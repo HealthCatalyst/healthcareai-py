@@ -8,4 +8,4 @@ model that pushes predictions to SQL Server.
 
 -  Provide tools related to data cleaning, manipulation, and imputation.
 
-To get started, check out this [notebook](notebooks/HCPyTools example #1 -- comparing models.ipynb)
+To get started, check out this [notebook](notebooks/HCPyToolsExample1.ipynb)
