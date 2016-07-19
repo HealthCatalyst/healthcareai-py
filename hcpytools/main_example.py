@@ -47,7 +47,11 @@ if __name__ == "__main__":
             debug=False)
 
     o.randomforest(cores=1,
-                   debug=True)
+                   debug=False)
+
+    o.plotROC(save=False)
+
+    o.rfFeatureImportance(save=False)
 
     # Step 2: choose a model (here we choose rf) and deploy predictions to database
 
