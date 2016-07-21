@@ -1,5 +1,5 @@
 from sklearn.grid_search import GridSearchCV
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, cohen_kappa_score
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.externals import joblib
@@ -33,6 +33,7 @@ def clfreport(modeltype,
 
         if modeltype == 'classification':
             y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(X_test)[:,1])
+            y_pred_class = clf.fit(X_train, y_train).predict(X_test)
         elif modeltype == 'regression':
             y_pred = clf.fit(X_train, y_train).predict(X_test)
 
@@ -46,10 +47,11 @@ def clfreport(modeltype,
 
         if modeltype == 'classification':
             print('\nAUC Score:', roc_auc_score(y_test, y_pred), '\n')
+            print('Kappa Score:', cohen_kappa_score(y_test, y_pred_class), '\n')
         elif modeltype == 'regression':
             print('##########################################################')
             print('Model accuracy:')
-            print('\nRMSE error:', math.sqrt(mean_squared_error(y_test, y_pred)))
+            print('\nRMSE error:', math.sqrt(mean_squared_error(y_test, y_pred_class)))
             print('\nMean absolute error:', mean_absolute_error(y_test, y_pred), '\n')
             print('##########################################################')
 
