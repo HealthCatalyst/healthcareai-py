@@ -46,7 +46,9 @@ def clfreport(modeltype,
             print("No hyper-parameter tuning was done.")
 
         if modeltype == 'classification':
-            print('\nAUC Score:', roc_auc_score(y_test, y_pred))
+            print('\nMetrics:')
+            print('AUC Score:', roc_auc_score(y_test, y_pred))
+            print('The following metrics are very sensitive to cut point:')
             print('Kappa:', cohen_kappa_score(y_test, y_pred_class))
             print('Recall/Sensitivity:', recall_score(y_test, y_pred_class))
             print('Precision/PPV:', precision_score(y_test, y_pred_class), '\n')

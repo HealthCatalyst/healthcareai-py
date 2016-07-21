@@ -160,12 +160,21 @@ class DevelopSupervisedModel(object):
                                                                              tune=tune,
                                                                              col_list=self.col_list)
 
-    def plotROC(self, save=False):
+    def plotROC(self, debug=False, save=False):
         fpr_linear, tpr_linear, _ = roc_curve(self.y_test, self.y_probab_linear)
         roc_auc_linear = auc(fpr_linear, tpr_linear)
 
         fpr_rf, tpr_rf, _ = roc_curve(self.y_test, self.y_probab_rf)
         roc_auc_rf = auc(fpr_rf, tpr_rf)
+
+        if debug:
+            print('Linear model:')
+            print('FPR, and TRP')
+            print(pd.DataFrame({'FPR': fpr_linear, 'TPR': tpr_linear})) #Add cutoff
+
+            print('Random forest model:')
+            print('FPR, and TRP')
+            print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf})) #Add cutoff
 
         plt.figure()
         plt.plot(fpr_linear, tpr_linear, color='b', label='Logistic (area = %0.2f)' % roc_auc_linear)
