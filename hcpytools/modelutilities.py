@@ -1,5 +1,5 @@
 from sklearn.grid_search import GridSearchCV
-from sklearn.metrics import roc_auc_score, cohen_kappa_score
+from sklearn.metrics import roc_auc_score, cohen_kappa_score, precision_score, recall_score
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.externals import joblib
@@ -46,8 +46,10 @@ def clfreport(modeltype,
             print("No hyper-parameter tuning was done.")
 
         if modeltype == 'classification':
-            print('\nAUC Score:', roc_auc_score(y_test, y_pred), '\n')
-            print('Kappa Score:', cohen_kappa_score(y_test, y_pred_class), '\n')
+            print('\nAUC Score:', roc_auc_score(y_test, y_pred))
+            print('Kappa:', cohen_kappa_score(y_test, y_pred_class))
+            print('Recall/Sensitivity:', recall_score(y_test, y_pred_class))
+            print('Precision/PPV:', precision_score(y_test, y_pred_class), '\n')
         elif modeltype == 'regression':
             print('##########################################################')
             print('Model accuracy:')
