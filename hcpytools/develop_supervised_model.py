@@ -190,6 +190,7 @@ class DevelopSupervisedModel(object):
             plt.savefig('ROC.png')
             source_path = os.path.dirname(os.path.abspath(__file__))
             print('\nROC file saved in: {}'.format(source_path))
+            plt.show()
         else:
             plt.show()
 
@@ -210,5 +211,6 @@ class DevelopSupervisedModel(object):
             plt.savefig('FeatureImportances.png')
             source_path = os.path.dirname(os.path.abspath(__file__))
             print('\nFeature importances file saved in: {}'.format(source_path))
+            plt.show()
         else:
             plt.show()
