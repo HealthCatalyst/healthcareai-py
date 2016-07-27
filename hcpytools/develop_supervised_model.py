@@ -1,13 +1,13 @@
 from sklearn import cross_validation
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV, RandomizedLogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.grid_search import GridSearchCV
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from hcpytools import modelutilities
 from hcpytools.impute_custom import DataFrameImputer
-
+import os
 
 class DevelopSupervisedModel(object):
     """ This class helps create a model using several common classifiers (reporting AUC)
@@ -125,15 +125,15 @@ class DevelopSupervisedModel(object):
         elif self.modeltype == 'regression':
             algo = LinearRegression()
 
-        modelutilities.clfreport(modeltype=self.modeltype,
-                                 debug=debug,
-                                 devcheck='yesdev',
-                                 algo=algo,
-                                 X_train=self.X_train,
-                                 y_train=self.y_train,
-                                 X_test=self.X_test,
-                                 y_test=self.y_test,
-                                 cores=cores)
+        self.y_probab_linear = modelutilities.clfreport(modeltype=self.modeltype,
+                                         debug=debug,
+                                         devcheck='yesdev',
+                                         algo=algo,
+                                         X_train=self.X_train,
+                                         y_train=self.y_train,
+                                         X_test=self.X_test,
+                                         y_test=self.y_test,
+                                         cores=cores)
 
     def randomforest(self, cores, trees=200, tune=False, debug=False):
 
@@ -145,22 +145,72 @@ class DevelopSupervisedModel(object):
 
         params = {'n_estimators': [10,50,100,250,500]}
 
-        col_list = self.X_train.columns.values
+        self.col_list = self.X_train.columns.values
 
-        modelutilities.clfreport(modeltype=self.modeltype,
-                                 debug=debug,
-                                 devcheck='yesdev',
-                                 algo=algo,
-                                 X_train=self.X_train,
-                                 y_train=self.y_train,
-                                 X_test=self.X_test,
-                                 y_test=self.y_test,
-                                 param=params,
-                                 cores=cores,
-                                 tune=tune,
-                                 col_list=col_list)
+        self.y_probab_rf, self.rfclf = modelutilities.clfreport(modeltype=self.modeltype,
+                                                                             debug=debug,
+                                                                             devcheck='yesdev',
+                                                                             algo=algo,
+                                                                             X_train=self.X_train,
+                                                                             y_train=self.y_train,
+                                                                             X_test=self.X_test,
+                                                                             y_test=self.y_test,
+                                                                             param=params,
+                                                                             cores=cores,
+                                                                             tune=tune,
+                                                                             col_list=self.col_list)
 
+    def plotROC(self, debug=False, save=False):
+        fpr_linear, tpr_linear, _ = roc_curve(self.y_test, self.y_probab_linear)
+        roc_auc_linear = auc(fpr_linear, tpr_linear)
 
+        fpr_rf, tpr_rf, _ = roc_curve(self.y_test, self.y_probab_rf)
+        roc_auc_rf = auc(fpr_rf, tpr_rf)
 
+        if debug:
+            print('Linear model:')
+            print('FPR, and TRP')
+            print(pd.DataFrame({'FPR': fpr_linear, 'TPR': tpr_linear})) #Add cutoff
 
+            print('Random forest model:')
+            print('FPR, and TRP')
+            print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf})) #Add cutoff
 
+        plt.figure()
+        plt.plot(fpr_linear, tpr_linear, color='b', label='Logistic (area = %0.2f)' % roc_auc_linear)
+        plt.plot(fpr_rf, tpr_rf, color='g', label='RandomForest (area = %0.2f)' % roc_auc_rf)
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristic')
+        plt.legend(loc="lower right")
+        if save:
+            plt.savefig('ROC.png')
+            source_path = os.path.dirname(os.path.abspath(__file__))
+            print('\nROC file saved in: {}'.format(source_path))
+            plt.show()
+        else:
+            plt.show()
+
+    def rfFeatureImportance(self, save=False):
+        importances = self.rfclf.feature_importances_
+        std = np.std([tree.feature_importances_ for tree in self.rfclf.estimators_],
+                     axis=0)
+        indices = np.argsort(importances)[::-1]
+        namelist = [self.col_list[i] for i in indices]
+        plt.figure()
+        plt.title("Feature importances")
+        plt.bar(range(self.X_train.shape[1]), importances[indices], color="r", yerr=std[indices], align="center")
+        plt.xticks(range(self.X_train.shape[1]), namelist, rotation=90)
+        plt.xlim([-1, self.X_train.shape[1]])
+        plt.gca().set_ylim(bottom=0)
+        plt.tight_layout()
+        if save:
+            plt.savefig('FeatureImportances.png')
+            source_path = os.path.dirname(os.path.abspath(__file__))
+            print('\nFeature importances file saved in: {}'.format(source_path))
+            plt.show()
+        else:
+            plt.show()
