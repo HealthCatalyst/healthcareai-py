@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # p = DeploySupervisedModel(modeltype='regression',
     #                           df=df,
     #                           graincol='GrainID',
-    #                           windowcol='InWindow',
+    #                           windowcol='InTestWindow',
     #                           predictedcol='SickLeaveHours',
     #                           impute=True,
     #                           debug=False)

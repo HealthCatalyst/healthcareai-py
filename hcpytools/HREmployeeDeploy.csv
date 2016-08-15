@@ -1,4 +1,4 @@
-GrainID,OrganizationLevel,MaritalStatus,Gender,VacationHours,SickLeaveHours,InWindow,SalariedFlag,TestDTS
+GrainID,OrganizationLevel,MaritalStatus,Gender,VacationHours,SickLeaveHours,InTestWindow,SalariedFlag,TestDTS
 10001,0,S,M,NULL,69,Y,Y,1/1/2014
 10002,1,S,F,NULL,NULL,Y,Y,1/2/2014
 10003,2,NULL,M,NULL,21,Y,NULL,1/3/2014
