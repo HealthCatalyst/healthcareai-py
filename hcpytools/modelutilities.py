@@ -22,6 +22,28 @@ def clfreport(modeltype,
               tune=False,
               use_saved_model=False,
               col_list=None):
+    """
+
+    Parameters
+    ----------
+    modeltype
+    debug
+    devcheck
+    algo
+    X_train
+    y_train
+    X_test
+    y_test
+    param
+    cores
+    tune
+    use_saved_model
+    col_list
+
+    Returns
+    -------
+
+    """
 
     # Initialize conditional vars that depend on ifelse to avoid PC warnng
     y_pred_class = None
@@ -59,13 +81,13 @@ def clfreport(modeltype,
 
         if modeltype == 'classification':
             print('\nMetrics:')
-            print('AUC Score:', roc_auc_score(y_test, y_pred))
+            roc_auc = roc_auc_score(y_test, y_pred)
+            print('AUC Score:', roc_auc)
             print('The following metrics are very sensitive to cut point:')
             print('Kappa:', cohen_kappa_score(y_test, y_pred_class))
             print('Recall/Sensitivity:', recall_score(y_test, y_pred_class))
             print('Precision/PPV:', precision_score(y_test,
-                                                    y_pred_class),
-                  '\n')
+                                                    y_pred_class), '\n')
 
         elif modeltype == 'regression':
             print('##########################################################')
@@ -76,21 +98,27 @@ def clfreport(modeltype,
                                                                 y_pred), '\n')
             print('##########################################################')
 
-        # Print variable importance if it's an attribute
-        if hasattr(clf, 'feature_importances_'):
+        # TODO: refactor this logic to be simpler
+        # Return without printing variable importance for linear case
+        if (not hasattr(clf, 'feature_importances_')) and (not
+            hasattr(clf, 'best_estimator_')):
 
-            importances = clf.feature_importances_
-            indices = np.argsort(importances)[::-1]
-            print('Variable importance:')
-            for f in range(0, X_train.shape[1]):
-                print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
-                                       importances[indices[f]]))
+            return y_pred, roc_auc
 
-            return y_pred, clf
+        # Print variable importance if rf and not tuning
+        elif hasattr(clf, 'feature_importances_'):
+            write_feature_importances(clf.feature_importances_,
+                                          col_list)
 
-        else:  # return dev case without feature importances
+            return y_pred, roc_auc, clf
 
-            return y_pred
+        # Print variable importance if rf and tuning
+        elif hasattr(clf.best_estimator_, 'feature_importances_'):
+            write_feature_importances(
+                clf.best_estimator_.feature_importances_,
+                col_list)
+
+            return y_pred, roc_auc, clf
 
     elif devcheck == 'notdev':
 
@@ -195,6 +223,45 @@ def findtopthreefactors(debug,
                             'third': third_fact[:3]}))
 
     return first_fact, second_fact, third_fact
+
+def write_feature_importances(importance_attr, col_list):
+    """
+    This function prints an ordered list of rf-related feature importance.
+
+    Parameters
+    ----------
+    importance_attr (attribute) : This is the feature importance attribute
+    from a scikit-learn method that represents feature importances
+    col_list (list) : Vector holding list of column names
+
+    Returns
+    -------
+    Nothing. Simply prints feature importance list to console.
+    """
+    indices = np.argsort(importance_attr)[::-1]
+    print('Variable importance:')
+    for f in range(0, len(col_list)):
+        print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
+                               importance_attr[indices[f]]))
+
+def calculate_rfmtry(number_of_columns, type):
+    if number_of_columns < 3:
+        message = "You need more than two columns to tune hyperparameters."
+        raise ValueError(message)
+
+    if type == 'classification':
+        # Default to grid of 1,2,3 for start of less than 2
+        start_temp = math.floor(math.sqrt(number_of_columns))
+        start = start_temp if start_temp >= 2 else 2
+        grid_mtry = [start-1,start,start+1]
+
+    if type == 'regression':
+        # Default to grid of 1,2,3 for start of less than 2
+        start_temp = math.floor(number_of_columns/3)
+        start = start_temp if start_temp >= 2 else 2
+        grid_mtry = [start-1,start,start+1]
+
+    return grid_mtry
 
 if __name__ == "__main__":
     pass

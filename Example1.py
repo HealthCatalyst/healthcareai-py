@@ -6,7 +6,7 @@ found that one of the models works well on your data, move to Example2
 from hcpytools.develop_supervised_model import DevelopSupervisedModel
 import pandas as pd
 import time
-
+import sys
 
 def main():
 
@@ -48,16 +48,15 @@ def main():
                                impute=True,
                                debug=False)
 
-    o.linear(cores=1,
-             debug=False)
+    #o.linear(cores=1)
 
     o.random_forest(cores=1,
-                    debug=False)
+                    tune=True)
 
-    o.plot_roc(debug=False,
-               save=False)
+    #o.plot_roc(debug=False,
+    #           save=False)
 
-    o.rf_feature_importance(save=False)
+    #o.plot_rffeature_importance(save=False)
 
     print('\nTime:\n', time.time() - t0)
 

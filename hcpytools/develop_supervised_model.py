@@ -59,6 +59,7 @@ class DevelopSupervisedModel(object):
         self.y_train = None
         self.X_test = None
         self.y_test = None
+        self.au_roc = None
 
         if debug:
             print('Shape and top 5 rows of original dataframe:')
@@ -162,16 +163,16 @@ class DevelopSupervisedModel(object):
         else:
             algo = None
 
-        self.y_probab_linear = modelutilities.clfreport(
-            modeltype=self.modeltype,
-            debug=debug,
-            devcheck='yesdev',
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            cores=cores)
+        self.y_probab_linear, self.au_roc = modelutilities.clfreport(
+                                                modeltype=self.modeltype,
+                                                debug=debug,
+                                                devcheck='yesdev',
+                                                algo=algo,
+                                                X_train=self.X_train,
+                                                y_train=self.y_train,
+                                                X_test=self.X_test,
+                                                y_test=self.y_test,
+                                                cores=cores)
 
     def random_forest(self, cores=4, trees=200, tune=False, debug=False):
         """
@@ -189,7 +190,6 @@ class DevelopSupervisedModel(object):
         Returns
         -------
         Nothing. Output to console describes model accuracy.
-
         """
 
         # TODO: refactor, such that each algo doesn't need an if/else tree
@@ -200,29 +200,47 @@ class DevelopSupervisedModel(object):
         elif self.modeltype == 'regression':
             algo = RandomForestRegressor(n_estimators=trees,
                                          verbose=(2 if debug is True else 0))
-        else:
+
+        else:  # Here to appease pep8
             algo = None
 
-        params = {'n_estimators': [100, 250, 500]}
+        params = {'max_features':
+                      modelutilities.calculate_rfmtry(len(self.X_test.columns),
+                                                      self.modeltype)}
 
         self.col_list = self.X_train.columns.values
 
-        self.y_probab_rf, self.rfclf = modelutilities.clfreport(
-            modeltype=self.modeltype,
-            debug=debug,
-            devcheck='yesdev',
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            param=params,
-            cores=cores,
-            tune=tune,
-            col_list=self.col_list)
+        self.y_probab_rf, self.au_roc, self.rfclf = modelutilities.clfreport(
+                                                    modeltype=self.modeltype,
+                                                    debug=debug,
+                                                    devcheck='yesdev',
+                                                    algo=algo,
+                                                    X_train=self.X_train,
+                                                    y_train=self.y_train,
+                                                    X_test=self.X_test,
+                                                    y_test=self.y_test,
+                                                    param=params,
+                                                    cores=cores,
+                                                    tune=tune,
+                                                    col_list=self.col_list)
 
-    def plot_roc(self, debug=False, save=False):
-        """"Describe the method"""
+
+    def plot_roc(self, save=False, debug=False):
+        """
+        Plots roc related to models resulting from linear and random
+        forest methods within the DevelopSupervisedModel step.
+
+        Parameters
+        ----------
+        save (boolean) : Whether to save the plot
+        debug (boolean) : Verbosity of output. If True, shows list of
+        FPR/TPR for each point in the plot (default False)
+
+        Returns
+        -------
+        Nothing. A plot is created and displayed.
+        """
+
         fpr_linear, tpr_linear, _ = roc_curve(self.y_test,
                                               self.y_probab_linear)
         roc_auc_linear = auc(fpr_linear, tpr_linear)
@@ -230,15 +248,16 @@ class DevelopSupervisedModel(object):
         fpr_rf, tpr_rf, _ = roc_curve(self.y_test, self.y_probab_rf)
         roc_auc_rf = auc(fpr_rf, tpr_rf)
 
+        # TODO: add cutoff associated with FPR/TPR
         if debug:
             print('Linear model:')
             print('FPR, and TRP')
             print(pd.DataFrame(
-                {'FPR': fpr_linear, 'TPR': tpr_linear}))  # Add cutoff
+                {'FPR': fpr_linear, 'TPR': tpr_linear}))
 
             print('Random forest model:')
             print('FPR, and TRP')
-            print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))  # Add cutoff
+            print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))
 
         plt.figure()
         plt.plot(fpr_linear, tpr_linear, color='b',
@@ -260,14 +279,38 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def rf_feature_importance(self, save=False):
-        """Describe the method"""
-        importances = self.rfclf.feature_importances_
-        std = np.std(
-            [tree.feature_importances_ for tree in self.rfclf.estimators_],
-            axis=0)
+    def plot_rffeature_importance(self, save=False):
+        """
+        Plots feature importances related to models resulting from
+        and random forest methods within the DevelopSupervisedModel step.
+
+        Parameters
+        ----------
+        save (boolean) : Whether to save the plot
+
+        Returns
+        -------
+        Nothing. A plot is created and displayed.
+        """
+
+        # Arrange columns in order of importance
+        if hasattr(self.rfclf, 'best_estimator_'):
+            importances = self.rfclf.best_estimator_.feature_importances_
+            std = np.std(
+                        [tree.feature_importances_ for tree in
+                        self.rfclf.best_estimator_.estimators_],
+                        axis=0)
+        else:
+            importances = self.rfclf.feature_importances_
+            std = np.std(
+                        [tree.feature_importances_ for tree in
+                         self.rfclf.estimators_],
+                        axis=0)
+
         indices = np.argsort(importances)[::-1]
         namelist = [self.col_list[i] for i in indices]
+
+        # Plot these columns
         plt.figure()
         plt.title("Feature importances")
         plt.bar(range(self.X_train.shape[1]),
