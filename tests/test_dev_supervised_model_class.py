@@ -49,7 +49,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
 class TestRFDevTuneTrueSmall(unittest.TestCase):
     def setUp(self):
-        cols = ['SalariedFlag','Gender','VacationHours','MaritalStatus']
+        cols = ['SalariedFlag', 'Gender', 'VacationHours', 'MaritalStatus']
         df = pd.read_csv('../hcpytools/HREmployeeDev.csv', usecols=cols)
 
         np.random.seed(42)
@@ -70,7 +70,7 @@ class TestRFDevTuneTrueSmall(unittest.TestCase):
 
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
-        cols = ['SalariedFlag','Gender','VacationHours']
+        cols = ['SalariedFlag', 'Gender', 'VacationHours']
         df = pd.read_csv('../hcpytools/HREmployeeDev.csv', usecols=cols)
 
         np.random.seed(42)
@@ -81,7 +81,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
     def runTest(self):
         self.assertRaises(ValueError, lambda: self.o.random_forest(cores=1,
-                                                            tune=True))
+                                                                   tune=True))
 
     def tearDown(self):
         del self.o

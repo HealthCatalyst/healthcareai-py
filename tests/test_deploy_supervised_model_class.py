@@ -60,6 +60,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def tearDown(self):
         del self.o
 
+
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv('../hcpytools/HREmployeeDeploy.csv')
