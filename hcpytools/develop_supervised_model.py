@@ -66,6 +66,7 @@ class DevelopSupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
+        # CALL new function!!
         # Remove DTS columns
         # TODO: make this work with col names shorter than three letters
         cols = [c for c in self.df.columns if c[-3:] != 'DTS']
@@ -98,6 +99,7 @@ class DevelopSupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
+        #CALL new function!!
         # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
         # Note that this makes hcpytools only handle N/Y in pred column
         if self.modeltype == 'classification':
@@ -120,9 +122,14 @@ class DevelopSupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
+        # Create dummy vars for all cols but predictedcol
+        # First switch (temporarily) pred col to numeric (so it's not dummy)
+        self.df[self.predictedcol] = pd.to_numeric(
+            arg=self.df[self.predictedcol], errors='raise')
+        self.df = pd.get_dummies(self.df, drop_first=True, prefix_sep='.')
+
         y = np.squeeze(self.df[[self.predictedcol]])
         X = self.df.drop([self.predictedcol], axis=1)
-        X = pd.get_dummies(X, drop_first=True, prefix_sep='.')
 
         # Split the dataset in two equal parts
         self.X_train, self.X_test, self.y_train, self.y_test = \

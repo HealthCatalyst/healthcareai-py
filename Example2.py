@@ -56,7 +56,7 @@ def main():
     p.deploy(method='rf',
              cores=4,
              server='localhost',
-             dest_db_schema_table='[SAM].[dbo].[PyOutputRegresBASE]',
+             dest_db_schema_table='[SAM].[dbo].[HCPyDeployClassificationBASE]',
              use_saved_model=False,
              trees=200,
              debug=False)

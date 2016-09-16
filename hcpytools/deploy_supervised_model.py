@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import ceODBC
 import datetime
+import math
 
 
 class DeploySupervisedModel(object):
@@ -26,6 +27,12 @@ class DeploySupervisedModel(object):
                  debug=False):
         """Describe the class"""
 
+
+        self.modeltype = modeltype
+        self.graincol = graincol
+        self.impute = impute
+        self.y_pred = None # Only used for unit test
+
         if debug:
             print('\nTypes of original dataframe:')
             print(df.dtypes)
@@ -33,10 +40,7 @@ class DeploySupervisedModel(object):
             print(df.shape)
             print(df.head())
 
-        self.modeltype = modeltype
-        self.graincol = graincol
-        self.impute = impute
-
+        #CALL FUNCTION!!
         # Remove DTS columns
         # TODO: make this work with col names shorter than three letters
         cols = [c for c in df.columns if c[-3:] != 'DTS']
@@ -91,6 +95,7 @@ class DeploySupervisedModel(object):
                 # noinspection PyUnresolvedReferences,PyUnresolvedReferences
                 print(df.ix[df[windowcol] == 'N'].shape)
 
+        #Call new function!!
         # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
         # Makes it so that hcpytools only handles N/Y in pred column
         if modeltype == 'classification':
@@ -186,13 +191,11 @@ class DeploySupervisedModel(object):
                server,
                dest_db_schema_table,
                trees=200,
+               mtry=None,
                use_saved_model=False,
                debug=False):
 
         """"Describe the method"""
-
-        # Initialize conditional vars that depend on ifelse to avoid PC warnng
-        y_pred = None
 
         if debug:
             print("""\ngraincol test shape and cell type before db
@@ -246,65 +249,75 @@ class DeploySupervisedModel(object):
 
             algorithm = LogisticRegression(n_jobs=cores)
 
-            y_pred = modelutilities.clfreport(modeltype=self.modeltype,
-                                              debug=debug,
-                                              devcheck='notdev',
-                                              algo=algorithm,
-                                              X_train=self.X_train,
-                                              y_train=self.y_train,
-                                              X_test=self.X_test,
-                                              use_saved_model=use_saved_model
-                                              )
+            self.y_pred = modelutilities.clfreport(
+                modeltype=self.modeltype,
+                debug=debug,
+                devcheck='notdev',
+                algo=algorithm,
+                X_train=self.X_train,
+                y_train=self.y_train,
+                X_test=self.X_test,
+                use_saved_model=use_saved_model)
 
         elif self.modeltype == 'regression' and method == 'linear':
 
             algorithm = LinearRegression(n_jobs=cores)
 
-            y_pred = modelutilities.clfreport(modeltype=self.modeltype,
-                                              debug=debug,
-                                              devcheck='notdev',
-                                              algo=algorithm,
-                                              X_train=self.X_train,
-                                              y_train=self.y_train,
-                                              X_test=self.X_test,
-                                              use_saved_model=use_saved_model
-                                              )
+            self.y_pred = modelutilities.clfreport(
+                modeltype=self.modeltype,
+                debug=debug,
+                devcheck='notdev',
+                algo=algorithm,
+                X_train=self.X_train,
+                y_train=self.y_train,
+                X_test=self.X_test,
+                use_saved_model=use_saved_model)
 
         if self.modeltype == 'classification' and method == 'rf':
 
+            # TODO: think about moving this to modelutilities mtry function
+            if not mtry:
+                mtry = math.floor(math.sqrt(len(self.X_train.columns.values)))
+
             algorithm = RandomForestClassifier(n_estimators=trees,
+                                               max_features=mtry,
                                                n_jobs=cores,
                                                verbose=(
                                                    2 if debug is True else 0)
                                                )
 
-            y_pred = modelutilities.clfreport(modeltype=self.modeltype,
-                                              debug=debug,
-                                              devcheck='notdev',
-                                              algo=algorithm,
-                                              X_train=self.X_train,
-                                              y_train=self.y_train,
-                                              X_test=self.X_test,
-                                              use_saved_model=use_saved_model
-                                              )
+            self.y_pred = modelutilities.clfreport(
+                modeltype=self.modeltype,
+                debug=debug,
+                devcheck='notdev',
+                algo=algorithm,
+                X_train=self.X_train,
+                y_train=self.y_train,
+                X_test=self.X_test,
+                use_saved_model=use_saved_model)
 
         elif self.modeltype == 'regression' and method == 'rf':
 
+            # TODO: think about moving this to modelutilities mtry function
+            if not mtry:
+                mtry = math.floor(len(self.X_train.columns.values)/3)
+
             algorithm = RandomForestRegressor(n_estimators=trees,
+                                              max_features=mtry,
                                               n_jobs=cores,
                                               verbose=(
                                                   2 if debug is True else 0)
                                               )
 
-            y_pred = modelutilities.clfreport(modeltype=self.modeltype,
-                                              debug=debug,
-                                              devcheck='notdev',
-                                              algo=algorithm,
-                                              X_train=self.X_train,
-                                              y_train=self.y_train,
-                                              X_test=self.X_test,
-                                              use_saved_model=use_saved_model
-                                              )
+            self.y_pred = modelutilities.clfreport(
+                modeltype=self.modeltype,
+                debug=debug,
+                devcheck='notdev',
+                algo=algorithm,
+                X_train=self.X_train,
+                y_train=self.y_train,
+                X_test=self.X_test,
+                use_saved_model=use_saved_model)
 
         # Calculate three imp columns
         first_fact, second_fact, third_fact = modelutilities. \
@@ -315,15 +328,17 @@ class DeploySupervisedModel(object):
                                 self.modeltype,
                                 use_saved_model)
 
-        # Convert to base int instead of numpy data type
+        # Convert to base int instead of numpy data type for SQL insert
         graincol_baseint = [int(self.graincol_test.iloc[i])
                             for i in range(0, len(self.graincol_test))]
-        y_pred_baseint = [float(y_pred[i]) for i in range(0, len(y_pred))]
+        y_pred_baseint = [float(self.y_pred[i])
+                          for i in range(0, len(self.y_pred))]
 
         # Create columns for export to SQL Server
         X_test_length = len(self.X_test.iloc[:, 0])
         bindingid = [0] * X_test_length
         bindingnm = ['Python'] * X_test_length
+
         # Create vector with time to the millisecond
         lastloaddts = [datetime.datetime.utcnow().
                        strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]] * \

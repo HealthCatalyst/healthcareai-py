@@ -1,8 +1,6 @@
 from hcpytools.develop_supervised_model import DevelopSupervisedModel
-from sklearn.utils import check_random_state
 import pandas as pd
 import numpy as np
-import matplotlib
 import unittest
 
 
@@ -82,7 +80,6 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                                         impute=True)
 
     def runTest(self):
-        expect = "ValueError: You need more than two columns to tune hyperparameters."
         self.assertRaises(ValueError, lambda: self.o.random_forest(cores=1,
                                                             tune=True))
 
