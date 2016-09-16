@@ -106,3 +106,7 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
     def tearDown(self):
         del self.o
+
+
+if __name__ == '__main__':
+    unittest.main()
