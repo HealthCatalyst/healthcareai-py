@@ -17,5 +17,5 @@ def fixture(file):
     >>> fixture('SampleData.csv')
     """
     return path.join(path.abspath(path.dirname(__file__)),
-                     '../hcpytools',
+                     'fixtures',
                      file)
