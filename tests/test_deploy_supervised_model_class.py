@@ -1,4 +1,5 @@
 from hcpytools.deploy_supervised_model import DeploySupervisedModel
+from tests.helpers import fixture
 import pandas as pd
 import numpy as np
 import unittest
@@ -6,7 +7,7 @@ import unittest
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDeploy.csv')
+        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
@@ -34,7 +35,7 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
 
 class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDeploy.csv')
+        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
@@ -63,7 +64,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDeploy.csv')
+        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
@@ -92,7 +93,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
 class TestLinearDeploy(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDeploy.csv')
+        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
