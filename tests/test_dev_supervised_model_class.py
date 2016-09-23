@@ -1,4 +1,5 @@
 from hcpytools.develop_supervised_model import DevelopSupervisedModel
+from tests.helpers import fixture
 import pandas as pd
 import numpy as np
 import unittest
@@ -6,7 +7,7 @@ import unittest
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDev.csv')
+        df = pd.read_csv(fixture('HREmployeeDev.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
@@ -27,7 +28,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDev.csv')
+        df = pd.read_csv(fixture('HREmployeeDev.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
@@ -50,7 +51,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 class TestRFDevTuneTrueSmall(unittest.TestCase):
     def setUp(self):
         cols = ['SalariedFlag', 'Gender', 'VacationHours', 'MaritalStatus']
-        df = pd.read_csv('../hcpytools/HREmployeeDev.csv', usecols=cols)
+        df = pd.read_csv(fixture('HREmployeeDev.csv'), usecols=cols)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -71,7 +72,7 @@ class TestRFDevTuneTrueSmall(unittest.TestCase):
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
         cols = ['SalariedFlag', 'Gender', 'VacationHours']
-        df = pd.read_csv('../hcpytools/HREmployeeDev.csv', usecols=cols)
+        df = pd.read_csv(fixture('HREmployeeDev.csv'), usecols=cols)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -89,7 +90,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv('../hcpytools/HREmployeeDev.csv')
+        df = pd.read_csv(fixture('HREmployeeDev.csv'))
 
         # Convert numeric columns to factor/category columns
         df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
