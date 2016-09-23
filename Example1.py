@@ -3,7 +3,7 @@ It provides examples of reading from both csv and SQL Server. Note that this
 example can be run as-is after installing HCPyTools. After you have
 found that one of the models works well on your data, move to Example2
 """
-from hcpytools.develop_supervised_model import DevelopSupervisedModel
+from hcpytools import DevelopSupervisedModel
 import pandas as pd
 import time
 import sys

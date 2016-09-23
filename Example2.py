@@ -5,7 +5,7 @@ use_saved_model to TRUE, such that the next time this script is run, it will
 run the test set against the model that was saved. Note that for this to run
 as-is, you'll have to run the CREATE TABLE statements found below in SSMS.
 """
-from hcpytools.deploy_supervised_model import DeploySupervisedModel
+from hcpytools import DeploySupervisedModel
 import pandas as pd
 import time
 
