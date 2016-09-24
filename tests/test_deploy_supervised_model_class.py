@@ -1,4 +1,4 @@
-from hcpytools.deploy_supervised_model import DeploySupervisedModel
+from hcpytools import DeploySupervisedModel
 from tests.helpers import fixture
 import pandas as pd
 import numpy as np
