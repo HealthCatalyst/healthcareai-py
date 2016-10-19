@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from distutils.core import setup
+from setuptools import setup
 
 
 def readme():
@@ -25,7 +25,6 @@ setup(name='HCPyTools',
           'scipy>=0.17.1',
           'scikit-learn>=0.17.1',
           'pandas>=0.18.1',
-          'ceODBC>=2.0.1',
           'matplotlib>=1.5.0'
       ],
       tests_require=[
