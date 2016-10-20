@@ -20,3 +20,21 @@ To render docs, create a virtualenvironment for ``hcpytools`` and
 install required python modules with ``pip install -r dev-requirements.txt``.
 
 Then simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
+
+Installation
+============
+
+Docker
+++++++
+
+To install using docker, run ``docker build -t hcpytools .``
+
+Then you can run the docker instance with ``docker run hcpytools`` and you should
+have a jupyter notebook available on ``http://localhost:8888``.
+
+Docker Compose
+++++++++++++++
+
+With ``docker-compose`` you can spin up a jupyter application and a database instance
+for local development. This is useful for one-off development questions requiring a
+database.
