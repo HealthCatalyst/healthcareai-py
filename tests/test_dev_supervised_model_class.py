@@ -20,7 +20,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.au_roc, 0.95736434108527135)
+        self.assertAlmostEqual(self.o.au_roc, 0.95736434108527135)
 
     def tearDown(self):
         del self.o
@@ -42,7 +42,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.au_roc, 0.93953488372093019)
+        self.assertAlmostEqual(self.o.au_roc, 0.93953488372093019)
 
     def tearDown(self):
         del self.o
@@ -63,7 +63,7 @@ class TestRFDevTuneTrueSmall(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.au_roc, 0.34883720930232559)
+        self.assertAlmostEqual(self.o.au_roc, 0.34883720930232559)
 
     def tearDown(self):
         del self.o
@@ -103,7 +103,7 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.au_roc, 0.90387596899224809)
+        self.assertAlmostEqual(self.o.au_roc, 0.90387596899224809)
 
     def tearDown(self):
         del self.o
