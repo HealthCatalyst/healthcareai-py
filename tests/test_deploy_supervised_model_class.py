@@ -27,7 +27,7 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.y_pred[5], 0.36499999999999999)
+        self.assertAlmostEqual(self.o.y_pred[5], 0.36499999999999999)
 
     def tearDown(self):
         del self.o
@@ -56,7 +56,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.y_pred[5], 0.28499999999999998)
+        self.assertAlmostEqual(self.o.y_pred[5], 0.28499999999999998)
 
     def tearDown(self):
         del self.o
@@ -85,7 +85,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.y_pred[5], 0.40000000000000002)
+        self.assertAlmostEqual(self.o.y_pred[5], 0.40000000000000002)
 
     def tearDown(self):
         del self.o
@@ -113,7 +113,7 @@ class TestLinearDeploy(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertEqual(self.o.y_pred[5], 5.8445543322402692e-06)
+        self.assertAlmostEqual(self.o.y_pred[5], 5.8445543322402692e-06)
 
     def tearDown(self):
         del self.o
