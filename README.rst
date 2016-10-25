@@ -12,8 +12,10 @@ To get started, check out this `notebook`_.
 
 .. _notebook: notebooks/HCPyToolsExample1.ipynb
 
-Installation
-============
+
+
+Documentation
+=============
 
 To render docs, create a virtualenvironment for ``hcpytools``
   - ``cd`` to directory where folder was downloaded
@@ -21,10 +23,5 @@ To render docs, create a virtualenvironment for ``hcpytools``
 
 Install required python modules
   - Type ``pip install -r dev-requirements.txt``.
-  
-
-
-Documentation
-=============
 
 Then simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
