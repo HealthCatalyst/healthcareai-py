@@ -13,10 +13,19 @@ To get started, check out this `notebook`_.
 
 .. _notebook: notebooks/HCPyToolsExample1.ipynb
 
+Installation
+============
+
+To render docs, create a virtualenvironment for ``hcpytools``
+  - ``cd`` to directory where folder was downloaded
+  - Type ``python -m virtualenv healthcare``
+
+Install required python modules
+  - Type ``pip install -r dev-requirements.txt``.
+  
+
+
 Documentation
 =============
-
-To render docs, create a virtualenvironment for ``hcpytools`` and
-install required python modules with ``pip install -r dev-requirements.txt``.
 
 Then simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
