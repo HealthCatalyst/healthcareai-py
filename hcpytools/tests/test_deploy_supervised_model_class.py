@@ -1,8 +1,10 @@
-from hcpytools import DeploySupervisedModel
-from tests.helpers import fixture
-import pandas as pd
-import numpy as np
 import unittest
+
+import numpy as np
+import pandas as pd
+
+from hcpytools import DeploySupervisedModel
+from hcpytools.tests.helpers import fixture
 
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):

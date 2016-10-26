@@ -46,4 +46,5 @@ setup(name='HCPyTools',
           "Programming Language :: Python :: 3.5",
           "Topic :: Scientific/Engineering :: Artificial Intelligence",
           "Topic :: Software Development :: Libraries :: Python Modules",
-      ],)
+      ],
+      include_package_data=True)
