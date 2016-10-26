@@ -9,16 +9,14 @@ from hcpytools.tests.helpers import fixture
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
                                        df=df,
-                                       graincol='GrainID',
-                                       windowcol='InTestWindow',
-                                       predictedcol='SalariedFlag',
+                                       graincol='PatientEncounterID',
+                                       windowcol='InTestWindowFLG',
+                                       predictedcol='ThirtyDayReadmitFLG',
                                        impute=True)
         self.o.deploy(
              method='rf',
@@ -29,7 +27,7 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.y_pred[5], 0.36499999999999999)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.035)
 
     def tearDown(self):
         del self.o
@@ -37,16 +35,14 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
 
 class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
                                        df=df,
-                                       graincol='GrainID',
-                                       windowcol='InTestWindow',
-                                       predictedcol='SalariedFlag',
+                                       graincol='PatientEncounterID',
+                                       windowcol='InTestWindowFLG',
+                                       predictedcol='ThirtyDayReadmitFLG',
                                        impute=True)
         self.o.deploy(
              method='rf',
@@ -58,7 +54,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.y_pred[5], 0.28499999999999998)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.042)
 
     def tearDown(self):
         del self.o
@@ -66,16 +62,14 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
                                        df=df,
-                                       graincol='GrainID',
-                                       windowcol='InTestWindow',
-                                       predictedcol='SalariedFlag',
+                                       graincol='PatientEncounterID',
+                                       windowcol='InTestWindowFLG',
+                                       predictedcol='ThirtyDayReadmitFLG',
                                        impute=True)
         self.o.deploy(
              method='rf',
@@ -87,7 +81,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.y_pred[5], 0.40000000000000002)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.040000)
 
     def tearDown(self):
         del self.o
@@ -95,16 +89,14 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
 class TestLinearDeploy(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDeploy.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
                                        df=df,
-                                       graincol='GrainID',
-                                       windowcol='InTestWindow',
-                                       predictedcol='SalariedFlag',
+                                       graincol='PatientEncounterID',
+                                       windowcol='InTestWindowFLG',
+                                       predictedcol='ThirtyDayReadmitFLG',
                                        impute=True)
         self.o.deploy(
              method='linear',
@@ -115,7 +107,7 @@ class TestLinearDeploy(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.y_pred[5], 5.8445543322402692e-06)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.154754)
 
     def tearDown(self):
         del self.o

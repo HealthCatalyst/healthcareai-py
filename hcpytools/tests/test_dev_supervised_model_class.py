@@ -9,20 +9,19 @@ from hcpytools.tests.helpers import fixture
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDev.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
         # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
                                         df=df,
-                                        predictedcol='SalariedFlag',
+                                        predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
         self.o.random_forest(cores=1)
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.au_roc, 0.95736434108527135)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.9698420)
 
     def tearDown(self):
         del self.o
@@ -30,42 +29,19 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDev.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
                                         df=df,
-                                        predictedcol='SalariedFlag',
+                                        predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
 
         self.o.random_forest(cores=1, tune=True)
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.au_roc, 0.93953488372093019)
-
-    def tearDown(self):
-        del self.o
-
-
-class TestRFDevTuneTrueSmall(unittest.TestCase):
-    def setUp(self):
-        cols = ['SalariedFlag', 'Gender', 'VacationHours', 'MaritalStatus']
-        df = pd.read_csv(fixture('HREmployeeDev.csv'), usecols=cols)
-
-        np.random.seed(42)
-        self.o = DevelopSupervisedModel(modeltype='classification',
-                                        df=df,
-                                        predictedcol='SalariedFlag',
-                                        impute=True)
-
-        self.o.random_forest(cores=1, tune=True)
-
-    def runTest(self):
-
-        self.assertAlmostEqual(self.o.au_roc, 0.34883720930232559)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.9670740)
 
     def tearDown(self):
         del self.o
@@ -73,13 +49,13 @@ class TestRFDevTuneTrueSmall(unittest.TestCase):
 
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
-        cols = ['SalariedFlag', 'Gender', 'VacationHours']
-        df = pd.read_csv(fixture('HREmployeeDev.csv'), usecols=cols)
+        cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'), usecols=cols)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
                                         df=df,
-                                        predictedcol='SalariedFlag',
+                                        predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
 
     def runTest(self):
@@ -92,20 +68,18 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HREmployeeDev.csv'))
+        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
 
-        # Convert numeric columns to factor/category columns
-        df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
                                         df=df,
-                                        predictedcol='SalariedFlag',
+                                        predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
         self.o.linear(cores=1)
 
     def runTest(self):
 
-        self.assertAlmostEqual(self.o.au_roc, 0.90387596899224809)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.676274)
 
     def tearDown(self):
         del self.o
