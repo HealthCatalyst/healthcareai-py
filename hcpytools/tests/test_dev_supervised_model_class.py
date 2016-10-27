@@ -10,6 +10,7 @@ from hcpytools.tests.helpers import fixture
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         # Convert numeric columns to factor/category columns
         np.random.seed(42)
@@ -21,7 +22,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.9698420)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.959630)
 
     def tearDown(self):
         del self.o
@@ -30,6 +31,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -41,7 +43,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.9670740)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.959439)
 
     def tearDown(self):
         del self.o
@@ -69,6 +71,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -79,7 +82,7 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.676274)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.670739)
 
     def tearDown(self):
         del self.o
