@@ -11,12 +11,11 @@ data. The package has two main goals:
 Installation
 =============
 
-- If you haven't, install Python 3.5 via the Windows x86-64 executable installer, from `here`_.
+- If you haven't, install Python 3.5 via the Windows x86-64 executable installer
+ - https://www.python.org/downloads/release/python-352/
+ - On the first screen, check 'Add to PATH'
 
-.. _here: https://www.python.org/downloads/release/python-352/
-    - On the first screen, check 'Add to PATH'
-
-- Clone this repo (look for the green button above)
+- Clone this repo (look for the green button on the repo main page)
 
 - Install the prerequisites
     - Using Windows
