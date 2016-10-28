@@ -1,4 +1,4 @@
-How to set up your dev environment
+How to set up your dev environment (Windows-specific)
 -------------------
 
 Set up Git
@@ -92,5 +92,3 @@ Code Housekeeping
 
 6) Click Code -> Inspect code -> Whole project -> Look for section on Package requirements
  - Under the lines related to sklearn, click ‘Ignore Requirement’
-
-
