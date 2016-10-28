@@ -92,3 +92,24 @@ Code Housekeeping
 
 6) Click Code -> Inspect code -> Whole project -> Look for section on Package requirements
  - Under the lines related to sklearn, click ‘Ignore Requirement’
+
+Git config
+=============
+Set up your email and username for git (otherwise no attribution in github)
+
+1) Set git user name and work email
+ - git config user.name "Billy Everyteen"
+ -	git config --global user.email "your_email@example.com"
+
+2) Configure line endings for windows: ``git config core.autocrlf true``
+
+3) Make git case sensitive for file names: ``git config core.ignorecase false``
+
+3) Set up SSH (if desired) so you can push to topic branch without password
+ - `Step1`_
+ - `Step2`_
+ - `Step3`_
+ 
+ .. _Step1: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
+ .. _Step2: https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
+ .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
