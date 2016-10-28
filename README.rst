@@ -8,10 +8,6 @@ data. The package has two main goals:
 
 -  Provide tools related to data cleaning, manipulation, and imputation.
 
-To get started, check out this `notebook`_.
-
-.. _notebook: notebooks/HCPyToolsExample1.ipynb
-
 Installation
 =============
 
@@ -66,7 +62,12 @@ Getting started
        [Factor2TXT] [varchar] (255),
        [Factor3TXT] [varchar] (255))
 
+Contributing
+=============
 
+We welcome community contributions. See `here`_ to get started!
+
+.. _here: https://github.com/HealthCatalystSLC/HCPyTools/blob/master/CONTRIBUTING.rst
 
 Documentation
 =============
