@@ -22,8 +22,8 @@ Installation
 
 - Install the prerequisites
     - Using Windows
-        - Install the following cp3.5 and amd64 type packages (in this order)
-        - Use cmd or PowerShell: ``python -m pip install path\somepackage.whl``
+        - Download and Install the following cp3.5 and amd64 type packages (in this order)
+        - Use cmd or PowerShell to install: ``python -m pip install path\somepackage.whl``
         - numpy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy
         - scipy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
         - scikit-learn from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
@@ -38,7 +38,9 @@ Installation
     
 Getting started
 =============
-- Run the examples in the HCPyTools directory
+- Run the examples in the HCPyTools directory and check out this `notebook`_.
+
+.. _notebook: notebooks/HCPyToolsExample1.ipynb
 
 - Modify the queries and parameters to match your data
 
