@@ -6,14 +6,13 @@ found that one of the models works well on your data, move to Example2
 from hcpytools import DevelopSupervisedModel
 import pandas as pd
 import time
-import sys
 
 def main():
 
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('hcpytools/HREmployeeDev.csv')
+    df = pd.read_csv('hcpytools/tests/fixtures/HCRDiabetesClinical.csv')
 
     # SQL snippet for reading data into dataframe
     # import ceODBC
@@ -37,26 +36,30 @@ def main():
     print(df.head())
     print(df.dtypes)
 
-    # Convert numeric columns to factor/category columns
-    df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
+    # Drop columns that won't help machine learning
+    df.drop('PatientID',axis=1,inplace=True)
 
     # Step 1: compare two models
     o = DevelopSupervisedModel(modeltype='classification',
                                df=df,
-                               predictedcol='SalariedFlag',
-                               graincol='',  # OPTIONAL/ENCOURAGED
+                               predictedcol='ThirtyDayReadmitFLG',
+                               graincol='PatientEncounterID', #OPTIONAL
                                impute=True,
                                debug=False)
 
-    #o.linear(cores=1)
+    # Run the linear model
+    o.linear(cores=1)
 
+    # Run the random forest model
     o.random_forest(cores=1,
                     tune=True)
 
-    #o.plot_roc(debug=False,
-    #           save=False)
+    # Look at the RF feature importance rankings
+    o.plot_rffeature_importance(save=False)
 
-    #o.plot_rffeature_importance(save=False)
+    # Create ROC plot to compare the two models
+    o.plot_roc(debug=False,
+               save=False)
 
     print('\nTime:\n', time.time() - t0)
 

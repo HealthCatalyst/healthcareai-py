@@ -66,7 +66,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
-        # df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
+        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
@@ -85,7 +85,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.040000)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.060000)
 
     def tearDown(self):
         del self.o
@@ -94,7 +94,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 class TestLinearDeploy(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
-        # df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
+        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)
         self.o = DeploySupervisedModel(modeltype='classification',
@@ -112,7 +112,7 @@ class TestLinearDeploy(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.y_pred[5], 6), 0.154754)
+        self.assertAlmostEqual(np.round(self.o.y_pred[5], 5), 0.18087)
 
     def tearDown(self):
         del self.o
