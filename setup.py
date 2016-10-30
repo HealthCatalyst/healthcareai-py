@@ -25,7 +25,7 @@ setup(name='HCPyTools',
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
           'pandas>=0.19.0',
-          'matplotlib>=2.0.0b4,'
+          'matplotlib>=2.0.0b4',
           'ceODBC>=2.0.1',
       ],
       tests_require=[
