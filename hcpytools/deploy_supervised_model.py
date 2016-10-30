@@ -233,9 +233,9 @@ class DeploySupervisedModel(object):
         except ceODBC.DatabaseError:
             print("\nFailed to insert values into {}.".format(
                 dest_db_schema_table))
-            print("""Check that the table exists and that the column structure
-            is correct. \nExample column structure can be found in the docs.
-            \nYour GrainID col might not match that in your input table""")
+            print("Check that the table exists with right col structure")
+            print("Example column structure can be found in the docs")
+            print("Your GrainID col might not match that in your input table")
 
         finally:
             try:
@@ -377,8 +377,8 @@ class DeploySupervisedModel(object):
         except ceODBC.DatabaseError:
             print("\nFailed to insert values into {}.".
                   format(dest_db_schema_table))
-            print("""Was your test insert successful earlier? If so,
-            what might have changed with your entity since then?""")
+            print("Was your test insert successful earlier?")
+            print("If so, what has changed with your entity since then?")
 
         finally:
             try:
