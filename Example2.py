@@ -14,16 +14,32 @@ def main():
 
     t0 = time.time()
 
+    # Load in data
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('hcpytools/tests/fixtures/HCPyDiabetesClinical.csv')
+    df = pd.read_csv('hcpytools/tests/fixtures/HCPyDiabetesClinical.csv',
+                     na_values=['None'])
+
+    # SQL snippet for reading data into dataframe
+    # import pyodbc
+    # cnxn = pyodbc.connect("""SERVER=localhost;
+    #                          DRIVER={SQL Server Native Client 11.0};
+    #                          Trusted_Connection=yes;
+    #                          autocommit=True""")
+    #
+    # df = pd.read_sql(
+    #     sql="""SELECT
+    #            *
+    #            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
+    #     con=cnxn)
+    #
+    # # Set None string to be None type
+    # df.replace(['None'],[None],inplace=True)
 
     # Look at data that's been pulled in
     print(df.head())
     print(df.dtypes)
 
-    # Step 2: choose a model (here we choose rf) and deploy predictions to db
-
-    # To create a destination table, execute this (or better yet, use SAMD):
+    # To create a destination table, execute in SSMS (or use SAMD):
     # For classification:
     # CREATE TABLE dbo.HCRDeployClassificationBASE(
     #   BindingID float,
