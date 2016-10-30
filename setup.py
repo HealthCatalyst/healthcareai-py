@@ -14,18 +14,19 @@ setup(name='HCPyTools',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
       license='proprietary',
-      description='Tools for healthcare data science',
+      description='Tools for healthcare machine learning',
       long_description=readme(),
-      url='https://community.healthcatalyst.com/community/data-science',
+      url='http://healthcare.ai/',
       packages=[
           'hcpytools',
       ],
       install_requires=[
-          'numpy>=1.11.0',
-          'scipy>=0.17.1',
-          'scikit-learn>=0.17.1',
-          'pandas>=0.18.1',
-          'matplotlib>=1.5.0'
+          'numpy>=1.11.2+mkl',
+          'scipy>=0.18.1',
+          'scikit-learn>=0.18',
+          'pandas>=0.19.0',
+          'matplotlib>=2.0.0b4,'
+          'ceODBC>=2.0.1'
       ],
       tests_require=[
           'nose',
