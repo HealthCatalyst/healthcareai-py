@@ -9,7 +9,7 @@ from hcpytools.tests.helpers import fixture
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         # Convert numeric columns to factor/category columns
@@ -30,7 +30,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)
@@ -52,7 +52,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'), usecols=cols)
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), usecols=cols)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -70,7 +70,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCRDiabetesClinical.csv'))
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
         np.random.seed(42)

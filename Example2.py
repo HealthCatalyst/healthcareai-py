@@ -15,7 +15,7 @@ def main():
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('hcpytools/tests/fixtures/HCRDiabetesClinical.csv')
+    df = pd.read_csv('hcpytools/tests/fixtures/HCPyDiabetesClinical.csv')
 
     # Look at data that's been pulled in
     print(df.head())
