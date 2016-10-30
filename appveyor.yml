@@ -2,10 +2,11 @@ environment:
 
   matrix:
 
-    # For Python versions available on Appveyor, see
-    # http://www.appveyor.com/docs/installed-software#python
+    # Python 2.7.10 is the latest version and is not pre-installed.
 
-    - PYTHON: "C:\\Python35-x64"
+    - PYTHON: "C:\\Python35.2"
+      PYTHON_VERSION: "3.5.2"
+      PYTHON_ARCH: "64"
 
 install:
   # We need wheel installed to build wheels
