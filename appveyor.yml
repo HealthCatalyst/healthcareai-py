@@ -18,7 +18,7 @@ install:
   - ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
