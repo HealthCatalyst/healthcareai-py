@@ -1,3 +1,6 @@
+services:
+  - mssql2012sp1
+
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
@@ -66,6 +69,8 @@ install:
   - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
 
 build_script:
+  # Upload mdf and ldf file for integration tests
+  - ps: iex .\appveyor\CIBuild_DBCreate.ps1
   # Build the compiled extension
   #- "%CMD_IN_ENV% python setup.py build"
   - "python setup.py build"
