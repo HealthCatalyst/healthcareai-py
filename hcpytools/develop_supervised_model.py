@@ -1,4 +1,4 @@
-from sklearn import cross_validation
+from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import roc_curve, auc
@@ -133,7 +133,7 @@ class DevelopSupervisedModel(object):
 
         # Split the dataset in two equal parts
         self.X_train, self.X_test, self.y_train, self.y_test = \
-            cross_validation.train_test_split(
+            model_selection.train_test_split(
                 X, y, test_size=.20, random_state=0)
 
         if debug:
