@@ -46,10 +46,10 @@ install:
   #- "pip install --disable-pip-version-check --user --upgrade pip"
 
   # We need wheel installed to build wheels
-  - "conda install wheel"
+  - "conda install wheel --yes"
 
   # Upgrade setuptools
-  - "conda install --upgrade setuptools"
+  - "conda install --update --yes setuptools"
 
   # Install pyodbc from github (doesn't work with 3.5 from PyPI)
   #- "clone https://github.com/mkleehammer/pyodbc.git"
@@ -63,7 +63,7 @@ install:
 
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
-  - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install"
+  - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
 
 build_script:
   # Build the compiled extension
