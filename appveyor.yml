@@ -7,9 +7,8 @@ environment:
 
   matrix:
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5.0"
-      PYTHON_ARCH: "64"
+    - PYTHON_VERSION: 3.5
+      MINICONDA: C:\Miniconda35-x64
 
 install:
 
@@ -61,6 +60,9 @@ build_script:
   - "%CMD_IN_ENV% python setup.py build"
 
 test_script:
+  # From here: https://github.com/rmcgibbo/python-appveyor-conda-example/blob/master/appveyor.yml
+  - "%CMD_IN_ENV% conda build conda-recipe --quiet"
+
   # Run the project tests
   - "%CMD_IN_ENV% python setup.py nosetests"
 
