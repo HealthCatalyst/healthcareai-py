@@ -4,7 +4,7 @@ HCPyTools
 .. image:: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master?svg=true
     :target: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master
 
-The aim of ``HCPyTools`` is to make it easy to do data science with healthcare
+The aim of ``HCPyTools`` is to streamline machine learning in healthcare
 data. The package has two main goals:
 
 -  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to SQL Server.
