@@ -7,8 +7,11 @@ environment:
 
   matrix:
 
-    - PYTHON_VERSION: 3.5
-      MINICONDA: C:\Miniconda35-x64
+    - PYTHON: "C:\\Python35_64"
+      PYTHON_VERSION: "3.5"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "34"
+      CONDA_NPY: "18"
 
 install:
 
