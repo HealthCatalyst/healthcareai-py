@@ -54,7 +54,7 @@ install:
 
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
-  - "cat requirements.txt | xargs %CMD_IN_ENV% pip install"
+  - "cat dev-requirements.txt | xargs %CMD_IN_ENV% pip install"
 
 build_script:
   # Build the compiled extension
