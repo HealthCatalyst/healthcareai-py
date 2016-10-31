@@ -87,9 +87,9 @@ test_script:
 
 after_test:
   # If tests are successful, create binary packages for the project.
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
-  - "%CMD_IN_ENV% python setup.py bdist_wininst"
-  - "%CMD_IN_ENV% python setup.py bdist_msi"
+  - "python setup.py bdist_wheel"
+  - "python setup.py bdist_wininst"
+  - "python setup.py bdist_msi"
   - ps: "ls dist"
 
 artifacts:
