@@ -22,8 +22,8 @@ install:
 #  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
 
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
+  #- conda config --set always_yes yes --set changeps1 no
+  #- conda update -q conda
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
