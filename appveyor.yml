@@ -27,9 +27,9 @@ install:
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+  #- ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
   # Previous line gives error in conda
-  #- powershell .\\appveyor\\install.ps1
+  - powershell .\\appveyor\\install.ps1
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
@@ -43,13 +43,13 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  #- "pip install --disable-pip-version-check --user --upgrade pip"
 
   # We need wheel installed to build wheels
-  - "pip install wheel"
+  - "conda install wheel"
 
   # Upgrade setuptools
-  - "pip install --upgrade setuptools"
+  - "conda install --upgrade setuptools"
 
   # Install pyodbc from github (doesn't work with 3.5 from PyPI)
   #- "clone https://github.com/mkleehammer/pyodbc.git"
@@ -63,7 +63,7 @@ install:
 
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
-  - "cat dev-requirements.txt | xargs -n 1 -L 1 pip install"
+  - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install"
 
 build_script:
   # Build the compiled extension
