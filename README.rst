@@ -1,6 +1,9 @@
 HCPyTools
 ---------
 
+.. image:: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master?svg=true
+    :target: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master
+
 The aim of ``HCPyTools`` is to make it easy to do data science with healthcare
 data. The package has two main goals:
 
