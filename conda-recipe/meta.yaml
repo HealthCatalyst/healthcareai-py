@@ -7,11 +7,11 @@ package:
 requirements:
   build:
     - python
-    - numpy>=1.11.2+mkl
-    - pandas>=0.19.0
-    - pyodbc>=3.0.10
-    - scikit-learn>=0.18
-    - scipy>=0.18.1
+    - numpy >=1.11.2+mkl
+    - pandas >=0.19.0
+    - pyodbc >=3.0.10
+    - scikit-learn >=0.18
+    - scipy >=0.18.1
     - setuptools
 
   run:
