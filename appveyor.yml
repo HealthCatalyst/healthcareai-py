@@ -43,10 +43,9 @@ install:
   - "pip install --upgrade setuptools"
 
   # Install pyodbc from github (doesn't work with 3.5 from PyPI)
-
-  - "clone https://github.com/mkleehammer/pyodbc.git"
-  - "setup.py build"
-  - "setup.py install"
+  #- "clone https://github.com/mkleehammer/pyodbc.git"
+  #- "setup.py build"
+  #- "setup.py install"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
