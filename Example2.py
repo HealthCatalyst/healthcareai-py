@@ -15,7 +15,7 @@ def main():
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('hcpytools/HREmployeeDeploy.csv')
+    df = pd.read_csv('hcpytools/tests/fixtures/HCPyDiabetesClinical.csv')
 
     # Look at data that's been pulled in
     print(df.head())
@@ -26,8 +26,11 @@ def main():
     # To create a destination table, execute this (or better yet, use SAMD):
     # For classification:
     # CREATE TABLE dbo.HCRDeployClassificationBASE(
-    #   BindingID float, BindingNM varchar(255), LastLoadDTS datetime2,
-    #   GrainID int, PredictedProbNBR decimal(38, 2),
+    #   BindingID float,
+    #   BindingNM varchar(255),
+    #   LastLoadDTS datetime2,
+    #   PatientEncounterID int, # Change to the Grain col of your data
+    #   PredictedProbNBR decimal(38, 2),
     #   Factor1TXT varchar(255),
     #   Factor2TXT varchar(255),
     #   Factor3TXT varchar(255)
@@ -35,28 +38,31 @@ def main():
 
     # For regression:
     # CREATE TABLE dbo.HCRDeployRegressionBASE(
-    #   BindingID float, BindingNM varchar(255), LastLoadDTS datetime2,
-    #   GrainID int, PredictedValueNBR decimal(38, 2),
+    #   BindingID float,
+    #   BindingNM varchar(255),
+    #   LastLoadDTS datetime2,
+    #   PatientEncounterID int, # Change to the Grain col of your data
+    #   PredictedValueNBR decimal(38, 2),
     #   Factor1TXT varchar(255),
     #   Factor2TXT varchar(255),
     #   Factor3TXT varchar(255)
     # )
 
-    # Convert numeric columns to factor/category columns
-    df['OrganizationLevel'] = df['OrganizationLevel'].astype(object)
+    # Drop columns that won't help machine learning
+    df.drop('PatientID', axis=1, inplace=True)
 
     p = DeploySupervisedModel(modeltype='regression',
                               df=df,
-                              graincol='GrainID',
-                              windowcol='InTestWindow',
-                              predictedcol='SickLeaveHours',
+                              graincol='PatientEncounterID',
+                              windowcol='InTestWindowFLG',
+                              predictedcol='LDLNBR',
                               impute=True,
                               debug=False)
 
     p.deploy(method='rf',
-             cores=4,
+             cores=2,
              server='localhost',
-             dest_db_schema_table='[SAM].[dbo].[HCPyDeployClassificationBASE]',
+             dest_db_schema_table='[SAM].[dbo].[HCPyDeployRegressionBASE]',
              use_saved_model=False,
              trees=200,
              debug=False)

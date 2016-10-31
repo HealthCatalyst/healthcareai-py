@@ -94,3 +94,9 @@ ENV/
 
 # Health Catalyst
 .idea/
+
+#Compiled python modules
+*.pyc
+
+#Pickled results
+*.pkl

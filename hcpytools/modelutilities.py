@@ -1,6 +1,5 @@
 from sklearn.grid_search import GridSearchCV
-from sklearn.metrics import roc_auc_score, cohen_kappa_score
-from sklearn.metrics import precision_score, recall_score
+from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.externals import joblib
@@ -67,7 +66,7 @@ def clfreport(modeltype,
         if modeltype == 'classification':
             y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(
                 X_test)[:, 1])
-            y_pred_class = clf.fit(X_train, y_train).predict(X_test)
+            #y_pred_class = clf.fit(X_train, y_train).predict(X_test)
         elif modeltype == 'regression':
             y_pred = clf.fit(X_train, y_train).predict(X_test)
 
@@ -82,12 +81,11 @@ def clfreport(modeltype,
         if modeltype == 'classification':
             print('\nMetrics:')
             roc_auc = roc_auc_score(y_test, y_pred)
-            print('AUC Score:', roc_auc)
-            print('The following metrics are very sensitive to cut point:')
-            print('Kappa:', cohen_kappa_score(y_test, y_pred_class))
-            print('Recall/Sensitivity:', recall_score(y_test, y_pred_class))
-            print('Precision/PPV:', precision_score(y_test,
-                                                    y_pred_class), '\n')
+            print('AU_ROC Score:', roc_auc)
+
+            precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
+            pr_auc = auc(recall, precision)
+            print('\nAU_PR Score:', pr_auc)
 
         elif modeltype == 'regression':
             print('##########################################################')
@@ -239,7 +237,7 @@ def write_feature_importances(importance_attr, col_list):
     Nothing. Simply prints feature importance list to console.
     """
     indices = np.argsort(importance_attr)[::-1]
-    print('Variable importance:')
+    print('\nVariable importance:')
     for f in range(0, len(col_list)):
         print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
                                importance_attr[indices[f]]))
