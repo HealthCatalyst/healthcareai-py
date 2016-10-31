@@ -9,8 +9,11 @@ from hcpytools.tests.helpers import fixture
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
-        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+                         na_values=['None'])
+
+        # Drop uninformative columns
+        df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         # Convert numeric columns to factor/category columns
         np.random.seed(42)
@@ -22,7 +25,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.959630)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.965070)
 
     def tearDown(self):
         del self.o
@@ -30,8 +33,11 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
-        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+                         na_values=['None'])
+
+        # Drop uninformative columns
+        df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -43,7 +49,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.959439)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.968028)
 
     def tearDown(self):
         del self.o
@@ -52,7 +58,9 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), usecols=cols)
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+                         na_values=['None'],
+                         usecols=cols)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -70,8 +78,11 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'))
-        df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+                         na_values=['None'])
+
+        # Drop uninformative columns
+        df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
@@ -82,7 +93,7 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
     def runTest(self):
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.671311)
+        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.671884)
 
     def tearDown(self):
         del self.o

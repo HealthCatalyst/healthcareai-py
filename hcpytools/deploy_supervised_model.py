@@ -4,7 +4,7 @@ from hcpytools.impute_custom import DataFrameImputer
 from hcpytools import modelutilities
 import numpy as np
 import pandas as pd
-import ceODBC
+import pyodbc
 import datetime
 import math
 
@@ -204,7 +204,7 @@ class DeploySupervisedModel(object):
             print(type(self.graincol_test.iloc[0]))
 
         # First, check the connection by inserting test data (and rolling back)
-        cecnxn = ceODBC.connect("""DRIVER={SQL Server Native Client 11.0};
+        cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                    SERVER=""" + server + """;
                                    Trusted_Connection=yes;""")
         cursor = cecnxn.cursor()
@@ -230,7 +230,7 @@ class DeploySupervisedModel(object):
                 dest_db_schema_table))
             print("SQL insert successfuly rolled back (since it was a test).")
 
-        except ceODBC.DatabaseError:
+        except pyodbc.DatabaseError:
             print("\nFailed to insert values into {}.".format(
                 dest_db_schema_table))
             print("Check that the table exists with right col structure")
@@ -240,7 +240,7 @@ class DeploySupervisedModel(object):
         finally:
             try:
                 cecnxn.close()
-            except ceODBC.DatabaseError:
+            except pyodbc.DatabaseError:
                 print("""\nAn attempt to complete a transaction has failed.
                 No corresponding transaction found. \nPerhaps you don''t have
                 permission to write to this server.""")
@@ -358,7 +358,7 @@ class DeploySupervisedModel(object):
             print('\nTop rows of 2-d list immediately before insert into db')
             print(pd.DataFrame(output_2dlist[0:3]).head())
 
-        cecnxn = ceODBC.connect("""DRIVER={SQL Server Native Client 11.0};
+        cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                    SERVER=""" + server + """;
                                    Trusted_Connection=yes;""")
         cursor = cecnxn.cursor()
@@ -369,12 +369,13 @@ class DeploySupervisedModel(object):
                                self.graincol + """,""" + predictedvalcol + """,
                                Factor1TXT, Factor2TXT, Factor3TXT)
                                values (?,?,?,?,?,?,?,?)""", output_2dlist)
-            affected_count = cursor.rowcount
             cecnxn.commit()
-            print("\nSuccessfully inserted {} rows into {}.".
-                  format(affected_count, dest_db_schema_table))
 
-        except ceODBC.DatabaseError:
+            # Todo: count and display (via pyodbc) how many rows inserted
+            print("\nSuccessfully inserted rows into {}.".
+                  format(dest_db_schema_table))
+
+        except pyodbc.DatabaseError:
             print("\nFailed to insert values into {}.".
                   format(dest_db_schema_table))
             print("Was your test insert successful earlier?")
@@ -383,7 +384,7 @@ class DeploySupervisedModel(object):
         finally:
             try:
                 cecnxn.close()
-            except ceODBC.DatabaseError:
+            except pyodbc.DatabaseError:
                 print("""\nAn attempt to complete a transaction has failed.
                       No corresponding transaction found. \nPerhaps you don't
                       have permission to write to this server.""")
