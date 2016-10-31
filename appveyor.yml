@@ -7,21 +7,20 @@ environment:
 
   matrix:
 
-    - PYTHON: "C:\\Python35_64"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "34"
-      CONDA_NPY: "18"
+    - PYTHON_VERSION: 3.5-x64
+      MINICONDA: C:\Miniconda35-x64
 
 install:
 
-  - ECHO "Filesystem root:"
-  - ps: "ls \"C:/\""
+#  - ECHO "Filesystem root:"
+#  - ps: "ls \"C:/\""
+#
+#  - ECHO "Installed SDKs:"
+#  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
-  - ECHO "Installed SDKs:"
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
-
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "set PATH=%MINICONDA%;%MINICONDA%\\Scripts;%PATH%"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
 
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
