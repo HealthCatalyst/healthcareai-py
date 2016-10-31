@@ -74,8 +74,8 @@ build_script:
 test_script:
   # From here: https://github.com/rmcgibbo/python-appveyor-conda-example/blob/master/appveyor.yml
 
-  - "conda install conda-build --yes"
-  - "conda build conda-recipe --quiet"
+  #- "conda install conda-build --yes"
+  #- "conda build conda-recipe --quiet"
 
   # Run the project tests
   - python setup.py nosetests"

@@ -43,8 +43,8 @@ test:
     requires:
         - nose
     commands:
-        - nosetests --exe pyappveyordemo
+        - nosetests --exe hcpytools
 
 about:
-  home: https://github.com/rmcgibbo/python-appveyor-conda-example
+  home: http://healthcare.ai
   license: MIT
