@@ -1,8 +1,9 @@
 HCPyTools
 ---------
-
-.. image:: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master?svg=true
-    :target: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master
+    
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/0qmnsbtxjbcj33nc/branch/master?svg=true&style=flat&label=AppVeyor
+    :alt: AppVeyor Build Status
+    :target: https://ci.appveyor.com/project/CatalystAdmin/hcpytools/branch/master
 
 The aim of ``HCPyTools`` is to streamline machine learning in healthcare
 data. The package has two main goals:
