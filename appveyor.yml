@@ -49,7 +49,7 @@ install:
   - "conda install wheel --yes"
 
   # Upgrade setuptools
-  - "conda install --update --yes setuptools"
+  - "conda update --yes setuptools"
 
   # Install pyodbc from github (doesn't work with 3.5 from PyPI)
   #- "clone https://github.com/mkleehammer/pyodbc.git"
