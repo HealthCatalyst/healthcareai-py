@@ -67,14 +67,16 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build"
+  #- "%CMD_IN_ENV% python setup.py build"
+  - "python setup.py build"
+  - "python setup.py install"
 
 test_script:
   # From here: https://github.com/rmcgibbo/python-appveyor-conda-example/blob/master/appveyor.yml
-  - "%CMD_IN_ENV% conda build conda-recipe --quiet"
+  - "conda build conda-recipe --quiet"
 
   # Run the project tests
-  - "%CMD_IN_ENV% python setup.py nosetests"
+  - python setup.py nosetests"
 
 after_test:
   # If tests are successful, create binary packages for the project.
