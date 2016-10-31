@@ -1,5 +1,5 @@
 package:
-  name: HCPyTools
+  name: hcpytools
   # version: "1.0"
   # the version is actually being set by the __conda_version__.txt file
   # http://conda.pydata.org/docs/build.html#post-build-version
