@@ -5,8 +5,8 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from hcpytools import modelutilities
-from hcpytools.impute_custom import DataFrameImputer
+from healthcareai import modelutilities
+from healthcareai.impute_custom import DataFrameImputer
 import os
 
 
@@ -101,7 +101,7 @@ class DevelopSupervisedModel(object):
 
         #CALL new function!!
         # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Note that this makes hcpytools only handle N/Y in pred column
+        # Note that this makes healthcareai only handle N/Y in pred column
         if self.modeltype == 'classification':
             # Turning off warning around replace
             pd.options.mode.chained_assignment = None  # default='warn'

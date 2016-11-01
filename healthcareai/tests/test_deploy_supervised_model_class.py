@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from hcpytools import DeploySupervisedModel
-from hcpytools.tests.helpers import fixture
+from healthcareai import DeploySupervisedModel
+from healthcareai.tests.helpers import fixture
 
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):

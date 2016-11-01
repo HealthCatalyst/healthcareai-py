@@ -1,7 +1,7 @@
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from hcpytools.impute_custom import DataFrameImputer
-from hcpytools import modelutilities
+from healthcareai.impute_custom import DataFrameImputer
+from healthcareai import modelutilities
 import numpy as np
 import pandas as pd
 import pyodbc
@@ -97,7 +97,7 @@ class DeploySupervisedModel(object):
 
         #Call new function!!
         # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Makes it so that hcpytools only handles N/Y in pred column
+        # Makes it so that healthcareai only handles N/Y in pred column
         if modeltype == 'classification':
             # Turning off warning around replace
             # pd.options.mode.chained_assignment = None  # default='warn'

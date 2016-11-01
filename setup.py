@@ -9,7 +9,7 @@ def readme():
         return f.read()
 
 
-setup(name='HCPyTools',
+setup(name='healthcareai-py',
       version='0.1.7',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
@@ -18,7 +18,7 @@ setup(name='HCPyTools',
       long_description=readme(),
       url='http://healthcare.ai/',
       packages=[
-          'hcpytools',
+          'healthcareai',
       ],
       install_requires=[
           'matplotlib>=1.5.3',

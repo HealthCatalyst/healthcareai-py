@@ -1,2 +1,2 @@
 include README.rst
-include hcpytools/tests/fixtures/HCPyDiabetesClinical.csv
+include healthcareai/tests/fixtures/HCPyDiabetesClinical.csv

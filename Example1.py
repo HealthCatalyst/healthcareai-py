@@ -3,7 +3,7 @@ It provides examples of reading from both csv and SQL Server. Note that this
 example can be run as-is after installing HCPyTools. After you have
 found that one of the models works well on your data, move to Example2
 """
-from hcpytools import DevelopSupervisedModel
+from healthcareai import DevelopSupervisedModel
 import pandas as pd
 import time
 
@@ -12,7 +12,7 @@ def main():
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('hcpytools/tests/fixtures/HCPyDiabetesClinical.csv',
+    df = pd.read_csv('healthcareai/tests/fixtures/HCPyDiabetesClinical.csv',
                      na_values=['None'])
 
     # SQL snippet for reading data into dataframe

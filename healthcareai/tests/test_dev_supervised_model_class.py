@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from hcpytools import DevelopSupervisedModel
-from hcpytools.tests.helpers import fixture
+from healthcareai import DevelopSupervisedModel
+from healthcareai.tests.helpers import fixture
 
 
 class TestRFDevTuneFalse(unittest.TestCase):

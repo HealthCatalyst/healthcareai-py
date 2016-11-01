@@ -1,4 +1,4 @@
-from hcpytools.impute_custom import DataFrameImputer
+from healthcareai.impute_custom import DataFrameImputer
 import pandas as pd
 import numpy as np
 import unittest

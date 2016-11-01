@@ -1,5 +1,5 @@
 package:
-  name: hcpytools
+  name: healthcareai
   # version: "1.0"
   # the version is actually being set by the __conda_version__.txt file
   # http://conda.pydata.org/docs/build.html#post-build-version
@@ -44,7 +44,7 @@ test:
     requires:
         - nose
     commands:
-        - nosetests --exe hcpytools
+        - nosetests --exe healthcareai
 
 about:
   home: http://healthcare.ai
