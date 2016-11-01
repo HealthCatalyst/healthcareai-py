@@ -9,8 +9,7 @@ HCPyTools
    
 |
 
-The aim of ``HCPyTools`` is to streamline machine learning in healthcare
-data. The package has two main goals:
+The aim of ``HCPyTools`` is to streamline machine learning in healthcare. The package has two main goals:
 
 -  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to SQL Server.
 
