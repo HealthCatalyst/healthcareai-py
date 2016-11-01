@@ -95,9 +95,9 @@ Installation
 Docker
 ++++++
 
-To install using docker, run ``docker build -t hcpytools .``
+To install using docker, run ``docker build -t healthcareai .``
 
-Then you can run the docker instance with ``docker run hcpytools`` and you should
+Then you can run the docker instance with ``docker run -p 8888:8888 healthcareai`` and you should
 have a jupyter notebook available on ``http://localhost:8888``.
 
 Docker Compose
