@@ -38,6 +38,7 @@ requirements:
     - six ==1.10.0
     - snowballstemmer ==1.2.1
     - Sphinx ==1.4.8
+    - sphinx_rtd_theme ==0.1.9
 
 test:
     requires:
