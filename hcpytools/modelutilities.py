@@ -1,4 +1,4 @@
-from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.linear_model import LogisticRegression, LinearRegression
