@@ -39,31 +39,6 @@ def main():
     print(df.head())
     print(df.dtypes)
 
-    # To create a destination table, execute in SSMS (or use SAMD):
-    # For classification:
-    # CREATE TABLE dbo.HCRDeployClassificationBASE(
-    #   BindingID float,
-    #   BindingNM varchar(255),
-    #   LastLoadDTS datetime2,
-    #   PatientEncounterID int, # Change to the Grain col of your data
-    #   PredictedProbNBR decimal(38, 2),
-    #   Factor1TXT varchar(255),
-    #   Factor2TXT varchar(255),
-    #   Factor3TXT varchar(255)
-    # )
-
-    # For regression:
-    # CREATE TABLE dbo.HCRDeployRegressionBASE(
-    #   BindingID float,
-    #   BindingNM varchar(255),
-    #   LastLoadDTS datetime2,
-    #   PatientEncounterID int, # Change to the Grain col of your data
-    #   PredictedValueNBR decimal(38, 2),
-    #   Factor1TXT varchar(255),
-    #   Factor2TXT varchar(255),
-    #   Factor3TXT varchar(255)
-    # )
-
     # Drop columns that won't help machine learning
     df.drop('PatientID', axis=1, inplace=True)
 
