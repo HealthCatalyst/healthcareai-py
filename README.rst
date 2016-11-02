@@ -9,7 +9,7 @@ healthcareai
    
 |
 
-The aim of ``HCPyTools`` is to streamline machine learning in healthcare. The package has two main goals:
+The aim of ``healthcareai`` is to streamline machine learning in healthcare. The package has two main goals:
 
 -  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to SQL Server.
 
@@ -87,7 +87,12 @@ To render docs, create a virtualenvironment for ``hcpytools``
 Install required python modules
   - Type ``pip install -r dev-requirements.txt``.
 
-Then simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
+For Windows
+ - Run ``sphinx-autobuild docs docs/_build/html`` in the root of the repo
+ - Open a browser to http://127.0.0.1:8000
+
+For non-Windows:
+ - Simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
 
 Installation
 ============
@@ -96,9 +101,8 @@ Docker
 ++++++
 
 To install using docker, run ``docker build -t healthcareai .``
-
-Then you can run the docker instance with ``docker run -p 8888:8888 healthcareai`` and you should
-have a jupyter notebook available on ``http://localhost:8888``.
+Then you can run the docker instance with ``docker run -p 8888:8888 healthcareai`` 
+You should then have a jupyter notebook available on ``http://localhost:8888``.
 
 Docker Compose
 ++++++++++++++
