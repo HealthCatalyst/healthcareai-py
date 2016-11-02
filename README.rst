@@ -18,28 +18,18 @@ The aim of ``healthcareai`` is to streamline machine learning in healthcare. The
 Installation
 =============
 
-- If you haven't, install Python 3.5 via the Windows x86-64 executable installer
- - https://www.python.org/downloads/release/python-352/
- - On the first screen, check 'Add to PATH'
+ - Using Windows
+     - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
+     .. _the Anaconda distribution: https://www.continuum.io/downloads
+     - In CMD or PowerShell, run ``conda install pyodbc``
+     - In CMD or PowerShell, run
+        - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
+ - Using POSIX
+     - Clone this repo (look for the green button on the repo main page)
+     - cd into the cloned directory
+     - ``pip install -r dev-requirements.txt``
+     - `cd` to the the cloned directory and run ``python setup.py install``
 
-- Clone this repo (look for the green button on the repo main page)
-
-- Install the prerequisites
-    - Using Windows
-        - Download and Install the following cp3.5 and amd64 type packages (in this order)
-        - Use cmd or PowerShell to install: ``python -m pip install path\somepackage.whl``
-        - numpy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy
-        - scipy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
-        - scikit-learn from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
-        - pandas http://www.lfd.uci.edu/~gohlke/pythonlibs/#pandas
-        - ceODBC http://www.lfd.uci.edu/~gohlke/pythonlibs/#ceodbc
-        - matplotlib http://www.lfd.uci.edu/~gohlke/pythonlibs/#matplotlib
-    - Using POSIX
-        - cd into the cloned directory
-        - ``pip install -r dev-requirements.txt``
-
-    - `cd` to the the cloned directory and run ``python setup.py install``
-    
 Getting started
 =============
 - Run the examples in the HCPyTools directory and check out this `notebook`_.
