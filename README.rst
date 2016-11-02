@@ -21,10 +21,10 @@ Installation
  - Using Windows
      - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
      .. _the Anaconda distribution: https://www.continuum.io/downloads
-     - In CMD or PowerShell, run ``conda install pyodbc``
-     - In CMD or PowerShell, run
-        - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
- - Using POSIX
+     - Open Spyder (which installed with Anaconda)
+     - run ``conda install pyodbc``
+     - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
+ - Using Linux / OSX
      - Clone this repo (look for the green button on the repo main page)
      - cd into the cloned directory
      - ``pip install -r dev-requirements.txt``
