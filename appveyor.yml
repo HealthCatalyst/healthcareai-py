@@ -69,6 +69,9 @@ after_test:
   - "python setup.py bdist_wheel"
   - "python setup.py bdist_wininst"
   - "python setup.py bdist_msi"
+  - "python setup.py bdist --format=zip"
+  - "python setup.py bdist --format=gztar"
+  
   - ps: "ls dist"
 
 artifacts:
