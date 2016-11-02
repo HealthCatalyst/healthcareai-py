@@ -24,15 +24,14 @@ Installation
      - Open Spyder (which installed with Anaconda)
      - run ``conda install pyodbc``
      - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
- - Using Linux / OSX
+ - Using Linux / OSX (via docker)
      - Install `docker`_
      .. _docker: https://docs.docker.com/engine/installation/
      - Clone this repo (look for the green button on the repo main page)
      - cd into the cloned directory
-     - ``pip install -r dev-requirements.txt``
-     - `cd` to the the cloned directory and run ``python setup.py install``
-
-
+     - run ``docker build -t healthcareai .``
+     - run the docker instance with ``docker run -p 8888:8888 healthcareai`` 
+     - You should then have a jupyter notebook available on ``http://localhost:8888``.
 
 Getting started
 =============
@@ -44,11 +43,13 @@ Getting started
 
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
 
+.. code-block:: sql
+
    CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
        [BindingID] [int] ,
        [BindingNM] [varchar] (255),
        [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
+       [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
        [PredictedProbNBR] [decimal] (38, 2),
        [Factor1TXT] [varchar] (255),
        [Factor2TXT] [varchar] (255),
@@ -58,11 +59,13 @@ Getting started
        [BindingID] [int],
        [BindingNM] [varchar] (255),
        [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
+       [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
        [PredictedValueNBR] [decimal] (38, 2),
        [Factor1TXT] [varchar] (255),
        [Factor2TXT] [varchar] (255),
        [Factor3TXT] [varchar] (255))
+
+Note that we're currently working on easy connections to other types of databases.
 
 Contributing
 =============
@@ -88,18 +91,8 @@ For Windows
 For non-Windows:
  - Simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
 
-Installation
-============
-
-Docker
-++++++
-
-To install using docker, run ``docker build -t healthcareai .``
-Then you can run the docker instance with ``docker run -p 8888:8888 healthcareai`` 
-You should then have a jupyter notebook available on ``http://localhost:8888``.
-
 Docker Compose
-++++++++++++++
+============
 
 With ``docker-compose`` you can spin up a jupyter application and a database instance
 for local development. This is useful for one-off development questions requiring a
