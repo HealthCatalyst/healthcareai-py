@@ -9,7 +9,7 @@ healthcareai
    
 |
 
-The aim of ``HCPyTools`` is to streamline machine learning in healthcare. The package has two main goals:
+The aim of ``healthcareai`` is to streamline machine learning in healthcare. The package has two main goals:
 
 -  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to SQL Server.
 
@@ -18,31 +18,25 @@ The aim of ``HCPyTools`` is to streamline machine learning in healthcare. The pa
 Installation
 =============
 
-- If you haven't, install Python 3.5 via the Windows x86-64 executable installer
- - https://www.python.org/downloads/release/python-352/
- - On the first screen, check 'Add to PATH'
+ - Using Windows
+     - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
+     .. _the Anaconda distribution: https://www.continuum.io/downloads
+     - Open Spyder (which installed with Anaconda)
+     - run ``conda install pyodbc``
+     - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
+ - Using Linux / OSX (via docker)
+     - Install `docker`_
+     .. _docker: https://docs.docker.com/engine/installation/
+     - Clone this repo (look for the green button on the repo main page)
+     - cd into the cloned directory
+     - run ``docker build -t healthcareai .``
+     - run the docker instance with ``docker run -p 8888:8888 healthcareai`` 
+     - You should then have a jupyter notebook available on ``http://localhost:8888``.
 
-- Clone this repo (look for the green button on the repo main page)
-
-- Install the prerequisites
-    - Using Windows
-        - Download and Install the following cp3.5 and amd64 type packages (in this order)
-        - Use cmd or PowerShell to install: ``python -m pip install path\somepackage.whl``
-        - numpy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#numpy
-        - scipy from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scipy
-        - scikit-learn from http://www.lfd.uci.edu/~gohlke/pythonlibs/#scikit-learn
-        - pandas http://www.lfd.uci.edu/~gohlke/pythonlibs/#pandas
-        - ceODBC http://www.lfd.uci.edu/~gohlke/pythonlibs/#ceodbc
-        - matplotlib http://www.lfd.uci.edu/~gohlke/pythonlibs/#matplotlib
-    - Using POSIX
-        - cd into the cloned directory
-        - ``pip install -r dev-requirements.txt``
-
-    - `cd` to the the cloned directory and run ``python setup.py install``
-    
 Getting started
 =============
-- Run the examples in the HCPyTools directory and check out this `notebook`_.
+- Visit `healthcare.ai`_ and check out this `notebook`_.
+.. _healthcare.ai: http://healthcare.ai/py/
 
 .. _notebook: notebooks/HCPyToolsExample1.ipynb
 
@@ -50,11 +44,13 @@ Getting started
 
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
 
+.. code-block:: sql
+
    CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
        [BindingID] [int] ,
        [BindingNM] [varchar] (255),
        [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
+       [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
        [PredictedProbNBR] [decimal] (38, 2),
        [Factor1TXT] [varchar] (255),
        [Factor2TXT] [varchar] (255),
@@ -64,11 +60,13 @@ Getting started
        [BindingID] [int],
        [BindingNM] [varchar] (255),
        [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
+       [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
        [PredictedValueNBR] [decimal] (38, 2),
        [Factor1TXT] [varchar] (255),
        [Factor2TXT] [varchar] (255),
        [Factor3TXT] [varchar] (255))
+
+Note that we're currently working on easy connections to other types of databases.
 
 Contributing
 =============
@@ -87,21 +85,15 @@ To render docs, create a virtualenvironment for ``hcpytools``
 Install required python modules
   - Type ``pip install -r dev-requirements.txt``.
 
-Then simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
+For Windows
+ - Run ``sphinx-autobuild docs docs/_build/html`` in the root of the repo
+ - Open a browser to http://127.0.0.1:8000
 
-Installation
-============
-
-Docker
-++++++
-
-To install using docker, run ``docker build -t healthcareai .``
-
-Then you can run the docker instance with ``docker run -p 8888:8888 healthcareai`` and you should
-have a jupyter notebook available on ``http://localhost:8888``.
+For non-Windows:
+ - Simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
 
 Docker Compose
-++++++++++++++
+============
 
 With ``docker-compose`` you can spin up a jupyter application and a database instance
 for local development. This is useful for one-off development questions requiring a
