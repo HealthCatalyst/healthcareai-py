@@ -7,13 +7,10 @@ Set up Git
 - Choose Use Git from Git Bash only
 - Checkout using Windows-style
 - Chose Mintty
-- Restart RStudio
-- In RStudio, open Tools --> Global Options
- - Look for git.exe in the bin folder in C:\Program Files\Git\bin
 
-Install HCPyTools via these instuctions: https://github.com/HealthCatalystSLC/HCPyTools/blob/master/README.rst
+Install healthcareai via these instuctions: https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/README.rst
 
-Install the IDE and clone the HCPyTools repo
+Install the IDE and clone the healthcareai-py repo
 =============
 
 1)	Install PyCharm Community Edition
@@ -23,9 +20,9 @@ Install the IDE and clone the HCPyTools repo
 3)	Clone repo (if you haven't) via PyCharm -> VCS (at top) -> Checkout from version control -> Github
  - Grab .git url from HCRTools repo in Github
  - Set parent directory to C:/Source
- - Name directory HCPyTools
+ - Name directory healthcareai-py
 
-4)	File -> Open and look for the HCPyTools project (if it didn’t come up already)
+4)	File -> Open and look for the healthcareai project (if it didn’t come up already)
 
 5) Create a destination table for the test predictions by executing this in SSMS:
 
@@ -51,7 +48,7 @@ CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
        
        
 6)	Verify that unit tests pass
- - Right click on tests folder under HCPyTools/hcpytools
+ - Right click on tests folder under healthcareai-py/healthcareai
  - Click on Run Nosetest in test
 
 7)	Create test branch and push it to github
