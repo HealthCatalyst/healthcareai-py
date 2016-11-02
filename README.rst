@@ -4,7 +4,7 @@ healthcareai
 .. image::
    https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true
    :width: 300
-   :target: https://ci.appveyor.com/project/CatalystAdmin/hcpytools
+   :target: https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py
    :alt: Appveyor build status
    
 |
