@@ -25,10 +25,14 @@ Installation
      - run ``conda install pyodbc``
      - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
  - Using Linux / OSX
+     - Install `docker`_
+     .. _docker: https://docs.docker.com/engine/installation/
      - Clone this repo (look for the green button on the repo main page)
      - cd into the cloned directory
      - ``pip install -r dev-requirements.txt``
      - `cd` to the the cloned directory and run ``python setup.py install``
+
+
 
 Getting started
 =============
