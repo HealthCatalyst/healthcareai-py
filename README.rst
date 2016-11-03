@@ -91,10 +91,3 @@ For Windows
 
 For non-Windows:
  - Simply run ``inv docs`` and a new browser window should open to http://127.0.0.1:8001
-
-Docker Compose
-============
-
-With ``docker-compose`` you can spin up a jupyter application and a database instance
-for local development. This is useful for one-off development questions requiring a
-database.
