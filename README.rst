@@ -36,14 +36,13 @@ Installation
 Getting started
 =============
 - Visit `healthcare.ai`_ to read the docs and find examples. Also, see this `notebook`_.
-.. _healthcare.ai: http://healthcare.ai/py/
-
-.. _notebook: notebooks/HCPyToolsExample1.ipynb
 
 - Modify the queries and parameters to match your data
 
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
 
+.. _healthcare.ai: http://healthcare.ai/py/
+.. _notebook: notebooks/HCPyToolsExample1.ipynb
 .. code-block:: sql
 
    CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
