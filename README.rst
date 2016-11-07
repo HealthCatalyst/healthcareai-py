@@ -35,7 +35,7 @@ Installation
 
 Getting started
 =============
-- Visit `healthcare.ai`_
+- Visit `healthcare.ai`_ to read the docs and find examples. Also, see this `notebook`_.
 .. _healthcare.ai: http://healthcare.ai/py/
 
 .. _notebook: notebooks/HCPyToolsExample1.ipynb
