@@ -8,7 +8,11 @@ Set up Git
 - Checkout using Windows-style
 - Chose Mintty
 
-Install healthcareai via these instuctions: https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/README.rst
+Set up healthcare-ai
+====================
+- In terminal, run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
+- ``cd`` to healthcareai-py directory
+- Run ``pip install -r dev-requirements.txt``
 
 Install the IDE and clone the healthcareai-py repo
 =============
@@ -18,9 +22,7 @@ Install the IDE and clone the healthcareai-py repo
 2)	Set path to git.exe via File -> settings -> Version Control -> Git
 
 3)	Clone repo (if you haven't) via PyCharm -> VCS (at top) -> Checkout from version control -> Github
- - Grab .git url from HCRTools repo in Github
- - Set parent directory to C:/Source
- - Name directory healthcareai-py
+ - Grab .git url from healthcareai-py repo in Github
 
 4)	File -> Open and look for the healthcareai project (if it didn’t come up already)
 
