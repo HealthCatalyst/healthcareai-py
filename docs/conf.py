@@ -160,7 +160,9 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
+html_context = {
+    'css_files': ['_static/css/hcstyle.css','http://fonts.googleapis.com/css?family=Open+Sans'],
+}
 # Adding custom theme
 #html_style = 'css/my_theme.css'
 
@@ -345,3 +347,5 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+def setup(app):
+    app.add_stylesheet('css/hcstyle.css')
