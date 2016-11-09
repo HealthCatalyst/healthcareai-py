@@ -46,7 +46,7 @@ install:
   # Install in order of list in dev-requirements.txt
   #- "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
   # Use conda environment defined by conda_env.yml
-  - "conda create -n hcconda --file conda_env.yml"
+  - "conda create"
   - "activate hcconda"
 
 build_script:
