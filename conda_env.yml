@@ -1,4 +1,4 @@
-name: hcconda2
+name: hcconda
 channels: !!python/tuple
 - defaults
 dependencies:
