@@ -5,8 +5,9 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from healthcareai import modelutilities
-from healthcareai.impute_custom import DataFrameImputer
+from healthcareai.common import model_eval
+from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common import filters
 import os
 
 
@@ -66,17 +67,11 @@ class DevelopSupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
-        # CALL new function!!
-        # Remove DTS columns
-        # TODO: make this work with col names shorter than three letters
-        cols = [c for c in self.df.columns if c[-3:] != 'DTS']
-        self.df = self.df[cols]
+        #remove datetime columns
+        self.df = filters.remove_datetime_columns(self.df)
 
         # Remove graincol (if specified)
         if graincol:
-            pd.options.mode.chained_assignment = None  # default='warn'
-            # TODO: Fix this SettingWithCopyWarning: value trying to be set on
-            # a copy of a slice from a DataFrame"
             self.df.drop(graincol, axis=1, inplace=True)
 
         if debug:
@@ -170,7 +165,7 @@ class DevelopSupervisedModel(object):
         else:
             algo = None
 
-        self.y_probab_linear, self.au_roc = modelutilities.clfreport(
+        self.y_probab_linear, self.au_roc = model_eval.clfreport(
                                                 modeltype=self.modeltype,
                                                 debug=debug,
                                                 devcheck='yesdev',
@@ -212,12 +207,12 @@ class DevelopSupervisedModel(object):
             algo = None
 
         params = {'max_features':
-                      modelutilities.calculate_rfmtry(len(self.X_test.columns),
+                      model_eval.calculate_rfmtry(len(self.X_test.columns),
                                                       self.modeltype)}
 
         self.col_list = self.X_train.columns.values
 
-        self.y_probab_rf, self.au_roc, self.rfclf = modelutilities.clfreport(
+        self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
                                                     modeltype=self.modeltype,
                                                     debug=debug,
                                                     devcheck='yesdev',

@@ -1,7 +1,8 @@
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from healthcareai.impute_custom import DataFrameImputer
-from healthcareai import modelutilities
+from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common import model_eval
+from healthcareai.common import filters
 import numpy as np
 import pandas as pd
 import pyodbc
@@ -29,6 +30,7 @@ class DeploySupervisedModel(object):
 
 
         self.modeltype = modeltype
+        self.df = df
         self.graincol = graincol
         self.impute = impute
         self.y_pred = None # Only used for unit test
@@ -40,11 +42,7 @@ class DeploySupervisedModel(object):
             print(df.shape)
             print(df.head())
 
-        #CALL FUNCTION!!
-        # Remove DTS columns
-        # TODO: make this work with col names shorter than three letters
-        cols = [c for c in df.columns if c[-3:] != 'DTS']
-        df = df[cols]
+        self.df = filters.remove_datetime_columns(self.df)
 
         if debug:
             print('\nDataframe after removing DTS columns:')
@@ -54,6 +52,8 @@ class DeploySupervisedModel(object):
             print(df.shape)
 
         pd.options.mode.chained_assignment = None  # default='warn'
+
+
         # TODO: put try/catch here when type = class and pred col is numer
         df.replace('NULL', np.nan, inplace=True)
 
@@ -249,7 +249,7 @@ class DeploySupervisedModel(object):
 
             algorithm = LogisticRegression(n_jobs=cores)
 
-            self.y_pred = modelutilities.clfreport(
+            self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
                 devcheck='notdev',
@@ -263,7 +263,7 @@ class DeploySupervisedModel(object):
 
             algorithm = LinearRegression(n_jobs=cores)
 
-            self.y_pred = modelutilities.clfreport(
+            self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
                 devcheck='notdev',
@@ -275,7 +275,7 @@ class DeploySupervisedModel(object):
 
         if self.modeltype == 'classification' and method == 'rf':
 
-            # TODO: think about moving this to modelutilities mtry function
+            # TODO: think about moving this to model_eval mtry function
             if not mtry:
                 mtry = math.floor(math.sqrt(len(self.X_train.columns.values)))
 
@@ -286,7 +286,7 @@ class DeploySupervisedModel(object):
                                                    2 if debug is True else 0)
                                                )
 
-            self.y_pred = modelutilities.clfreport(
+            self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
                 devcheck='notdev',
@@ -298,7 +298,7 @@ class DeploySupervisedModel(object):
 
         elif self.modeltype == 'regression' and method == 'rf':
 
-            # TODO: think about moving this to modelutilities mtry function
+            # TODO: think about moving this to model_eval mtry function
             if not mtry:
                 mtry = math.floor(len(self.X_train.columns.values)/3)
 
@@ -309,7 +309,7 @@ class DeploySupervisedModel(object):
                                                   2 if debug is True else 0)
                                               )
 
-            self.y_pred = modelutilities.clfreport(
+            self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
                 devcheck='notdev',
@@ -320,7 +320,7 @@ class DeploySupervisedModel(object):
                 use_saved_model=use_saved_model)
 
         # Calculate three imp columns
-        first_fact, second_fact, third_fact = modelutilities. \
+        first_fact, second_fact, third_fact = model_eval. \
             findtopthreefactors(debug,
                                 self.X_train,
                                 self.y_train,
