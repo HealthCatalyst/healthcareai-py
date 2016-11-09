@@ -22,7 +22,7 @@ setup(name='healthcareai-py',
       ],
       install_requires=[
           'matplotlib>=1.5.3',
-          'numpy>=1.11.2+mkl',
+          'numpy>=1.11.2',
           'pandas>=0.19.0',
           'pyodbc>=3.0.10',
           'scipy>=0.18.1',
