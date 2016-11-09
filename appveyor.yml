@@ -44,7 +44,10 @@ install:
 
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
-  - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
+  #- "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
+  # Use conda environment defined by conda_env.yml
+  - "conda create -n hcconda --file conda_env.yml"
+  - "activate hcconda"
 
 build_script:
   # Upload mdf and ldf file for integration tests
