@@ -32,10 +32,10 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # We need wheel installed to build wheels
-  # - "conda install wheel --yes"
+  - "conda install wheel --yes"
 
   # Upgrade setuptools
-  # - "conda update --yes setuptools"
+  - "conda update --yes setuptools"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
