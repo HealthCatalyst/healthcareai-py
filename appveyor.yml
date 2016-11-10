@@ -32,10 +32,7 @@ install:
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
   # We need wheel installed to build wheels
-  # - "conda install wheel --yes"
-
-  # Upgrade setuptools
-  #- "conda update --yes setuptools"
+  - "conda install wheel --yes"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
@@ -45,7 +42,7 @@ install:
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
   #- "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
-  # Use conda environment defined by conda_env.yml
+  # Use conda environment defined by environment.yml
   - "conda env create"
   - "activate hcconda"
 
