@@ -6,13 +6,16 @@ Set up Git
 - Download and install Git for Windows: https://git-scm.com/download/win
 - Choose Use Git from Git Bash only
 - Checkout using Windows-style
-- Chose Mintty
+- Choose Mintty
 
 Set up healthcare-ai
 ====================
+- Download Anaconda for Windows (Python 3.5) https://www.continuum.io/downloads
 - In terminal, run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
 - ``cd`` to healthcareai-py directory
-- Run ``pip install -r dev-requirements.txt``
+- In terminal, run ``conda env create`` to create the hcconda virtual environment
+- To activate your virtual environment, in terminal run ``activate hcconda`` (or ``source activate hcconda`` if using bash)
+- To set hcconda as your default conda environment (not required), run ``conda config --set core.default_env=hcconda``
 
 Install the IDE and clone the healthcareai-py repo
 =============
