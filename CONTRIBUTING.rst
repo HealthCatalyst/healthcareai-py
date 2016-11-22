@@ -1,10 +1,10 @@
 How to set up your dev environment (Windows-specific)
 -------------------
 
-Set up Git
+Set up git
 =============
-- Download and install Git for Windows: https://git-scm.com/download/win
-- Choose Use Git from Git Bash only
+- Download and install git for Windows: https://git-scm.com/download/win
+- Choose "Use Git from Git Bash" only
 - Checkout using Windows-style
 - Choose Mintty
 
@@ -115,3 +115,5 @@ Set up your email and username for git (otherwise no attribution in github)
  .. _Step1: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
  .. _Step2: https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
  .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
+ 
+ 4) Make git case sensitive: ``git config core.ignorecase false``
