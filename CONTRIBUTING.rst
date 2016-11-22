@@ -116,4 +116,4 @@ Set up your email and username for git (otherwise no attribution in github)
  .. _Step2: https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
  .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
  
- 4) Make git case sensitive: ``git config core.ignorecase false``
+4) Make git case sensitive: ``git config core.ignorecase false``
