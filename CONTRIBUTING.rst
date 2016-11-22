@@ -4,9 +4,11 @@ How to set up your dev environment (Windows-specific)
 Set up git
 =============
 - Download and install git for Windows: https://git-scm.com/download/win
-- Choose "Use Git from Git Bash" only
+- Choose "64-bit Git for Windows Setup"
+- On the Select Components screen, accept the defaults
+- After selecting install location, choose "Use Git from the Windows Command Prompt"
 - Checkout using Windows-style
-- Choose Mintty
+- Choose MinTTy
 
 Set up healthcare-ai
 ====================
