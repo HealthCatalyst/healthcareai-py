@@ -53,7 +53,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'healthcareai'
+project = 'healthcare.ai'
 copyright = '2016, Health Catalyst'
 author = 'Health Catalyst'
 
