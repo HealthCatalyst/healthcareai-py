@@ -34,9 +34,6 @@ install:
   # We need wheel installed to build wheels
   - "conda install wheel --yes"
 
-  # Upgrade setuptools
-  - "conda update --yes setuptools"
-
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
@@ -44,7 +41,10 @@ install:
 
   #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
   # Install in order of list in dev-requirements.txt
-  - "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
+  #- "cat dev-requirements.txt | xargs -n 1 -L 1 conda install --yes"
+  # Use conda environment defined by environment.yml
+  - "conda env create"
+  - "activate hcconda"
 
 build_script:
   # Upload mdf and ldf file for integration tests
