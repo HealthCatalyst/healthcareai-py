@@ -1,5 +1,5 @@
-How do I begin?
----------------
+Hints and tips
+--------------
 
 Gathering the data
 ##################
