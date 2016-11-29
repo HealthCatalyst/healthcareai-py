@@ -1,0 +1,75 @@
+*{
+    font-family: 'Open Sans', sans-serif;
+ }
+
+h1 {
+    color: #333333;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 30px;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+h2 {
+    color: #006D9A;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+h3 {
+    color: #6D6E70;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 22px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+h4 {
+    color: #333333;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 18px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+p {
+    color: #333333;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.wy-side-nav-search{
+    background-color: #0e6e9c ;
+}
+.wy-nav-side{
+    background-color: #094765 ;
+    color: #74D0D6;
+}
+.wy-menu-vertical span{
+    color: #00AEEF;
+}
+.wy-menu-vertical .subnav a{
+    color: #fff;
+}
+.wy-menu-vertical li.current a{
+    color: #333;
+    background-color: #fff;
+}
+.wy-menu-vertical li.on a, .wy-menu-vertical li.current>a{
+    background-color: #fff;
+    color: #00AEEF;
+}
+/*.wy-menu-vertical a:hover{
+    background-color:#00AEEF;
+    background-color:#d6d6d6;
+}*/
+.wy-menu-vertical a:hover{
+    background-color:#00AEEF;
+}
+.wy-menu-vertical a{
+    color: #fff;
+}
