@@ -82,17 +82,17 @@ Code Housekeeping
  - pyflakes
     
 2) Set these up via http://www.mantidproject.org/How_to_run_Pylint#PyCharm_-_JetBrains
- - If your python is installed in C:\Pythonxx, then your parameters will be:
-  - Program: C:\Python34\Scripts\pylint.exe
-  - Parameters: $FilePath$
-  - Working dir: C:\Python34\Scripts
+ - If your python is installed in ``C:\Pythonxx``, then your parameters will be:
+  - Program: ``C:\Python34\Scripts\pylint.exe``
+  - Parameters: ``$FilePath$``
+  - Working dir: ``C:\Python34\Scripts``
  - If you are using a different Python distribution, you may need to find where Pylint is installed.  For example, the same three parameters from above might be:
-  - C:\Users\user.name \AppData\Local\Continuum\Anaconda3\Scripts\pylint
-  - Parameters: $FilePath$
-  - C:\Users\david.healey\AppData\Local\Continuum\Anaconda3\Scripts
+  - ``C:\Users\user.name\AppData\Local\Continuum\Anaconda3\Scripts\pylint``
+  - Parameters: ``$FilePath$``
+  - ``C:\Users\user.name\AppData\Local\Continuum\Anaconda3\Scripts``
 
- - Instead of using default parameter, use $FilePath$
- - For Anaconda, you may have to use C:\Users\user.name \AppData\Local\Continuum\Anaconda3\Scripts\pylint
+ - Instead of using default parameter, use ``$FilePath$``
+ - For Anaconda, you may have to use ``C:\Users\user.name\AppData\Local\Continuum\Anaconda3\Scripts\pylint``
  - Check all boxes
     
 3) Make sure pylint and pyflakes work
