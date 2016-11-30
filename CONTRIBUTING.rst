@@ -3,12 +3,20 @@ How to set up your dev environment (Windows-specific)
 
 Set up git
 =============
-- Download and install git for Windows: https://git-scm.com/download/win
+
+This is for Windows; see `this`_ for macOS and `this link`_ for linux
+
+.. _this: https://developer.apple.com/xcode/
+.. _this link: https://git-scm.com/download/linux
+
+- `Download and install`_ git for Windows:
 - Choose "64-bit Git for Windows Setup"
 - On the Select Components screen, accept the defaults
 - After selecting install location, choose "Use Git from the Windows Command Prompt"
 - Checkout using Windows-style
 - Choose MinTTy
+
+.. _Download and install: https://git-scm.com/download/
 
 Set up healthcare-ai
 ====================
