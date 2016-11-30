@@ -42,27 +42,35 @@ Install the IDE and clone the healthcareai-py repo
 
 4)	File -> Open and look for the healthcareai project (if it didn’t come up already)
 
-5) Create a destination table for the test predictions by executing this in SSMS:
+5) Set up SQL Server, if you haven't already
+ - If on Windows, `install`_ both SQL Server Express and SSMS Express
+ - Create tables (on localhost) to receive predictive output using the code below (use SSMS if on Windows):
 
-CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
-       [BindingID] [int] ,
-       [BindingNM] [varchar] (255),
-       [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
-       [PredictedProbNBR] [decimal] (38, 2),
-       [Factor1TXT] [varchar] (255),
-       [Factor2TXT] [varchar] (255),
-       [Factor3TXT] [varchar] (255))
+.. _install: http://stackoverflow.com/a/11278818/5636012
 
-CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
-       [BindingID] [int],
-       [BindingNM] [varchar] (255),
-       [LastLoadDTS] [datetime2] (7),
-       [PatientEncounterID] [decimal] (38, 0),
-       [PredictedValueNBR] [decimal] (38, 2),
-       [Factor1TXT] [varchar] (255),
-       [Factor2TXT] [varchar] (255),
-       [Factor3TXT] [varchar] (255))
+Note that these will go in the SAM database, if using the Health Catalyst analytics environment
+
+.. code-block:: sql
+
+   CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+          [BindingID] [int] ,
+          [BindingNM] [varchar] (255),
+          [LastLoadDTS] [datetime2] (7),
+          [PatientEncounterID] [decimal] (38, 0),
+          [PredictedProbNBR] [decimal] (38, 2),
+          [Factor1TXT] [varchar] (255),
+          [Factor2TXT] [varchar] (255),
+          [Factor3TXT] [varchar] (255))
+
+   CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+          [BindingID] [int],
+          [BindingNM] [varchar] (255),
+          [LastLoadDTS] [datetime2] (7),
+          [PatientEncounterID] [decimal] (38, 0),
+          [PredictedValueNBR] [decimal] (38, 2),
+          [Factor1TXT] [varchar] (255),
+          [Factor2TXT] [varchar] (255),
+          [Factor3TXT] [varchar] (255))
        
        
 6)	Verify that unit tests pass
