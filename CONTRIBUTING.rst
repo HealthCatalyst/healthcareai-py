@@ -101,15 +101,22 @@ Git config
 =============
 Set up your email and username for git (otherwise no attribution in github)
 
-1) Set git user name and work email
+1) Open the shell (ie, git bash, if on Windows)
+
+2) Set up your email and user name for proper attribution
  - git config user.name "Billy Everyteen"
  -	git config --global user.email "your_email@example.com"
 
-2) Configure line endings for windows: ``git config core.autocrlf true``
+3) Configure line endings for windows: ``git config core.autocrlf true``
 
-3) Make git case sensitive for file names: ``git config core.ignorecase false``
+4) Make git case sensitive for file names: ``git config core.ignorecase false``
 
-3) Set up SSH (if desired) so you can push to topic branch without password
+5) Improve merge conflict resolution via ``git config --global merge.conflictstyle diff3``
+
+6) If you use a personal email for github, and would rather have notifications go to your Health Cataylst email
+ - See `here`_ -> Notification email -> Custom routing
+
+7) Set up SSH (if desired) so you can push to topic branch without password
  - `Step1`_
  - `Step2`_
  - `Step3`_
@@ -117,5 +124,4 @@ Set up your email and username for git (otherwise no attribution in github)
  .. _Step1: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
  .. _Step2: https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
  .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
- 
-4) Make git case sensitive: ``git config core.ignorecase false``
+ .. _here: https://github.com/settings/notifications
