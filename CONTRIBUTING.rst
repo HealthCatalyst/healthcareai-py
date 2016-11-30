@@ -21,7 +21,10 @@ This is for Windows; see `this`_ for macOS and `this link`_ for linux
 Set up healthcare-ai
 ====================
 - Download Anaconda for Windows (Python 3.5) https://www.continuum.io/downloads
-- In terminal, run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
+- Open the terminal (ie git bash, if using Windows)
+- run ``conda install pyodbc``
+- run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
+- run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
 - ``cd`` to healthcareai-py directory
 - In terminal, run ``conda env create`` to create the hcconda virtual environment
 - To activate your virtual environment, in terminal run ``activate hcconda`` (or ``source activate hcconda`` if using bash)
