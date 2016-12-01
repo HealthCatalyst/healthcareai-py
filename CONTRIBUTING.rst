@@ -26,6 +26,9 @@ Set up healthcare-ai
 - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
 - run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
 - ``cd`` to healthcareai-py directory
+
+If you like using virtual environments (not completely necessary):
+
 - In terminal, run ``conda env create`` to create the hcconda virtual environment
 - To activate your virtual environment, in terminal run ``activate hcconda`` (or ``source activate hcconda`` if using bash)
 - To set hcconda as your default conda environment (not required), run ``conda config --set core.default_env=hcconda``
