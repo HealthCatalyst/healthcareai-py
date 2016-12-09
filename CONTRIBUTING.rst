@@ -31,7 +31,7 @@ If you like using virtual environments (not completely necessary):
 
 - In terminal, run ``conda env create`` to create the hcconda virtual environment
 - To activate your virtual environment, in terminal run ``activate hcconda`` (or ``source activate hcconda`` if using bash)
-- To set hcconda as your default conda environment (not required), run ``conda config --set core.default_env=hcconda``
+- You might have to update packages, especially sk-learn. The best way to do this is through Settings->Project->Project Interpreter and update scikit-learn
 
 Install the IDE and clone the healthcareai-py repo
 =============
@@ -47,9 +47,10 @@ Install the IDE and clone the healthcareai-py repo
 
 5) Set up SQL Server, if you haven't already
  - If on Windows, `install`_ both SQL Server Express and SSMS Express
- - Create tables (on localhost) to receive predictive output using the code below (use SSMS if on Windows):
+ - Create tables `(on localhost)`_ to receive predictive output using the code below (use SSMS if on Windows):
 
 .. _install: http://stackoverflow.com/a/11278818/5636012
+.. _(on localhost): https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/localhost_config.rst
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 
