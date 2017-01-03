@@ -24,9 +24,11 @@ Installation
      - Open the terminal (ie git bash, if using Windows)
      - run ``conda install pyodbc``
      - To install the latest release, run 
-       ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/v0.1.7-beta``
+     
+       - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/v0.1.7-beta``
      - If you know what you're doing, and instead want the bleeding-edge version, run
-       ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
+       
+       - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
  - Using Linux / OSX (via docker)
      - Install `docker`_
      .. _docker: https://docs.docker.com/engine/installation/
