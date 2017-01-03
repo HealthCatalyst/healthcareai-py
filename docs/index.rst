@@ -9,7 +9,7 @@ Welcome to the healthcare.ai documentation!
 The purpose of this python package is to streamline healthcare machine learning. It does this by including functionality specific to healthcare, as well as simplifying the workflow of creating and deploying models.
 
 Do I want this package over the `R package`_?
-==========================================
+=============================================
 
 Choose this Python package if most of the following apply:
 
