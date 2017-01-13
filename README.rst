@@ -23,6 +23,9 @@ Installation
      .. _the Anaconda distribution: https://www.continuum.io/downloads
      - Open the terminal (i.e., CMD or PowerShell, if using Windows)
      - run ``conda install pyodbc``
+     - Upgrade to latest scipy (note that upgrade command took forever)
+     - Run ``conda remove scipy``
+     - Run ``conda install scipy``
      - To install the latest release, run 
      
        - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/v0.1.7-beta``
