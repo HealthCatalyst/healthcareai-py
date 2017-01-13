@@ -22,7 +22,7 @@ Installation
      - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
      .. _the Anaconda distribution: https://www.continuum.io/downloads
      - Open the terminal (i.e., CMD or PowerShell, if using Windows)
-     - run ``conda install pyodbc``
+     - Run ``conda install pyodbc``
      - Upgrade to latest scipy (note that upgrade command took forever)
      - Run ``conda remove scipy``
      - Run ``conda install scipy``
