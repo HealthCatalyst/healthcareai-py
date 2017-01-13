@@ -21,7 +21,7 @@ Installation
  - Using Windows
      - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
      .. _the Anaconda distribution: https://www.continuum.io/downloads
-     - Open the terminal (ie git bash, if using Windows)
+     - Open the terminal (i.e., CMD or PowerShell, if using Windows)
      - run ``conda install pyodbc``
      - To install the latest release, run 
      
@@ -41,6 +41,8 @@ Installation
 Getting started
 =============
 - Visit `healthcare.ai`_ to read the docs and find examples. Also, see this `notebook`_.
+
+- Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 
 - Modify the queries and parameters to match your data
 
