@@ -21,17 +21,21 @@ This is for Windows; see `this`_ for macOS and `this link`_ for linux
 Set up healthcare-ai
 ====================
 - Download Anaconda for Windows (Python 3.5) https://www.continuum.io/downloads
-- Open the terminal (ie git bash, if using Windows)
+- Open the terminal (i.e., git bash, if using Windows)
 - run ``conda install pyodbc``
 - run ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master``
-- run ``git clone git@github.com:HealthCatalystSLC/healthcareai-py.git``
+- Fork this repo (look for the link in the top right corner of the current page)
+- At the top of the `repo homepage`_ click the green 'Clone or download' button and copy the https link
+- In the terminal type ``git clone [paste_the_link]``
 - ``cd`` to healthcareai-py directory
 
-If you like using virtual environments (not completely necessary):
+.. _repo homepage: https://github.com/HealthCatalystSLC/healthcareai-py
+
+If you like using virtual environments (not required):
 
 - In terminal, run ``conda env create`` to create the hcconda virtual environment
 - To activate your virtual environment, in terminal run ``activate hcconda`` (or ``source activate hcconda`` if using bash)
-- You might have to update packages, especially sk-learn. The best way to do this is through Settings->Project->Project Interpreter and update scikit-learn
+- You might have to update packages, especially sklearn. The best way to do this is through Settings->Project->Project Interpreter and update scikit-learn
 
 Install the IDE and clone the healthcareai-py repo
 =============
