@@ -11,7 +11,7 @@ The purpose of this python package is to streamline healthcare machine learning.
 Do I want this package over the `R package`_?
 =============================================
 
-Choose this Python package if most of the following apply:
+Choose this Python package if one of the following apply:
 
 - You're familiar with python
 - You're familiar with machine learning
@@ -21,7 +21,7 @@ Otherwise, the `R package`_ is recommended, as it currently has more features an
 
 .. _R package: http://healthcare.ai/r
 
-If you're excited about Python, see these links to start:
+If you're excited about the Python vesrion of healthcare.ai, see these links to start:
 
 .. toctree::
    :maxdepth: 1
@@ -31,3 +31,4 @@ If you're excited about Python, see these links to start:
    hints
    develop
    deploy
+   compile
