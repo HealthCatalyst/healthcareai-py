@@ -21,8 +21,11 @@ Installation
  - Using Windows
      - If you haven't, install 64-bit Python 3.5 via `the Anaconda distribution`_
      .. _the Anaconda distribution: https://www.continuum.io/downloads
-     - Open the terminal (ie git bash, if using Windows)
-     - run ``conda install pyodbc``
+     - Open the terminal (i.e., CMD or PowerShell, if using Windows)
+     - Run ``conda install pyodbc``
+     - Upgrade to latest scipy (note that upgrade command took forever)
+     - Run ``conda remove scipy``
+     - Run ``conda install scipy``
      - To install the latest release, run 
      
        - ``pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/v0.1.7-beta``
@@ -41,6 +44,8 @@ Installation
 Getting started
 =============
 - Visit `healthcare.ai`_ to read the docs and find examples. Also, see this `notebook`_.
+
+- Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 
 - Modify the queries and parameters to match your data
 
