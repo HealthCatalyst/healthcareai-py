@@ -77,9 +77,21 @@ Getting started
 
 Note that we're currently working on easy connections to other types of databases.
 
+For Issues
+==========
+- Double check that the code follows the examples at `healthcare.ai/py`_
+
+- If you're still seeing an error, `create a post in our Google Group`_ that contains
+  
+  - Details on your environment (OS, database type, R vs Py)
+  - Goals (ie, what are you trying to accomplish)
+  - Crystal clear steps for reproducing the error
+  
+.. _healthcare.ai/py: http://healthcare.ai/py/
+.. _create a post in our Google Group: https://groups.google.com/forum/#!forum/healthcareai-users
+
 Contributing
 =============
-
 You want to help? Wohoo! We welcome that and are willing to help newbies get started.
 
 First, See `here`_ for instructions on setting up your development environment
@@ -128,17 +140,3 @@ After that's done, *here's the contribution workflow:*
    - Again, check that the unit tests are passing
    
 7) Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
-
-For Issues
-==========
-
-- Double check that the code follows the examples at `healthcare.ai/py`_
-
-- If you're still seeing an error, `create a post in our Google Group`_ that contains
-  
-  - Details on your environment (OS, database type, R vs Py)
-  - Goals (ie, what are you trying to accomplish)
-  - Crystal clear steps for reproducing the error
-  
-.. _healthcare.ai/py: http://healthcare.ai/py/
-.. _create a post in our Google Group: https://groups.google.com/forum/#!forum/healthcareai-users
