@@ -49,11 +49,14 @@ Install the IDE and clone the healthcareai-py repo
 
 4)	File -> Open and look for the healthcareai project (if it didn’t come up already)
 
-5) Set up SQL Server, if you haven't already
- - If on Windows, `install`_ both SQL Server Express and SSMS Express
- - Create tables `(on localhost)`_ to receive predictive output using the code below (use SSMS if on Windows):
+5) If on Windows, `install both`_ SQL Server Express and SSMS Express
+ - Navigate to the `downloads page`_
+ - Look for and download ENU\x64\SQLEXPRWT_x64_ENU.exe
+ - When installing, be sure to check the box to install SSMS
+ - Create tables `(on localhost)`_ within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
 
-.. _install: http://stackoverflow.com/a/11278818/5636012
+.. _install both: http://stackoverflow.com/a/11278818/5636012
+.. _downloads page: https://www.microsoft.com/en-us/download/details.aspx?id=29062
 .. _(on localhost): https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/localhost_config.md
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
