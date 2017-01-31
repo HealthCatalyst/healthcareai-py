@@ -80,6 +80,29 @@ Note that we're currently working on easy connections to other types of database
 Contributing
 =============
 
-We welcome community contributions. See `here`_ to get started!
+You want to help? Wohoo! We welcome that and are willing to help newbies get started.
+
+First, See `here`_ for instructions on setting up your development environment
 
 .. _here: https://github.com/HealthCatalystSLC/HCPyTools/blob/master/CONTRIBUTING.rst
+
+After that's done, *here's the contribution workflow:*
+
+1) Identify an issue that suits your skill level [here](https://github.com/HealthCatalystSLC/healthcareai-r/issues)
+   - Only look for issues in the Backlog category
+   - Please reach out with questions on details and where to start
+
+2) Create a topic branch to work in, as described [here](CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
+
+3) Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
+
+4) Make changes and use the throwaway file to make sure your packages changes work
+   
+   - Make small commits after getting a small piece working
+   - Push often so your changes are backed up. See `this`_ for more
+     
+.. _this: https://gist.github.com/blackfalcon/8428401#push-your-branch
+
+5) Early on, create a `pull request`_ such that Levi and co. can discuss the changes that you're making. Conversation is good.
+
+.. _pull request: https://yangsu.github.io/pull-request-tutorial/
