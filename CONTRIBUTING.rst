@@ -54,7 +54,7 @@ Install the IDE and clone the healthcareai-py repo
  - Create tables `(on localhost)`_ to receive predictive output using the code below (use SSMS if on Windows):
 
 .. _install: http://stackoverflow.com/a/11278818/5636012
-.. _(on localhost): https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/localhost_config.rst
+.. _(on localhost): https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/localhost_config.md
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 
