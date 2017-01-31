@@ -153,7 +153,9 @@ Set up your email and username for git (otherwise no attribution in github)
  .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
  .. _here: https://github.com/settings/notifications
  
- Getting started with contributions
- ==================================
+Getting started with contributions
+==================================
  
- - When your dev environment is set up, see [here](README.md#contributing) for the contribution workflow.
+When your dev environment is set up, see `click here`_ for the contribution workflow.
+
+.. _click here: README.md#contributing
