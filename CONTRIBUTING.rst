@@ -153,9 +153,19 @@ Set up your email and username for git (otherwise no attribution in github)
  .. _Step3: https://help.github.com/enterprise/11.10.340/user/articles/changing-a-remote-s-url/
  .. _here: https://github.com/settings/notifications
  
+Create a topic branch that you can work in
+==========================================
+1) Open the terminal (whether in Git Bash, in Spyder, etc)
+
+2) Type ``git checkout -b nameofbranch``
+   - This creates the your local branch for work
+   - Note this branch should have your name in it
+   
+3) Type ``git push origin nameofbranch``
+   - This pushes the branch to github (and now it's backed-up)
+
 Getting started with contributions
 ==================================
- 
 When your dev environment is set up, see `click here`_ for the contribution workflow.
 
 .. _click here: README.md#contributing
