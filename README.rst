@@ -129,7 +129,7 @@ After that's done, *here's the contribution workflow:*
 7) Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
 
 For Issues
-##########
+==========
 
 - Double check that the code follows the examples at `healthcare.ai/py`_
 
