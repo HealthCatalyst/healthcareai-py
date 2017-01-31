@@ -88,11 +88,16 @@ First, See `here`_ for instructions on setting up your development environment
 
 After that's done, *here's the contribution workflow:*
 
-1) Identify an issue that suits your skill level [here](https://github.com/HealthCatalystSLC/healthcareai-r/issues)
+1) `Identify an issue that`_ suits your skill level
+
    - Only look for issues in the Backlog category
    - Please reach out with questions on details and where to start
+   
+.. _Identify an issue that: https://github.com/HealthCatalystSLC/healthcareai-r/issues
 
-2) Create a topic branch to work in, as described [here](CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
+2) Create a topic branch to work in; here are `instructions`_.
+
+.. _instructions: CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
 
 3) Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
 
@@ -103,6 +108,36 @@ After that's done, *here's the contribution workflow:*
      
 .. _this: https://gist.github.com/blackfalcon/8428401#push-your-branch
 
-5) Early on, create a `pull request`_ such that Levi and co. can discuss the changes that you're making. Conversation is good.
+5) Early on, create a `pull request`_ such that Levi and team can discuss the changes that you're making. Conversation is good.
 
 .. _pull request: https://yangsu.github.io/pull-request-tutorial/
+
+6) When you're done with the issue you chose, do the following
+   
+   - Check that the unit tests are passing
+   - Check that pyflakes and pylint don't show any issues
+   - Merge the master branch into your topic branch (so that you have the latest changes from master)
+   
+   .. code-block:: git
+
+      git checkout LeviBugFix
+      git fetch
+      git merge --no-ff origin/master
+      
+   - Again, check that the unit tests are passing
+   
+7) Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
+
+For Issues
+##########
+
+- Double check that the code follows the examples at `healthcare.ai/py`_
+
+- If you're still seeing an error, `create a post in our Google Group`_ that contains
+  
+  - Details on your environment (OS, database type, R vs Py)
+  - Goals (ie, what are you trying to accomplish)
+  - Crystal clear steps for reproducing the error
+  
+.. _healthcare.ai/py: http://healthcare.ai/py/
+.. _create a post in our Google Group: https://groups.google.com/forum/#!forum/healthcareai-users
