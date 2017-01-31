@@ -97,7 +97,7 @@ After that's done, *here's the contribution workflow:*
 
 2) Create a topic branch to work in; here are `instructions`_.
 
-.. _instructions: CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in
+.. _instructions: CONTRIBUTING.rst#create-a-topic-branch-that-you-can-work-in
 
 3) Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
 
