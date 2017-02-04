@@ -52,7 +52,7 @@ Getting started
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
 
 .. _healthcare.ai: http://healthcare.ai/py/
-.. _notebook: notebooks/HCPyToolsExample1.ipynb
+.. _notebook: notebooks/Example1.ipynb
 .. code-block:: sql
 
    CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
@@ -91,12 +91,12 @@ For Issues
 .. _create a post in our Google Group: https://groups.google.com/forum/#!forum/healthcareai-users
 
 Contributing
-=============
+============
 You want to help? Wohoo! We welcome that and are willing to help newbies get started.
 
 First, See `here`_ for instructions on setting up your development environment
 
-.. _here: https://github.com/HealthCatalystSLC/HCPyTools/blob/master/CONTRIBUTING.rst
+.. _here: https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/CONTRIBUTING.rst
 
 After that's done, *here's the contribution workflow:*
 
