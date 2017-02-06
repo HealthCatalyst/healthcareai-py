@@ -10,7 +10,7 @@ What is ``DevelopSupervisedModel``?
 
 - To jump straight to an example notebook, see `here`_
 
-.. _here: https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/HCPyToolsExample1.ipynb
+.. _here: https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/Example1.ipynb
 
 Am I ready for model creation?
 ##############################
