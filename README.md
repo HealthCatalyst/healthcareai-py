@@ -72,7 +72,7 @@ Note that we're currently working on easy connections to other types of database
 
 You want to help? Woohoo! We welcome that and are willing to help newbies get started.
 
-Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/CONTRIBUTING.rst) for instructions on setting up your development environment
+Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/CONTRIBUTING.md) for instructions on setting up your development environment
 
 ### Workflow
 
@@ -80,7 +80,7 @@ Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/he
     * Only look for issues in the Backlog category
     * If you're new to open source, please look for issues with the `bug low`, `help wanted`, or `docs` tags
     * Please reach out with questions on details and where to start
-2. Create a topic branch to work in; here are [instructions](CONTRIBUTING.rst#create-a-topic-branch-that-you-can-work-in)
+2. Create a topic branch to work in; here are [instructions](CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
 3. Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
 4. Make changes and use the throwaway file to validate that your packages changes work
     * Make small commits after getting a small piece working
