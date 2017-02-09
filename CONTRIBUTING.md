@@ -15,7 +15,7 @@
 
 #### macOS
 
-see [macOS instructions](https://developer.apple.com/xcode/ for macOS and 
+see [macOS instructions](https://developer.apple.com/xcode/) for macOS and 
 
 #### Linux
 
