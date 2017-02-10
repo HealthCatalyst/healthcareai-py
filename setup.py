@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
 from setuptools import setup
 
 
@@ -9,12 +8,13 @@ def readme():
         return f.read()
 
 
-setup(name='healthcareai-py',
+setup(name='healthcareai',
       version='0.1.7',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
       license='MIT',
       description='Tools for healthcare machine learning',
+      keywords='machine learning healthcare data science',
       long_description=readme(),
       url='http://healthcare.ai/',
       packages=[
@@ -37,8 +37,8 @@ setup(name='healthcareai-py',
           "Development Status :: 1 - Planning",
           "Intended Audience :: Healthcare Industry",
           "Intended Audience :: Developers",
-          "License :: Other/Proprietary License",
           "Operating System :: OS Independent",
+          "License :: OSI Approved :: MIT License",
           "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.2",
