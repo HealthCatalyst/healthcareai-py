@@ -8,16 +8,18 @@ def readme():
     # to have things how I'd like, but not throw complaints when people are trying
     # to install the package and they don't have pypandoc or the README in the
     # right place.
+    # From https://coderwall.com/p/qawuyq/use-markdown-readme-s-in-python-modules
     try:
         import pypandoc
         long_description = pypandoc.convert('README.md', 'rst')
     except (IOError, ImportError):
         with open('README.md') as f:
             return f.read()
+    else:
+        return long_description
 
-
-setup(name='healthcareai-test',
-      version='0.1.7',
+setup(name='healthcareai',
+      version='0.1.7-rc.2',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
       license='MIT',
