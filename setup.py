@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from setuptools import setup
+# from __future__ import unicode_literals
+from setuptools import setup, find_packages
 
 
 def readme():
-    with open('README.md') as f:
-        return f.read()
+    # I really prefer Markdown to reStructuredText.  PyPi does not.  This allows me
+    # to have things how I'd like, but not throw complaints when people are trying
+    # to install the package and they don't have pypandoc or the README in the
+    # right place.
+    try:
+        import pypandoc
+        long_description = pypandoc.convert('README.md', 'rst')
+    except (IOError, ImportError):
+        with open('README.md') as f:
+            return f.read()
 
 
-setup(name='healthcareai',
+setup(name='healthcareai-test',
       version='0.1.7',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
@@ -16,10 +24,8 @@ setup(name='healthcareai',
       description='Tools for healthcare machine learning',
       keywords='machine learning healthcare data science',
       long_description=readme(),
-      url='http://healthcare.ai/',
-      packages=[
-          'healthcareai',
-      ],
+      url='http://healthcare.ai',
+      packages=find_packages(),
       install_requires=[
           'matplotlib>=1.5.3',
           'numpy>=1.11.2',
@@ -28,6 +34,9 @@ setup(name='healthcareai',
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
       ],
+      package_data={
+          'examples': ['*.py', '*.ipynb']
+      },
       tests_require=[
           'nose',
       ],
@@ -36,6 +45,7 @@ setup(name='healthcareai',
       classifiers=[
           "Development Status :: 1 - Planning",
           "Intended Audience :: Healthcare Industry",
+          "Intended Audience :: Science/Research",
           "Intended Audience :: Developers",
           "Operating System :: OS Independent",
           "License :: OSI Approved :: MIT License",
@@ -46,6 +56,7 @@ setup(name='healthcareai',
           "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: 3.5",
           "Topic :: Scientific/Engineering :: Artificial Intelligence",
+          "Topic :: Scientific/Engineering :: Information Analysis",
           "Topic :: Software Development :: Libraries :: Python Modules",
       ],
       include_package_data=True)
