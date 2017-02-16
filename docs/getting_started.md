@@ -58,27 +58,28 @@ If you did get an error, or run into other installation issues, please [let us k
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
-  ```sql
-  CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
-	 [BindingID] [int] ,
-	 [BindingNM] [varchar] (255),
-	 [LastLoadDTS] [datetime2] (7),
-	 [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-	 [PredictedProbNBR] [decimal] (38, 2),
-	 [Factor1TXT] [varchar] (255),
-	 [Factor2TXT] [varchar] (255),
-	 [Factor3TXT] [varchar] (255))
+  
+```sql
+CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+ [BindingID] [int] ,
+ [BindingNM] [varchar] (255),
+ [LastLoadDTS] [datetime2] (7),
+ [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
+ [PredictedProbNBR] [decimal] (38, 2),
+ [Factor1TXT] [varchar] (255),
+ [Factor2TXT] [varchar] (255),
+ [Factor3TXT] [varchar] (255))
 
-  CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
-	 [BindingID] [int],
-	 [BindingNM] [varchar] (255),
-	 [LastLoadDTS] [datetime2] (7),
-	 [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-	 [PredictedValueNBR] [decimal] (38, 2),
-	 [Factor1TXT] [varchar] (255),
-	 [Factor2TXT] [varchar] (255),
-	 [Factor3TXT] [varchar] (255))
-  ```
+CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+ [BindingID] [int],
+ [BindingNM] [varchar] (255),
+ [LastLoadDTS] [datetime2] (7),
+ [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
+ [PredictedValueNBR] [decimal] (38, 2),
+ [Factor1TXT] [varchar] (255),
+ [Factor2TXT] [varchar] (255),
+ [Factor3TXT] [varchar] (255))
+```
 Note that we're currently working on easy connections to other types of databases.
 
 ## For Issues
