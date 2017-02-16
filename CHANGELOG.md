@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added changelog
 - Changed all docs to markdown
+- added `setup.cfg` and some functions in `setup.py` to prep for PyPI
 
 ### Changed
 
-- Lots of documentation
+- Lots of documentation, especially around installation on the various platforms.
 
 ### Fixed
 

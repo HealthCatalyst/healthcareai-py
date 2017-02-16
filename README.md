@@ -1,6 +1,6 @@
 # healthcareai
 
-![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
+Windows Build Status: ![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
@@ -10,6 +10,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 ## Installation
 
 ### Windows
+
 - If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
 - Open the terminal (i.e., CMD or PowerShell, if using Windows)
 - Run `conda install pyodbc`
@@ -17,10 +18,23 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - Run `conda remove scipy`
 - Run `conda install scipy`
 - To install the latest release, run 
-    * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/v0.1.7-beta`
-- If you know what you're doing, and instead want the bleeding-edge version, run
+    * `pip install healthcareai`
+- If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run
     * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
  
+### Linux
+
+You may need to install the following dependencies:
+- `sudo apt-get install python-tk`
+- `sudo pip install pyodbc`
+    - Note you'll might run into trouble with the `pyodbc` dependency. You may first need to run `sudo apt-get install unixodbc-dev` then retry `sudo pip install pyodbc`. Credit [stackoverflow](http://stackoverflow.com/questions/2960339/unable-to-install-pyodbc-on-linux)
+
+Once you have the dependencies satisfied run `pip install healthcareai` or `sudo pip install healthcareai`
+
+### macOS
+
+- `pip install healthcareai` or `sudo pip install healthcareai`
+
 ### Linux and macOS (via docker)
  
 - Install [docker](https://docs.docker.com/engine/installation/)
@@ -29,6 +43,12 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - run `docker build -t healthcareai .`
 - run the docker instance with `docker run -p 8888:8888 healthcareai` 
 - You should then have a jupyter notebook available on `http://localhost:8888`.
+
+### Verify Installation
+
+To verify that *healthcareai* installed correctly, open a terminal and run `python`. This opens an interactive python console (also known as a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)). Then enter this command: `from healthcareai import develop_supervised_model` and hit enter. If no error is thrown, you are ready to rock.
+
+If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html) or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai)(with the healthcare-ai tag) so we can help others along this process.
 
 ## Getting started
 
@@ -97,3 +117,18 @@ Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/he
         ```
     * Again, check that the unit tests are passing
 7. Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
+
+## PyPI Package Creation and Updating
+
+**Note these instructions are for maintainers only.**
+
+First, read this [Packaging and Distributing Projects](https://packaging.python.org/distributing/) guide.
+
+It's also worth noting that while this *should* be done on the [pypi test site](https://testpypi.python.org/pypi), I've run into a great deal of trouble with conflicting guides authenticating to the test site. So be smart about this.
+
+1. **Build a source distribution**: from python3 (ran in windows anaconda python 3) run `python setup.py sdist`
+2. **Register the package** by using the [form on pypi](https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=healthcareai). Upload your `PKG-INFO` that was generated inside the `.egg` file.
+3. **Upload the package** using [twine](https://pypi.python.org/pypi/twine)
+    - `twine upload dist/healthcareai-<version>.tar.gz`
+    - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before you push to github.
+4. Verify install on all three platforms (linux, macOS, windows) by first `pip uninstall healthcareai` and then `pip install healthcareai`, followed by a `from healthcareai import develop_supervised_model` in a python REPL.
