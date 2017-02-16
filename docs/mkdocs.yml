@@ -1,13 +1,14 @@
 site_name: healthcare.ai
 site_url: http://healthcare.ai
 repo_url: https://github.com/HealthCatalystSLC/healthcareai-py
-edit_uri: edit/master/docs/
+repo_name: healthcareai-py
+docs_dir: /docs
 google_analytics: ['UA-85609357-1']
 pages:
-  - 'Introduction': 'index.md'
-  - 'Getting started': 'getting_started.md'
-  - 'FAQ': 'FAQ.md'
-  - 'Hints and tips': 'hints.md'
-  - 'Developing and comparing models.md': 'develop.md'
-  - 'Saving and deploying a model': 'deploy.md'
-  - 'Compiling python files to an executable': 'compile.md'
+  - Introduction: 'index.md'
+  - Getting started: 'getting_started.md'
+  - FAQ: 'FAQ.md'
+  - Hints and tips: 'hints.md'
+  - Developing and comparing models.md: 'develop.md'
+  - Saving and deploying a model: 'deploy.md'
+  - Compiling python files to an executable: 'compile.md'
