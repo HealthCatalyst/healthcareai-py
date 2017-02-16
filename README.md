@@ -1,6 +1,6 @@
 # healthcareai
 
-![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
+Windows Build Status: ![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
