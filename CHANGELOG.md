@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Lots of documentation
+- Lots of documentation, especially around installation on the various platforms.
 
 ### Fixed
 
