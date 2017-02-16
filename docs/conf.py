@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+from recommonmark.parser import CommonMarkParser
 import sphinx_rtd_theme
+
 # healthcareai-py documentation build configuration file, created by
 # sphinx-quickstart on Wed Oct 19 16:34:01 2016.
 #
@@ -39,8 +40,12 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
+
 source_suffix = ['.rst', '.md']
 # source_suffix = '.rst'
+
+# Parsing for markdown http://blog.readthedocs.com/adding-markdown-support/
+source_parsers = {'.md': CommonMarkParser}
 
 # The encoding of source files.
 #
@@ -51,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'healthcare.ai'
-copyright = '2016, Health Catalyst'
+copyright = '2017, Health Catalyst'
 author = 'Health Catalyst'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -38,5 +38,7 @@ outcomes.
 We'd love to hear from you! We welcome complaints, suggestions, and
 contributions.
 
+[healthcare.ai/contact.html](healthcare.ai/contact.html)
+
 Twitter: [@levithatcher](https://twitter.com/levithatcher) Email:
 [<levi.thatcher@healthcatalyst.com>](mailto:levi.thatcher@healthcatalyst.com)
