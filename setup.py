@@ -19,7 +19,7 @@ def readme():
         return long_description
 
 setup(name='healthcareai',
-      version='0.1.7',
+      version='0.1.8',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
       license='MIT',

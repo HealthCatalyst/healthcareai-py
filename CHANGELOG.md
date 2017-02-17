@@ -8,13 +8,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## [0.1.8] - 2017-02-16
+
+### Added
+
 - Added changelog
 - Changed all docs to markdown
-- added `setup.cfg` and some functions in `setup.py` to prep for PyPI
+- added `setup.cfg` and some functions in `setup.py` for PyPI
+- `mkdocs.yml` for readthedocs hosting
+- Conda environment files
 
 ### Changed
 
 - Lots of documentation, especially around installation on the various platforms.
+- Removed doc templates and css now that docs will live on readthedocs
 
 ### Fixed
 
