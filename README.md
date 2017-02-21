@@ -132,3 +132,20 @@ It's also worth noting that while this *should* be done on the [pypi test site](
     - `twine upload dist/healthcareai-<version>.tar.gz`
     - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before you push to github.
 4. Verify install on all three platforms (linux, macOS, windows) by first `pip uninstall healthcareai` and then `pip install healthcareai`, followed by a `from healthcareai import develop_supervised_model` in a python REPL.
+
+### Release process (Including Read The Docs)
+
+1. update all version numbers
+    - `setup.py`
+2. update CHANGELOG
+    - Move all items under **unreleased** to a new release number
+    - Leave the template under **unreleased**
+3. merge in the PR
+4. create release on github releases (making sure this matches the release number in `setup.py`)
+5. Create and upload the new pypi release (see above)
+6. update readthedocs settings
+    - **Admin** > **Versions**
+    - Ensure that the new release number is checked for **public**
+7. Manually build new read the docs
+    - **Builds** > **Build version <new release>**
+8. verify the new version builds and is viewable at the public url
