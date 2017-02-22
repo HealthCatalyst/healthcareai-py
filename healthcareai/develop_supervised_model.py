@@ -157,28 +157,7 @@ class DevelopSupervisedModel(object):
                                          'MetricValue']).set_index('TimeStamp')
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header= False)
-        
-    def save_output_to_azure_storage(filename,output):
-        # Still have to test this. 
-        # This is from: https://docs.microsoft.com/en-us/azure/storage/storage-python-how-to-use-file-storage
-        from azure.storage.file import FileService
-        file_service = FileService(account_name=os.environ.get("CAFE_AZURE_FileStorage_ModelLogs_AccountName"), account_key=os.environ.get("CAFE_AZURE_FileStorage_ModelLogs_AccountKey"))
 
-        file_service.create_file_from_path(
-            'modellogs',
-            None, # We want to create this blob in the root directory, so we specify None for the directory_name
-            filename + '.txt')
-
-        file_service.create_file_from_path(
-            'modellogs',
-            None, # We want to create this blob in the root directory, so we specify None for the directory_name
-            filename + '.json')
-    
-        file_service.create_file_from_path(
-            'modellogs',
-            None, # We want to create this blob in the root directory, so we specify None for the directory_name
-            filename + '.pkl')
- 
             
     def linear(self, cores=4, debug=False):
         """
@@ -438,7 +417,7 @@ class DevelopSupervisedModel(object):
         
         fpr, tpr, thresholds = metrics.roc_curve(self.y_train, probs)
         """
-	plt.figure(figsize=(10,10))
+	    plt.figure(figsize=(10,10))
         plt.plot(fpr, tpr)
         plt.xlim([0.0, 1.0])
         plt.ylim([0.0, 1.0])
@@ -451,7 +430,3 @@ class DevelopSupervisedModel(object):
         self.save_output_to_csv(complete_filename,output)
         self.save_output_to_json(complete_filename,output)
         self.save_output_to_pickle(complete_filename,output)
-        self.save_output_to_azure_storage(complete_filename,output)
-        
-
-        
