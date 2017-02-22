@@ -147,7 +147,7 @@ class DevelopSupervisedModel(object):
             pickle.dump(random_search.best_estimator_, open_file)
 
     def save_output_to_csv(filename,output):
-        outputDF = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
+        output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
                                   output['gridSearch_BestScore'],
                                   output['gridSearch_ScoreMetric'], ) \
                                 + x for x in list(output.items())],   \
@@ -156,7 +156,7 @@ class DevelopSupervisedModel(object):
                                          'BestScoreMetric', 'Metric',
                                          'MetricValue']).set_index('TimeStamp')
         # save files locally #
-        outputDF.to_csv(complete_filename + '.txt', header= False)
+        output_dataframe.to_csv(file + '.txt', header= False)
         
     def save_output_to_azure_storage(filename,output):
         # Still have to test this. 
