@@ -139,7 +139,7 @@ class DevelopSupervisedModel(object):
             print(self.y_test.shape)
 
     def save_output_to_json(filename,output):
-        with open(complete_filename + '.json', 'w') as open_file:
+        with open(filename + '.json', 'w') as open_file:
             json.dump(output, open_file, indent=4, sort_keys=True)
 
     def save_output_to_pickle(filename,output):
@@ -156,7 +156,7 @@ class DevelopSupervisedModel(object):
                                          'BestScoreMetric', 'Metric',
                                          'MetricValue']).set_index('TimeStamp')
         # save files locally #
-        output_dataframe.to_csv(file + '.txt', header= False)
+        output_dataframe.to_csv(filename + '.txt', header= False)
         
     def save_output_to_azure_storage(filename,output):
         # Still have to test this. 
