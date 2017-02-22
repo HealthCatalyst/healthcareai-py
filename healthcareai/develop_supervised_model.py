@@ -138,6 +138,15 @@ class DevelopSupervisedModel(object):
             print(self.X_test.shape)
             print(self.y_test.shape)
 
+    def save_output_to_json(filename,output):
+        with open(complete_filename + '.json', 'w') as open_file:
+            json.dump(output, open_file, indent=4, sort_keys=True)
+
+    def save_output_to_pickle(filename,output):
+        with open(filename + '.pkl', 'wb') as open_file:
+            pickle.dump(random_search.best_estimator_, open_file)
+
+            
     def linear(self, cores=4, debug=False):
         """
         This method creates and assesses the accuracy of a logistic regression
@@ -329,3 +338,123 @@ class DevelopSupervisedModel(object):
             plt.show()
         else:
             plt.show()
+
+    def randomsearch(modelType,param_dist,model,
+                     scoreMetric,n_iter_search):
+
+        rS = RandomizedSearchCV(model,
+                        scoring = scoreMetric,
+                        param_distributions=param_dist,
+                        n_iter=n_iter_search,
+                        cv = 3, 
+                        verbose = 1,
+                        n_jobs = -1)
+        rS.fit(X, y)
+        
+        ######### Validation metrics #########
+
+        y_preds = rS.best_estimator_.predict(self.X_train)
+        confustionMatrix = metrics.confusion_matrix(self.y_train, y_preds)
+        accuracy = metrics.accuracy_score(self.y_train, y_preds)
+        precision = metrics.precision_score(self.y_train, y_preds)
+        recall = metrics.recall_score(self.y_train, y_preds) #sensitivity
+        specificity = confustionMatrix[0][0] / (confustionMatrix[0][1] + confustionMatrix[0][0])
+        f1 = metrics.f1_score(self.y_train, y_preds)
+        print(ConfusionMatrix(list(self.y_train), list(y_preds)))
+        print(metrics.classification_report(self.y_train, y_preds, digits=5))
+
+        #calculate roc_auc_score
+        probs = random_search.best_estimator_.predict_proba(self.X_train)[:, 1]
+        roc_auc_score = metrics.roc_auc_score(self.y_train, probs)
+   
+        ######### Save output and best model #########    
+        timeRanFile, timeRan = datetime.utcnow().strftime(fmt), str(datetime.utcnow())
+        filename = modelType + '_' + optional_file_suffix + '_' + timeRanFile
+        complete_filename = os.path.join(filepath, filename)
+
+        output = {}   
+        output['modelType'] = self.modeltype
+        output['modelTimeRan'] = timeRan
+        output['modelLabels'] = self.modeltype  
+        output['data_rowCount'] = self.X_train.shape[0]
+        output['data_columnCount'] = self.X_train.shape[1]
+        output['data_columnNames'] = self.X_train.columns.tolist()
+        output['gridSearch'] = 'Yes'
+        output['gridSearch_Type'] = 'RandomSearch'
+        output['gridSearch_Params'] = str(param_dist)
+        output['gridSearch_TimeToRun'] = timeToRunGS
+        output['gridSearch_Iters'] = n_iter_search
+        output['gridSearch_GridScores'] = str(random_search.grid_scores_)
+        output['gridSearch_BestScore'] = random_search.best_score_
+        output['gridSearch_Model'] = str(model)
+        output['gridSearch_ScoreMetric'] = str(scoreMetric)
+        output['gridSearch_ScoreingMethod'] = str(scoreMetric)
+        output['bestModel'] = str(random_search.best_estimator_)
+        output['bestmodel_Dict'] = str(random_search.best_estimator_.__dict__)
+        output['bestmodel_File'] = filename
+        output['bestModel_Validation_Roc_auc'] = roc_auc_score
+        output['bestModel_Validation_ConfusionMatrix'] = confustionMatrix.tolist()
+        output['bestModel_Validation_Accuracy'] = accuracy
+        output['bestModel_Validation_Precision'] = precision
+        output['bestModel_Validation_Recall'] = recall
+        output['bestModel_Validation_Specificity'] = specificity
+        output['bestModel_Validation_F1'] = f1 
+        output['bestModel_Validation_rowCount'] = self.y_train.shape[0]
+        
+        ######### Save roc_auc image #########    
+        
+        fpr, tpr, thresholds = metrics.roc_curve(self.y_train, probs)
+        """
+	plt.figure(figsize=(10,10))
+        plt.plot(fpr, tpr)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.0])
+        plt.xlabel('False Positive Rate (1 - Specificity)', fontsize = 18)
+        plt.ylabel('True Positive Rate (Sensitivity)', fontsize = 18)
+        plt.text(.4, .6, r"AUC = %.4f" % roc_auc_score, fontsize = 18)
+        plt.savefig(complete_filename + '.png', bbox_inches='tight')
+        """
+        
+        outputDF = pd.DataFrame([(timeRan, modelType, output['modelLabels'], \
+                                  output['gridSearch_BestScore'], output['gridSearch_ScoreMetric'], ) \
+                                 + x for x in list(output.items())], \
+                                columns=['TimeStamp', 'ModelType', 'ModelLabels', 'BestScore', \
+                                         'BestScoreMetric', 'Metric', 'MetricValue']).set_index('TimeStamp')
+
+        # save files locally #
+        outputDF.to_csv(complete_filename + '.txt', header= False)
+        
+        self.save_output_to_json(complete_filename,output)
+        self.save_output_to_pickle(complete_filename,output)
+        
+
+        # save files to Azure Storage #
+        
+        file_service.create_file_from_path(
+            'modellogs',
+            None, # We want to create this blob in the root directory, so we specify None for the directory_name
+            filename + '.txt',
+            complete_filename + '.txt')
+        
+        file_service.create_file_from_path(
+            'modellogs',
+            None, # We want to create this blob in the root directory, so we specify None for the directory_name
+            filename + '.json',
+            complete_filename + '.json')
+        
+        file_service.create_file_from_path(
+            'modellogs',
+            None, # We want to create this blob in the root directory, so we specify None for the directory_name
+            filename + '.pkl',
+            complete_filename + '.pkl')
+    
+        file_service.create_file_from_path(
+            'modellogs',
+            None, # We want to create this blob in the root directory, so we specify None for the directory_name
+            filename + '.png',
+            complete_filename + '.png')
+
+        
+        
+        return random_search
+        

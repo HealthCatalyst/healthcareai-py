@@ -81,7 +81,7 @@ def clfreport(modeltype,
         if modeltype == 'classification':
             print('\nMetrics:')
             roc_auc = roc_auc_score(y_test, y_pred)
-            print('AU_ROC Score:', roc_auc)
+            print('AU_ROC ScoreX:', roc_auc)
 
             precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
             pr_auc = auc(recall, precision)
