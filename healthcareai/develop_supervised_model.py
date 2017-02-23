@@ -9,7 +9,7 @@ from healthcareai.common import model_eval
 from healthcareai.common.transformers import DataFrameImputer
 from healthcareai.common import filters
 import os
-
+from datetime import datetime
 
 class DevelopSupervisedModel(object):
     """
@@ -351,39 +351,47 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def randomsearch(modelType,param_dist,model,
-                     scoreMetric,n_iter_search):
+    def randomsearch(model_type,model,param_grid,cv
+                     n_iter,score_metric):
 
-        rS = RandomizedSearchCV(model,
-                        scoring = scoreMetric,
-                        param_distributions=param_dist,
-                        n_iter=n_iter_search,
-                        cv = 3, 
+        rs = RandomizedSearchCV(model,
+                        scoring = score_metric,
+                        param_distributions=param_grid,
+                        n_iter=n_iter,
+                        cv = cv, 
                         verbose = 1,
                         n_jobs = -1)
-        rS.fit(X, y)
-        
+        rs.fit(self.X_train, self.y_train)
+
         ######### Validation metrics #########
 
-        y_preds = rS.best_estimator_.predict(self.X_train)
-        confustionMatrix = metrics.confusion_matrix(self.y_train, y_preds)
-        accuracy = metrics.accuracy_score(self.y_train, y_preds)
-        precision = metrics.precision_score(self.y_train, y_preds)
-        recall = metrics.recall_score(self.y_train, y_preds) #sensitivity
+        y_preds = rs.best_estimator_.predict(self.X_test)
+        confustionMatrix = metrics.confusion_matrix(self.y_test, y_preds)
+        accuracy = metrics.accuracy_score(self.y_test, y_preds)
+        precision = metrics.precision_score(self.y_test, y_preds)
+        recall = metrics.recall_score(self.y_test, y_preds) #sensitivity
         specificity = confustionMatrix[0][0] / (confustionMatrix[0][1] + confustionMatrix[0][0])
-        f1 = metrics.f1_score(self.y_train, y_preds)
-        print(ConfusionMatrix(list(self.y_train), list(y_preds)))
-        print(metrics.classification_report(self.y_train, y_preds, digits=5))
+        f1 = metrics.f1_score(self.y_test, y_preds)
+        print(ConfusionMatrix(list(self.y_test), list(y_preds)))
+        print(metrics.classification_report(self.y_test, y_preds, digits=5))
 
         #calculate roc_auc_score
-        probs = random_search.best_estimator_.predict_proba(self.X_train)[:, 1]
-        roc_auc_score = metrics.roc_auc_score(self.y_train, probs)
+        probs = random_search.best_estimator_.predict_proba(self.X_test)[:, 1]
+        roc_auc_score = metrics.roc_auc_score(self.y_test, probs)
    
-        ######### Save output and best model #########    
-        timeRanFile, timeRan = datetime.utcnow().strftime(fmt), str(datetime.utcnow())
-        filename = modelType + '_' + optional_file_suffix + '_' + timeRanFile
-        complete_filename = os.path.join(filepath, filename)
+        ######### Make file for output #########
 
+        starttime = str(datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S'))
+        filepath = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "models", starttime))
+        os.makedirs(filepath)
+        
+        timeRanFile = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
+        timeRan = str(datetime.utcnow())
+        filename = modelType + '_' + timeRanFile
+        complete_filename = os.path.join(filepath, filename)
+        
+        ######### Make dictionary with output #########
+        
         output = {}   
         output['modelType'] = self.modeltype
         output['modelTimeRan'] = timeRan
@@ -393,7 +401,7 @@ class DevelopSupervisedModel(object):
         output['data_columnNames'] = self.X_train.columns.tolist()
         output['gridSearch'] = 'Yes'
         output['gridSearch_Type'] = 'RandomSearch'
-        output['gridSearch_Params'] = str(param_dist)
+        output['gridSearch_Params'] = str(param_grid)
         output['gridSearch_TimeToRun'] = timeToRunGS
         output['gridSearch_Iters'] = n_iter_search
         output['gridSearch_GridScores'] = str(random_search.grid_scores_)
@@ -416,17 +424,8 @@ class DevelopSupervisedModel(object):
         ######### Save roc_auc image #########    
         
         fpr, tpr, thresholds = metrics.roc_curve(self.y_train, probs)
-        """
-	    plt.figure(figsize=(10,10))
-        plt.plot(fpr, tpr)
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.0])
-        plt.xlabel('False Positive Rate (1 - Specificity)', fontsize = 18)
-        plt.ylabel('True Positive Rate (Sensitivity)', fontsize = 18)
-        plt.text(.4, .6, r"AUC = %.4f" % roc_auc_score, fontsize = 18)
-        plt.savefig(complete_filename + '.png', bbox_inches='tight')
-        """
         
         self.save_output_to_csv(complete_filename,output)
         self.save_output_to_json(complete_filename,output)
         self.save_output_to_pickle(complete_filename,output)
+        
