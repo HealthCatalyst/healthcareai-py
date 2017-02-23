@@ -16,7 +16,12 @@ You will need to have an alias called "localhost" that points to your SQL databa
      - Under the IP Addresses tab, scroll all the way to the bottom.
      - Under IPALL, TCP Dynamic Ports should be blank
      - Under IPALL, TCP Port should be set to 1433
+     
+3) Working in Configuration Manager, 
+   - Expand SQL Server Services 
+   - Right-click on your SQL Server instance
+   - Restart SQL Server
 
-3) Open SSMS and verify that you can connect to the server localhost.
+4) Open SSMS and verify that you can connect to the server `localhost`.
 
-4) In RStudio, you should now be able to connect to localhost; if not, email [Levi Thatcher](mailto:levi.thatcher@healthcatalyst.com)
+5) In RStudio, you should now be able to connect to localhost; if not, email [Levi Thatcher](mailto:levi.thatcher@healthcatalyst.com)
