@@ -14,6 +14,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 ### Windows
 
 - If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
+    - **Important** When prompted for the **Installation Type**, select **Just Me (recommended)**. This makes permissions later in the process much simpler.
 - Open the terminal (i.e., CMD or PowerShell, if using Windows)
 - Run `conda install pyodbc`
 - Upgrade to latest scipy (note that upgrade command took forever)
