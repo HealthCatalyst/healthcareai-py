@@ -18,10 +18,18 @@
 - Upgrade to latest scipy (note that upgrade command took forever)
 - Run `conda remove scipy`
 - Run `conda install scipy`
-- To install the latest release, run 
-    * `pip install healthcareai`
-- If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run
-    * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+- Run `conda install scikit-learn`
+- Install healthcareai:
+    - **Recommended** Install the latest release: 
+        * `pip install healthcareai`
+    - **For advanced users** that want bleeding-edge version direct from our github repo:
+        * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+
+#### Why Anaconda?
+
+We recommend using the Anaconda python distribution when working on Windows. There are a number of reasons:
+- When running anaconda and installing packages using the `conda` command, you don't need to worry about [dependency hell](https://en.wikipedia.org/wiki/Dependency_hell), particularly because packages aren't compiled on your machine; `conda` installs pre-compiled binaries.
+- A great example of the pain the using `conda` saves you is with the python package **scipy**, which, by [their own admission](http://www.scipy.org/scipylib/building/windows.html) *"is difficult"*
  
 ### Linux
 
