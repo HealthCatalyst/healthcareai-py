@@ -53,8 +53,8 @@ If you did get an error, or run into other installation issues, please [let us k
 
 ## Getting started
 
-- Visit [healthcare.ai](healthcare.ai/py) to read the docs and find examples.
-    * Including this [notebook](healthcare.ai/notebooks/Example1.ipynb)
+- Read through the docs on this site
+    * If you like Jupyter notebooks, [see here](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/Example1.ipynb)
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
@@ -84,8 +84,8 @@ Note that we're currently working on easy connections to other types of database
 
 ## For Issues
 
-- Double check that the code follows the examples at [healthcare.ai/py](http://healthcare.ai/py/)
-- If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
-    * Details on your environment (OS, database type, R vs Py)
-    * Goals (ie, what are you trying to accomplish)
-    * Crystal clear steps for reproducing the error
+- Double check that the code follows the examples in these documents.
+- If you're still seeing an error, file an issue on [Stack Overflow](http://stackoverflow.com/) using the healthcare-ai tag. Please provide
+  - Details on your environment (OS, database type, R vs Py)
+  - Goals (ie, what are you trying to accomplish)
+  - Crystal clear steps for reproducing the error
