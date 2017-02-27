@@ -264,7 +264,7 @@ def calculate_rfmtry(number_of_columns, type):
     return grid_mtry
 
 
-def generateAUC(predictions, labels, aucType, plotFlg):
+def GenerateAUC(predictions, labels, aucType, plotFlg):
     """
     This function creates an ROC or PR curve and calculates the area under it.
 
@@ -277,11 +277,13 @@ def generateAUC(predictions, labels, aucType, plotFlg):
 
     Returns
     -------
-    Nothing. Simply prints feature importance list to console.
+    AUC (float) : either AU_ROC or AU_PR
     """
     # Error check for uneven length predictions and labels
     if len(predictions) != len(labels):
-        sys.exit('Data vectors are not equal length!')
+        return
+    else:
+        raise Exception('Data vectors are not equal length!')
 
     # make AUC type upper case.
     aucType = aucType.upper()
@@ -292,13 +294,16 @@ def generateAUC(predictions, labels, aucType, plotFlg):
         aucType = 'SS'
 
     # Compute ROC curve and ROC area
-    if aucType == 'SS':
-        fpr, tpr, _ = roc_curve(labels, predictions)
+    if aucType is 'SS':
+        fpr, tpr, thresh = roc_curve(labels, predictions)
         roc_auc = auc(fpr, tpr)
         print('Area under ROC curve (AUC): %0.2f' % roc_auc)
+        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
+        for i in range(len(thresh)):
+            print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
 
         # plot ROC curve
-        if plotFlg == True:
+        if plotFlg is True:
             plt.figure()
             plt.plot(fpr, tpr, color='darkorange',
                      lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
@@ -310,16 +315,21 @@ def generateAUC(predictions, labels, aucType, plotFlg):
             plt.title('Receiver operating characteristic curve')
             plt.legend(loc="lower right")
             plt.show()
+        return (roc_auc)
 
+        # Compute PR curve and PR area
     # Compute PR curve and PR area
-    if aucType == 'PR':
+    else: # must be PR
         # Compute Precision-Recall and plot curve
-        precision, recall, _ = precision_recall_curve(labels, predictions)
+        precision, recall, thresh = precision_recall_curve(labels, predictions)
         average_precision = average_precision_score(labels, predictions)
         print('Area under PR curve (AU_PR): %0.2f' % average_precision)
+        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
+        for i in range(len(thresh)):
+            print('%5.2f %6.2f %10.2f' %(thresh[i],precision[i], recall[i]))
 
         # plot PR curve
-        if plotFlg == True:
+        if plotFlg is True:
             # Plot Precision-Recall curve
             plt.figure()
             plt.plot(recall, precision, lw=2, color='darkred',
@@ -332,6 +342,7 @@ def generateAUC(predictions, labels, aucType, plotFlg):
                 average_precision))
             plt.legend(loc="lower right")
             plt.show()
+    return (average_precision)
 
 if __name__ == "__main__":
     pass
