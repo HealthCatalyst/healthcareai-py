@@ -1,7 +1,10 @@
 from sklearn import model_selection
 from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import roc_curve, auc
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -10,6 +13,7 @@ from healthcareai.common.transformers import DataFrameImputer
 from healthcareai.common import filters
 import os
 from datetime import datetime
+from healthcareai.common import output_utilities
 
 class DevelopSupervisedModel(object):
     """
@@ -138,15 +142,9 @@ class DevelopSupervisedModel(object):
             print(self.X_test.shape)
             print(self.y_test.shape)
 
-    def save_output_to_json(filename,output):
-        with open(filename + '.json', 'w') as open_file:
-            json.dump(output, open_file, indent=4, sort_keys=True)
 
-    def save_output_to_pickle(filename,output):
-        with open(filename + '.pkl', 'wb') as open_file:
-            pickle.dump(random_search.best_estimator_, open_file)
 
-    def save_output_to_csv(filename,output):
+    def save_output_to_csv(self,filename,output):
         output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
                                   output['gridSearch_BestScore'],
                                   output['gridSearch_ScoreMetric'], ) \
@@ -351,16 +349,20 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def randomsearch(model_type,model,param_grid,cv
-                     n_iter,score_metric):
+    def randomsearch(self,
+                     model_type,model,
+                     param_grid,
+                     cv,
+                     n_iter,
+                     score_metric):
 
-        rs = RandomizedSearchCV(model,
+        rs = RandomizedSearchCV(estimator = model,
                         scoring = score_metric,
                         param_distributions=param_grid,
                         n_iter=n_iter,
                         cv = cv, 
-                        verbose = 1,
-                        n_jobs = -1)
+                        verbose = 0,
+                        n_jobs = 1)
         rs.fit(self.X_train, self.y_train)
 
         ######### Validation metrics #########
@@ -372,11 +374,11 @@ class DevelopSupervisedModel(object):
         recall = metrics.recall_score(self.y_test, y_preds) #sensitivity
         specificity = confustionMatrix[0][0] / (confustionMatrix[0][1] + confustionMatrix[0][0])
         f1 = metrics.f1_score(self.y_test, y_preds)
-        print(ConfusionMatrix(list(self.y_test), list(y_preds)))
-        print(metrics.classification_report(self.y_test, y_preds, digits=5))
+#        print(ConfusionMatrix(list(self.y_test), list(y_preds)))
+#        print(metrics.classification_report(self.y_test, y_preds, digits=5))
 
         #calculate roc_auc_score
-        probs = random_search.best_estimator_.predict_proba(self.X_test)[:, 1]
+        probs = rs.best_estimator_.predict_proba(self.X_test)[:, 1]
         roc_auc_score = metrics.roc_auc_score(self.y_test, probs)
    
         ######### Make file for output #########
@@ -387,31 +389,26 @@ class DevelopSupervisedModel(object):
         
         timeRanFile = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
         timeRan = str(datetime.utcnow())
-        filename = modelType + '_' + timeRanFile
+        filename = model_type + '_' + timeRanFile
         complete_filename = os.path.join(filepath, filename)
-        
+
         ######### Make dictionary with output #########
-        
-        output = {}   
+
+        output = {}
         output['modelType'] = self.modeltype
         output['modelTimeRan'] = timeRan
-        output['modelLabels'] = self.modeltype  
         output['data_rowCount'] = self.X_train.shape[0]
         output['data_columnCount'] = self.X_train.shape[1]
         output['data_columnNames'] = self.X_train.columns.tolist()
-        output['gridSearch'] = 'Yes'
-        output['gridSearch_Type'] = 'RandomSearch'
-        output['gridSearch_Params'] = str(param_grid)
-        output['gridSearch_TimeToRun'] = timeToRunGS
-        output['gridSearch_Iters'] = n_iter_search
-        output['gridSearch_GridScores'] = str(random_search.grid_scores_)
-        output['gridSearch_BestScore'] = random_search.best_score_
-        output['gridSearch_Model'] = str(model)
-        output['gridSearch_ScoreMetric'] = str(scoreMetric)
-        output['gridSearch_ScoreingMethod'] = str(scoreMetric)
-        output['bestModel'] = str(random_search.best_estimator_)
-        output['bestmodel_Dict'] = str(random_search.best_estimator_.__dict__)
-        output['bestmodel_File'] = filename
+        output['param_grid'] = str(param_grid)
+        output['random_search_n_iterations'] = n_iter
+        output['random_search_GridScores'] = str(rs.cv_results_)
+        output['random_search_BestScore'] = rs.best_score_
+        output['random_search_Model'] = str(model)
+        output['gridSearch_ScoreMetric'] = str(score_metric) 
+        output['best_estimator'] = str(rs.best_estimator_)
+        output['best_estimator_dict'] = str(rs.best_estimator_.__dict__)
+        output['bestmodel_filename'] = filename
         output['bestModel_Validation_Roc_auc'] = roc_auc_score
         output['bestModel_Validation_ConfusionMatrix'] = confustionMatrix.tolist()
         output['bestModel_Validation_Accuracy'] = accuracy
@@ -421,11 +418,11 @@ class DevelopSupervisedModel(object):
         output['bestModel_Validation_F1'] = f1 
         output['bestModel_Validation_rowCount'] = self.y_train.shape[0]
         
-        ######### Save roc_auc image #########    
-        
-        fpr, tpr, thresholds = metrics.roc_curve(self.y_train, probs)
-        
-        self.save_output_to_csv(complete_filename,output)
-        self.save_output_to_json(complete_filename,output)
-        self.save_output_to_pickle(complete_filename,output)
+#        self.save_output_to_csv(complete_filename,output)
+#        output_utilities.save_output_to_json(complete_filename,output)
+#        output_utilities.save_best_estimator_to_pickle(complete_filename,rs.best_estimator_)
+        output_utilities.save_output_to_json('random_search.json',output)
+        output_utilities.save_best_estimator_to_pickle('random_search',rs.best_estimator_)
+
+        print("Done running random search.")
         
