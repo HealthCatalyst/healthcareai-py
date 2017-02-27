@@ -349,12 +349,7 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def randomsearch(self,
-                     model_type,model,
-                     param_grid,
-                     cv,
-                     n_iter,
-                     score_metric):
+    def randomsearch(self, model, param_grid, cv, n_iter, score_metric):
 
         rs = RandomizedSearchCV(estimator = model,
                         scoring = score_metric,
@@ -367,62 +362,60 @@ class DevelopSupervisedModel(object):
 
         ######### Validation metrics #########
 
-        y_preds = rs.best_estimator_.predict(self.X_test)
-        confustionMatrix = metrics.confusion_matrix(self.y_test, y_preds)
-        accuracy = metrics.accuracy_score(self.y_test, y_preds)
-        precision = metrics.precision_score(self.y_test, y_preds)
-        recall = metrics.recall_score(self.y_test, y_preds) #sensitivity
-        specificity = confustionMatrix[0][0] / (confustionMatrix[0][1] + confustionMatrix[0][0])
-        f1 = metrics.f1_score(self.y_test, y_preds)
-#        print(ConfusionMatrix(list(self.y_test), list(y_preds)))
-#        print(metrics.classification_report(self.y_test, y_preds, digits=5))
+        y_predictions = rs.best_estimator_.predict(self.X_test)
+        confusion_matrix = metrics.confusion_matrix(self.y_test, y_predictions)
+        accuracy = metrics.accuracy_score(self.y_test, y_predictions)
+        precision = metrics.precision_score(self.y_test, y_predictions)
+        recall = metrics.recall_score(self.y_test, y_predictions) #sensitivity
+        specificity = confusion_matrix[0][0] / (confusion_matrix[0][1] + confusion_matrix[0][0])
+        f1 = metrics.f1_score(self.y_test, y_predictions)
+        # print(ConfusionMatrix(list(self.y_test), list(y_predictions)))
+        # print(metrics.classification_report(self.y_test, y_predictions, digits=5))
 
-        #calculate roc_auc_score
-        probs = rs.best_estimator_.predict_proba(self.X_test)[:, 1]
-        roc_auc_score = metrics.roc_auc_score(self.y_test, probs)
+        # calculate roc_auc_score
+        probabilities = rs.best_estimator_.predict_proba(self.X_test)[:, 1]
+        roc_auc_score = metrics.roc_auc_score(self.y_test, probabilities)
    
         ######### Make file for output #########
 
-        starttime = str(datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S'))
-        filepath = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "models", starttime))
-        os.makedirs(filepath)
+        start_time = str(datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S'))
+        filepath = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "models", start_time))
+        # TODO we may not want to create directories (for example, we may want to just direclty save to azure)
+        # os.makedirs(filepath)
         
-        timeRanFile = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
-        timeRan = str(datetime.utcnow())
-        filename = model_type + '_' + timeRanFile
+        time_ran = str(datetime.utcnow())
+        filename = model_type + '_' + datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
         complete_filename = os.path.join(filepath, filename)
 
-        ######### Make dictionary with output #########
+        # Setup a dict of important metrics
+        model_validation_metrics = {
+            'model_type': self.modeltype,
+            'time_run': time_ran,
+            'data_row_count': self.X_train.shape[0],
+            'data_column_count': self.X_train.shape[1],
+            'data_column_names': self.X_train.columns.tolist(),
+            'param_grid': str(param_grid),
+            'random_search_n_iterations': n_iter,
+            'random_search_grid_scores': str(rs.cv_results_),
+            'random_search_best_score': rs.best_score_,
+            'random_search_model': str(model),
+            'grid_search_score_metric': str(score_metric),
+            'best_estimator': str(rs.best_estimator_),
+            't_estimator_dict': str(rs.best_estimator_.__dict__),
+            'best_model_filename': filename,
+            'best_model_validation_roc_auc': roc_auc_score,
+            'best_model_validation_confusion_matrix': confusion_matrix.tolist(),
+            'best_model_validation_accuracy': accuracy,
+            'best_model_validation_precision': precision,
+            'best_model_validation_recall': recall,
+            'best_model_validation_specificity': specificity,
+            'best_model_validation_f1': f1,
+            'best_model_validation_row_count': self.y_train.shape[0]
+        }
 
-        output = {}
-        output['modelType'] = self.modeltype
-        output['modelTimeRan'] = timeRan
-        output['data_rowCount'] = self.X_train.shape[0]
-        output['data_columnCount'] = self.X_train.shape[1]
-        output['data_columnNames'] = self.X_train.columns.tolist()
-        output['param_grid'] = str(param_grid)
-        output['random_search_n_iterations'] = n_iter
-        output['random_search_GridScores'] = str(rs.cv_results_)
-        output['random_search_BestScore'] = rs.best_score_
-        output['random_search_Model'] = str(model)
-        output['gridSearch_ScoreMetric'] = str(score_metric) 
-        output['best_estimator'] = str(rs.best_estimator_)
-        output['best_estimator_dict'] = str(rs.best_estimator_.__dict__)
-        output['bestmodel_filename'] = filename
-        output['bestModel_Validation_Roc_auc'] = roc_auc_score
-        output['bestModel_Validation_ConfusionMatrix'] = confustionMatrix.tolist()
-        output['bestModel_Validation_Accuracy'] = accuracy
-        output['bestModel_Validation_Precision'] = precision
-        output['bestModel_Validation_Recall'] = recall
-        output['bestModel_Validation_Specificity'] = specificity
-        output['bestModel_Validation_F1'] = f1 
-        output['bestModel_Validation_rowCount'] = self.y_train.shape[0]
-        
+        # Save important things to files
 #        self.save_output_to_csv(complete_filename,output)
-#        output_utilities.save_output_to_json(complete_filename,output)
-#        output_utilities.save_best_estimator_to_pickle(complete_filename,rs.best_estimator_)
-        output_utilities.save_output_to_json('random_search.json',output)
-        output_utilities.save_best_estimator_to_pickle('random_search',rs.best_estimator_)
+        output_utilities.save_output_to_json(complete_filename + '.json', model_validation_metrics)
+        output_utilities.save_best_estimator_to_pickle(complete_filename, rs.best_estimator_)
 
         print("Done running random search.")
-        
