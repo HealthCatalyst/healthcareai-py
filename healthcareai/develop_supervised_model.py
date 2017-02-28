@@ -415,7 +415,7 @@ class DevelopSupervisedModel(object):
 
         # Save important things to files
 #        self.save_output_to_csv(complete_filename,output)
-        output_utilities.save_output_to_json(complete_filename + '.json', model_validation_metrics)
-        output_utilities.save_best_estimator_to_pickle(complete_filename, rs.best_estimator_)
+        output_utilities.save_dict_object_to_json(complete_filename + '.json', model_validation_metrics)
+        output_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
 
         print("Done running random search.")
