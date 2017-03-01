@@ -1,11 +1,15 @@
 import pickle
 from azure.storage.blob import BlockBlobService
+from azure.common import AzureMissingResourceHttpError
 
 
 class AzureBlobStorageHelper:
     """Azure Blob Storage Helper
 
     This class helps you store blobs on Azure's Blob Storage Service.
+
+    Note you do need to have the azure-storage python package installed. It is intentionally not included here to keep the
+    dependencies of healthcareai light.
 
     After instantiating the class with your Azure account name and key you can easily upload text blobs and objects
     (that this class automatically pickles for you).
@@ -66,4 +70,15 @@ class AzureBlobStorageHelper:
         Creates a new container on azure if it does not exist.
         :param container_name: the name of the container
         """
-        self._connection.create_container(container_name)
+        try:
+            return self._connection.create_container(container_name)
+        except AzureMissingResourceHttpError as ae:
+            raise(AzureBlobStorageHelperError('The specified container does not exist.'))
+
+
+class AzureBlobStorageHelperError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return repr(self.message)
