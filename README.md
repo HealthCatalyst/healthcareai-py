@@ -20,10 +20,10 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - Upgrade to latest scipy (note that upgrade command took forever)
 - Run `conda remove scipy`
 - Run `conda install scipy`
-- To install the latest release, run 
-    * `pip install healthcareai`
-- If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run
-    * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+- Install our package using **one and only one** of these three methods (ordered from easiest to hardest).
+    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
+    2. Install the latest release with pip run `pip install healthcareai`
+    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
  
 ### Linux
 
