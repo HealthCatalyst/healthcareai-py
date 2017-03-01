@@ -1,9 +1,10 @@
 # healthcareai
 
-- Windows Build Status: ![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
-- [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
-- [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
-- [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/license.svg)](https://anaconda.org/catalyst/healthcareai)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
+[![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalystSLC/healthcareai-py/master/LICENSE)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
@@ -15,16 +16,24 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 ### Windows
 
 - If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
+    - **Important** When prompted for the **Installation Type**, select **Just Me (recommended)**. This makes permissions later in the process much simpler.
 - Open the terminal (i.e., CMD or PowerShell, if using Windows)
 - Run `conda install pyodbc`
 - Upgrade to latest scipy (note that upgrade command took forever)
 - Run `conda remove scipy`
 - Run `conda install scipy`
-- Install our package using **one and only one** of these three methods (ordered from easiest to hardest).
+- Run `conda install scikit-learn`
+- Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
     2. Install the latest release with pip run `pip install healthcareai`
     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
- 
+
+#### Why Anaconda?
+
+We recommend using the Anaconda python distribution when working on Windows. There are a number of reasons:
+- When running anaconda and installing packages using the `conda` command, you don't need to worry about [dependency hell](https://en.wikipedia.org/wiki/Dependency_hell), particularly because packages aren't compiled on your machine; `conda` installs pre-compiled binaries.
+- A great example of the pain the using `conda` saves you is with the python package **scipy**, which, by [their own admission](http://www.scipy.org/scipylib/building/windows.html) *"is difficult"*.
+
 ### Linux
 
 You may need to install the following dependencies:
@@ -135,3 +144,20 @@ It's also worth noting that while this *should* be done on the [pypi test site](
     - `twine upload dist/healthcareai-<version>.tar.gz`
     - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before you push to github.
 4. Verify install on all three platforms (linux, macOS, windows) by first `pip uninstall healthcareai` and then `pip install healthcareai`, followed by a `from healthcareai import develop_supervised_model` in a python REPL.
+
+### Release process (Including Read The Docs)
+
+1. update all version numbers
+    - `setup.py`
+2. update CHANGELOG
+    - Move all items under **unreleased** to a new release number
+    - Leave the template under **unreleased**
+3. merge in the PR
+4. create release on github releases (making sure this matches the release number in `setup.py`)
+5. Create and upload the new pypi release (see above)
+6. update readthedocs settings
+    - **Admin** > **Versions**
+    - Ensure that the new release number is checked for **public**
+7. Manually build new read the docs
+    - **Builds** > **Build version <new release>**
+8. verify the new version builds and is viewable at the public url
