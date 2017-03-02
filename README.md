@@ -64,7 +64,7 @@ If you did get an error, or run into other installation issues, please [let us k
 ## Getting started
 
 - Visit [healthcare.ai](healthcare.ai/py) to read the docs and find examples.
-    * Including this [notebook](healthcare.ai/notebooks/Example1.ipynb)
+    * Including this [notebook](notebooks/Example1.ipynb)
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
