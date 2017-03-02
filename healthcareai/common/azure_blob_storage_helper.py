@@ -20,10 +20,10 @@ class AzureBlobStorageHelper:
         ```
         my_azure = AzureHelper('fakeyname123', 'fakeyfakefakefakekey12312312')
         my_azure.create_container('my_new_container')
-        my_azure.save_text_blob_to_azure('text goes here...', 'my_filename.txt', 'my_new_container')
+        my_azure.save_text_blob('text goes here...', 'my_filename.txt', 'my_new_container')
 
         stuff = {'model_type': 'random_forest', 'weights': [2, 5, 1, 3, 6], 'hyper_parameters': {'a': 33.3, 'b': 42.2}}
-        my_azure.save_object_as_pickle_to_azure(stuff, 'stuff.pkl', 'my_new_container')
+        my_azure.save_object_as_pickle(stuff, 'stuff.pkl', 'my_new_container')
 
         ```
 
@@ -43,7 +43,7 @@ class AzureBlobStorageHelper:
         """Returns and instance of BlockBlobService"""
         return BlockBlobService(account_name=self._account_name, account_key=self._account_key)
 
-    def save_text_blob_to_azure(self, blob, blob_name, container):
+    def save_text_blob(self, blob, blob_name, container):
         """
         Saves a blob of text to azure
         :param blob: the blob of text
@@ -53,7 +53,7 @@ class AzureBlobStorageHelper:
         """
         return self._connection.create_blob_from_text(container_name=container, blob_name=blob_name, text=blob)
 
-    def save_object_as_pickle_to_azure(self, object_to_pickle, blob_name, container):
+    def save_object_as_pickle(self, object_to_pickle, blob_name, container):
         """
         Save an object as a pickle file to azure
         :param object_to_pickle: the object you want pickled 'n shipped
