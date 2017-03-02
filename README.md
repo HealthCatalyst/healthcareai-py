@@ -63,7 +63,7 @@ If you did get an error, or run into other installation issues, please [let us k
 
 ## Getting started
 
-- Visit [healthcare.ai](healthcare.ai/py) to read the docs and find examples.
+- Visit [healthcare.ai](http://healthcareai-py.readthedocs.io/en/latest/) to read the docs and find examples.
     * Including this [notebook](notebooks/Example1.ipynb)
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
@@ -93,7 +93,7 @@ Note that we're currently working on easy connections to other types of database
 
 ## For Issues
 
-- Double check that the code follows the examples at [healthcare.ai/py](http://healthcare.ai/py/)
+- Double check that the code follows the examples [here](http://healthcareai-py.readthedocs.io/en/latest/)
 - If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
