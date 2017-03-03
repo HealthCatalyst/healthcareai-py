@@ -325,7 +325,7 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         return ({'AU_ROC': area,
                  'BestCutoff': cutoff[0],
                  'BestTpr': bestTpr[0],
-                 'BestFPR': bestFpr[0]})
+                 'BestFpr': bestFpr[0]})
     # Compute PR curve and PR area
     else: # must be PR
         # Compute Precision-Recall and plot curve
