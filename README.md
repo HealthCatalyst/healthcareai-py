@@ -160,3 +160,37 @@ It's also worth noting that while this *should* be done on the [pypi test site](
 7. Manually build new read the docs
     - **Builds** > **Build version <new release>**
 8. verify the new version builds and is viewable at the public url
+
+### Conda Packaging and Distribution
+
+Creating a conda package is much easier if you have already built the PyPI package.
+
+1. Install prerequisites (only needed once)
+    + Install conda build `conda install conda-build`
+    + Install anaconda cli `conda install anaconda-client`
+    + Login to anaconda.org with `anaconda login`
+2. Configure conda
+    + `conda config --set always_yes true`
+    + `conda config --set anaconda_upload no`
+3. Create the skeleton conda recipe from the existing PyPI package
+    + `conda skeleton pypi healthcareai`
+4. Build the conda package for the main python versions
+    + `conda build --python 2.7 healthcareai`
+    + `conda build --python 3.4 healthcareai`
+    + `conda build --python 3.5 healthcareai`
+    + `conda build --python 3.6 healthcareai`
+5. Convert the existing builds to work on all platforms (win32, win64, osx62, linux32, linux64). Note this can take a while.
+    + `conda convert --platform all win-64/healthcareai-*-py*.tar.bz2 -o <PATH_TO_BUILD_DIRECTORY>`
+6. Upload to anaconda using the anaconda cli
+    + Note that you'll have to keep track of where the builds are put!
+    + `anaconda upload <PATH_TO_BUILD_DIRECTORY>/**/healthcareai*.tar.bz2`
+7. Clean up the mess
+    + `conda build purge`
+
+##### Helpful Resources
+
+- Conda [Building Packages](https://conda.io/docs/building/build.html)
+- [Anaconda.org dashboard](https://anaconda.org/catalyst/healthcareai)
+- Taken from the excellent [conda.io docs](https://conda.io/docs/build_tutorials/pkgs.html)
+- Also, some taken from this [Travis CI build](https://gist.github.com/yoavram/05a3c04ddcf317a517d5)#
+
