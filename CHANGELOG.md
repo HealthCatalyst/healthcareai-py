@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- AzureBlogStorageHelper class to make storing text & pickled objects simple.
+
 ### Changed
 
 ### Fixed

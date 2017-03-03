@@ -1,6 +1,8 @@
 # healthcareai
 
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalystSLC/healthcareai-py/master/LICENSE)
 
@@ -10,7 +12,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 -  Provide tools related to data cleaning, manipulation, and imputation.
 
 ## Installation
- 
+
 ### Windows
 
 - If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
@@ -21,18 +23,17 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - Run `conda remove scipy`
 - Run `conda install scipy`
 - Run `conda install scikit-learn`
-- Install healthcareai:
- - **Recommended** Install the latest release: 
-     * `pip install healthcareai`
- - **For advanced users** that want bleeding-edge version direct from our github repo:
-     * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+- Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
+    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
+    2. Install the latest release with pip run `pip install healthcareai`
+    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
 
 #### Why Anaconda?
 
 We recommend using the Anaconda python distribution when working on Windows. There are a number of reasons:
 - When running anaconda and installing packages using the `conda` command, you don't need to worry about [dependency hell](https://en.wikipedia.org/wiki/Dependency_hell), particularly because packages aren't compiled on your machine; `conda` installs pre-compiled binaries.
 - A great example of the pain the using `conda` saves you is with the python package **scipy**, which, by [their own admission](http://www.scipy.org/scipylib/building/windows.html) *"is difficult"*.
-  
+
 ### Linux
 
 You may need to install the following dependencies:
