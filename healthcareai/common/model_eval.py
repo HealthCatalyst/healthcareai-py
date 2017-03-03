@@ -296,8 +296,16 @@ def GenerateAUC(predictions, labels, aucType, plotFlg):
     # Compute ROC curve and ROC area
     if aucType is 'SS':
         fpr, tpr, thresh = roc_curve(labels, predictions)
-        roc_auc = auc(fpr, tpr)
-        print('Area under ROC curve (AUC): %0.2f' % roc_auc)
+        area = auc(fpr, tpr)
+        print('Area under ROC curve (AUC): %0.2f' % area)
+
+        # get ideal cutoffs for suggestions
+        d = (fpr - 0) ^ 2 + (tpr - 1) ^ 2
+        ind = (d == np.min(d))
+        bestTpr = tpr[ind]
+        bestFpr = fpr[ind]
+        cutoff = thresh[ind]
+
         print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
         for i in range(len(thresh)):
             print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
@@ -315,15 +323,13 @@ def GenerateAUC(predictions, labels, aucType, plotFlg):
             plt.title('Receiver operating characteristic curve')
             plt.legend(loc="lower right")
             plt.show()
-        return (roc_auc)
 
-        # Compute PR curve and PR area
     # Compute PR curve and PR area
     else: # must be PR
         # Compute Precision-Recall and plot curve
         precision, recall, thresh = precision_recall_curve(labels, predictions)
-        average_precision = average_precision_score(labels, predictions)
-        print('Area under PR curve (AU_PR): %0.2f' % average_precision)
+        area = average_precision_score(labels, predictions)
+        print('Area under PR curve (AU_PR): %0.2f' % area)
         print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
         for i in range(len(thresh)):
             print('%5.2f %6.2f %10.2f' %(thresh[i],precision[i], recall[i]))
@@ -342,7 +348,7 @@ def GenerateAUC(predictions, labels, aucType, plotFlg):
                 average_precision))
             plt.legend(loc="lower right")
             plt.show()
-    return (average_precision)
+    return (area)
 
 if __name__ == "__main__":
     pass
