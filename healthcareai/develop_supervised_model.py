@@ -44,104 +44,115 @@ class DevelopSupervisedModel(object):
     Object representing the cleaned data, against which methods are run
     """
 
-    def __init__(self,
-                 modeltype,
-                 df,
-                 predictedcol,
-                 impute,
-                 graincol=None,
-                 debug=False):
-
+    def __init__(self, df, predictedcol, modeltype):
         self.df = df
         self.predictedcol = predictedcol
         self.modeltype = modeltype
-        self.impute = impute
-        self.y_probab_linear = None
-        self.y_probab_rf = None
-        self.col_list = None
-        self.rfclf = None
-        self.X_train = None
-        self.y_train = None
-        self.X_test = None
-        self.y_test = None
-        self.au_roc = None
 
-        if debug:
-            print('Shape and top 5 rows of original dataframe:')
-            print(self.df.shape)
-            print(self.df.head())
-
-        #remove datetime columns
-        self.df = filters.remove_datetime_columns(self.df)
-
-        # Remove graincol (if specified)
-        if graincol:
-            self.df.drop(graincol, axis=1, inplace=True)
-
-        if debug:
-            print('\nDataframe after removing DTS columns:')
-            print(self.df.head())
-            print('\nNow either doing imputation or dropping rows with NULLs')
-
-        if self.impute:
-            self.df = DataFrameImputer().fit_transform(self.df)
-            # This class comes from here:
-            # http://stackoverflow.com/a/25562948/5636012
-            if debug:
-                print('\nself.df after doing imputation:')
-                print(self.df.shape)
-                print(self.df.head())
-        else:
-            # TODO switch similar statements to work inplace
-            self.df = self.df.dropna(axis=0, how='any', inplace=True)
-            print('\nself.df after dropping rows with NULLS:')
-            print(self.df.shape)
-            print(self.df.head())
-
-        #CALL new function!!
-        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Note that this makes healthcareai only handle N/Y in pred column
-        if self.modeltype == 'classification':
-            # Turning off warning around replace
-            pd.options.mode.chained_assignment = None  # default='warn'
-            # TODO: put try/catch here when type = class and predictor is numer
-            self.df[self.predictedcol].replace(['Y', 'N'], [1, 0],
-                                               inplace=True)
-
-            if debug:
-                print('\nDataframe after converting to 1/0 instead of Y/N for '
-                      'classification:')
-                print(self.df.head())
-
-        # Remove rows with null values in predicted col
-        self.df = self.df[pd.notnull(self.df[self.predictedcol])]
-
-        if debug:
-            print('\nself.df after removing rows where predicted col is NULL:')
-            print(self.df.shape)
-            print(self.df.head())
-
-        # Create dummy vars for all cols but predictedcol
-        # First switch (temporarily) pred col to numeric (so it's not dummy)
-        self.df[self.predictedcol] = pd.to_numeric(
-            arg=self.df[self.predictedcol], errors='raise')
-        self.df = pd.get_dummies(self.df, drop_first=True, prefix_sep='.')
-
-        y = np.squeeze(self.df[[self.predictedcol]])
-        X = self.df.drop([self.predictedcol], axis=1)
-
-        # Split the dataset in two equal parts
-        self.X_train, self.X_test, self.y_train, self.y_test = \
-            model_selection.train_test_split(
+        X = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+        print(X.head())
+        y = df['species']
+        print(y.head())
+        self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
                 X, y, test_size=.20, random_state=0)
 
-        if debug:
-            print('\nShape of X_train, y_train, X_test, and y_test:')
-            print(self.X_train.shape)
-            print(self.y_train.shape)
-            print(self.X_test.shape)
-            print(self.y_test.shape)
-
+    # def __init__(self,
+    #              modeltype,
+    #              df,
+    #              predictedcol,
+    #              impute,
+    #              graincol=None,
+    #              debug=False):
+    #
+    #     self.df = df
+    #     self.predictedcol = predictedcol
+    #     self.modeltype = modeltype
+    #     self.impute = impute
+    #     self.y_probab_linear = None
+    #     self.y_probab_rf = None
+    #     self.col_list = None
+    #     self.rfclf = None
+    #     self.X_train = None
+    #     self.y_train = None
+    #     self.X_test = None
+    #     self.y_test = None
+    #     self.au_roc = None
+    #
+    #     if debug:
+    #         print('Shape and top 5 rows of original dataframe:')
+    #         print(self.df.shape)
+    #         print(self.df.head())
+    #
+    #     #remove datetime columns
+    #     self.df = filters.remove_datetime_columns(self.df)
+    #
+    #     # Remove graincol (if specified)
+    #     if graincol:
+    #         self.df.drop(graincol, axis=1, inplace=True)
+    #
+    #     if debug:
+    #         print('\nDataframe after removing DTS columns:')
+    #         print(self.df.head())
+    #         print('\nNow either doing imputation or dropping rows with NULLs')
+    #
+    #     if self.impute:
+    #         self.df = DataFrameImputer().fit_transform(self.df)
+    #         # This class comes from here:
+    #         # http://stackoverflow.com/a/25562948/5636012
+    #         if debug:
+    #             print('\nself.df after doing imputation:')
+    #             print(self.df.shape)
+    #             print(self.df.head())
+    #     else:
+    #         # TODO switch similar statements to work inplace
+    #         self.df = self.df.dropna(axis=0, how='any', inplace=True)
+    #         print('\nself.df after dropping rows with NULLS:')
+    #         print(self.df.shape)
+    #         print(self.df.head())
+    #
+    #     #CALL new function!!
+    #     # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
+    #     # Note that this makes healthcareai only handle N/Y in pred column
+    #     if self.modeltype == 'classification':
+    #         # Turning off warning around replace
+    #         pd.options.mode.chained_assignment = None  # default='warn'
+    #         # TODO: put try/catch here when type = class and predictor is numer
+    #         self.df[self.predictedcol].replace(['Y', 'N'], [1, 0],
+    #                                            inplace=True)
+    #
+    #         if debug:
+    #             print('\nDataframe after converting to 1/0 instead of Y/N for '
+    #                   'classification:')
+    #             print(self.df.head())
+    #
+    #     # Remove rows with null values in predicted col
+    #     self.df = self.df[pd.notnull(self.df[self.predictedcol])]
+    #
+    #     if debug:
+    #         print('\nself.df after removing rows where predicted col is NULL:')
+    #         print(self.df.shape)
+    #         print(self.df.head())
+    #
+    #     # Create dummy vars for all cols but predictedcol
+    #     # First switch (temporarily) pred col to numeric (so it's not dummy)
+    #     self.df[self.predictedcol] = pd.to_numeric(
+    #         arg=self.df[self.predictedcol], errors='raise')
+    #     self.df = pd.get_dummies(self.df, drop_first=True, prefix_sep='.')
+    #
+    #     y = np.squeeze(self.df[[self.predictedcol]])
+    #     X = self.df.drop([self.predictedcol], axis=1)
+    #
+    #     # Split the dataset in two equal parts
+    #     self.X_train, self.X_test, self.y_train, self.y_test = \
+    #         model_selection.train_test_split(
+    #             X, y, test_size=.20, random_state=0)
+    #
+    #     if debug:
+    #         print('\nShape of X_train, y_train, X_test, and y_test:')
+    #         print(self.X_train.shape)
+    #         print(self.y_train.shape)
+    #         print(self.X_test.shape)
+    #         print(self.y_test.shape)
 
 
     def save_output_to_csv(self,filename,output):
@@ -156,7 +167,71 @@ class DevelopSupervisedModel(object):
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header= False)
 
-            
+    def automatic_classification(self, scoring_metric='accuracy'):
+        # TODO save models and stats
+
+        # Run two algoritms
+        print('running KNN')
+        knn_randomized_grid_search = self.knn(scoring_metric=scoring_metric)
+        print('running LR')
+        logistic_regression = self.logistic_regression()
+
+        # compare two algorithms and return the best
+        knn_score = self.calculate_accuracy(knn_randomized_grid_search.best_estimator_)
+        lr_score = self.calculate_accuracy(logistic_regression)
+
+        if knn_score > lr_score:
+            best_algorithm = 'KNN'
+        else:
+            best_algorithm = 'Logistic Regression'
+
+        results = {
+            'logistic_regression_model': logistic_regression,
+            'knn_randomized_grid_search': knn_randomized_grid_search,
+            'knn_score': knn_score,
+            'logistic_regression_score': lr_score
+        }
+
+        print('Best algorithm is: {}'.format(best_algorithm))
+        print('{} accuracy = {}'.format('KNN', knn_score))
+
+        return results
+
+    def calculate_accuracy(self, trained_model):
+        predictions = trained_model.predict(self.X_test)
+        accuracy_score = metrics.accuracy_score(self.y_test, predictions)
+        print('accuracy = {}'.format(accuracy_score))
+        return accuracy_score
+
+    def logistic_regression(self):
+        # TODO STUB FINISH THIS
+        # add scoring options
+
+        result = LogisticRegressionCV().fit(self.X_train, self.y_train)
+
+        return result
+
+    def knn(self, hyperparameter_grid=None, scoring_metric='accuracy'):
+        # TODO
+        # add scoring options
+
+        if not hyperparameter_grid:
+            neighbor_list = list(range(10, 26))
+            print(neighbor_list)
+            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+
+        random_search = RandomizedSearchCV(estimator=KNeighborsClassifier(),
+                                           scoring=scoring_metric,
+                                           param_distributions=hyperparameter_grid,
+                                           n_iter=2,
+                                           cv=5,
+                                           verbose=0,
+                                           n_jobs=1)
+
+        random_search.fit(self.X_train, self.y_train)
+
+        return random_search
+
     def linear(self, cores=4, debug=False):
         """
         This method creates and assesses the accuracy of a logistic regression
@@ -419,3 +494,31 @@ class DevelopSupervisedModel(object):
         output_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
 
         print("Done running random search.")
+
+    def knn_stats(self, random_search):
+        model_validation_metrics = {
+            'model_type': self.modeltype,
+            'data_row_count': self.X_train.shape[0],
+            'data_column_count': self.X_train.shape[1],
+            'data_column_names': self.X_train.columns.tolist(),
+            'param_grid': str(random_search.param_distributions),
+            'random_search_n_iterations': random_search.n_iter,
+            'random_search_grid_scores': str(random_search.cv_results_),
+            'random_search_best_score': random_search.best_score_,
+            # 'random_search_model': str(model),
+            # 'grid_search_score_metric': str(score_metric),
+            'best_estimator': str(random_search.best_estimator_),
+            't_estimator_dict': str(random_search.best_estimator_.__dict__),
+            # 'best_model_filename': filename,
+            # 'best_model_validation_roc_auc': roc_auc_score,
+            # 'best_model_validation_confusion_matrix': confusion_matrix.tolist(),
+            # 'best_model_validation_accuracy': accuracy,
+            # 'best_model_validation_precision': precision,
+            # 'best_model_validation_recall': recall,
+            # 'best_model_validation_specificity': specificity,
+            # 'best_model_validation_f1': f1,
+            'best_model_validation_row_count': self.y_train.shape[0]
+        }
+
+    def save_models(self, random_search):
+        pass
