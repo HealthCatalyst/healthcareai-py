@@ -1,0 +1,2 @@
+class HealthcareAIError(Exception):
+    pass

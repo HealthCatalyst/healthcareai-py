@@ -1,19 +1,21 @@
-from sklearn import model_selection
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import roc_curve, auc
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
+import os
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn import metrics
+from sklearn import model_selection
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegressionCV
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.neighbors import KNeighborsClassifier
+
 from healthcareai.common import model_eval
-from healthcareai.common.transformers import DataFrameImputer
-from healthcareai.common import filters
-import os
-from datetime import datetime
 from healthcareai.common import output_utilities
+from healthcareai.common.healthcareai_error import HealthcareAIError
+
 
 class DevelopSupervisedModel(object):
     """
@@ -167,70 +169,129 @@ class DevelopSupervisedModel(object):
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header= False)
 
-    def automatic_classification(self, scoring_metric='accuracy'):
+    def automatic_ensemble_classification(self, scoring_metric='roc_auc', debug=False):
         # TODO save models and stats
+        # enumerate, document and validate scoring options http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
+        # Does one of those options make the most sense to pick a default?
+        # Can we algorithmically determine the best choice?
+        """
+        A simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
+        :param scoring_metric: Optional model comparison
+        :param debug: Optional verbose output
+        :return:
+        """
 
-        # Run two algoritms
-        print('running KNN')
-        knn_randomized_grid_search = self.knn(scoring_metric=scoring_metric)
-        print('running LR')
-        logistic_regression = self.logistic_regression()
+        self.validate_score_metric_for_number_of_classes(scoring_metric)
+        trained_models = []
 
-        # compare two algorithms and return the best
-        knn_score = self.calculate_accuracy(knn_randomized_grid_search.best_estimator_)
-        lr_score = self.calculate_accuracy(logistic_regression)
+        # compare algorithms and return the best. This list can grow as new algorithms are added
+        if debug:
+            print('running KNN')
+        knn = self.advanced_knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
 
-        if knn_score > lr_score:
-            best_algorithm = 'KNN'
-        else:
-            best_algorithm = 'Logistic Regression'
+        if debug:
+            print('running LR')
+        logistic_regression = self.advanced_logistic_regression()
+
+        # TODO loop over all the models?
+        knn_score = self.calculate_classification_metric(knn, scoring_metric=scoring_metric)
+        lr_score = self.calculate_classification_metric(logistic_regression, scoring_metric=scoring_metric)
+
+        trained_models.append({'name': 'knn', 'model': knn, 'score': knn_score})
+        trained_models.append({'name': 'logistic_regression', 'model': logistic_regression, 'score': lr_score})
+
+        sorted_trained_models = self.sort_models_by_score(trained_models)
+        best_algorithm_name = sorted_trained_models[0]['name']
+        best_score = sorted_trained_models[0]['score']
 
         results = {
-            'logistic_regression_model': logistic_regression,
-            'knn_randomized_grid_search': knn_randomized_grid_search,
-            'knn_score': knn_score,
-            'logistic_regression_score': lr_score
+            'best_score': best_score,
+            'best_algorithm_name': best_algorithm_name,
+            'model_scores': sorted_trained_models
         }
 
-        print('Best algorithm is: {}'.format(best_algorithm))
-        print('{} accuracy = {}'.format('KNN', knn_score))
+        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric, best_algorithm_name))
+        print('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
         return results
 
-    def calculate_accuracy(self, trained_model):
-        predictions = trained_model.predict(self.X_test)
-        accuracy_score = metrics.accuracy_score(self.y_test, predictions)
-        print('accuracy = {}'.format(accuracy_score))
-        return accuracy_score
+    def validate_score_metric_for_number_of_classes(self, metric):
+        # TODO make this more robust for other scoring metrics
+        """
+        Check that a user's choice of scoring metric makes sense with the number of prediction classes
+        :param metric: a string of the scoring metric
+        """
+        classes = self.determine_number_of_prediction_classes()
+        if classes is 2:
+            pass
+        elif classes > 2 and metric is 'roc_auc':
+            raise (HealthcareAIError(
+                'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def logistic_regression(self):
+    def sort_models_by_score(self, list_of_models, sort_attribute_name='score'):
+        results = sorted(list_of_models, key=lambda x: x[sort_attribute_name], reverse=True)
+        return results
+
+    def calculate_classification_metric(self, trained_model, scoring_metric='roc_auc'):
+        """
+        Given a trained model
+        :param trained_model:
+        :param scoring_metric:
+        :return:
+        """
+        predictions = trained_model.predict(self.X_test)
+        if scoring_metric is 'roc_auc':
+            result = metrics.roc_auc_score(self.y_test, predictions)
+        if scoring_metric is 'accuracy':
+            result = metrics.accuracy_score(self.y_test, predictions)
+
+        return result
+
+    def advanced_logistic_regression(self):
         # TODO STUB FINISH THIS
-        # add scoring options
+        # does it makes sense to wrap this in randomized search too?
+        # enumerate, document and validate scoring options
 
         result = LogisticRegressionCV().fit(self.X_train, self.y_train)
 
         return result
 
-    def knn(self, hyperparameter_grid=None, scoring_metric='accuracy'):
+    def advanced_knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         # TODO
-        # add scoring options
+        # enumerate, document and validate scoring options
+        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
 
-        if not hyperparameter_grid:
-            neighbor_list = list(range(10, 26))
-            print(neighbor_list)
-            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+        """
+        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overrideable)
+        hyperparameter grid.
+        :param randomized_search: Defaults to true to perform randomized search
+        :param hyperparameter_grid: An optional custom hyperparameter grid
+        :return: a trained model
+        """
+        algorithm = KNeighborsClassifier(n_neighbors=5)
 
-        random_search = RandomizedSearchCV(estimator=KNeighborsClassifier(),
-                                           scoring=scoring_metric,
-                                           param_distributions=hyperparameter_grid,
-                                           n_iter=2,
-                                           cv=5,
-                                           verbose=0,
-                                           n_jobs=1)
+        if randomized_search:
+            if not hyperparameter_grid:
+                neighbor_list = list(range(10, 26))
+                hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
-        random_search.fit(self.X_train, self.y_train)
+            algorithm = RandomizedSearchCV(estimator=KNeighborsClassifier(),
+                                               scoring=scoring_metric,
+                                               param_distributions=hyperparameter_grid,
+                                               n_iter=2,
+                                               cv=5,
+                                               verbose=0,
+                                               n_jobs=1)
 
-        return random_search
+        return algorithm.fit(self.X_train, self.y_train)
+
+    def determine_number_of_prediction_classes(self):
+        """
+        Count the number of prediction classes by enumerating and counting the unique target values in the dataframe
+        :return: number of target classes
+        """
+        uniques = self.df[self.predictedcol].unique()
+        return len(uniques)
 
     def linear(self, cores=4, debug=False):
         """
@@ -319,7 +380,6 @@ class DevelopSupervisedModel(object):
                                                     cores=cores,
                                                     tune=tune,
                                                     col_list=self.col_list)
-
 
     def plot_roc(self, save=False, debug=False):
         """
