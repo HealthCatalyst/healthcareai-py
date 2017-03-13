@@ -3,11 +3,12 @@ import time
 import numpy as np
 from datetime import datetime, timedelta, date
 import matplotlib.pyplot as plt
+from healthcareai.common.healthcareai_error import HealthcareAIError
 
-def featureAvailabilityProfiler(df, admitColName='AdmitDTS',
-                                lastLoadColName='LastLoadDTS',
-                                plotFLG=True,
-                                listFLG=False):
+def feature_availability_profiler(dataFrame, admitColName='AdmitDTS',
+                                  lastLoadColName='LastLoadDTS',
+                                  plotFlag=True,
+                                  listFlag=False):
 
     """
     This function counts the number of populated data values over time for a
@@ -15,27 +16,30 @@ def featureAvailabilityProfiler(df, admitColName='AdmitDTS',
 
     Parameters
     ----------
-    df (dataframe) : dataframe of features to count populated data in. This
+    dataFrame (dataframe) : dataframe of features to count populated data in. This
       table must have a 2 date columns: one for patient admission date, one for
       today's date (or when the table was last loaded). Minimum 3 columns.
     admitColName (str) : name of column containing patient admission date
     lastLoadColName (str) : name of column containing today's date or when the
       table was last loaded.
-    listFLG (bol) : True will return a matrix of populated fields vs. time.
+    plotFlag (bol) : True will return a plot of the data availability.
+    listFlag (bol) : True will return a matrix of populated fields vs. time.
 
     Returns
     -------
     numData (df) : a DF of populated fields vs. time.
-    :param plotFLG:
+    :param plotFlag:
     """
+
+    df = dataFrame
 
     # Error checks
     if df[admitColName].dtype != 'datetime64[ns]':
-        raise Exception('Admit Date column is not a date type')
+        raise HealthcareAIError('Admit Date column is not a date type')
     if df[lastLoadColName].dtype != 'datetime64[ns]':
-        raise Exception('Last Load Date column is not a date type')
+        raise HealthcareAIError('Last Load Date column is not a date type')
     if df.shape[1] < 3:
-        raise Exception('Dataframe must be at least 3 columns')
+        raise HealthcareAIError('Dataframe must be at least 3 columns')
 
     # Look at data that's been pulled in
     print(df.head())
@@ -79,10 +83,10 @@ def featureAvailabilityProfiler(df, admitColName='AdmitDTS',
     numData['Age'] = numData['Age'].round(decimals=1)
     numData.set_index('Age', inplace=True)
     print('Age is the number of days since patient admission.')
-    if listFLG is True:
+    if listFlag is True:
         print(numData)
 
-    if plotFLG is True:
+    if plotFlag is True:
         # plot nulls vs time.
         plt.plot(numData)
         plt.plot(lw=2, linestyle='--')
@@ -96,12 +100,8 @@ def featureAvailabilityProfiler(df, admitColName='AdmitDTS',
 
 def count_nulls_in_date_range(df, start, end, admitColName):
 
-    # called by featureAvailabilityProfiler to count nulls within a date range.
+    # called by feature_availability_profiler to count nulls within a date range.
     mask = (df[admitColName] > start) & (df[admitColName] <= end)
     df = df.loc[mask]
     numData = 100 - np.round(100*df.isnull().sum()/df.shape[0])
     return(numData)
-
-
-if __name__ == "__main__":
-    pass
