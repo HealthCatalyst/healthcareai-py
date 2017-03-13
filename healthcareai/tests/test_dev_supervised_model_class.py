@@ -18,7 +18,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
         # Convert numeric columns to factor/category columns
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
-                                        df=df,
+                                        dataframe=df,
                                         predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
         self.o.random_forest(cores=1)
@@ -41,7 +41,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
-                                        df=df,
+                                        dataframe=df,
                                         predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
 
@@ -64,7 +64,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
-                                        df=df,
+                                        dataframe=df,
                                         predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
 
@@ -78,15 +78,14 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
-                         na_values=['None'])
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
 
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
         self.o = DevelopSupervisedModel(modeltype='classification',
-                                        df=df,
+                                        dataframe=df,
                                         predictedcol='ThirtyDayReadmitFLG',
                                         impute=True)
         self.o.linear(cores=1)
@@ -98,6 +97,23 @@ class TestLinearDevTuneFalse(unittest.TestCase):
     def tearDown(self):
         del self.o
 
+
+class TestHelpers(unittest.TestCase):
+    def test_class_counter_on_binary(self):
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        ml = DevelopSupervisedModel(modeltype='classification', dataframe=df, predictedcol='ThirtyDayReadmitFLG')
+
+        result = ml.determine_number_of_prediction_classes()
+
+        self.assertEqual(result, 2)
+
+    def test_class_counter_on_binary(self):
+        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        ml = DevelopSupervisedModel(modeltype='classification', dataframe=df, predictedcol='PatientID')
+
+        result = ml.determine_number_of_prediction_classes()
+
+        self.assertEqual(result, 2)
 
 if __name__ == '__main__':
     unittest.main()

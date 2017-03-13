@@ -8,48 +8,29 @@ import numpy as np
 import pandas as pd
 
 
-def clfreport(modeltype,
-              debug,
-              devcheck,
-              algo,
-              X_train,
-              y_train,
-              X_test,
-              y_test=None,
-              param=None,
-              cores=4,
-              tune=False,
-              use_saved_model=False,
-              col_list=None):
+def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test=None, param=None, cores=4, tune=False, use_saved_model=False, col_list=None):
+    """
+    Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
+    - runs grid search
+    - load a pickled model
+    - print out debug messages
+    - train the classifier
+    - do some numpy manipulation
+    - possible returns:
+        - a single prediction
+        - a prediction and an roc_auc score
+        - spits out feature importances (if they exist)
+        - saves a pickled model
+
+    Note this serves at least 3 uses
     """
 
-    Parameters
-    ----------
-    modeltype
-    debug
-    devcheck
-    algo
-    X_train
-    y_train
-    X_test
-    y_test
-    param
-    cores
-    tune
-    use_saved_model
-    col_list
-
-    Returns
-    -------
-
-    """
-
-    # Initialize conditional vars that depend on ifelse to avoid PC warnng
+    # Initialize conditional vars that depend on ifelse to avoid PC warning
     y_pred_class = None
     y_pred = None
 
+    # compare algorithms
     if devcheck == 'yesdev':
-
         if tune:
             clf = GridSearchCV(algo,
                                param,

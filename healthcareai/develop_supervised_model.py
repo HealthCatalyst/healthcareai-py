@@ -12,6 +12,7 @@ from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 
+from healthcareai.common import filters
 from healthcareai.common import model_eval
 from healthcareai.common import output_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -46,116 +47,121 @@ class DevelopSupervisedModel(object):
     Object representing the cleaned data, against which methods are run
     """
 
-    def __init__(self, df, predictedcol, modeltype):
-        self.df = df
+    def __init__(self, dataframe, predictedcol, modeltype, graincol=None, verbose=False):
+        self.dataframe = dataframe
         self.predictedcol = predictedcol
         self.modeltype = modeltype
+        self.graincol = graincol
+        self.verbose = verbose
 
-        X = df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
+        self.console_log(
+            'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
+
+        X = dataframe[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
         print(X.head())
-        y = df['species']
+        y = dataframe['species']
         print(y.head())
         self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
                 X, y, test_size=.20, random_state=0)
 
-    # def __init__(self,
-    #              modeltype,
-    #              df,
-    #              predictedcol,
-    #              impute,
-    #              graincol=None,
-    #              debug=False):
-    #
-    #     self.df = df
-    #     self.predictedcol = predictedcol
-    #     self.modeltype = modeltype
-    #     self.impute = impute
-    #     self.y_probab_linear = None
-    #     self.y_probab_rf = None
-    #     self.col_list = None
-    #     self.rfclf = None
-    #     self.X_train = None
-    #     self.y_train = None
-    #     self.X_test = None
-    #     self.y_test = None
-    #     self.au_roc = None
-    #
-    #     if debug:
-    #         print('Shape and top 5 rows of original dataframe:')
-    #         print(self.df.shape)
-    #         print(self.df.head())
-    #
-    #     #remove datetime columns
-    #     self.df = filters.remove_datetime_columns(self.df)
-    #
-    #     # Remove graincol (if specified)
-    #     if graincol:
-    #         self.df.drop(graincol, axis=1, inplace=True)
-    #
-    #     if debug:
-    #         print('\nDataframe after removing DTS columns:')
-    #         print(self.df.head())
-    #         print('\nNow either doing imputation or dropping rows with NULLs')
-    #
-    #     if self.impute:
-    #         self.df = DataFrameImputer().fit_transform(self.df)
-    #         # This class comes from here:
-    #         # http://stackoverflow.com/a/25562948/5636012
-    #         if debug:
-    #             print('\nself.df after doing imputation:')
-    #             print(self.df.shape)
-    #             print(self.df.head())
-    #     else:
-    #         # TODO switch similar statements to work inplace
-    #         self.df = self.df.dropna(axis=0, how='any', inplace=True)
-    #         print('\nself.df after dropping rows with NULLS:')
-    #         print(self.df.shape)
-    #         print(self.df.head())
-    #
-    #     #CALL new function!!
-    #     # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-    #     # Note that this makes healthcareai only handle N/Y in pred column
-    #     if self.modeltype == 'classification':
-    #         # Turning off warning around replace
-    #         pd.options.mode.chained_assignment = None  # default='warn'
-    #         # TODO: put try/catch here when type = class and predictor is numer
-    #         self.df[self.predictedcol].replace(['Y', 'N'], [1, 0],
-    #                                            inplace=True)
-    #
-    #         if debug:
-    #             print('\nDataframe after converting to 1/0 instead of Y/N for '
-    #                   'classification:')
-    #             print(self.df.head())
-    #
-    #     # Remove rows with null values in predicted col
-    #     self.df = self.df[pd.notnull(self.df[self.predictedcol])]
-    #
-    #     if debug:
-    #         print('\nself.df after removing rows where predicted col is NULL:')
-    #         print(self.df.shape)
-    #         print(self.df.head())
-    #
-    #     # Create dummy vars for all cols but predictedcol
-    #     # First switch (temporarily) pred col to numeric (so it's not dummy)
-    #     self.df[self.predictedcol] = pd.to_numeric(
-    #         arg=self.df[self.predictedcol], errors='raise')
-    #     self.df = pd.get_dummies(self.df, drop_first=True, prefix_sep='.')
-    #
-    #     y = np.squeeze(self.df[[self.predictedcol]])
-    #     X = self.df.drop([self.predictedcol], axis=1)
-    #
-    #     # Split the dataset in two equal parts
-    #     self.X_train, self.X_test, self.y_train, self.y_test = \
-    #         model_selection.train_test_split(
-    #             X, y, test_size=.20, random_state=0)
-    #
-    #     if debug:
-    #         print('\nShape of X_train, y_train, X_test, and y_test:')
-    #         print(self.X_train.shape)
-    #         print(self.y_train.shape)
-    #         print(self.X_test.shape)
-    #         print(self.y_test.shape)
+    def imputation(self):
+        self.remove_date_and_grain_columns()
 
+
+    def old_init(self,
+                 modeltype,
+                 dataframe,
+                 predictedcol,
+                 impute,
+                 graincol=None,
+                 debug=False):
+
+        self.dataframe = dataframe
+        self.predictedcol = predictedcol
+        self.modeltype = modeltype
+        self.impute = impute
+        self.y_probab_linear = None
+        self.y_probab_rf = None
+        self.col_list = None
+        self.rfclf = None
+        self.X_train = None
+        self.y_train = None
+        self.X_test = None
+        self.y_test = None
+        self.au_roc = None
+
+
+        print('\nNow either doing imputation or dropping rows with NULLs')
+
+        if self.impute:
+            self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
+            # This class comes from here:
+            # http://stackoverflow.com/a/25562948/5636012
+            if debug:
+                print('\nself.df after doing imputation:')
+                print(self.dataframe.shape)
+                print(self.dataframe.head())
+        else:
+            # TODO switch similar statements to work inplace
+            self.dataframe = self.dataframe.dropna(axis=0, how='any', inplace=True)
+            print('\nself.df after dropping rows with NULLS:')
+            print(self.dataframe.shape)
+            print(self.dataframe.head())
+
+        #CALL new function!!
+        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
+        # Note that this makes healthcareai only handle N/Y in pred column
+        if self.modeltype == 'classification':
+            # Turning off warning around replace
+            pd.options.mode.chained_assignment = None  # default='warn'
+            # TODO: put try/catch here when type = class and predictor is numer
+            self.dataframe[self.predictedcol].replace(['Y', 'N'], [1, 0],
+                                                      inplace=True)
+
+            if debug:
+                print('\nDataframe after converting to 1/0 instead of Y/N for '
+                      'classification:')
+
+                print(self.dataframe.head())
+
+        # Remove rows with null values in predicted col
+        self.dataframe = self.dataframe[pd.notnull(self.dataframe[self.predictedcol])]
+
+        if debug:
+            print('\nself.df after removing rows where predicted col is NULL:')
+            print(self.dataframe.shape)
+            print(self.dataframe.head())
+
+        # Create dummy vars for all cols but predictedcol
+        # First switch (temporarily) pred col to numeric (so it's not dummy)
+        self.dataframe[self.predictedcol] = pd.to_numeric(
+            arg=self.dataframe[self.predictedcol], errors='raise')
+        self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
+
+        y = np.squeeze(self.dataframe[[self.predictedcol]])
+        X = self.dataframe.drop([self.predictedcol], axis=1)
+
+        # Split the dataset in two equal parts
+        self.X_train, self.X_test, self.y_train, self.y_test = \
+            model_selection.train_test_split(
+                X, y, test_size=.20, random_state=0)
+
+        if debug:
+            print('\nShape of X_train, y_train, X_test, and y_test:')
+            print(self.X_train.shape)
+            print(self.y_train.shape)
+            print(self.X_test.shape)
+            print(self.y_test.shape)
+
+    def remove_date_and_grain_columns(self):
+        # remove datetime columns
+        self.dataframe = filters.remove_DTS_postfix_columns(self.dataframe)
+
+        # Remove grain column (if specified)
+        if self.grain_column is not None:
+            self.dataframe.drop(self.grain_column, axis=1, inplace=True)
+
+        self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
 
     def save_output_to_csv(self,filename,output):
         output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
@@ -169,45 +175,57 @@ class DevelopSupervisedModel(object):
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header= False)
 
-    def automatic_ensemble_classification(self, scoring_metric='roc_auc', debug=False):
+    def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
         # TODO save models and stats
         # enumerate, document and validate scoring options http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
         # Does one of those options make the most sense to pick a default?
         # Can we algorithmically determine the best choice?
-        """
-        A simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
-        :param scoring_metric: Optional model comparison
-        :param debug: Optional verbose output
-        :return:
-        """
+        """ A simple way to put data in and have healthcare.ai train a few models and pick the best one for your data. """
 
         self.validate_score_metric_for_number_of_classes(scoring_metric)
-        trained_models = []
+        score_by_name = {}
+
+        # Here is the default list of algorithms to try
+        if model_by_name is None:
+            model_by_name = {}
+            model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
+            model_by_name['Logistic Regression'] = self.logistic_regression()
+            model_by_name['Random Forest Classifier'] = self.advanced_random_forest_classifier(
+                randomized_search=True,
+                scoring_metric=scoring_metric).best_estimator_
+
+        for name, model in model_by_name.items():
+            score = self.calculate_classification_metric(model, scoring_metric=scoring_metric)
+            score_by_name[name] = score
+
+            self.console_log('{} algorithm: score = {}'.format(name, score))
+
 
         # compare algorithms and return the best. This list can grow as new algorithms are added
-        if debug:
-            print('running KNN')
-        knn = self.advanced_knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
+        # if debug:
+        #     print('running KNN')
+        # knn = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
+        #
+        # if debug:
+        #     print('running LR')
+        # logistic_regression = self.logistic_regression()
+        #
+        # # TODO loop over all the models?
+        # knn_score = self.calculate_classification_metric(knn, scoring_metric=scoring_metric)
+        # lr_score = self.calculate_classification_metric(logistic_regression, scoring_metric=scoring_metric)
+        #
+        # trained_models.append({'name': 'knn', 'model': knn, 'score': knn_score})
+        # trained_models.append({'name': 'logistic_regression', 'model': logistic_regression, 'score': lr_score})
 
-        if debug:
-            print('running LR')
-        logistic_regression = self.advanced_logistic_regression()
-
-        # TODO loop over all the models?
-        knn_score = self.calculate_classification_metric(knn, scoring_metric=scoring_metric)
-        lr_score = self.calculate_classification_metric(logistic_regression, scoring_metric=scoring_metric)
-
-        trained_models.append({'name': 'knn', 'model': knn, 'score': knn_score})
-        trained_models.append({'name': 'logistic_regression', 'model': logistic_regression, 'score': lr_score})
-
-        sorted_trained_models = self.sort_models_by_score(trained_models)
-        best_algorithm_name = sorted_trained_models[0]['name']
-        best_score = sorted_trained_models[0]['score']
+        sorted_names_and_scores = sorted(score_by_name.items(), key=lambda x: x[1])
+        best_algorithm_name, best_score = sorted_names_and_scores[-1]
+        best_model = model_by_name[best_algorithm_name]
 
         results = {
             'best_score': best_score,
             'best_algorithm_name': best_algorithm_name,
-            'model_scores': sorted_trained_models
+            'model_scores': score_by_name,
+            'best_model': best_model
         }
 
         print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric, best_algorithm_name))
@@ -228,10 +246,6 @@ class DevelopSupervisedModel(object):
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def sort_models_by_score(self, list_of_models, sort_attribute_name='score'):
-        results = sorted(list_of_models, key=lambda x: x[sort_attribute_name], reverse=True)
-        return results
-
     def calculate_classification_metric(self, trained_model, scoring_metric='roc_auc'):
         """
         Given a trained model
@@ -247,41 +261,51 @@ class DevelopSupervisedModel(object):
 
         return result
 
-    def advanced_logistic_regression(self):
+    def logistic_regression(self):
         # TODO STUB FINISH THIS
         # does it makes sense to wrap this in randomized search too?
         # enumerate, document and validate scoring options
 
-        result = LogisticRegressionCV().fit(self.X_train, self.y_train)
+        trained_model = LogisticRegressionCV().fit(self.X_train, self.y_train)
 
-        return result
+        return trained_model
 
-    def advanced_knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+    def gradient(self, asdfsadffdsa):
+        if hyperparameter_grid is None:
+            neighbor_list = list(range(10, 26))
+            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+
+        algorithm = prepare_randomized_search(
+            Gradient,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search)
+
+        return algorithm.fit(self.X_train, self.y_train)
+
+
+    def knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         # TODO
+        # KNN, gradient boosted trees, bootstrap aggregation
+        # impact coding
+        #
         # enumerate, document and validate scoring options
         # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
 
         """
-        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overrideable)
+        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overideable)
         hyperparameter grid.
-        :param randomized_search: Defaults to true to perform randomized search
-        :param hyperparameter_grid: An optional custom hyperparameter grid
-        :return: a trained model
         """
-        algorithm = KNeighborsClassifier(n_neighbors=5)
+        if hyperparameter_grid is None:
+            neighbor_list = list(range(10, 26))
+            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
-        if randomized_search:
-            if not hyperparameter_grid:
-                neighbor_list = list(range(10, 26))
-                hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
-
-            algorithm = RandomizedSearchCV(estimator=KNeighborsClassifier(),
-                                               scoring=scoring_metric,
-                                               param_distributions=hyperparameter_grid,
-                                               n_iter=2,
-                                               cv=5,
-                                               verbose=0,
-                                               n_jobs=1)
+        algorithm = prepare_randomized_search(
+            KNeighborsClassifier,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            n_neighbors=5)
 
         return algorithm.fit(self.X_train, self.y_train)
 
@@ -290,7 +314,7 @@ class DevelopSupervisedModel(object):
         Count the number of prediction classes by enumerating and counting the unique target values in the dataframe
         :return: number of target classes
         """
-        uniques = self.df[self.predictedcol].unique()
+        uniques = self.dataframe[self.predictedcol].unique()
         return len(uniques)
 
     def linear(self, cores=4, debug=False):
@@ -330,6 +354,41 @@ class DevelopSupervisedModel(object):
                                                 X_test=self.X_test,
                                                 y_test=self.y_test,
                                                 cores=cores)
+
+    def advanced_random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+        # TODO
+        # print out best hyperparameters
+        # recreate stuff from the dumpster fire of model_eval.snarf
+        # KNN, gradient boosted trees, bootstrap aggregation
+        # impact coding
+        #
+        # enumerate, document and validate scoring options
+        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
+
+        """
+        A light wrapper for Sklearn's RandomForestClassifier that performs randomized search over a default (and overideable)
+        hyperparameter grid.
+        :param randomized_search: Defaults to true to perform randomized search
+        :param hyperparameter_grid: An optional custom hyperparameter grid
+        :return: a trained model
+        """
+        algorithm = RandomForestClassifier(n_estimators=trees)
+
+        if randomized_search:
+            if not hyperparameter_grid:
+                max_features = model_eval.calculate_rfmtry(len(self.X_test.columns), self.modeltype)
+                hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
+
+            algorithm = RandomizedSearchCV(estimator=RandomForestClassifier(),
+                                               scoring=scoring_metric,
+                                               param_distributions=hyperparameter_grid,
+                                            # TODO brute force all 6 in the hyperparameter space?
+                                               n_iter=6,
+                                               cv=5,
+                                               verbose=0,
+                                               n_jobs=1)
+
+        return algorithm.fit(self.X_train, self.y_train)
 
     def random_forest(self, cores=4, trees=200, tune=False, debug=False):
         """
@@ -580,5 +639,32 @@ class DevelopSupervisedModel(object):
             'best_model_validation_row_count': self.y_train.shape[0]
         }
 
+    def console_log(self, message):
+        if self.verbose:
+            print('DSM: {}'.format(message))
+
     def save_models(self, random_search):
         pass
+
+# TODO think about making this a static method?
+def prepare_randomized_search(
+        estimator,
+        scoring_metric,
+        hyperparameter_grid,
+        randomized_search,
+        **non_randomized_estimator_kwargs):
+    if randomized_search:
+        algorithm = RandomizedSearchCV(estimator=estimator(),
+                                       scoring=scoring_metric,
+                                       param_distributions=hyperparameter_grid,
+                                       n_iter=2,
+                                       cv=5,
+                                       verbose=0,
+                                       n_jobs=1)
+
+    else:
+        algorithm = estimator(**non_randomized_estimator_kwargs)
+
+    return algorithm
+
+

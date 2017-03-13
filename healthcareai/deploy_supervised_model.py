@@ -42,7 +42,7 @@ class DeploySupervisedModel(object):
             print(df.shape)
             print(df.head())
 
-        self.df = filters.remove_datetime_columns(self.df)
+        self.df = filters.remove_DTS_postfix_columns(self.df)
 
         if debug:
             print('\nDataframe after removing DTS columns:')
