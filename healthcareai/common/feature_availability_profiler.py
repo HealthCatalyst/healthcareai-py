@@ -5,10 +5,10 @@ from datetime import datetime, timedelta, date
 import matplotlib.pyplot as plt
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
-def feature_availability_profiler(dataFrame, admitColName='AdmitDTS',
-                                  lastLoadColName='LastLoadDTS',
-                                  plotFlag=True,
-                                  listFlag=False):
+def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
+                                  last_load_col_name='LastLoadDTS',
+                                  plot_flag=True,
+                                  list_flag=False):
 
     """
     This function counts the number of populated data values over time for a
@@ -16,27 +16,27 @@ def feature_availability_profiler(dataFrame, admitColName='AdmitDTS',
 
     Parameters
     ----------
-    dataFrame (dataframe) : dataframe of features to count populated data in. This
+    data_frame (dataframe) : dataframe of features to count populated data in. This
       table must have a 2 date columns: one for patient admission date, one for
       today's date (or when the table was last loaded). Minimum 3 columns.
-    admitColName (str) : name of column containing patient admission date
-    lastLoadColName (str) : name of column containing today's date or when the
+    admit_col_name (str) : name of column containing patient admission date
+    last_load_col_name (str) : name of column containing today's date or when the
       table was last loaded.
     plotFlag (bol) : True will return a plot of the data availability.
-    listFlag (bol) : True will return a matrix of populated fields vs. time.
+    list_flag (bol) : True will return a matrix of populated fields vs. time.
 
     Returns
     -------
-    numData (df) : a DF of populated fields vs. time.
-    :param plotFlag:
+    num_data (df) : a DF of populated fields vs. time.
+    :param plot_flag:
     """
 
-    df = dataFrame
+    df = data_frame
 
     # Error checks
-    if df[admitColName].dtype != 'datetime64[ns]':
+    if df[admit_col_name].dtype != 'datetime64[ns]':
         raise HealthcareAIError('Admit Date column is not a date type')
-    if df[lastLoadColName].dtype != 'datetime64[ns]':
+    if df[last_load_col_name].dtype != 'datetime64[ns]':
         raise HealthcareAIError('Last Load Date column is not a date type')
     if df.shape[1] < 3:
         raise HealthcareAIError('Dataframe must be at least 3 columns')
@@ -47,61 +47,61 @@ def feature_availability_profiler(dataFrame, admitColName='AdmitDTS',
     print('Loaded ' + str(a) + ' rows and ' + str(b) + ' columns')
 
     # Get most recent date
-    lastLoad = max(df[lastLoadColName])
-    print('Data was last loaded on ' + str(lastLoad) + ' (from LastLoadDTS)')
-    oldestAdmit = min(df['AdmitDTS'])
-    print('Oldest data is from ' + str(oldestAdmit) + ' (from AdmitDTS)')
+    last_load = max(df[last_load_col_name])
+    print('Data was last loaded on ' + str(last_load) + ' (from LastLoadDTS)')
+    oldest_admit = min(df['AdmitDTS'])
+    print('Oldest data is from ' + str(oldest_admit) + ' (from AdmitDTS)')
 
     # get key list to count
-    keyList = [col for col in df.columns if col not in ['index', lastLoadColName, admitColName]]
+    key_list = [col for col in df.columns if col not in ['index', last_load_col_name, admit_col_name]]
     print('Column names to count:')
-    for col in keyList:
+    for col in key_list:
         print(col)
 
     # create a container for final null counts
-    numData = {'Age': []}
-    for key in keyList:
-        numData[key] = []
+    num_data = {'Age': []}
+    for key in key_list:
+        num_data[key] = []
 
     # get date range to count over
-    dateSpread = lastLoad - oldestAdmit
-    if dateSpread.days < 90:
-        dateRange = [1/24, 2/24, 4/24, 8/24 ,12/24] + list(range(1,dateSpread.days))
+    date_spread = last_load - oldest_admit
+    if date_spread.days < 90:
+        date_range = [1/24, 2/24, 4/24, 8/24 ,12/24] + list(range(1,date_spread.days))
     else:
-        dateRange = [1/24, 2/24, 4/24, 8/24, 12/24] + list(range(1, 91))
+        date_range = [1/24, 2/24, 4/24, 8/24, 12/24] + list(range(1, 91))
 
     # count null percentage over date range
-    for i in dateRange:
-        start = lastLoad - timedelta(days=i)
-        numNullsTemp = count_nulls_in_date_range(df, start, lastLoad, admitColName)
-        numData['Age'].append(i)
-        for key in keyList:
-            numData[key].append(numNullsTemp[key])
+    for i in date_range:
+        start = last_load - timedelta(days=i)
+        num_nulls_temp = count_nulls_in_date_range(df, start, last_load, admit_col_name)
+        num_data['Age'].append(i)
+        for key in key_list:
+            num_data[key].append(num_nulls_temp[key])
 
     # print nulls if desired
-    numData = pd.DataFrame(numData)
-    numData['Age'] = numData['Age'].round(decimals=1)
-    numData.set_index('Age', inplace=True)
+    num_data = pd.DataFrame(num_data)
+    num_data['Age'] = num_data['Age'].round(decimals=1)
+    num_data.set_index('Age', inplace=True)
     print('Age is the number of days since patient admission.')
-    if listFlag is True:
-        print(numData)
+    if list_flag is True:
+        print(num_data)
 
-    if plotFlag is True:
+    if plot_flag is True:
         # plot nulls vs time.
-        plt.plot(numData)
+        plt.plot(num_data)
         plt.plot(lw=2, linestyle='--')
         plt.xlabel('Days since Admission')
         plt.ylabel('Populated Values (%)')
         plt.title('Feature Availability Over Time')
-        plt.legend(labels=keyList, loc="lower right")
+        plt.legend(labels=key_list, loc="lower right")
         plt.show()
 
-    return(numData)
+    return(num_data)
 
-def count_nulls_in_date_range(df, start, end, admitColName):
+def count_nulls_in_date_range(df, start, end, admit_col_name):
 
     # called by feature_availability_profiler to count nulls within a date range.
-    mask = (df[admitColName] > start) & (df[admitColName] <= end)
+    mask = (df[admit_col_name] > start) & (df[admit_col_name] <= end)
     df = df.loc[mask]
-    numData = 100 - np.round(100*df.isnull().sum()/df.shape[0])
-    return(numData)
+    num_data = 100 - np.round(100*df.isnull().sum()/df.shape[0])
+    return(num_data)

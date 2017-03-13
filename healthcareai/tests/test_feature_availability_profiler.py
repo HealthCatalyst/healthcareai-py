@@ -30,11 +30,11 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
         self.df.loc[a, ['B']] = np.nan
 
     def runTest(self):
-        dfOut = feature_availability_profiler(dataFrame=self.df,
-                                              admitColName='AdmitDTS',
-                                              lastLoadColName='LastLoadDTS',
-                                              plotFlag= False,
-                                              listFlag=False)
+        dfOut = feature_availability_profiler(data_frame=self.df,
+                                              admit_col_name='AdmitDTS',
+                                              last_load_col_name='LastLoadDTS',
+                                              plot_flag= False,
+                                              list_flag=False)
 
         self.assertTrue(dfOut.iloc[-1,1] > 65 and dfOut.iloc[-1,1] < 85)
         self.assertTrue(dfOut.iloc[-1, 0] > 40 and dfOut.iloc[-1, 0] < 60)
@@ -50,11 +50,11 @@ class TestFeatureAvailabilityProfilerError1(unittest.TestCase):
 
     def runTest(self):
          with self.assertRaises(HealthcareAIError) as error:
-            dfOut = feature_availability_profiler(dataFrame=self.df,
-                                                  admitColName='AdmitDTS',
-                                                  lastLoadColName='LastLoadDTS',
-                                                  plotFlag=False,
-                                                  listFlag=False)
+            dfOut = feature_availability_profiler(data_frame=self.df,
+                                                  admit_col_name='AdmitDTS',
+                                                  last_load_col_name='LastLoadDTS',
+                                                  plot_flag=False,
+                                                  list_flag=False)
          self.assertEqual('Admit Date column is not a date type', error.exception.message)
 
 class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
@@ -67,11 +67,11 @@ class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
 
     def runTest(self):
         with self.assertRaises(HealthcareAIError) as error:
-            dfOut = feature_availability_profiler(dataFrame=self.df,
-                                                  admitColName='AdmitDTS',
-                                                  lastLoadColName='LastLoadDTS',
-                                                  plotFlag=False,
-                                                  listFlag=False)
+            dfOut = feature_availability_profiler(data_frame=self.df,
+                                                  admit_col_name='AdmitDTS',
+                                                  last_load_col_name='LastLoadDTS',
+                                                  plot_flag=False,
+                                                  list_flag=False)
         self.assertEqual('Last Load Date column is not a date type',
                          error.exception.message)
 
@@ -94,11 +94,11 @@ class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
 
     def runTest(self):
         with self.assertRaises(HealthcareAIError) as error:
-            dfOut = feature_availability_profiler(dataFrame=self.df,
-                                                  admitColName='AdmitDTS',
-                                                  lastLoadColName='LastLoadDTS',
-                                                  plotFlag=False,
-                                                  listFlag=False)
+            dfOut = feature_availability_profiler(data_frame=self.df,
+                                                  admit_col_name='AdmitDTS',
+                                                  last_load_col_name='LastLoadDTS',
+                                                  plot_flag=False,
+                                                  list_flag=False)
         self.assertEqual('Dataframe must be at least 3 columns',
                          error.exception.message)
 
