@@ -5,11 +5,13 @@ from datetime import datetime, timedelta, date
 import matplotlib.pyplot as plt
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
-def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
-                                  last_load_col_name='LastLoadDTS',
-                                  plot_flag=True,
-                                  list_flag=False):
 
+def feature_availability_profiler(
+        data_frame,
+        admit_col_name='AdmitDTS',
+        last_load_col_name='LastLoadDTS',
+        plot_flag=True,
+        list_flag=False):
     """
     This function counts the number of populated data values over time for a
     given dataframe.
@@ -28,7 +30,11 @@ def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
     Returns
     -------
     num_data (df) : a DF of populated fields vs. time.
-    :param plot_flag:
+    :param data_frame: Your dataframe
+    :param admit_col_name: The name of the column containing the admit dates
+    :param last_load_col_name: The name of the column containing the last load date
+    :param plot_flag: Shows or hides plot
+    :param list_flag: Shows or hides listS
     """
 
     df = data_frame
@@ -43,14 +49,14 @@ def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
 
     # Look at data that's been pulled in
     print(df.head())
-    a,b = df.shape
-    print('Loaded ' + str(a) + ' rows and ' + str(b) + ' columns')
+    a, b = df.shape
+    print('Loaded {} rows and {} columns'.format(str(a), str(b)))
 
     # Get most recent date
     last_load = max(df[last_load_col_name])
-    print('Data was last loaded on ' + str(last_load) + ' (from LastLoadDTS)')
-    oldest_admit = min(df['AdmitDTS'])
-    print('Oldest data is from ' + str(oldest_admit) + ' (from AdmitDTS)')
+    print('Data was last loaded on {} (from {})'.format(str(last_load), str(last_load_col_name)))
+    oldest_admit = min(df[admit_col_name])
+    print('Oldest data is from {} (from {})'.format(str(oldest_admit), str(admit_col_name)))
 
     # get key list to count
     key_list = [col for col in df.columns if col not in ['index', last_load_col_name, admit_col_name]]
@@ -66,9 +72,9 @@ def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
     # get date range to count over
     date_spread = last_load - oldest_admit
     if date_spread.days < 90:
-        date_range = [1/24, 2/24, 4/24, 8/24 ,12/24] + list(range(1,date_spread.days))
+        date_range = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24] + list(range(1, date_spread.days))
     else:
-        date_range = [1/24, 2/24, 4/24, 8/24, 12/24] + list(range(1, 91))
+        date_range = [1 / 24, 2 / 24, 4 / 24, 8 / 24, 12 / 24] + list(range(1, 91))
 
     # count null percentage over date range
     for i in date_range:
@@ -83,6 +89,7 @@ def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
     num_data['Age'] = num_data['Age'].round(decimals=1)
     num_data.set_index('Age', inplace=True)
     print('Age is the number of days since patient admission.')
+
     if list_flag is True:
         print(num_data)
 
@@ -96,12 +103,12 @@ def feature_availability_profiler(data_frame, admit_col_name='AdmitDTS',
         plt.legend(labels=key_list, loc="lower right")
         plt.show()
 
-    return(num_data)
+    return num_data
+
 
 def count_nulls_in_date_range(df, start, end, admit_col_name):
-
-    # called by feature_availability_profiler to count nulls within a date range.
+    """Counts nulls for a given dataframe column within a date range."""
     mask = (df[admit_col_name] > start) & (df[admit_col_name] <= end)
     df = df.loc[mask]
-    num_data = 100 - np.round(100*df.isnull().sum()/df.shape[0])
-    return(num_data)
+    num_data = 100 - np.round(100 * df.isnull().sum() / df.shape[0])
+    return (num_data)
