@@ -39,12 +39,8 @@ def main():
     df.drop(['PatientID','InTestWindowFLG'],axis=1,inplace=True)
 
     # Step 1: compare two models
-    o = DevelopSupervisedModel(modeltype='classification',
-                               df=df,
-                               predictedcol='ThirtyDayReadmitFLG',
-                               graincol='PatientEncounterID', #OPTIONAL
-                               impute=True,
-                               debug=False)
+    o = DevelopSupervisedModel(dataframe='classification', model_type='classification',
+                               predicted_column='ThirtyDayReadmitFLG', grain_column_name='PatientEncounterID')
 
     # Run the linear model
     o.linear(cores=1)

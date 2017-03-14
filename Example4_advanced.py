@@ -3,28 +3,52 @@ It provides examples of reading from both csv and SQL Server. Note that this
 example can be run as-is after installing healthcare.ai. After you have
 found that one of the models works well on your data, move to Example2
 """
-from healthcareai import DevelopSupervisedModel
-import pandas as pd
 import time
+import pandas as pd
+from healthcareai import DevelopSupervisedModel
+from healthcareai.common import filters
+
 
 def main():
-
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/HCPyDiabetesClinical.csv',
-                     na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/HCPyDiabetesClinical.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID','InTestWindowFLG'],axis=1,inplace=True)
+    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-    # Step 1: compare two models
-    hcai = DevelopSupervisedModel(modeltype='classification',
-                                  dataframe=dataframe,
-                                  predictedcol='ThirtyDayReadmitFLG',
-                                  graincol='PatientEncounterID',  #OPTIONAL
-                               impute=True,
-                                  debug=False)
+    # Step 1: Instantiate the main class with your raw data
+    hcai = DevelopSupervisedModel(
+        dataframe=dataframe,
+        model_type='classification',
+        predicted_column='ThirtyDayReadmitFLG',
+        grain_column_name='PatientEncounterID',
+        verbose=False)
+
+    # Step 2: Prepare the data using optional imputation. There are two options for this:
+
+    ## Option 1: Use built in cleaning, encoding, prep, train/test splitting with optional imputation
+    hcai.data_preparation(impute=True)
+
+    ## Option 2: Do this stuff yourself using healthcare ai methods or your own.
+
+    # Note if you prefer to handle the data prep yourself you may chain together these calls (or other you prefer)
+    # Drop some columns
+    hcai.remove_grain_column()
+    hcai.dataframe = filters.remove_DTS_postfix_columns(hcai.dataframe)
+
+    # Perform one of two basic imputation methods
+    hcai.imputation()
+    # or simply drop columns with any nulls
+    # hcai.drop_rows_with_any_nulls()
+
+    # Convert, encode and create test/train sets
+    hcai.convert_encode_predicted_col_to_binary_numeric()
+    hcai.encode_categorical_data_as_dummy_variables()
+    hcai.train_test_split()
+
+    # Step 3: Train some models
 
     # Run the linear model with a randomized search over custom hyperparameters
     knn_hyperparameters = {
@@ -50,13 +74,12 @@ def main():
         hyperparameter_grid=knn_hyperparameters,
         randomized_search=True)
 
-
     # Look at the RF feature importance rankings
     hcai.plot_rffeature_importance(save=False)
 
     # Create ROC plot to compare the two models
     hcai.plot_roc(debug=False,
-               save=False)
+                  save=False)
 
     print('\nTime:\n', time.time() - t0)
 
@@ -71,10 +94,11 @@ def main():
             scoring_metric='recall').best_estimator_,
         'Logistic Regression': hcai.logistic_regression(),
         'Random Forest Classifier': hcai.advanced_random_forest_classifier(
-             randomized_search=True,
-             scoring_metric='recall').best_estimator_}
+            randomized_search=True,
+            scoring_metric='recall').best_estimator_}
 
     hcai.ensemble_classification(scoring_metric='recall', model_by_name=custom_ensemble)
+
 
 if __name__ == "__main__":
     main()

@@ -17,13 +17,10 @@ def main():
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-    # Step 1: Setup healthcareai for developing a model
-    hcai = SimpleDevelopSupervisedModel(
-        modeltype='classification',
-        dataframe=dataframe,
-        predictedcol='ThirtyDayReadmitFLG',
-        graincol='PatientEncounterID',  # OPTIONAL
-        verbose=False)
+    # Step 1: Setup healthcareai for developing a model. This prepares your data for model building
+    hcai = SimpleDevelopSupervisedModel(dataframe=dataframe, predicted_column='ThirtyDayReadmitFLG',
+                                        model_type='classification', impute=True, grain_column='PatientEncounterID',
+                                        verbose=False)
 
     # Step 2: Compare two models
 

@@ -1,11 +1,10 @@
 from .develop_supervised_model import DevelopSupervisedModel
 
-class SimpleDevelopSupervisedModel(object):
-    def __init__(self, dataframe, predictedcol, modeltype, graincol=None, verbose=False):
-        self._dsm = DevelopSupervisedModel(dataframe, predictedcol, modeltype, graincol, verbose)
 
-    def imputation(self):
-        pass
+class SimpleDevelopSupervisedModel(object):
+    def __init__(self, dataframe, predicted_column, model_type, impute, grain_column=None, verbose=False):
+        self._dsm = DevelopSupervisedModel(dataframe, model_type, predicted_column, grain_column, verbose)
+        self._dsm.data_preparation(impute=impute)
 
     def knn(self):
         self._dsm.knn(
@@ -14,22 +13,22 @@ class SimpleDevelopSupervisedModel(object):
             randomized_search=True)
 
     def random_forest(self):
-        if self._dsm.modeltype is 'classification':
+        if self._dsm.model_type is 'classification':
             self._dsm.advanced_random_forest_classifier(
                 trees=200,
                 scoring_metric='roc_auc',
                 hyperparameter_grid=None,
                 randomized_search=True)
-        elif self._dsm.modeltype is 'regression':
+        elif self._dsm.model_type is 'regression':
             # TODO STUB
             pass
 
     def ensemble(self):
-        if self._dsm.modeltype is 'classification':
+        if self._dsm.model_type is 'classification':
             self._dsm.ensemble_classification(
                 scoring_metric='roc_auc'
             )
-        elif self._dsm.modeltype is 'regression':
+        elif self._dsm.model_type is 'regression':
             # TODO STUB
             pass
 

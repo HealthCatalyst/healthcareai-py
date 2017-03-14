@@ -4,16 +4,16 @@ import numpy as np
 
 
 class DataFrameImputer(TransformerMixin):
+    """Impute missing values.
 
+    Columns of dtype object are imputed with the most frequent value in column.
+
+    Columns of other types are imputed with mean of column.
+    """
     def __init__(self):
-        """Impute missing values.
+        self.obj_list = None
+        self.fill = None
 
-        Columns of dtype object are imputed with the most frequent value
-        in column.
-
-        Columns of other types are imputed with mean of column.
-
-        """
     def fit(self, X, y=None):
         # Grab list of object column names before doing imputation
         self.obj_list = X.select_dtypes(include=['object']).columns.values
@@ -22,6 +22,7 @@ class DataFrameImputer(TransformerMixin):
             if X[c].dtype == np.dtype('O') else X[c].mean() for c in X],
             index=X.columns)
 
+        # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
@@ -30,4 +31,5 @@ class DataFrameImputer(TransformerMixin):
         for i in self.obj_list:
             X[i] = X[i].astype(object)
 
+        # return self for scikit compatibility
         return X

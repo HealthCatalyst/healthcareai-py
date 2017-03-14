@@ -16,6 +16,8 @@ from healthcareai.common import filters
 from healthcareai.common import model_eval
 from healthcareai.common import output_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
+from healthcareai.common.helpers import count_unique_elements_in_column
+from healthcareai.common.transformers import DataFrameImputer
 
 
 class DevelopSupervisedModel(object):
@@ -47,123 +49,95 @@ class DevelopSupervisedModel(object):
     Object representing the cleaned data, against which methods are run
     """
 
-    def __init__(self, dataframe, predictedcol, modeltype, graincol=None, verbose=False):
+    def __init__(self, dataframe, model_type, predicted_column, grain_column_name=None, verbose=False):
         self.dataframe = dataframe
-        self.predictedcol = predictedcol
-        self.modeltype = modeltype
-        self.graincol = graincol
+        self.model_type = model_type
+        self.predicted_column = predicted_column
+        self.grain_column_name = grain_column_name
         self.verbose = verbose
-
-        self.console_log(
-            'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
-
-        X = dataframe[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
-        print(X.head())
-        y = dataframe['species']
-        print(y.head())
-        self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
-                X, y, test_size=.20, random_state=0)
-
-    def imputation(self):
-        self.remove_date_and_grain_columns()
-
-
-    def old_init(self,
-                 modeltype,
-                 dataframe,
-                 predictedcol,
-                 impute,
-                 graincol=None,
-                 debug=False):
-
-        self.dataframe = dataframe
-        self.predictedcol = predictedcol
-        self.modeltype = modeltype
-        self.impute = impute
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+        # TODO implement (or avoid) these attributes, which really might be methods
         self.y_probab_linear = None
         self.y_probab_rf = None
         self.col_list = None
         self.rfclf = None
-        self.X_train = None
-        self.y_train = None
-        self.X_test = None
-        self.y_test = None
         self.au_roc = None
 
+        self.console_log(
+            'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-        print('\nNow either doing imputation or dropping rows with NULLs')
-
-        if self.impute:
-            self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
-            # This class comes from here:
-            # http://stackoverflow.com/a/25562948/5636012
-            if debug:
-                print('\nself.df after doing imputation:')
-                print(self.dataframe.shape)
-                print(self.dataframe.head())
-        else:
-            # TODO switch similar statements to work inplace
-            self.dataframe = self.dataframe.dropna(axis=0, how='any', inplace=True)
-            print('\nself.df after dropping rows with NULLS:')
-            print(self.dataframe.shape)
-            print(self.dataframe.head())
-
-        #CALL new function!!
-        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Note that this makes healthcareai only handle N/Y in pred column
-        if self.modeltype == 'classification':
-            # Turning off warning around replace
-            pd.options.mode.chained_assignment = None  # default='warn'
-            # TODO: put try/catch here when type = class and predictor is numer
-            self.dataframe[self.predictedcol].replace(['Y', 'N'], [1, 0],
-                                                      inplace=True)
-
-            if debug:
-                print('\nDataframe after converting to 1/0 instead of Y/N for '
-                      'classification:')
-
-                print(self.dataframe.head())
-
-        # Remove rows with null values in predicted col
-        self.dataframe = self.dataframe[pd.notnull(self.dataframe[self.predictedcol])]
-
-        if debug:
-            print('\nself.df after removing rows where predicted col is NULL:')
-            print(self.dataframe.shape)
-            print(self.dataframe.head())
-
-        # Create dummy vars for all cols but predictedcol
-        # First switch (temporarily) pred col to numeric (so it's not dummy)
-        self.dataframe[self.predictedcol] = pd.to_numeric(
-            arg=self.dataframe[self.predictedcol], errors='raise')
-        self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
-
-        y = np.squeeze(self.dataframe[[self.predictedcol]])
-        X = self.dataframe.drop([self.predictedcol], axis=1)
-
-        # Split the dataset in two equal parts
-        self.X_train, self.X_test, self.y_train, self.y_test = \
-            model_selection.train_test_split(
-                X, y, test_size=.20, random_state=0)
-
-        if debug:
-            print('\nShape of X_train, y_train, X_test, and y_test:')
-            print(self.X_train.shape)
-            print(self.y_train.shape)
-            print(self.X_test.shape)
-            print(self.y_test.shape)
-
-    def remove_date_and_grain_columns(self):
-        # remove datetime columns
+    def data_preparation(self, impute=False):
+        """Main data preparation method. Chains together small functions that prepare raw data for model building"""
+        # Drop some columns
+        self.remove_grain_column()
         self.dataframe = filters.remove_DTS_postfix_columns(self.dataframe)
 
-        # Remove grain column (if specified)
-        if self.grain_column is not None:
-            self.dataframe.drop(self.grain_column, axis=1, inplace=True)
+        # Perform one of two basic imputation methods
+        if impute is True:
+            self.imputation()
+        else:
+            self.drop_rows_with_any_nulls()
+
+        # Convert, encode and create test/train sets
+        self.convert_encode_predicted_col_to_binary_numeric()
+        self.encode_categorical_data_as_dummy_variables()
+        self.train_test_split()
+
+    def encode_categorical_data_as_dummy_variables(self):
+        # Create dummy vars for all cols but predictedcol
+        # First switch (temporarily) pred col to numeric (so it's not dummy)
+        self.dataframe[self.predicted_column] = pd.to_numeric(arg=self.dataframe[self.predicted_column], errors='raise')
+        self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
+
+    def convert_encode_predicted_col_to_binary_numeric(self):
+        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
+        # Note that this makes healthcareai only handle N/Y in pred column
+        if self.model_type == 'classification':
+            # Turning off warning around replace
+            pd.options.mode.chained_assignment = None  # default='warn'
+            # TODO: put try/catch here when type = class and predictor is numeric
+            self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
+
+            self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
+
+    def imputation(self):
+        # TODO should probably automate null imputation?
+        self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
+        self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
+
+    def print_out_dataframe_shape_and_head(self, message):
+        self.console_log(message)
+        self.console_log(self.dataframe.shape)
+        self.console_log(self.dataframe.head())
+
+    def drop_rows_with_any_nulls(self):
+        self.dataframe.dropna(axis=0, how='any', inplace=True)
+        self.print_out_dataframe_shape_and_head('\nDataframe after dropping rows with NULLS:')
+
+    def train_test_split(self):
+        y = np.squeeze(self.dataframe[[self.predicted_column]])
+        X = self.dataframe.drop([self.predicted_column], axis=1)
+
+        self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
+            X, y, test_size=.20, random_state=0)
+
+        self.console_log('\nShape of X_train: {}\ny_train: {}\nX_test: {}\ny_test: {}'.format(
+            self.X_train.shape,
+            self.y_train.shape,
+            self.X_test.shape,
+            self.y_test.shape))
+
+    def remove_grain_column(self):
+        # Remove grain column
+        if self.grain_column_name is not None:
+            self.dataframe.drop(self.grain_column_name, axis=1, inplace=True)
 
         self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
 
-    def save_output_to_csv(self,filename,output):
+    def save_output_to_csv(self, filename, output):
         output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
                                   output['gridSearch_BestScore'],
                                   output['gridSearch_ScoreMetric'], ) \
@@ -239,7 +213,7 @@ class DevelopSupervisedModel(object):
         Check that a user's choice of scoring metric makes sense with the number of prediction classes
         :param metric: a string of the scoring metric
         """
-        classes = self.determine_number_of_prediction_classes()
+        classes = count_unique_elements_in_column(self.dataframe, self.predicted_column)
         if classes is 2:
             pass
         elif classes > 2 and metric is 'roc_auc':
@@ -309,13 +283,6 @@ class DevelopSupervisedModel(object):
 
         return algorithm.fit(self.X_train, self.y_train)
 
-    def determine_number_of_prediction_classes(self):
-        """
-        Count the number of prediction classes by enumerating and counting the unique target values in the dataframe
-        :return: number of target classes
-        """
-        uniques = self.dataframe[self.predictedcol].unique()
-        return len(uniques)
 
     def linear(self, cores=4, debug=False):
         """
@@ -332,20 +299,20 @@ class DevelopSupervisedModel(object):
         Nothing. Output to console describes model accuracy.
         """
 
-        if self.modeltype == 'classification':
+        if self.model_type == 'classification':
             algo = LogisticRegressionCV(cv=5)
 
         # TODO: get GroupLasso working via lightning
 
         # TODO: see if CV splits needed for linear regress
 
-        elif self.modeltype == 'regression':
+        elif self.model_type == 'regression':
             algo = LinearRegression()
         else:
             algo = None
 
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
-                                                modeltype=self.modeltype,
+                                                modeltype=self.model_type,
                                                 debug=debug,
                                                 devcheck='yesdev',
                                                 algo=algo,
@@ -376,7 +343,7 @@ class DevelopSupervisedModel(object):
 
         if randomized_search:
             if not hyperparameter_grid:
-                max_features = model_eval.calculate_rfmtry(len(self.X_test.columns), self.modeltype)
+                max_features = model_eval.calculate_rfmtry(len(self.X_test.columns), self.model_type)
                 hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
             algorithm = RandomizedSearchCV(estimator=RandomForestClassifier(),
@@ -409,11 +376,11 @@ class DevelopSupervisedModel(object):
         """
 
         # TODO: refactor, such that each algo doesn't need an if/else tree
-        if self.modeltype == 'classification':
+        if self.model_type == 'classification':
             algo = RandomForestClassifier(n_estimators=trees,
                                           verbose=(2 if debug is True else 0))
 
-        elif self.modeltype == 'regression':
+        elif self.model_type == 'regression':
             algo = RandomForestRegressor(n_estimators=trees,
                                          verbose=(2 if debug is True else 0))
 
@@ -422,12 +389,12 @@ class DevelopSupervisedModel(object):
 
         params = {'max_features':
                       model_eval.calculate_rfmtry(len(self.X_test.columns),
-                                                      self.modeltype)}
+                                                  self.model_type)}
 
         self.col_list = self.X_train.columns.values
 
         self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
-                                                    modeltype=self.modeltype,
+                                                    modeltype=self.model_type,
                                                     debug=debug,
                                                     devcheck='yesdev',
                                                     algo=algo,
@@ -549,7 +516,7 @@ class DevelopSupervisedModel(object):
                         scoring = score_metric,
                         param_distributions=param_grid,
                         n_iter=n_iter,
-                        cv = cv, 
+                        cv = cv,
                         verbose = 0,
                         n_jobs = 1)
         rs.fit(self.X_train, self.y_train)
@@ -569,21 +536,21 @@ class DevelopSupervisedModel(object):
         # calculate roc_auc_score
         probabilities = rs.best_estimator_.predict_proba(self.X_test)[:, 1]
         roc_auc_score = metrics.roc_auc_score(self.y_test, probabilities)
-   
+
         ######### Make file for output #########
 
         start_time = str(datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S'))
         filepath = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "models", start_time))
         # TODO we may not want to create directories (for example, we may want to just direclty save to azure)
         # os.makedirs(filepath)
-        
+
         time_ran = str(datetime.utcnow())
         filename = model_type + '_' + datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
         complete_filename = os.path.join(filepath, filename)
 
         # Setup a dict of important metrics
         model_validation_metrics = {
-            'model_type': self.modeltype,
+            'model_type': self.model_type,
             'time_run': time_ran,
             'data_row_count': self.X_train.shape[0],
             'data_column_count': self.X_train.shape[1],
@@ -616,7 +583,7 @@ class DevelopSupervisedModel(object):
 
     def knn_stats(self, random_search):
         model_validation_metrics = {
-            'model_type': self.modeltype,
+            'model_type': self.model_type,
             'data_row_count': self.X_train.shape[0],
             'data_column_count': self.X_train.shape[1],
             'data_column_names': self.X_train.columns.tolist(),
@@ -666,5 +633,3 @@ def prepare_randomized_search(
         algorithm = estimator(**non_randomized_estimator_kwargs)
 
     return algorithm
-
-
