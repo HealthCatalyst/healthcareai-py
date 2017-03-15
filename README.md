@@ -1,6 +1,10 @@
 # healthcareai
 
-Windows Build Status: ![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
+[![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalystSLC/healthcareai-py/master/LICENSE)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
@@ -12,16 +16,24 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 ### Windows
 
 - If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
+    - **Important** When prompted for the **Installation Type**, select **Just Me (recommended)**. This makes permissions later in the process much simpler.
 - Open the terminal (i.e., CMD or PowerShell, if using Windows)
 - Run `conda install pyodbc`
 - Upgrade to latest scipy (note that upgrade command took forever)
 - Run `conda remove scipy`
 - Run `conda install scipy`
-- To install the latest release, run 
-    * `pip install healthcareai`
-- If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run
-    * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
- 
+- Run `conda install scikit-learn`
+- Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
+    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
+    2. Install the latest release with pip run `pip install healthcareai`
+    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+
+#### Why Anaconda?
+
+We recommend using the Anaconda python distribution when working on Windows. There are a number of reasons:
+- When running anaconda and installing packages using the `conda` command, you don't need to worry about [dependency hell](https://en.wikipedia.org/wiki/Dependency_hell), particularly because packages aren't compiled on your machine; `conda` installs pre-compiled binaries.
+- A great example of the pain the using `conda` saves you is with the python package **scipy**, which, by [their own admission](http://www.scipy.org/scipylib/building/windows.html) *"is difficult"*.
+
 ### Linux
 
 You may need to install the following dependencies:
@@ -48,12 +60,12 @@ Once you have the dependencies satisfied run `pip install healthcareai` or `sudo
 
 To verify that *healthcareai* installed correctly, open a terminal and run `python`. This opens an interactive python console (also known as a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)). Then enter this command: `from healthcareai import develop_supervised_model` and hit enter. If no error is thrown, you are ready to rock.
 
-If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html) or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai)(with the healthcare-ai tag) so we can help others along this process.
+If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html) or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) so we can help others along this process.
 
 ## Getting started
 
-- Visit [healthcare.ai](healthcare.ai/py) to read the docs and find examples.
-    * Including this [notebook](healthcare.ai/notebooks/Example1.ipynb)
+- Visit [healthcare.ai](http://healthcareai-py.readthedocs.io/en/latest/) to read the docs and find examples.
+    * Including this [notebook](notebooks/Example1.ipynb)
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
@@ -82,7 +94,7 @@ Note that we're currently working on easy connections to other types of database
 
 ## For Issues
 
-- Double check that the code follows the examples at [healthcare.ai/py](http://healthcare.ai/py/)
+- Double check that the code follows the examples [here](http://healthcareai-py.readthedocs.io/en/latest/)
 - If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
@@ -132,3 +144,54 @@ It's also worth noting that while this *should* be done on the [pypi test site](
     - `twine upload dist/healthcareai-<version>.tar.gz`
     - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before you push to github.
 4. Verify install on all three platforms (linux, macOS, windows) by first `pip uninstall healthcareai` and then `pip install healthcareai`, followed by a `from healthcareai import develop_supervised_model` in a python REPL.
+
+### Release process (Including Read The Docs)
+
+1. update all version numbers
+    - `setup.py`
+2. update CHANGELOG
+    - Move all items under **unreleased** to a new release number
+    - Leave the template under **unreleased**
+3. merge in the PR
+4. create release on github releases (making sure this matches the release number in `setup.py`)
+5. Create and upload the new pypi release (see above)
+6. update readthedocs settings
+    - **Admin** > **Versions**
+    - Ensure that the new release number is checked for **public**
+7. Manually build new read the docs
+    - **Builds** > **Build version <new release>**
+8. verify the new version builds and is viewable at the public url
+
+### Conda Packaging and Distribution
+
+Creating a conda package is much easier if you have already built the PyPI package.
+
+1. Install prerequisites (only needed once)
+    + Install conda build `conda install conda-build`
+    + Install anaconda cli `conda install anaconda-client`
+    + Login to anaconda.org with `anaconda login`
+2. Configure conda
+    + `conda config --set always_yes true`
+    + `conda config --set anaconda_upload no`
+3. Create the skeleton conda recipe from the existing PyPI package
+    + `conda skeleton pypi healthcareai`
+4. Build the conda package for the main python versions
+    + `conda build --python 2.7 healthcareai`
+    + `conda build --python 3.4 healthcareai`
+    + `conda build --python 3.5 healthcareai`
+    + `conda build --python 3.6 healthcareai`
+5. Convert the existing builds to work on all platforms (win32, win64, osx62, linux32, linux64). Note this can take a while.
+    + `conda convert --platform all win-64/healthcareai-*-py*.tar.bz2 -o <PATH_TO_BUILD_DIRECTORY>`
+6. Upload to anaconda using the anaconda cli
+    + Note that you'll have to keep track of where the builds are put!
+    + `anaconda upload <PATH_TO_BUILD_DIRECTORY>/**/healthcareai*.tar.bz2`
+7. Clean up the mess
+    + `conda build purge`
+
+##### Helpful Resources
+
+- Conda [Building Packages](https://conda.io/docs/building/build.html)
+- [Anaconda.org dashboard](https://anaconda.org/catalyst/healthcareai)
+- Taken from the excellent [conda.io docs](https://conda.io/docs/build_tutorials/pkgs.html)
+- Also, some taken from this [Travis CI build](https://gist.github.com/yoavram/05a3c04ddcf317a517d5)#
+

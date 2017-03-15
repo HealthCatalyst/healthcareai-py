@@ -18,11 +18,18 @@
 - Upgrade to latest scipy (note that upgrade command took forever)
 - Run `conda remove scipy`
 - Run `conda install scipy`
-- To install the latest release, run 
-    * `pip install healthcareai`
-- If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run
-    * `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
- 
+- Run `conda install scikit-learn`
+ Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
+    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
+    2. Install the latest release with pip run `pip install healthcareai`
+    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+
+#### Why Anaconda?
+
+We recommend using the Anaconda python distribution when working on Windows. There are a number of reasons:
+- When running anaconda and installing packages using the `conda` command, you don't need to worry about [dependency hell](https://en.wikipedia.org/wiki/Dependency_hell), particularly because packages aren't compiled on your machine; `conda` installs pre-compiled binaries.
+- A great example of the pain the using `conda` saves you is with the python package **scipy**, which, by [their own admission](http://www.scipy.org/scipylib/building/windows.html) *"is difficult"*
+
 ### Linux
 
 You may need to install the following dependencies:
@@ -53,8 +60,8 @@ If you did get an error, or run into other installation issues, please [let us k
 
 ## Getting started
 
-- Visit [healthcare.ai](healthcare.ai/py) to read the docs and find examples.
-    * Including this [notebook](healthcare.ai/notebooks/Example1.ipynb)
+- Read through the docs on this site
+    * If you like Jupyter notebooks, [see here](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/Example1.ipynb)
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
@@ -84,8 +91,8 @@ Note that we're currently working on easy connections to other types of database
 
 ## For Issues
 
-- Double check that the code follows the examples at [healthcare.ai/py](http://healthcare.ai/py/)
-- If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
-    * Details on your environment (OS, database type, R vs Py)
-    * Goals (ie, what are you trying to accomplish)
-    * Crystal clear steps for reproducing the error
+- Double check that the code follows the examples in these documents.
+- If you're still seeing an error, file an issue on [Stack Overflow](http://stackoverflow.com/) using the healthcare-ai tag. Please provide
+  - Details on your environment (OS, database type, R vs Py)
+  - Goals (ie, what are you trying to accomplish)
+  - Crystal clear steps for reproducing the error
