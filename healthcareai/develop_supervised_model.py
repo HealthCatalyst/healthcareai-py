@@ -89,7 +89,7 @@ class DevelopSupervisedModel(object):
                 print(self.df.head())
         else:
             # TODO switch similar statements to work inplace
-            self.df = self.df.dropna(axis=0, how='any', inplace=True)
+            self.df.dropna(axis=0, how='any', inplace=True)            
             print('\nself.df after dropping rows with NULLS:')
             print(self.df.shape)
             print(self.df.head())
