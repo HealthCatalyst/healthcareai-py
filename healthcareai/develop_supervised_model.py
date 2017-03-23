@@ -19,6 +19,9 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.transformers import DataFrameImputer
 
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.preprocessing import StandardScaler 
 
 class DevelopSupervisedModel(object):
     """
@@ -103,6 +106,94 @@ class DevelopSupervisedModel(object):
 
             self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
 
+    def impact_coding_on_a_single_column(self,column):
+        mean_of_target = np.mean(self.dataframe[self.predicted_column])
+        replacement_dictionary = {}
+        for category in self.dataframe[column].unique():
+            sub_dataframe =  self.dataframe[self.dataframe[column] == category]
+            mean_for_category = np.mean(sub_dataframe[self.predicted_column])
+            value_for_category = mean_for_category - mean_of_target
+            replacement_dictionary[category] = value_for_category
+        self.dataframe[column].replace(replacement_dictionary,inplace=True)
+
+    def impact_coding_on_many_columns(self,list_of_column_names):
+        for column_name in list_of_column_names:
+            self.impact_coding_on_a_single_column(column_name)
+
+    def under_sampling(self,random_state=0):
+        # NB: Must be done BEFORE train/test split
+        #     so that when we split the under/over sampled
+        #     dataset. We do under/over sampling on
+        #     the entire dataframe.
+        #     Must be done after imputation, since
+        #     under/over sampling will not work with
+        #     missing values.
+        #     Must be done after target column is converted to
+        #     numerical value (so under/over sampling from
+        #     imblearn works).
+        y = np.squeeze(self.dataframe[[self.predicted_column]])
+        X = self.dataframe.drop([self.predicted_column], axis=1)
+
+        under_sampler = RandomUnderSampler(random_state=random_state)
+        X_under_sampled, y_under_sampled = under_sampler.fit_sample(X,y)
+        
+        X_under_sampled = pd.DataFrame(X_under_sampled)
+        X_under_sampled.columns = X.columns
+        y_under_sampled = pd.Series(y_under_sampled)
+
+        dataframe_under_sampled = X_under_sampled
+        dataframe_under_sampled[self.predicted_column] = y_under_sampled 
+        self.dataframe = dataframe_under_sampled
+
+    def over_sampling(self,random_state=0):
+        # NB: Must be done BEFORE train/test split
+        #     so that when we split the under/over sampled
+        #     dataset. We do under/over sampling on
+        #     the entire dataframe.
+        #     Must be done after imputation, since
+        #     under/over sampling will not work with
+        #     missing values.
+        #     Must be done after target column is converted to
+        #     numerical value (so under/over sampling from
+        #     imblearn works).
+        y = np.squeeze(self.dataframe[[self.predicted_column]])
+        X = self.dataframe.drop([self.predicted_column], axis=1)
+
+        over_sampler = RandomOverSampler(random_state=random_state)
+        X_over_sampled, y_over_sampled = over_sampler.fit_sample(X,y)
+        
+        X_over_sampled = pd.DataFrame(X_over_sampled)
+        X_over_sampled.columns = X.columns
+        y_over_sampled = pd.Series(y_over_sampled)
+
+        dataframe_over_sampled = X_over_sampled
+        dataframe_over_sampled[self.predicted_column] = y_over_sampled 
+        self.dataframe = dataframe_over_sampled
+        
+    def feature_scaling(self,columns_to_scale):
+        # NB: Must happen AFTER self.X_train, self.X_test,
+        #     self.y_train, self.y_test are defined.
+        #     Must happen AFTER imputation is done so there
+        #     are no missing values.
+        #     Must happen AFTER under/over sampling is done
+        #     so that we scale the under/over sampled dataset.
+        #     How to warn the user if they call this method
+        #     at the wrong time?
+        X_train_scaled_subset = self.X_train[columns_to_scale]
+        X_test_scaled_subset = self.X_test[columns_to_scale]        
+        scaler = StandardScaler()
+        scaler.fit(X_train_scaled_subset)
+        
+        X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_train_scaled_subset))
+        X_train_scaled_subset_dataframe.index = X_train_scaled_subset.index
+        X_train_scaled_subset_dataframe.columns = X_train_scaled_subset.columns
+        self.X_train[columns_to_scale] = X_train_scaled_subset_dataframe
+        
+        X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_test_scaled_subset))
+        X_test_scaled_subset_dataframe.index = X_test_scaled_subset.index
+        X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
+        self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
+        
     def imputation(self):
         # TODO should probably automate null imputation?
         self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
