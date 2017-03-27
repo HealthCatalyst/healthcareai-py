@@ -110,17 +110,6 @@ class DevelopSupervisedModel(object):
             self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
             self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
-
-    def impact_coding_on_a_single_column(self,column):
-        train, test = model_selection.train_test_split(self.dataframe,test_size=0.8,random_state = 0)
-        x_bar = train[self.predicted_column].mean()
-        impact = pd.DataFrame(train.groupby([column])[self.predicted_column].mean().rename(column + "_impact_coded"))
-        impact.reset_index(level=0, inplace=True)
-        impact[column + "_impact_coded"] = impact[column + "_impact_coded"] - x_bar        
-        post_df = test.merge(impact, how='left', on = column)
-        post_df.drop(column,axis=1,inplace=True)
-        post_df[column + "_impact_coded"].fillna(value = x_bar, inplace = True)
-        self.dataframe = post_df
         
     def impact_coding_on_many_columns(self,list_of_column_names):
         for column_name in list_of_column_names:
@@ -449,7 +438,7 @@ class DevelopSupervisedModel(object):
             algo = None
 
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
-                                                modeltype=self.model_type,
+                                                modeltype=simelf.model_type,
                                                 debug=debug,
                                                 devcheck='yesdev',
                                                 algo=algo,
