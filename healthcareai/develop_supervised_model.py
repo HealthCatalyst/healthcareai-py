@@ -11,6 +11,7 @@ from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import SGDClassifier
 
 from healthcareai.common import filters
 from healthcareai.common import model_eval
@@ -22,6 +23,9 @@ from healthcareai.common.transformers import DataFrameImputer
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import StandardScaler 
+
+from nltk import ConfusionMatrix
+import json 
 
 class DevelopSupervisedModel(object):
     """
@@ -68,7 +72,8 @@ class DevelopSupervisedModel(object):
         self.col_list = None
         self.rfclf = None
         self.au_roc = None
-
+        self.results = None
+        
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
@@ -107,15 +112,16 @@ class DevelopSupervisedModel(object):
             self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
 
     def impact_coding_on_a_single_column(self,column):
-        mean_of_target = np.mean(self.dataframe[self.predicted_column])
-        replacement_dictionary = {}
-        for category in self.dataframe[column].unique():
-            sub_dataframe =  self.dataframe[self.dataframe[column] == category]
-            mean_for_category = np.mean(sub_dataframe[self.predicted_column])
-            value_for_category = mean_for_category - mean_of_target
-            replacement_dictionary[category] = value_for_category
-        self.dataframe[column].replace(replacement_dictionary,inplace=True)
-
+        train, test = model_selection.train_test_split(self.dataframe,test_size=0.8,random_state = 0)
+        x_bar = train[self.predicted_column].mean()
+        impact = pd.DataFrame(train.groupby([column])[self.predicted_column].mean().rename(column + "_impact_coded"))
+        impact.reset_index(level=0, inplace=True)
+        impact[column + "_impact_coded"] = impact[column + "_impact_coded"] - x_bar        
+        post_df = test.merge(impact, how='left', on = column)
+        post_df.drop(column,axis=1,inplace=True)
+        post_df[column + "_impact_coded"].fillna(value = x_bar, inplace = True)
+        self.dataframe = post_df
+        
     def impact_coding_on_many_columns(self,list_of_column_names):
         for column_name in list_of_column_names:
             self.impact_coding_on_a_single_column(column_name)
@@ -254,6 +260,7 @@ class DevelopSupervisedModel(object):
         if model_by_name is None:
             model_by_name = {}
             model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
+            model_by_name['SGD'] = self.SGDClassifier(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
             model_by_name['Logistic Regression'] = self.logistic_regression()
             model_by_name['Random Forest Classifier'] = self.advanced_random_forest_classifier(
                 randomized_search=True,
@@ -296,8 +303,21 @@ class DevelopSupervisedModel(object):
         print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric, best_algorithm_name))
         print('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
+        self.results = results
         return results
 
+    def write_classification_metrics_to_json(self):
+        output = {}
+        y_pred = self.results['best_model'].predict(self.X_test)
+        accuracy = metrics.accuracy_score(self.y_test,y_pred)
+        confusion_matrix = metrics.confusion_matrix(self.y_test, y_pred)
+        output['accuracy'] = accuracy
+        output['confusion_matrix'] = confusion_matrix.tolist()
+        with open('classification_metrics.json', 'w') as fp:
+            json.dump(output, fp, indent=4, sort_keys=True)
+
+
+    
     def validate_score_metric_for_number_of_classes(self, metric):
         # TODO make this more robust for other scoring metrics
         """
@@ -374,6 +394,32 @@ class DevelopSupervisedModel(object):
 
         return algorithm.fit(self.X_train, self.y_train)
 
+    def SGDClassifier(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+        # TODO
+        # KNN, gradient boosted trees, bootstrap aggregation
+        # impact coding
+        #
+        # enumerate, document and validate scoring options
+        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
+
+        """
+        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overideable)
+        hyperparameter grid.
+        """
+        if hyperparameter_grid is None:
+            loss_list = ['hinge','log']
+            penalty_list = ['l1','l2']
+            alpha_list = [0.0001,0.001,0.01,0.1]
+            hyperparameter_grid = {'loss':loss_list,'penalty':penalty_list,'alpha':alpha_list}
+            
+        algorithm = prepare_randomized_search(
+            SGDClassifier, 
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search)
+
+        return algorithm.fit(self.X_train, self.y_train)
+    
 
     def linear(self, cores=4, debug=False):
         """
