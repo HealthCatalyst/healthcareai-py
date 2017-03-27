@@ -110,10 +110,7 @@ class DevelopSupervisedModel(object):
             self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
             self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
-        
-    def impact_coding_on_many_columns(self,list_of_column_names):
-        for column_name in list_of_column_names:
-            self.impact_coding_on_a_single_column(column_name)
+
 
     def under_sampling(self,random_state=0):
         # NB: Must be done BEFORE train/test split
