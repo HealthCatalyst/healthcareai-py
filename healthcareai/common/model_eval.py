@@ -93,7 +93,7 @@ def clfreport(modeltype,
             print('##########################################################')
             print('Model accuracy:')
             print('\nRMSE error:', math.sqrt(mean_squared_error(y_test,
-                                                                y_pred_class)))
+                                                                y_pred)))
             print('\nMean absolute error:', mean_absolute_error(y_test,
                                                                 y_pred), '\n')
             print('##########################################################')
