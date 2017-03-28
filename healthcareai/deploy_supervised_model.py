@@ -11,11 +11,15 @@ import math
 
 
 class DeploySupervisedModel(object):
-    """ Describe what this does
-
-
-
-
+    """
+    A likely incomplete list of functionality
+    - [ ] refactor out data preprocessing pipeline
+    - [ ] retrain on full dataset
+    - [ ] tests db connection
+    - [ ] writes to db
+    - [ ] loads or saves pickle via model mess
+    - [ ] performance on top n factors
+    - [ ] refactor top n factors
     """
 
     def __init__(self,
@@ -26,7 +30,6 @@ class DeploySupervisedModel(object):
                  predictedcol,
                  impute,
                  debug=False):
-        """Describe the class"""
 
 
         self.modeltype = modeltype

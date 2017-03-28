@@ -13,11 +13,17 @@ import matplotlib.pyplot as plt
 def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test=None, param=None, cores=4, tune=False, use_saved_model=False, col_list=None):
     """
     Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
-    - runs grid search
-    - load a pickled model
-    - print out debug messages
-    - train the classifier
+    - [x] runs grid search
+    - [ ] save/load a pickled model
+    - [ ] print out debug messages
+    - [x] train the classifier
+    - [ ] print out grid params
+    - [ ] calculate metrics
+    - [ ] feature importances
+    - [ ] logging
+    - [ ] production predictions from pickle file
     - do some numpy manipulation
+        - lines ~50?
     - possible returns:
         - a single prediction
         - a prediction and an roc_auc score
@@ -226,6 +232,7 @@ def write_feature_importances(importance_attr, col_list):
                                importance_attr[indices[f]]))
 
 def calculate_rfmtry(number_of_columns, type):
+    # TODO refactor this
     if number_of_columns < 3:
         message = "You need more than two columns to tune hyperparameters."
         raise ValueError(message)
@@ -246,6 +253,7 @@ def calculate_rfmtry(number_of_columns, type):
 
 
 def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):
+    # TODO refactor this
     """
     This function creates an ROC or PR curve and calculates the area under it.
 
