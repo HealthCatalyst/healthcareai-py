@@ -35,6 +35,7 @@ setup(name='healthcareai',
           'pyodbc>=3.0.10',
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
+          'imbalanced-learn>=0.2.1',
       ],
       package_data={
           'examples': ['*.py', '*.ipynb']
