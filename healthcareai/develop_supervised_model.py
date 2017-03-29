@@ -436,7 +436,7 @@ class DevelopSupervisedModel(object):
             algo = None
 
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
-                                                modeltype=simelf.model_type,
+                                                modeltype=self.model_type,
                                                 debug=debug,
                                                 devcheck='yesdev',
                                                 algo=algo,
