@@ -13,6 +13,7 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import SGDClassifier
 
+import healthcareai.common.helpers
 from healthcareai.common import filters
 from healthcareai.common import model_eval
 from healthcareai.common import output_utilities
@@ -466,7 +467,7 @@ class DevelopSupervisedModel(object):
 
         if randomized_search:
             if not hyperparameter_grid:
-                max_features = model_eval.calculate_rfmtry(len(self.X_test.columns), self.model_type)
+                max_features = healthcareai.common.helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns), self.model_type)
                 hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
             algorithm = RandomizedSearchCV(estimator=RandomForestClassifier(),
@@ -511,8 +512,8 @@ class DevelopSupervisedModel(object):
             algo = None
 
         params = {'max_features':
-                      model_eval.calculate_rfmtry(len(self.X_test.columns),
-                                                  self.model_type)}
+                      healthcareai.common.helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                                              self.model_type)}
 
         self.col_list = self.X_train.columns.values
 

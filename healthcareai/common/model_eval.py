@@ -1,14 +1,15 @@
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score, roc_curve, auc
-from sklearn.metrics import average_precision_score, precision_recall_curve
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.externals import joblib
 import math
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sys
-import matplotlib.pyplot as plt
+from sklearn.externals import joblib
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.metrics import average_precision_score, precision_recall_curve
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.model_selection import GridSearchCV
+
 
 def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test=None, param=None, cores=4, tune=False, use_saved_model=False, col_list=None):
     """
@@ -230,26 +231,6 @@ def write_feature_importances(importance_attr, col_list):
     for f in range(0, len(col_list)):
         print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
                                importance_attr[indices[f]]))
-
-def calculate_rfmtry(number_of_columns, type):
-    # TODO refactor this
-    if number_of_columns < 3:
-        message = "You need more than two columns to tune hyperparameters."
-        raise ValueError(message)
-
-    if type == 'classification':
-        # Default to grid of 1,2,3 for start of less than 2
-        start_temp = math.floor(math.sqrt(number_of_columns))
-        start = start_temp if start_temp >= 2 else 2
-        grid_mtry = [start-1,start,start+1]
-
-    if type == 'regression':
-        # Default to grid of 1,2,3 for start of less than 2
-        start_temp = math.floor(number_of_columns/3)
-        start = start_temp if start_temp >= 2 else 2
-        grid_mtry = [start-1,start,start+1]
-
-    return grid_mtry
 
 
 def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):
