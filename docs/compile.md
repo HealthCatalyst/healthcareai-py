@@ -1,5 +1,9 @@
 # Compiling Python files to an exe
 
+## Python 3.6 Note
+
+Please note that as of 2017-03-31 this process will not work if the machine is running Python 3.6.
+
 ## Why might I want to do this?
 
 Note: this is optional to model deployment. When working in with
