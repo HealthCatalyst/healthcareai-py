@@ -22,8 +22,11 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
     :rtype: str: basic stats about how many records were archived
     
     Example usage:
-    
+
+    ```
+    from healthcareai.common.table_archiver import table_archiver
     table_archiver('localhost', 'SAM_123', 'RiskScores', 'RiskScoreArchive', 'ArchiveDTS')
+    ```
     """
     # Basic input validation
     if type(server) is not str:
