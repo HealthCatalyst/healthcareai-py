@@ -41,6 +41,16 @@ For example, if you have a dietary table that looks like this:
 
 ### Use
 
+#### Parameters
+
+- **server**: server name
+- **database**: database name
+- **source_table**: source table name
+- **destination_table**: destination table name
+- **timestamp_column_name**: new timestamp column name
+
+This function returns some basic stats about how many records were archived
+
 ```python
 from healthcareai.common.table_archiver import table_archiver
 table_archiver('localhost', 'SAM_123', 'RiskScores', 'RiskScoreArchive', 'ArchiveDTS')
