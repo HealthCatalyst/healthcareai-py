@@ -300,10 +300,10 @@ class DevelopSupervisedModel(object):
         confusion_matrix = metrics.confusion_matrix(self.y_test, y_pred)
         output['accuracy'] = accuracy
         output['confusion_matrix'] = confusion_matrix.tolist()
+        output['auc_roc'] = self.results['best_score']
+        output['algorithm_name']=self.results['best_algorithm_name']
         with open('classification_metrics.json', 'w') as fp:
             json.dump(output, fp, indent=4, sort_keys=True)
-
-
     
     def validate_score_metric_for_number_of_classes(self, metric):
         # TODO make this more robust for other scoring metrics
