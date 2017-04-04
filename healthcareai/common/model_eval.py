@@ -10,8 +10,22 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
+from healthcareai.common.feature_importances import write_feature_importances
 
-def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test=None, param=None, cores=4, tune=False, use_saved_model=False, col_list=None):
+
+def clfreport(modeltype,
+              debug,
+              devcheck,
+              algo,
+              X_train,
+              y_train,
+              X_test,
+              y_test=None,
+              param=None,
+              cores=4,
+              tune=False,
+              use_saved_model=False,
+              col_list=None):
     """
     Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
     - [x] runs grid search
@@ -37,54 +51,40 @@ def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test
     # Initialize conditional vars that depend on ifelse to avoid PC warning
     y_pred_class = None
     y_pred = None
+    clf = algo
 
     # compare algorithms
     if devcheck == 'yesdev':
         if tune:
-            clf = GridSearchCV(algo,
-                               param,
-                               cv=5,
-                               scoring='roc_auc',
-                               n_jobs=cores)
-        else:
-            clf = algo
+            # Set up grid search
+            clf = GridSearchCV(algo, param, cv=5, scoring='roc_auc', n_jobs=cores)
 
         if debug:
             print('\nclf object right before fitting main model:')
             print(clf)
 
+        print('\n', algo)
+
         if modeltype == 'classification':
-            y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(
-                X_test)[:, 1])
+            y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(X_test)[:, 1])
             #y_pred_class = clf.fit(X_train, y_train).predict(X_test)
+
+            roc_auc = roc_auc_score(y_test, y_pred)
+            precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
+            pr_auc = auc(recall, precision)
+
+            print_classification_metrics(pr_auc, roc_auc)
         elif modeltype == 'regression':
             y_pred = clf.fit(X_train, y_train).predict(X_test)
 
-        print('\n', algo)
-        print("Best hyper-parameters found after tuning:")
+            print_regression_metrics(y_pred, y_pred_class, y_test)
 
         if hasattr(clf, 'best_params_') and tune:
+            print("Best hyper-parameters found after tuning:")
             print(clf.best_params_)
         else:
             print("No hyper-parameter tuning was done.")
 
-        if modeltype == 'classification':
-            print('\nMetrics:')
-            roc_auc = roc_auc_score(y_test, y_pred)
-            print('AU_ROC ScoreX:', roc_auc)
-
-            precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
-            pr_auc = auc(recall, precision)
-            print('\nAU_PR Score:', pr_auc)
-
-        elif modeltype == 'regression':
-            print('##########################################################')
-            print('Model accuracy:')
-            print('\nRMSE error:', math.sqrt(mean_squared_error(y_test,
-                                                                y_pred_class)))
-            print('\nMean absolute error:', mean_absolute_error(y_test,
-                                                                y_pred), '\n')
-            print('##########################################################')
 
         # TODO: refactor this logic to be simpler
         # Return without printing variable importance for linear case
@@ -95,34 +95,24 @@ def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test
 
         # Print variable importance if rf and not tuning
         elif hasattr(clf, 'feature_importances_'):
-            write_feature_importances(clf.feature_importances_,
-                                          col_list)
+            write_feature_importances(clf.feature_importances_, col_list)
 
             return y_pred, roc_auc, clf
 
         # Print variable importance if rf and tuning
         elif hasattr(clf.best_estimator_, 'feature_importances_'):
-            write_feature_importances(
-                clf.best_estimator_.feature_importances_,
-                col_list)
+            write_feature_importances(clf.best_estimator_.feature_importances_, col_list)
 
             return y_pred, roc_auc, clf
 
     elif devcheck == 'notdev':
-
-        clf = algo
-
         if use_saved_model is True:
-
             clf = joblib.load('probability.pkl')
-
         else:
-
             if debug:
                 print('\nclf object right before fitting main model:')
 
             clf.fit(X_train, y_train)
-
             joblib.dump(clf, 'probability.pkl', compress=1)
 
         if modeltype == 'classification':
@@ -132,45 +122,53 @@ def clfreport(modeltype, debug, devcheck, algo, X_train, y_train, X_test, y_test
 
     return y_pred
 
-def findtopthreefactors(debug,
-                        X_train,
-                        y_train,
-                        X_test,
-                        modeltype,
-                        use_saved_model):
+
+def print_regression_metrics(y_pred, y_pred_class, y_test):
+    print('##########################################################')
+    print('Model accuracy:')
+    print('\nRMSE error:', math.sqrt(mean_squared_error(y_test, y_pred_class)))
+    print('\nMean absolute error:', mean_absolute_error(y_test, y_pred), '\n')
+    print('##########################################################')
+
+
+def print_classification_metrics(pr_auc, roc_auc):
+    print('\nMetrics:')
+    print('AU_ROC ScoreX:', roc_auc)
+    print('\nAU_PR Score:', pr_auc)
+
+
+def find_top_three_factors(debug,
+                           X_train,
+                           y_train,
+                           X_test,
+                           model_type,
+                           use_saved_model):
 
     # Initialize conditional vars that depend on ifelse to avoid PC warnng
     clf = None
 
-    if modeltype == 'classification':
+    if model_type == 'classification':
         clf = LogisticRegression()
-
-    elif modeltype == 'regression':
+    elif model_type == 'regression':
         clf = LinearRegression()
 
     if use_saved_model is True:
-
         clf = joblib.load('factorlogit.pkl')
 
     elif use_saved_model is False:
-
-        if modeltype == 'classification':
-
+        if model_type == 'classification':
             if debug:
                 print('\nclf object right before fitting factor ranking model')
                 print(clf)
-
             clf.fit(X_train, y_train).predict_proba(X_test)
 
-        elif modeltype == 'regression':
-
+        elif model_type == 'regression':
             if debug:
                 print('\nclf object right before fitting factor ranking model')
                 print(clf)
-
             clf.fit(X_train, y_train).predict(X_test)
 
-        joblib.dump(clf, 'factorlogit.pkl', compress=1)
+        write_classifier_to_pickle(clf)
 
     if debug:
         print('\nCoeffs right before multiplic. to determine top 3 factors')
@@ -212,25 +210,9 @@ def findtopthreefactors(debug,
 
     return first_fact, second_fact, third_fact
 
-def write_feature_importances(importance_attr, col_list):
-    """
-    This function prints an ordered list of rf-related feature importance.
 
-    Parameters
-    ----------
-    importance_attr (attribute) : This is the feature importance attribute
-    from a scikit-learn method that represents feature importances
-    col_list (list) : Vector holding list of column names
-
-    Returns
-    -------
-    Nothing. Simply prints feature importance list to console.
-    """
-    indices = np.argsort(importance_attr)[::-1]
-    print('\nVariable importance:')
-    for f in range(0, len(col_list)):
-        print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
-                               importance_attr[indices[f]]))
+def write_classifier_to_pickle(clf):
+    joblib.dump(clf, 'factorlogit.pkl', compress=1)
 
 
 def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):

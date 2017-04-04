@@ -323,13 +323,12 @@ class DeploySupervisedModel(object):
                 use_saved_model=use_saved_model)
 
         # Calculate three imp columns
-        first_fact, second_fact, third_fact = model_eval. \
-            findtopthreefactors(debug,
-                                self.X_train,
-                                self.y_train,
-                                self.X_test,
-                                self.modeltype,
-                                use_saved_model)
+        first_fact, second_fact, third_fact = model_eval.find_top_three_factors(debug,
+                                                                                self.X_train,
+                                                                                self.y_train,
+                                                                                self.X_test,
+                                                                                self.modeltype,
+                                                                                use_saved_model)
 
         # Convert to base int instead of numpy data type for SQL insert
         graincol_baseint = [int(self.graincol_test.iloc[i])
