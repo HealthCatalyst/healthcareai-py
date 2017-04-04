@@ -37,19 +37,11 @@ class DevelopSupervisedModel(object):
 
     Parameters
     ----------
-    modeltype (str) : whether the model will be 'classification' or
-    'regression'
-
+    modeltype (str) : whether the model will be 'classification' or 'regression'
     df (dataframe) : data that your model is based on
-
     predictedcol (str) : y column (in ticks) who's values are being predicted
-
-    impute (boolean) : whether imputation is done on the data; if not,
-    rows with nulls are removed
-
-    graincol (str) : OPTIONAL | column (in ticks) that represents the data's
-    grain
-
+    impute (boolean) : whether imputation is done on the data; if not, rows with nulls are removed
+    graincol (str) : OPTIONAL | column (in ticks) that represents the data's grain
     debug (boolean) : OPTIONAL | verbosity of the output
 
     Returns
@@ -111,7 +103,6 @@ class DevelopSupervisedModel(object):
             self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
             self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
-
 
     def under_sampling(self,random_state=0):
         # NB: Must be done BEFORE train/test split
@@ -437,6 +428,7 @@ class DevelopSupervisedModel(object):
         return algorithm.fit(self.X_train, self.y_train)
 
     def linear(self, cores=4, debug=False):
+        # TODO deprecate
         """
         This method creates and assesses the accuracy of a logistic regression
         model.
@@ -499,17 +491,18 @@ class DevelopSupervisedModel(object):
                 hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
             algorithm = RandomizedSearchCV(estimator=RandomForestClassifier(),
-                                               scoring=scoring_metric,
-                                               param_distributions=hyperparameter_grid,
-                                            # TODO brute force all 6 in the hyperparameter space?
-                                               n_iter=6,
-                                               cv=5,
-                                               verbose=0,
-                                               n_jobs=1)
+                                           scoring=scoring_metric,
+                                           param_distributions=hyperparameter_grid,
+                                           # TODO brute force all 6 in the hyperparameter space?
+                                           n_iter=6,
+                                           cv=5,
+                                           verbose=0,
+                                           n_jobs=1)
 
         return algorithm.fit(self.X_train, self.y_train)
 
     def random_forest(self, cores=4, trees=200, tune=False, debug=False):
+        # TODO deprecate
         """
         This method creates and assesses the accuracy of a logistic regression
         model.
@@ -539,9 +532,8 @@ class DevelopSupervisedModel(object):
         else:  # Here to appease pep8
             algo = None
 
-        params = {'max_features':
-                      helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
-                                                                                              self.model_type)}
+        params = {'max_features': helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                                      self.model_type)}
 
         self.col_list = self.X_train.columns.values
 
