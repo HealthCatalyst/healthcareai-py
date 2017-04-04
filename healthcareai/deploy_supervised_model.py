@@ -255,7 +255,7 @@ class DeploySupervisedModel(object):
             self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -269,7 +269,7 @@ class DeploySupervisedModel(object):
             self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -292,7 +292,7 @@ class DeploySupervisedModel(object):
             self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -315,7 +315,7 @@ class DeploySupervisedModel(object):
             self.y_pred = model_eval.clfreport(
                 modeltype=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,

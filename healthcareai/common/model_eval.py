@@ -15,7 +15,7 @@ from healthcareai.common.output_utilities import save_object_as_pickle, load_pic
 
 def clfreport(modeltype,
               debug,
-              devcheck,
+              develop_model_mode,
               algo,
               X_train,
               y_train,
@@ -54,7 +54,7 @@ def clfreport(modeltype,
     clf = algo
 
     # compare algorithms
-    if devcheck == 'yesdev':
+    if develop_model_mode is True:
         if tune:
             # Set up grid search
             clf = GridSearchCV(algo, param, cv=5, scoring='roc_auc', n_jobs=cores)
@@ -87,25 +87,23 @@ def clfreport(modeltype,
 
 
         # TODO: refactor this logic to be simpler
-        # Return without printing variable importance for linear case
-        if (not hasattr(clf, 'feature_importances_')) and (not
-            hasattr(clf, 'best_estimator_')):
+        # These returns are TIGHTLY coupled with their uses in develop and deploy. Both will have to be unwound together
+        has_importances = hasattr(clf, 'feature_importances_')
+        has_best_estimator = hasattr(clf, 'best_estimator_')
 
+        if not has_importances and not has_best_estimator:
+            # Return without printing variable importance for linear case
             return y_pred, roc_auc
-
-        # Print variable importance if rf and not tuning
-        elif hasattr(clf, 'feature_importances_'):
+        elif has_importances:
+            # Print variable importance if rf and not tuning
             write_feature_importances(clf.feature_importances_, col_list)
-
             return y_pred, roc_auc, clf
-
-        # Print variable importance if rf and tuning
         elif hasattr(clf.best_estimator_, 'feature_importances_'):
+            # Print variable importance if rf and tuning
             write_feature_importances(clf.best_estimator_.feature_importances_, col_list)
-
             return y_pred, roc_auc, clf
 
-    elif devcheck == 'notdev':
+    elif develop_model_mode is False:
         if use_saved_model is True:
             clf = load_pickle_file('probability.pkl')
         else:

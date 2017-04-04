@@ -438,7 +438,7 @@ class DevelopSupervisedModel(object):
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
                                                 modeltype=self.model_type,
                                                 debug=debug,
-                                                devcheck='yesdev',
+                                                develop_model_mode=True,
                                                 algo=algo,
                                                 X_train=self.X_train,
                                                 y_train=self.y_train,
@@ -520,7 +520,7 @@ class DevelopSupervisedModel(object):
         self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
                                                     modeltype=self.model_type,
                                                     debug=debug,
-                                                    devcheck='yesdev',
+                                                    develop_model_mode=True,
                                                     algo=algo,
                                                     X_train=self.X_train,
                                                     y_train=self.y_train,
