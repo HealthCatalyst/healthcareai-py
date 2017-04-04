@@ -3,7 +3,6 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -11,6 +10,7 @@ from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
 from healthcareai.common.feature_importances import write_feature_importances
+from healthcareai.common.output_utilities import save_object_as_pickle, load_pickle_file
 
 
 def clfreport(modeltype,
@@ -107,13 +107,13 @@ def clfreport(modeltype,
 
     elif devcheck == 'notdev':
         if use_saved_model is True:
-            clf = joblib.load('probability.pkl')
+            clf = load_pickle_file('probability.pkl')
         else:
             if debug:
                 print('\nclf object right before fitting main model:')
 
             clf.fit(X_train, y_train)
-            joblib.dump(clf, 'probability.pkl', compress=1)
+            save_object_as_pickle('probability.pkl', clf)
 
         if modeltype == 'classification':
             y_pred = np.squeeze(clf.predict_proba(X_test)[:, 1])
@@ -153,8 +153,7 @@ def find_top_three_factors(debug,
         clf = LinearRegression()
 
     if use_saved_model is True:
-        clf = joblib.load('factorlogit.pkl')
-
+        clf = load_pickle_file('factorlogit.pkl')
     elif use_saved_model is False:
         if model_type == 'classification':
             if debug:
@@ -168,7 +167,7 @@ def find_top_three_factors(debug,
                 print(clf)
             clf.fit(X_train, y_train).predict(X_test)
 
-        write_classifier_to_pickle(clf)
+            save_object_as_pickle('factorlogit.pkl', clf)
 
     if debug:
         print('\nCoeffs right before multiplic. to determine top 3 factors')
@@ -210,9 +209,6 @@ def find_top_three_factors(debug,
 
     return first_fact, second_fact, third_fact
 
-
-def write_classifier_to_pickle(clf):
-    joblib.dump(clf, 'factorlogit.pkl', compress=1)
 
 
 def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):

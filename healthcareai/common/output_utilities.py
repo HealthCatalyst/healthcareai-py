@@ -20,3 +20,12 @@ def save_object_as_pickle(filename, object_to_pickle):
     """
     with open(filename + '.pkl', 'wb') as open_file:
         pickle.dump(object_to_pickle, open_file)
+
+
+def load_pickle_file(filename):
+    """
+    Loads a python object of any type from a pickle file with the given filename
+    :param filename:
+    """
+    with open(filename, 'rb') as open_file:
+        return pickle.load(open_file)
