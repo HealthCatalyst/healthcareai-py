@@ -13,7 +13,7 @@ from healthcareai.common.feature_importances import write_feature_importances
 from healthcareai.common.output_utilities import save_object_as_pickle, load_pickle_file
 
 
-def clfreport(modeltype,
+def clfreport(model_type,
               debug,
               develop_model_mode,
               algo,
@@ -65,7 +65,7 @@ def clfreport(modeltype,
 
         print('\n', algo)
 
-        if modeltype == 'classification':
+        if model_type == 'classification':
             y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(X_test)[:, 1])
             #y_pred_class = clf.fit(X_train, y_train).predict(X_test)
 
@@ -74,7 +74,7 @@ def clfreport(modeltype,
             pr_auc = auc(recall, precision)
 
             print_classification_metrics(pr_auc, roc_auc)
-        elif modeltype == 'regression':
+        elif model_type == 'regression':
             y_pred = clf.fit(X_train, y_train).predict(X_test)
 
             print_regression_metrics(y_pred, y_pred_class, y_test)
@@ -104,20 +104,25 @@ def clfreport(modeltype,
             return y_pred, roc_auc, clf
 
     elif develop_model_mode is False:
-        if use_saved_model is True:
-            clf = load_pickle_file('probability.pkl')
-        else:
-            if debug:
-                print('\nclf object right before fitting main model:')
+        y_pred = do_deploy_mode_stuff(X_test, X_train, clf, debug, model_type, use_saved_model, y_pred, y_train)
 
-            clf.fit(X_train, y_train)
-            save_object_as_pickle('probability.pkl', clf)
+    # TODO is it possible to get to this return if you are in develop_model_mode?
+    return y_pred
 
-        if modeltype == 'classification':
-            y_pred = np.squeeze(clf.predict_proba(X_test)[:, 1])
-        elif modeltype == 'regression':
-            y_pred = clf.predict(X_test)
 
+def do_deploy_mode_stuff(X_test, X_train, clf, debug, mode_ltype, use_saved_model, y_pred, y_train):
+    if use_saved_model is True:
+        clf = load_pickle_file('probability.pkl')
+    else:
+        if debug:
+            print('\nclf object right before fitting main model:')
+
+        clf.fit(X_train, y_train)
+        save_object_as_pickle('probability.pkl', clf)
+    if mode_ltype == 'classification':
+        y_pred = np.squeeze(clf.predict_proba(X_test)[:, 1])
+    elif mode_ltype == 'regression':
+        y_pred = clf.predict(X_test)
     return y_pred
 
 

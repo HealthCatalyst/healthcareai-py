@@ -253,7 +253,7 @@ class DeploySupervisedModel(object):
             algorithm = LogisticRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -267,7 +267,7 @@ class DeploySupervisedModel(object):
             algorithm = LinearRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -290,7 +290,7 @@ class DeploySupervisedModel(object):
                                                )
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -313,7 +313,7 @@ class DeploySupervisedModel(object):
                                               )
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,

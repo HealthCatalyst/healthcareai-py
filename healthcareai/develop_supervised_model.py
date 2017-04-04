@@ -436,7 +436,7 @@ class DevelopSupervisedModel(object):
             algo = None
 
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
-                                                modeltype=self.model_type,
+                                                model_type=self.model_type,
                                                 debug=debug,
                                                 develop_model_mode=True,
                                                 algo=algo,
@@ -518,7 +518,7 @@ class DevelopSupervisedModel(object):
         self.col_list = self.X_train.columns.values
 
         self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
-                                                    modeltype=self.model_type,
+                                                    model_type=self.model_type,
                                                     debug=debug,
                                                     develop_model_mode=True,
                                                     algo=algo,
