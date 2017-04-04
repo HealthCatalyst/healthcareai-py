@@ -249,7 +249,7 @@ class DevelopSupervisedModel(object):
             model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
             model_by_name['SGD'] = self.SGDClassifier(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
             model_by_name['Logistic Regression'] = self.logistic_regression()
-            model_by_name['Random Forest Classifier'] = self.advanced_random_forest_classifier(
+            model_by_name['Random Forest Classifier'] = self.random_forest_classifier(
                 randomized_search=True,
                 scoring_metric=scoring_metric).best_estimator_
 
