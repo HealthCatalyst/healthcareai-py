@@ -38,5 +38,8 @@ class SimpleDevelopSupervisedModel(object):
     def logistic_regression(self):
         self._dsm.logistic_regression()
 
+    def linear_regression(self):
+        self._dsm.logistic_regression()
+
     def get_advanced_features(self):
         return self._dsm

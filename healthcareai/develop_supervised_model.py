@@ -333,14 +333,42 @@ class DevelopSupervisedModel(object):
 
         return result
 
-    def logistic_regression(self):
-        # TODO STUB FINISH THIS
-        # does it makes sense to wrap this in randomized search too?
-        # enumerate, document and validate scoring options
+    def logistic_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+        """
+        A light wrapper for Sklearn's logistic regression that performs randomized search over a default (and
+        overideable) hyperparameter grid.
+        """
+        if hyperparameter_grid is None:
+            # TODO sensible default hyperparameter grid
+            # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
-        trained_model = LogisticRegressionCV().fit(self.X_train, self.y_train)
+        algorithm = prepare_randomized_search(
+            LogisticRegressionCV,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            # 5 cross validation folds
+            cv=5)
 
-        return trained_model
+        return algorithm.fit(self.X_train, self.y_train)
+
+    def linear_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+        """
+        A light wrapper for Sklearn's linear regression that performs randomized search over a default (and
+        overideable) hyperparameter grid.
+        """
+        if hyperparameter_grid is None:
+            # TODO sensible default hyperparameter grid
+            # neighbor_list = list(range(10, 26))
+            # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+
+        algorithm = prepare_randomized_search(
+            LinearRegression,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search)
+
+        return algorithm.fit(self.X_train, self.y_train)
 
     def gradient(self, asdfsadffdsa):
         if hyperparameter_grid is None:
@@ -406,7 +434,6 @@ class DevelopSupervisedModel(object):
             randomized_search)
 
         return algorithm.fit(self.X_train, self.y_train)
-    
 
     def linear(self, cores=4, debug=False):
         """
