@@ -340,6 +340,7 @@ class DevelopSupervisedModel(object):
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
+            pass
             # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
         algorithm = prepare_randomized_search(
@@ -359,7 +360,7 @@ class DevelopSupervisedModel(object):
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
-            # neighbor_list = list(range(10, 26))
+            pass
             # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
         algorithm = prepare_randomized_search(
