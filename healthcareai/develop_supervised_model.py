@@ -324,6 +324,15 @@ class DevelopSupervisedModel(object):
 
         return result
 
+    def calculate_regression_metric(self, trained_model):
+        predictions = trained_model.predict(self.X_test)
+        mean_squared_error = metrics.mean_squared_error(self.y_test, predictions)
+        mean_absolute_error = metrics.mean_absolute_error(self.y_test, predictions)
+
+        result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
+
+        return result
+
     def logistic_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
         A light wrapper for Sklearn's logistic regression that performs randomized search over a default (and
@@ -360,7 +369,9 @@ class DevelopSupervisedModel(object):
             hyperparameter_grid,
             randomized_search)
 
-        return algorithm.fit(self.X_train, self.y_train)
+        algorithm.fit(self.X_train, self.y_train)
+
+        return algorithm
 
     def gradient(self, asdfsadffdsa):
         if hyperparameter_grid is None:
@@ -757,6 +768,7 @@ class DevelopSupervisedModel(object):
     def save_models(self, random_search):
         pass
 
+
 # TODO think about making this a static method?
 def prepare_randomized_search(
         estimator,
@@ -774,6 +786,7 @@ def prepare_randomized_search(
                                        n_jobs=1)
 
     else:
+        print('No randomized search. Using {}'.format(estimator))
         algorithm = estimator(**non_randomized_estimator_kwargs)
 
     return algorithm

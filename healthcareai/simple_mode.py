@@ -39,7 +39,13 @@ class SimpleDevelopSupervisedModel(object):
         self._dsm.logistic_regression()
 
     def linear_regression(self):
-        self._dsm.logistic_regression()
+        # Train the model
+        trained_model = self._dsm.linear_regression(randomized_search=False)
+
+        # Calculate the model metrics
+        performance_metrics = self._dsm.calculate_regression_metric(trained_model)
+
+        print(performance_metrics)
 
     def get_advanced_features(self):
         return self._dsm
