@@ -155,18 +155,14 @@ def find_top_three_factors(debug,
     if use_saved_model is True:
         clf = load_pickle_file('factorlogit.pkl')
     elif use_saved_model is False:
+        if debug:
+            print('\nclf object right before fitting factor ranking model')
+            print(clf)
+
         if model_type == 'classification':
-            if debug:
-                print('\nclf object right before fitting factor ranking model')
-                print(clf)
             clf.fit(X_train, y_train).predict_proba(X_test)
-
         elif model_type == 'regression':
-            if debug:
-                print('\nclf object right before fitting factor ranking model')
-                print(clf)
             clf.fit(X_train, y_train).predict(X_test)
-
             save_object_as_pickle('factorlogit.pkl', clf)
 
     if debug:
