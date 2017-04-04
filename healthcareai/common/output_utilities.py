@@ -1,5 +1,6 @@
 import json
 import pickle
+from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def save_dict_object_to_json(filename, dictionary):
@@ -27,5 +28,9 @@ def load_pickle_file(filename):
     Loads a python object of any type from a pickle file with the given filename
     :param filename:
     """
-    with open(filename, 'rb') as open_file:
-        return pickle.load(open_file)
+    try:
+        with open(filename, 'rb') as open_file:
+            return pickle.load(open_file)
+    except FileNotFoundError as e:
+        raise HealthcareAIError(
+            'No file named \'{}\' was found. Please verify the file you intend to load'.format(filename))
