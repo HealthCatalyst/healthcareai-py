@@ -446,7 +446,7 @@ class DevelopSupervisedModel(object):
                                                 y_test=self.y_test,
                                                 cores=cores)
 
-    def advanced_random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+    def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         # TODO
         # print out best hyperparameters
         # recreate stuff from the dumpster fire of model_eval.snarf

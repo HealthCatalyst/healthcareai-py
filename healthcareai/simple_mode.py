@@ -14,7 +14,7 @@ class SimpleDevelopSupervisedModel(object):
 
     def random_forest(self):
         if self._dsm.model_type is 'classification':
-            self._dsm.advanced_random_forest_classifier(
+            self._dsm.random_forest_classifier(
                 trees=200,
                 scoring_metric='roc_auc',
                 hyperparameter_grid=None,

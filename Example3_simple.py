@@ -41,7 +41,7 @@ def main():
     # Run 4 built in algorithms to see which one looks best at first
     hcai.ensemble()
 
-    hcai.get_advanced_features().advanced_random_forest_classifier()
+    hcai.get_advanced_features().random_forest_classifier()
 
 
 if __name__ == "__main__":

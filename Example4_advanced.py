@@ -68,7 +68,7 @@ def main():
         'max_features': [1, 5, 10, 20, 50, 100, 1000, 10000],
         'max_leaf_nodes': [None, 30, 400]}
 
-    hcai.advanced_random_forest_classifier(
+    hcai.random_forest_classifier(
         trees=500,
         scoring_metric='accuracy',
         hyperparameter_grid=knn_hyperparameters,
@@ -93,7 +93,7 @@ def main():
             randomized_search=True,
             scoring_metric='recall').best_estimator_,
         'Logistic Regression': hcai.logistic_regression(),
-        'Random Forest Classifier': hcai.advanced_random_forest_classifier(
+        'Random Forest Classifier': hcai.random_forest_classifier(
             randomized_search=True,
             scoring_metric='recall').best_estimator_}
 
