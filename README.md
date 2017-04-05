@@ -95,10 +95,11 @@ Note that we're currently working on easy connections to other types of database
 ## For Issues
 
 - Double check that the code follows the examples [here](http://healthcareai-py.readthedocs.io/en/latest/)
-- If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
+- If you're still seeing an error, create a post in [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) that contains
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
     * Crystal clear steps for reproducing the error
+- You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalystSLC/healthcareai-py/issues/new)
 
 ## Contributing
 
