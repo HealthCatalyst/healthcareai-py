@@ -9,7 +9,7 @@ from healthcareai.tests.helpers import fixture
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'),
                          na_values=['None'])
 
         # Drop uninformative columns
@@ -33,7 +33,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'),
                          na_values=['None'])
 
         # Drop uninformative columns
@@ -58,7 +58,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def setUp(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'),
                          na_values=['None'],
                          usecols=cols)
 
@@ -78,7 +78,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'),
                          na_values=['None'])
 
         # Drop uninformative columns
