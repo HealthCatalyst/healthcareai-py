@@ -42,11 +42,11 @@ def main():
     # Drop columns that won't help machine learning
     df.drop('PatientID', axis=1, inplace=True)
 
-    p = DeploySupervisedModel(modeltype='regression',
-                              df=df,
-                              graincol='PatientEncounterID',
-                              windowcol='InTestWindowFLG',
-                              predictedcol='LDLNBR',
+    p = DeploySupervisedModel(model_type='regression',
+                              dataframe=df,
+                              grain_column='PatientEncounterID',
+                              window_column='InTestWindowFLG',
+                              predicted_column='LDLNBR',
                               impute=True,
                               debug=False)
 

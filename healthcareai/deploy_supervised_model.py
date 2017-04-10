@@ -3,6 +3,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from healthcareai.common.transformers import DataFrameImputer
 from healthcareai.common import model_eval
 from healthcareai.common import filters
+from healthcareai.common.healthcareai_error import HealthcareAIError
+
 import numpy as np
 import pandas as pd
 import pyodbc
@@ -23,56 +25,58 @@ class DeploySupervisedModel(object):
     """
 
     def __init__(self,
-                 modeltype,
-                 df,
-                 graincol,
-                 windowcol,
-                 predictedcol,
+                 model_type,
+                 dataframe,
+                 grain_column,
+                 window_column,
+                 predicted_column,
                  impute,
                  debug=False):
-
-
-        self.modeltype = modeltype
-        self.df = df
-        self.graincol = graincol
+        self.modeltype = model_type
+        if model_type == 'classification':
+            self.predicted_column_name = 'PredictedProbNBR'
+        else:
+            self.predicted_column_name = 'PredictedValueNBR'
+        self.df = dataframe
+        self.grain_column = grain_column
         self.impute = impute
-        self.y_pred = None # Only used for unit test
+        self.y_pred = None  # Only used for unit test
 
         if debug:
             print('\nTypes of original dataframe:')
-            print(df.dtypes)
+            print(self.df.dtypes)
             print('\nShape and top 5 rows of original dataframe:')
-            print(df.shape)
-            print(df.head())
+            print(self.df.shape)
+            print(self.df.head())
 
         self.df = filters.remove_DTS_postfix_columns(self.df)
 
         if debug:
             print('\nDataframe after removing DTS columns:')
-            print(df.head())
+            print(self.df.head())
             print('\nNow either doing imputation or dropping rows with NULLs')
             print('\nTotal df shape before impute/remove')
-            print(df.shape)
+            print(self.df.shape)
 
         pd.options.mode.chained_assignment = None  # default='warn'
 
 
         # TODO: put try/catch here when type = class and pred col is numer
-        df.replace('NULL', np.nan, inplace=True)
+        self.df.replace('NULL', np.nan, inplace=True)
 
         if debug:
             print('\nTotal df after replacing NULL with nan')
-            print(df.shape)
-            print(df.head())
+            print(self.df.shape)
+            print(self.df.head())
 
         if self.impute:
 
-            df = DataFrameImputer().fit_transform(df)
+            self.df = DataFrameImputer().fit_transform(self.df)
 
             if debug:
                 print('\nTotal df after doing imputation:')
-                print(df.shape)
-                print(df.head())
+                print(self.df.shape)
+                print(self.df.head())
 
         else:
             # TODO switch similar statements to work inplace
@@ -80,72 +84,72 @@ class DeploySupervisedModel(object):
 
             if debug:
                 print('\nTrain portion before impute/remove')
-                print(df.ix[df[windowcol] == 'N'].shape)
+                print(self.df.ix[self.df[window_column] == 'N'].shape)
 
-            df_train_temp = df.ix[df[windowcol] == 'N']
-            df_test_temp = df.ix[df[windowcol] == 'Y']
+            df_train_temp = self.df.ix[self.df[window_column] == 'N']
+            df_test_temp = self.df.ix[self.df[window_column] == 'Y']
             df_train_temp.dropna(axis=0, how='any', inplace=True)
 
             # Recombine same (unaltered) test rows with modified training set
-            df = pd.concat([df_test_temp, df_train_temp])
+            self.df = pd.concat([df_test_temp, df_train_temp])
 
             if debug:
                 print('\nTotal df after dropping rows with NULLS:')
-                print(df.shape)
+                print(self.df.shape)
                 # noinspection PyUnresolvedReferences
-                print(df.head())
+                print(self.df.head())
                 print('\nTrain portion after removing training rows w/ NULLs')
                 # noinspection PyUnresolvedReferences,PyUnresolvedReferences
-                print(df.ix[df[windowcol] == 'N'].shape)
+                print(self.df.ix[self.df[window_column] == 'N'].shape)
 
         #Call new function!!
         # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
         # Makes it so that healthcareai only handles N/Y in pred column
-        if modeltype == 'classification':
+        if model_type == 'classification':
             # Turning off warning around replace
             # pd.options.mode.chained_assignment = None  # default='warn'
             # TODO: put try/catch here when type = class and pred col is numer
-            df[predictedcol].replace(['Y', 'N'], [1, 0], inplace=True)
+            self.df[predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
             if debug:
                 print("""\nDataframe after converting to 1/0 instead of Y/N
                 for classification:""")
-                print(df.head())
+                print(self.df.head())
 
-        # Split graincol into test piece; is taken out of ML and used in dfout
-        self.graincol_test = df[graincol].loc[df[windowcol] == 'Y']
+        # Split grain column into test piece; is taken out of ML and used in dfout
+        self.grain_column_test = self.df[grain_column].loc[self.df[window_column] == 'Y']
         pd.options.mode.chained_assignment = None  # default='warn'
         # TODO: Fix this copy of a slice SettingWithCopyWarning:
 
-        df.drop(graincol, axis=1, inplace=True)
+        self.df.drop(grain_column, axis=1, inplace=True)
 
         if debug:
             print('\nGrain_test col after splitting it from main df')
-            print(np.shape(self.graincol_test))
-            print(self.graincol_test.head())
+            print(np.shape(self.grain_column_test))
+            print(self.grain_column_test.head())
 
-            print('\ndf after splitting out graincol and before creating dums')
-            print(df.head())
+            print('\ndf after splitting out grain_column and before creating dummies')
+            print(self.df.head())
 
         # Create dummy vars for all cols but predictedcol
         # First switch (temporarily) pred col to numeric (so it's not dummy)
-        df[predictedcol] = pd.to_numeric(arg=df[predictedcol], errors='raise')
-        df = pd.get_dummies(df, drop_first=True, prefix_sep='.')
+        self.df[predicted_column] = pd.to_numeric(arg=self.df[predicted_column], errors='raise')
+        self.df = pd.get_dummies(self.df, drop_first=True, prefix_sep='.')
 
         if debug:
             print('\nDataframe after creating dummy vars:')
-            print(df.head())
+            print(self.df.head())
 
         # Split train off of maindf
         # noinspection PyUnresolvedReferences
-        df_train = df.ix[df[windowcol + '.Y'] == 0]
+        df_train = self.df.ix[self.df[window_column + '.Y'] == 0]
 
         if debug:
             print('\nTraining dataframe right after splitting it off:')
-            print(df.head())
+            print(self.df.head())
 
         # Always remove rows where predicted col is NULL in train
-        df_train.dropna(subset=[predictedcol], how='all', inplace=True)
+        df_train.dropna(subset=[predicted_column], how='all', inplace=True)
         if debug:
             print('\nTraining df after removing rows where pred col is NULL:')
             print(df_train.head())
@@ -153,20 +157,20 @@ class DeploySupervisedModel(object):
 
         # Split test off of main df
         # noinspection PyUnresolvedReferences
-        df_test = df.ix[df[windowcol + '.Y'] == 1]
+        df_test = self.df.ix[self.df[window_column + '.Y'] == 1]
 
         if debug:
             print('\nTest set after splitting off of main df:')
             print(df_test.head())
 
         # Drop window col from train and test
-        df_train = df_train.drop(windowcol + '.Y', axis=1)
+        df_train = df_train.drop(window_column + '.Y', axis=1)
 
         if debug:
             print('\nTrain set after dropping window col (from training set):')
             print(df_train.head())
 
-        df_test = df_test.drop(windowcol + '.Y', axis=1)
+        df_test = df_test.drop(window_column + '.Y', axis=1)
 
         if debug:
             print('\nTest set after dropping window col (from test set):')
@@ -175,11 +179,11 @@ class DeploySupervisedModel(object):
         # Check user input and remove rows with NULLS if not doing imputation
         self.impute = impute
 
-        self.X_train = df_train.drop([predictedcol], axis=1)
-        self.y_train = np.squeeze(df_train[[predictedcol]])
+        self.X_train = df_train.drop([predicted_column], axis=1)
+        self.y_train = np.squeeze(df_train[[predicted_column]])
 
-        self.X_test = df_test.drop([predictedcol], axis=1)
-        self.y_test = np.squeeze(df_test[[predictedcol]])
+        self.X_test = df_test.drop([predicted_column], axis=1)
+        self.y_test = np.squeeze(df_test[[predicted_column]])
 
         if debug:
             print('\nShape of X_train, y_train, X_test, and y_test:')
@@ -198,55 +202,16 @@ class DeploySupervisedModel(object):
                use_saved_model=False,
                debug=False):
 
-        """"Describe the method"""
-
         if debug:
-            print("""\ngraincol test shape and cell type before db
+            print("""\ngrain_column test shape and cell type before db
             prelim-insert check""")
-            print(np.shape(self.graincol_test))
-            print(type(self.graincol_test.iloc[0]))
+            print(np.shape(self.grain_column_test))
+            print(type(self.grain_column_test.iloc[0]))
 
-        # First, check the connection by inserting test data (and rolling back)
-        cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
-                                   SERVER=""" + server + """;
-                                   Trusted_Connection=yes;""")
-        cursor = cecnxn.cursor()
-        if self.modeltype == 'classification':
-            predictedvalcol = 'PredictedProbNBR'
-        else:
-            predictedvalcol = 'PredictedValueNBR'
-        # The following allows output to work with datetime/datetime2
-        dt = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-
-        try:
-
-            cursor.execute("""insert into """ + dest_db_schema_table + """
-                           (BindingID, BindingNM, LastLoadDTS, """ +
-                           self.graincol + """,""" + predictedvalcol + """,
-                           Factor1TXT, Factor2TXT, Factor3TXT)
-                           values (0, 'PyTest', ?, ?, 0.98,
-                           'FirstCol', 'SecondCol', 'ThirdCol')""",
-                           (dt, int(self.graincol_test.iloc[0])))
-            cecnxn.rollback()
-
-            print("\nSuccessfully inserted a test row into {}.".format(
-                dest_db_schema_table))
-            print("SQL insert successfuly rolled back (since it was a test).")
-
-        except pyodbc.DatabaseError:
-            print("\nFailed to insert values into {}.".format(
-                dest_db_schema_table))
-            print("Check that the table exists with right col structure")
-            print("Example column structure can be found in the docs")
-            print("Your GrainID col might not match that in your input table")
-
-        finally:
-            try:
-                cecnxn.close()
-            except pyodbc.DatabaseError:
-                print("""\nAn attempt to complete a transaction has failed.
-                No corresponding transaction found. \nPerhaps you don''t have
-                permission to write to this server.""")
+        validate_destination_table_connection(server,
+                                              dest_db_schema_table,
+                                              self.grain_column,
+                                              self.predicted_column_name)
 
         if self.modeltype == 'classification' and method == 'linear':
 
@@ -331,8 +296,8 @@ class DeploySupervisedModel(object):
                                                                                 use_saved_model)
 
         # Convert to base int instead of numpy data type for SQL insert
-        graincol_baseint = [int(self.graincol_test.iloc[i])
-                            for i in range(0, len(self.graincol_test))]
+        grain_column_baseint = [int(self.grain_column_test.iloc[i])
+                                for i in range(0, len(self.grain_column_test))]
         y_pred_baseint = [float(self.y_pred[i])
                           for i in range(0, len(self.y_pred))]
 
@@ -350,7 +315,7 @@ class DeploySupervisedModel(object):
         output_2dlist = list(zip(bindingid,
                                  bindingnm,
                                  lastloaddts,
-                                 graincol_baseint,
+                                 grain_column_baseint,
                                  y_pred_baseint,
                                  first_fact,
                                  second_fact,
@@ -368,7 +333,7 @@ class DeploySupervisedModel(object):
         try:
             cursor.executemany("""insert into """ + dest_db_schema_table + """
                                (BindingID, BindingNM, LastLoadDTS, """ +
-                               self.graincol + """,""" + predictedvalcol + """,
+                               self.grain_column + """,""" + self.predicted_column_name + """,
                                Factor1TXT, Factor2TXT, Factor3TXT)
                                values (?,?,?,?,?,?,?,?)""", output_2dlist)
             cecnxn.commit()
@@ -390,3 +355,44 @@ class DeploySupervisedModel(object):
                 print("""\nAn attempt to complete a transaction has failed.
                       No corresponding transaction found. \nPerhaps you don't
                       have permission to write to this server.""")
+
+
+def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
+    # First, check the connection by inserting test data (and rolling back)
+    db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
+                               SERVER=""" + server + """;
+                               Trusted_Connection=yes;""")
+
+    # The following allows output to work with datetime/datetime2
+    temp_date = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+    try:
+        cursor = db_connection.cursor()
+        cursor.execute("""INSERT INTO """ + destination_table + """
+                       (BindingID, BindingNM, LastLoadDTS, """ +
+                       grain_column + """,""" + predicted_column_name + """,
+                       Factor1TXT, Factor2TXT, Factor3TXT)
+                       VALUES (0, 'PyTest', ?, 33, 0.98,
+                       'FirstCol', 'SecondCol', 'ThirdCol')""",
+                       temp_date)
+
+        print("Successfully inserted a test row into {}.".format(destination_table))
+        db_connection.rollback()
+        print("SQL insert successfully rolled back (since it was a test).")
+        write_result = True
+    except pyodbc.DatabaseError:
+        write_result = False
+        error_message = """Failed to insert values into {}. Check that the table exists with right column structure.
+        Your Grain ID column might not match that in your input table.""".format(destination_table)
+        raise HealthcareAIError(error_message)
+
+    finally:
+        try:
+            db_connection.close()
+            result = write_result
+        except pyodbc.DatabaseError:
+            error_message = """An attempt to complete a transaction has failed. No corresponding transaction found.
+            \nPerhaps you don\'t have permission to write to this server."""
+            raise HealthcareAIError(error_message)
+
+    return result

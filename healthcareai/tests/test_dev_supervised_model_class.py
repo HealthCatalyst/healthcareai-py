@@ -68,6 +68,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         try:
             o.random_forest(cores=1, tune=True)
+            # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'You need more than two columns to tune hyperparameters.')

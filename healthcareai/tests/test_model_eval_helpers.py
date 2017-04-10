@@ -10,6 +10,7 @@ class TestCalculateRandomForestCalculateMTry(unittest.TestCase):
     def test_less_than_three_columns_raises_error_with_correct_message(self):
         try:
             calculate_random_forest_mtry_hyperparameter(2, 'classification')
+            # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'You need more than two columns to tune hyperparameters.')
@@ -17,6 +18,7 @@ class TestCalculateRandomForestCalculateMTry(unittest.TestCase):
     def test_negative_columns_raises_error_with_correct_message(self):
         try:
             calculate_random_forest_mtry_hyperparameter(-10, 'classification')
+            # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'You need more than two columns to tune hyperparameters.')
@@ -24,6 +26,7 @@ class TestCalculateRandomForestCalculateMTry(unittest.TestCase):
     def test_non_integer_columns_raises_error(self):
         try:
             calculate_random_forest_mtry_hyperparameter('foo', 'classification')
+            # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'The number_of_columns must be an integer')
@@ -34,6 +37,7 @@ class TestCalculateRandomForestCalculateMTry(unittest.TestCase):
     def test_bad_model_type_raises_error_with_correct_message(self):
         try:
             calculate_random_forest_mtry_hyperparameter(3, 'foo')
+            # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'Please specify model type of \'regression\' or \'classification\'')
