@@ -51,23 +51,23 @@ def clfreport(model_type,
     # Initialize conditional vars that depend on ifelse to avoid PC warning
     y_pred_class = None
     y_pred = None
-    clf = algo
+    algorithm = algo
 
     # compare algorithms
     if develop_model_mode is True:
         if tune:
             # Set up grid search
-            clf = GridSearchCV(algo, param, cv=5, scoring='roc_auc', n_jobs=cores)
+            algorithm = GridSearchCV(algo, param, cv=5, scoring='roc_auc', n_jobs=cores)
 
         if debug:
-            print('\nclf object right before fitting main model:')
-            print(clf)
+            print('\nalgorithm object right before fitting main model:')
+            print(algorithm)
 
         print('\n', algo)
 
         if model_type == 'classification':
-            y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(X_test)[:, 1])
-            #y_pred_class = clf.fit(X_train, y_train).predict(X_test)
+            y_pred = np.squeeze(algorithm.fit(X_train, y_train).predict_proba(X_test)[:, 1])
+            #y_pred_class = algorithm.fit(X_train, y_train).predict(X_test)
 
             roc_auc = roc_auc_score(y_test, y_pred)
             precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
@@ -75,54 +75,54 @@ def clfreport(model_type,
 
             print_classification_metrics(pr_auc, roc_auc)
         elif model_type == 'regression':
-            y_pred = clf.fit(X_train, y_train).predict(X_test)
+            y_pred = algorithm.fit(X_train, y_train).predict(X_test)
 
             print_regression_metrics(y_pred, y_pred_class, y_test)
 
-        if hasattr(clf, 'best_params_') and tune:
+        if hasattr(algorithm, 'best_params_') and tune:
             print("Best hyper-parameters found after tuning:")
-            print(clf.best_params_)
+            print(algorithm.best_params_)
         else:
             print("No hyper-parameter tuning was done.")
 
 
         # TODO: refactor this logic to be simpler
         # These returns are TIGHTLY coupled with their uses in develop and deploy. Both will have to be unwound together
-        has_importances = hasattr(clf, 'feature_importances_')
-        has_best_estimator = hasattr(clf, 'best_estimator_')
+        has_importances = hasattr(algorithm, 'feature_importances_')
+        has_best_estimator = hasattr(algorithm, 'best_estimator_')
 
         if not has_importances and not has_best_estimator:
             # Return without printing variable importance for linear case
             return y_pred, roc_auc
         elif has_importances:
             # Print variable importance if rf and not tuning
-            write_feature_importances(clf.feature_importances_, col_list)
-            return y_pred, roc_auc, clf
-        elif hasattr(clf.best_estimator_, 'feature_importances_'):
+            write_feature_importances(algorithm.feature_importances_, col_list)
+            return y_pred, roc_auc, algorithm
+        elif hasattr(algorithm.best_estimator_, 'feature_importances_'):
             # Print variable importance if rf and tuning
-            write_feature_importances(clf.best_estimator_.feature_importances_, col_list)
-            return y_pred, roc_auc, clf
+            write_feature_importances(algorithm.best_estimator_.feature_importances_, col_list)
+            return y_pred, roc_auc, algorithm
 
     elif develop_model_mode is False:
-        y_pred = do_deploy_mode_stuff(X_test, X_train, clf, debug, model_type, use_saved_model, y_pred, y_train)
+        y_pred = do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_saved_model, y_pred, y_train)
 
     # TODO is it possible to get to this return if you are in develop_model_mode?
     return y_pred
 
 
-def do_deploy_mode_stuff(X_test, X_train, clf, debug, mode_ltype, use_saved_model, y_pred, y_train):
+def do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_saved_model, y_pred, y_train):
     if use_saved_model is True:
-        clf = load_pickle_file('probability.pkl')
+        algorithm = load_pickle_file('probability.pkl')
     else:
         if debug:
             print('\nclf object right before fitting main model:')
 
-        clf.fit(X_train, y_train)
-        save_object_as_pickle('probability.pkl', clf)
-    if mode_ltype == 'classification':
-        y_pred = np.squeeze(clf.predict_proba(X_test)[:, 1])
-    elif mode_ltype == 'regression':
-        y_pred = clf.predict(X_test)
+        algorithm.fit(X_train, y_train)
+        save_object_as_pickle('probability.pkl', algorithm)
+    if model_type == 'classification':
+        y_pred = np.squeeze(algorithm.predict_proba(X_test)[:, 1])
+    elif model_type == 'regression':
+        y_pred = algorithm.predict(X_test)
     return y_pred
 
 
