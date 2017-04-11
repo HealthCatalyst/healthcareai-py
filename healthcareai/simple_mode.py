@@ -14,7 +14,7 @@ class SimpleDevelopSupervisedModel(object):
 
     def random_forest(self):
         if self._dsm.model_type is 'classification':
-            self._dsm.advanced_random_forest_classifier(
+            self._dsm.random_forest_classifier(
                 trees=200,
                 scoring_metric='roc_auc',
                 hyperparameter_grid=None,
@@ -37,6 +37,15 @@ class SimpleDevelopSupervisedModel(object):
 
     def logistic_regression(self):
         self._dsm.logistic_regression()
+
+    def linear_regression(self):
+        # Train the model
+        trained_model = self._dsm.linear_regression(randomized_search=False)
+
+        # Calculate the model metrics
+        performance_metrics = self._dsm.calculate_regression_metric(trained_model)
+
+        print(performance_metrics)
 
     def get_advanced_features(self):
         return self._dsm
