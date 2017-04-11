@@ -66,7 +66,7 @@ class DevelopSupervisedModel(object):
         self.rfclf = None
         self.au_roc = None
         self.results = None
-        
+
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
@@ -102,9 +102,10 @@ class DevelopSupervisedModel(object):
             # TODO: put try/catch here when type = class and predictor is numeric
             self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
-            self.print_out_dataframe_shape_and_head('\nDataframe after converting to 1/0 instead of Y/N for classification:')
+            self.print_out_dataframe_shape_and_head(
+                '\nDataframe after converting to 1/0 instead of Y/N for classification:')
 
-    def under_sampling(self,random_state=0):
+    def under_sampling(self, random_state=0):
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -119,17 +120,17 @@ class DevelopSupervisedModel(object):
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
         under_sampler = RandomUnderSampler(random_state=random_state)
-        X_under_sampled, y_under_sampled = under_sampler.fit_sample(X,y)
-        
+        X_under_sampled, y_under_sampled = under_sampler.fit_sample(X, y)
+
         X_under_sampled = pd.DataFrame(X_under_sampled)
         X_under_sampled.columns = X.columns
         y_under_sampled = pd.Series(y_under_sampled)
 
         dataframe_under_sampled = X_under_sampled
-        dataframe_under_sampled[self.predicted_column] = y_under_sampled 
+        dataframe_under_sampled[self.predicted_column] = y_under_sampled
         self.dataframe = dataframe_under_sampled
 
-    def over_sampling(self,random_state=0):
+    def over_sampling(self, random_state=0):
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -144,17 +145,17 @@ class DevelopSupervisedModel(object):
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
         over_sampler = RandomOverSampler(random_state=random_state)
-        X_over_sampled, y_over_sampled = over_sampler.fit_sample(X,y)
-        
+        X_over_sampled, y_over_sampled = over_sampler.fit_sample(X, y)
+
         X_over_sampled = pd.DataFrame(X_over_sampled)
         X_over_sampled.columns = X.columns
         y_over_sampled = pd.Series(y_over_sampled)
 
         dataframe_over_sampled = X_over_sampled
-        dataframe_over_sampled[self.predicted_column] = y_over_sampled 
+        dataframe_over_sampled[self.predicted_column] = y_over_sampled
         self.dataframe = dataframe_over_sampled
-        
-    def feature_scaling(self,columns_to_scale):
+
+    def feature_scaling(self, columns_to_scale):
         # NB: Must happen AFTER self.X_train, self.X_test,
         #     self.y_train, self.y_test are defined.
         #     Must happen AFTER imputation is done so there
@@ -164,20 +165,20 @@ class DevelopSupervisedModel(object):
         #     How to warn the user if they call this method
         #     at the wrong time?
         X_train_scaled_subset = self.X_train[columns_to_scale]
-        X_test_scaled_subset = self.X_test[columns_to_scale]        
+        X_test_scaled_subset = self.X_test[columns_to_scale]
         scaler = StandardScaler()
         scaler.fit(X_train_scaled_subset)
-        
+
         X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_train_scaled_subset))
         X_train_scaled_subset_dataframe.index = X_train_scaled_subset.index
         X_train_scaled_subset_dataframe.columns = X_train_scaled_subset.columns
         self.X_train[columns_to_scale] = X_train_scaled_subset_dataframe
-        
+
         X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_test_scaled_subset))
         X_test_scaled_subset_dataframe.index = X_test_scaled_subset.index
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
-        
+
     def imputation(self):
         # TODO should probably automate null imputation?
         self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
@@ -214,22 +215,24 @@ class DevelopSupervisedModel(object):
 
     def save_output_to_csv(self, filename, output):
         output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
-                                  output['gridSearch_BestScore'],
-                                  output['gridSearch_ScoreMetric'], ) \
-                                + x for x in list(output.items())],   \
-                                  columns=['TimeStamp', 'ModelType',
-                                         'ModelLabels', 'BestScore', 
-                                         'BestScoreMetric', 'Metric',
-                                         'MetricValue']).set_index('TimeStamp')
+                                          output['gridSearch_BestScore'],
+                                          output['gridSearch_ScoreMetric'],) \
+                                         + x for x in list(output.items())], \
+                                        columns=['TimeStamp', 'ModelType',
+                                                 'ModelLabels', 'BestScore',
+                                                 'BestScoreMetric', 'Metric',
+                                                 'MetricValue']).set_index('TimeStamp')
         # save files locally #
-        output_dataframe.to_csv(filename + '.txt', header= False)
+        output_dataframe.to_csv(filename + '.txt', header=False)
 
     def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
-        # TODO save models and stats
-        # enumerate, document and validate scoring options http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
-        # Does one of those options make the most sense to pick a default?
-        # Can we algorithmically determine the best choice?
-        """ A simple way to put data in and have healthcare.ai train a few models and pick the best one for your data. """
+        """
+        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
+        """
+        # TODO enumerate, document and validate scoring options
+        # http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
+        # TODO Does one of those options make the most sense to pick a default?
+        # TODO Can we algorithmically determine the best choice?
 
         self.validate_score_metric_for_number_of_classes(scoring_metric)
         score_by_name = {}
@@ -238,7 +241,8 @@ class DevelopSupervisedModel(object):
         if model_by_name is None:
             model_by_name = {}
             model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
-            model_by_name['SGD'] = self.SGDClassifier(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
+            model_by_name['SGD'] = self.stochastic_gradient_descent_classifier(randomized_search=True,
+                                                                               scoring_metric=scoring_metric).best_estimator_
             model_by_name['Logistic Regression'] = self.logistic_regression()
             model_by_name['Random Forest Classifier'] = self.random_forest_classifier(
                 randomized_search=True,
@@ -249,23 +253,6 @@ class DevelopSupervisedModel(object):
             score_by_name[name] = score
 
             self.console_log('{} algorithm: score = {}'.format(name, score))
-
-
-        # compare algorithms and return the best. This list can grow as new algorithms are added
-        # if debug:
-        #     print('running KNN')
-        # knn = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
-        #
-        # if debug:
-        #     print('running LR')
-        # logistic_regression = self.logistic_regression()
-        #
-        # # TODO loop over all the models?
-        # knn_score = self.calculate_classification_metric(knn, scoring_metric=scoring_metric)
-        # lr_score = self.calculate_classification_metric(logistic_regression, scoring_metric=scoring_metric)
-        #
-        # trained_models.append({'name': 'knn', 'model': knn, 'score': knn_score})
-        # trained_models.append({'name': 'logistic_regression', 'model': logistic_regression, 'score': lr_score})
 
         sorted_names_and_scores = sorted(score_by_name.items(), key=lambda x: x[1])
         best_algorithm_name, best_score = sorted_names_and_scores[-1]
@@ -278,24 +265,26 @@ class DevelopSupervisedModel(object):
             'best_model': best_model
         }
 
-        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric, best_algorithm_name))
+        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric,
+                                                                                       best_algorithm_name))
         print('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
         self.results = results
         return results
 
     def write_classification_metrics_to_json(self):
+        # TODO a similar method should be created for regression metrics
         output = {}
         y_pred = self.results['best_model'].predict(self.X_test)
-        accuracy = metrics.accuracy_score(self.y_test,y_pred)
+        accuracy = metrics.accuracy_score(self.y_test, y_pred)
         confusion_matrix = metrics.confusion_matrix(self.y_test, y_pred)
         output['accuracy'] = accuracy
         output['confusion_matrix'] = confusion_matrix.tolist()
         output['auc_roc'] = self.results['best_score']
-        output['algorithm_name']=self.results['best_algorithm_name']
+        output['algorithm_name'] = self.results['best_algorithm_name']
         with open('classification_metrics.json', 'w') as fp:
             json.dump(output, fp, indent=4, sort_keys=True)
-    
+
     def validate_score_metric_for_number_of_classes(self, metric):
         # TODO make this more robust for other scoring metrics
         """
@@ -311,10 +300,11 @@ class DevelopSupervisedModel(object):
 
     def calculate_classification_metric(self, trained_model, scoring_metric='roc_auc'):
         """
-        Given a trained model
-        :param trained_model:
-        :param scoring_metric:
-        :return:
+        Given a trained model, calculate the selected metric
+        :param trained_model: a scikit-learn estimator that has been `.fit()`
+        :param scoring_metric: The scoring metric to optimized for if using random search.
+            See http://scikit-learn.org/stable/modules/model_evaluation.html
+        :return: the metric
         """
         predictions = trained_model.predict(self.X_test)
         if scoring_metric is 'roc_auc':
@@ -322,9 +312,15 @@ class DevelopSupervisedModel(object):
         if scoring_metric is 'accuracy':
             result = metrics.accuracy_score(self.y_test, predictions)
 
+        # TODO consider returning an object with multiple metrics (similar to the regression method)
         return result
 
     def calculate_regression_metric(self, trained_model):
+        """
+        Given a trained model, calculate the selected metric
+        :param trained_model: a scikit-learn estimator that has been `.fit()`
+        :return: an object with two common regression metrics
+        """
         predictions = trained_model.predict(self.X_test)
         mean_squared_error = metrics.mean_squared_error(self.y_test, predictions)
         mean_absolute_error = metrics.mean_absolute_error(self.y_test, predictions)
@@ -373,33 +369,9 @@ class DevelopSupervisedModel(object):
 
         return algorithm
 
-    def gradient(self, asdfsadffdsa):
-        if hyperparameter_grid is None:
-            neighbor_list = list(range(10, 26))
-            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
-
-        algorithm = prepare_randomized_search(
-            Gradient,
-            scoring_metric,
-            hyperparameter_grid,
-            randomized_search)
-
-        return algorithm.fit(self.X_train, self.y_train)
-
-
     def knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
-        # TODO
-        # KNN, gradient boosted trees, bootstrap aggregation
-        # impact coding
-        #
-        # enumerate, document and validate scoring options
-        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
-
-        """
-        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overideable)
-        hyperparameter grid.
-        """
         if hyperparameter_grid is None:
+            # TODO add sensible KNN hyperparameter grid
             neighbor_list = list(range(10, 26))
             hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
@@ -412,31 +384,23 @@ class DevelopSupervisedModel(object):
 
         return algorithm.fit(self.X_train, self.y_train)
 
-    def SGDClassifier(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
-        # TODO
-        # KNN, gradient boosted trees, bootstrap aggregation
-        # impact coding
-        #
-        # enumerate, document and validate scoring options
-        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
-
-        """
-        A light wrapper for Sklearn's KNN that performs randomized search over a default (and overideable)
-        hyperparameter grid.
-        """
+    def stochastic_gradient_descent_classifier(self, scoring_metric='roc_auc', hyperparameter_grid=None,
+                                               randomized_search=True):
         if hyperparameter_grid is None:
-            loss_list = ['hinge','log']
-            penalty_list = ['l1','l2']
-            alpha_list = [0.0001,0.001,0.01,0.1]
-            hyperparameter_grid = {'loss':loss_list,'penalty':penalty_list,'alpha':alpha_list}
-            
+            # TODO add sensible SGD classifier hyperparameter grid
+            loss_list = ['hinge', 'log']
+            penalty_list = ['l1', 'l2']
+            alpha_list = [0.0001, 0.001, 0.01, 0.1]
+            hyperparameter_grid = {'loss': loss_list, 'penalty': penalty_list, 'alpha': alpha_list}
+
         algorithm = prepare_randomized_search(
-            SGDClassifier, 
+            SGDClassifier,
             scoring_metric,
             hyperparameter_grid,
             randomized_search)
 
-        return algorithm.fit(self.X_train, self.y_train)
+        algorithm.fit(self.X_train, self.y_train)
+        return algorithm
 
     def linear(self, cores=4, debug=False):
         # TODO deprecate
@@ -456,64 +420,60 @@ class DevelopSupervisedModel(object):
 
         if self.model_type == 'classification':
             algo = LogisticRegressionCV(cv=5)
-
-        # TODO: get GroupLasso working via lightning
-
-        # TODO: see if CV splits needed for linear regress
-
         elif self.model_type == 'regression':
             algo = LinearRegression()
         else:
             algo = None
 
         self.y_probab_linear, self.au_roc = model_eval.clfreport(
-                                                model_type=self.model_type,
-                                                debug=debug,
-                                                develop_model_mode=True,
-                                                algo=algo,
-                                                X_train=self.X_train,
-                                                y_train=self.y_train,
-                                                X_test=self.X_test,
-                                                y_test=self.y_test,
-                                                cores=cores)
+            model_type=self.model_type,
+            debug=debug,
+            develop_model_mode=True,
+            algo=algo,
+            X_train=self.X_train,
+            y_train=self.y_train,
+            X_test=self.X_test,
+            y_test=self.y_test,
+            cores=cores)
 
-    def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
-        # TODO
-        # print out best hyperparameters
-        # recreate stuff from the dumpster fire of model_eval.snarf
-        # KNN, gradient boosted trees, bootstrap aggregation
-        # impact coding
-        #
-        # enumerate, document and validate scoring options
-        # provide sensible defaults in neighbor list http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
+    def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
+                                 randomized_search=True):
+        if hyperparameter_grid is None:
+            # TODO add sensible hyperparameter grid
+            max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                               self.model_type)
+            hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
-        """
-        A light wrapper for Sklearn's RandomForestClassifier that performs randomized search over a default (and overideable)
-        hyperparameter grid.
-        :param randomized_search: Defaults to true to perform randomized search
-        :param hyperparameter_grid: An optional custom hyperparameter grid
-        :return: a trained model
-        """
-        algorithm = RandomForestClassifier(n_estimators=trees)
+        algorithm = prepare_randomized_search(
+            RandomForestClassifier,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            trees=trees)
 
-        if randomized_search:
-            if not hyperparameter_grid:
-                max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns), self.model_type)
-                hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
+        algorithm.fit(self.X_train, self.y_train)
+        return algorithm
 
-            algorithm = RandomizedSearchCV(estimator=RandomForestClassifier(),
-                                           scoring=scoring_metric,
-                                           param_distributions=hyperparameter_grid,
-                                           # TODO brute force all 6 in the hyperparameter space?
-                                           n_iter=6,
-                                           cv=5,
-                                           verbose=0,
-                                           n_jobs=1)
+    def random_forest_regressor(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
+                                randomized_search=True):
+        if hyperparameter_grid is None:
+            # TODO add sensible hyperparameter grid
+            max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                               self.model_type)
+            hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
-        return algorithm.fit(self.X_train, self.y_train)
+        algorithm = prepare_randomized_search(
+            RandomForestRegressor,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            trees=trees)
+
+        algorithm.fit(self.X_train, self.y_train)
+        return algorithm
 
     def random_forest(self, cores=4, trees=200, tune=False, debug=False):
-        # TODO deprecate
+        # TODO deprecate after replacements are implemented.
         """
         This method creates and assesses the accuracy of a logistic regression
         model.
@@ -549,18 +509,18 @@ class DevelopSupervisedModel(object):
         self.col_list = self.X_train.columns.values
 
         self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
-                                                    model_type=self.model_type,
-                                                    debug=debug,
-                                                    develop_model_mode=True,
-                                                    algo=algo,
-                                                    X_train=self.X_train,
-                                                    y_train=self.y_train,
-                                                    X_test=self.X_test,
-                                                    y_test=self.y_test,
-                                                    param=params,
-                                                    cores=cores,
-                                                    tune=tune,
-                                                    col_list=self.col_list)
+            model_type=self.model_type,
+            debug=debug,
+            develop_model_mode=True,
+            algo=algo,
+            X_train=self.X_train,
+            y_train=self.y_train,
+            X_test=self.X_test,
+            y_test=self.y_test,
+            param=params,
+            cores=cores,
+            tune=tune,
+            col_list=self.col_list)
 
     def plot_roc(self, save=False, debug=False):
         """
@@ -634,15 +594,15 @@ class DevelopSupervisedModel(object):
         if hasattr(self.rfclf, 'best_estimator_'):
             importances = self.rfclf.best_estimator_.feature_importances_
             std = np.std(
-                        [tree.feature_importances_ for tree in
-                        self.rfclf.best_estimator_.estimators_],
-                        axis=0)
+                [tree.feature_importances_ for tree in
+                 self.rfclf.best_estimator_.estimators_],
+                axis=0)
         else:
             importances = self.rfclf.feature_importances_
             std = np.std(
-                        [tree.feature_importances_ for tree in
-                         self.rfclf.estimators_],
-                        axis=0)
+                [tree.feature_importances_ for tree in
+                 self.rfclf.estimators_],
+                axis=0)
 
         indices = np.argsort(importances)[::-1]
         namelist = [self.col_list[i] for i in indices]
@@ -666,14 +626,15 @@ class DevelopSupervisedModel(object):
             plt.show()
 
     def randomsearch(self, model, param_grid, cv, n_iter, score_metric):
+        # TODO deprecate or tear apart the important bits.
 
-        rs = RandomizedSearchCV(estimator = model,
-                        scoring = score_metric,
-                        param_distributions=param_grid,
-                        n_iter=n_iter,
-                        cv = cv,
-                        verbose = 0,
-                        n_jobs = 1)
+        rs = RandomizedSearchCV(estimator=model,
+                                scoring=score_metric,
+                                param_distributions=param_grid,
+                                n_iter=n_iter,
+                                cv=cv,
+                                verbose=0,
+                                n_jobs=1)
         rs.fit(self.X_train, self.y_train)
 
         ######### Validation metrics #########
@@ -682,7 +643,7 @@ class DevelopSupervisedModel(object):
         confusion_matrix = metrics.confusion_matrix(self.y_test, y_predictions)
         accuracy = metrics.accuracy_score(self.y_test, y_predictions)
         precision = metrics.precision_score(self.y_test, y_predictions)
-        recall = metrics.recall_score(self.y_test, y_predictions) #sensitivity
+        recall = metrics.recall_score(self.y_test, y_predictions)  # sensitivity
         specificity = confusion_matrix[0][0] / (confusion_matrix[0][1] + confusion_matrix[0][0])
         f1 = metrics.f1_score(self.y_test, y_predictions)
         # print(ConfusionMatrix(list(self.y_test), list(y_predictions)))
@@ -730,36 +691,11 @@ class DevelopSupervisedModel(object):
         }
 
         # Save important things to files
-#        self.save_output_to_csv(complete_filename,output)
+        # self.save_output_to_csv(complete_filename,output)
         output_utilities.save_dict_object_to_json(complete_filename + '.json', model_validation_metrics)
         output_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
 
         print("Done running random search.")
-
-    def knn_stats(self, random_search):
-        model_validation_metrics = {
-            'model_type': self.model_type,
-            'data_row_count': self.X_train.shape[0],
-            'data_column_count': self.X_train.shape[1],
-            'data_column_names': self.X_train.columns.tolist(),
-            'param_grid': str(random_search.param_distributions),
-            'random_search_n_iterations': random_search.n_iter,
-            'random_search_grid_scores': str(random_search.cv_results_),
-            'random_search_best_score': random_search.best_score_,
-            # 'random_search_model': str(model),
-            # 'grid_search_score_metric': str(score_metric),
-            'best_estimator': str(random_search.best_estimator_),
-            't_estimator_dict': str(random_search.best_estimator_.__dict__),
-            # 'best_model_filename': filename,
-            # 'best_model_validation_roc_auc': roc_auc_score,
-            # 'best_model_validation_confusion_matrix': confusion_matrix.tolist(),
-            # 'best_model_validation_accuracy': accuracy,
-            # 'best_model_validation_precision': precision,
-            # 'best_model_validation_recall': recall,
-            # 'best_model_validation_specificity': specificity,
-            # 'best_model_validation_f1': f1,
-            'best_model_validation_row_count': self.y_train.shape[0]
-        }
 
     def console_log(self, message):
         if self.verbose:
@@ -776,6 +712,18 @@ def prepare_randomized_search(
         hyperparameter_grid,
         randomized_search,
         **non_randomized_estimator_kwargs):
+    """
+    Given an estimator and various params, initialize an algorithm with optional randomized search.
+    :param estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
+    :param scoring_metric: The scoring metric to optimized for if using random search.
+        See http://scikit-learn.org/stable/modules/model_evaluation.html
+    :param hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
+        through.
+    :param randomized_search: boolean True or False
+    :param non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used
+         when radomized_search is False
+    :return: a scikit learn algorithm ready to `.fit()`
+    """
     if randomized_search:
         algorithm = RandomizedSearchCV(estimator=estimator(),
                                        scoring=scoring_metric,

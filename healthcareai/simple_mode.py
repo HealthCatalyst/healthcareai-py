@@ -6,22 +6,52 @@ class SimpleDevelopSupervisedModel(object):
         self._dsm = DevelopSupervisedModel(dataframe, model_type, predicted_column, grain_column, verbose)
         self._dsm.data_preparation(impute=impute)
 
+    def random_forest(self):
+        # TODO Convenience method. Probably not needed?
+        if self._dsm.model_type is 'classification':
+            self.random_forest_classification()
+        elif self._dsm.model_type is 'regression':
+            self.random_forest_regression()
+
     def knn(self):
-        self._dsm.knn(
+        # Train the model
+        trained_model = self._dsm.knn(
             scoring_metric='roc_auc',
             hyperparameter_grid=None,
             randomized_search=True)
 
-    def random_forest(self):
-        if self._dsm.model_type is 'classification':
-            self._dsm.random_forest_classifier(
-                trees=200,
-                scoring_metric='roc_auc',
-                hyperparameter_grid=None,
-                randomized_search=True)
-        elif self._dsm.model_type is 'regression':
-            # TODO STUB
-            pass
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
+
+    def random_forest_regression(self):
+        # Train the model
+        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='roc_auc', randomized_search=True)
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
+
+    def random_forest_classification(self):
+        # Train the model
+        trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
+
+    def logistic_regression(self):
+        # Train the model
+        trained_model = self._dsm.logistic_regression()
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
+
+    def stochastic_gradient_descent_classifier(self):
+        # Train the model
+        trained_model = self._dsm.stochastic_gradient_descent_classifier()
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
+
+    def linear_regression(self):
+        # Train the model
+        trained_model = self._dsm.linear_regression(randomized_search=False)
+        # Display the model metrics
+        self.print_performance_metrics(trained_model)
 
     def ensemble(self):
         if self._dsm.model_type is 'classification':
@@ -35,15 +65,17 @@ class SimpleDevelopSupervisedModel(object):
     def plot_roc(self):
         self._dsm.plot_roc(save=False, debug=False)
 
-    def logistic_regression(self):
-        self._dsm.logistic_regression()
+    def print_performance_metrics(self, trained_model):
+        """
+        Given a trained model, calculate and print the appropriate performance metrics
+        :param trained_model: A scikit-learn trained algorithm
+        """
+        performance_metrics = None
 
-    def linear_regression(self):
-        # Train the model
-        trained_model = self._dsm.linear_regression(randomized_search=False)
-
-        # Calculate the model metrics
-        performance_metrics = self._dsm.calculate_regression_metric(trained_model)
+        if self._dsm.model_type is 'classification':
+            performance_metrics = self._dsm.calculate_classification_metric(trained_model)
+        elif self._dsm.model_type is 'regression':
+            performance_metrics = self._dsm.calculate_regression_metric(trained_model)
 
         print(performance_metrics)
 
