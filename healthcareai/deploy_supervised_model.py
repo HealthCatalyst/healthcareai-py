@@ -218,9 +218,9 @@ class DeploySupervisedModel(object):
             algorithm = LogisticRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -232,9 +232,9 @@ class DeploySupervisedModel(object):
             algorithm = LinearRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -255,9 +255,9 @@ class DeploySupervisedModel(object):
                                                )
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -278,9 +278,9 @@ class DeploySupervisedModel(object):
                                               )
 
             self.y_pred = model_eval.clfreport(
-                modeltype=self.modeltype,
+                model_type=self.modeltype,
                 debug=debug,
-                devcheck='notdev',
+                develop_model_mode=False,
                 algo=algorithm,
                 X_train=self.X_train,
                 y_train=self.y_train,
@@ -288,13 +288,12 @@ class DeploySupervisedModel(object):
                 use_saved_model=use_saved_model)
 
         # Calculate three imp columns
-        first_fact, second_fact, third_fact = model_eval. \
-            findtopthreefactors(debug,
-                                self.X_train,
-                                self.y_train,
-                                self.X_test,
-                                self.modeltype,
-                                use_saved_model)
+        first_fact, second_fact, third_fact = model_eval.find_top_three_factors(debug,
+                                                                                self.X_train,
+                                                                                self.y_train,
+                                                                                self.X_test,
+                                                                                self.modeltype,
+                                                                                use_saved_model)
 
         # Convert to base int instead of numpy data type for SQL insert
         grain_column_baseint = [int(self.grain_column_test.iloc[i])
