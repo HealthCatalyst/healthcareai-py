@@ -63,7 +63,8 @@ def main():
         randomized_search=True)
 
     # Run the random forest model with a randomized search over custom hyperparameters
-    knn_hyperparameters = {
+    # TODO these are bogus hyperparams for random forest
+    random_forest_hyperparameters = {
         'n_estimators': [10, 50, 200],
         'max_features': [1, 5, 10, 20, 50, 100, 1000, 10000],
         'max_leaf_nodes': [None, 30, 400]}
@@ -71,7 +72,7 @@ def main():
     hcai.random_forest_classifier(
         trees=500,
         scoring_metric='accuracy',
-        hyperparameter_grid=knn_hyperparameters,
+        hyperparameter_grid=random_forest_hyperparameters,
         randomized_search=True)
 
     # Look at the RF feature importance rankings
