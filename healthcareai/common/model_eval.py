@@ -10,7 +10,7 @@ from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
 from healthcareai.common.feature_importances import write_feature_importances
-from healthcareai.common.output_utilities import save_object_as_pickle, load_pickle_file
+from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
 
 
 def clfreport(model_type,

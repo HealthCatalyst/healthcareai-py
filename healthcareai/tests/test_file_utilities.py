@@ -1,9 +1,9 @@
 import unittest
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.output_utilities import load_pickle_file
+from healthcareai.common.file_io_utilities import load_pickle_file
 
 
-class TestPickling(unittest.TestCase):
+class TestPicklingErrors(unittest.TestCase):
     def test_load_non_existent_file_should_raise_error(self):
         self.assertRaises(HealthcareAIError, load_pickle_file, 'foo.pickle')
 
