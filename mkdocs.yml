@@ -8,6 +8,7 @@ docs_dir: docs
 pages:
     - Introduction: index.md
     - Getting started: getting_started.md
+    - Profiling Your Data: profiling_your_data.md
     - FAQ: FAQ.md
     - Hints and tips: hints.md
     - Developing and comparing models.md: develop.md
