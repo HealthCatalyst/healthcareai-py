@@ -1,5 +1,7 @@
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+import healthcareai.common.top_factors
 from healthcareai.common.transformers import DataFrameImputer
 from healthcareai.common import model_eval
 from healthcareai.common import filters
@@ -288,12 +290,12 @@ class DeploySupervisedModel(object):
                 use_saved_model=use_saved_model)
 
         # Calculate three imp columns
-        first_fact, second_fact, third_fact = model_eval.find_top_three_factors(debug,
-                                                                                self.X_train,
-                                                                                self.y_train,
-                                                                                self.X_test,
-                                                                                self.modeltype,
-                                                                                use_saved_model)
+        first_fact, second_fact, third_fact = healthcareai.common.top_factors.find_top_three_factors(debug,
+                                                                                                     self.X_train,
+                                                                                                     self.y_train,
+                                                                                                     self.X_test,
+                                                                                                     self.modeltype,
+                                                                                                     use_saved_model)
 
         # Convert to base int instead of numpy data type for SQL insert
         grain_column_baseint = [int(self.grain_column_test.iloc[i])
