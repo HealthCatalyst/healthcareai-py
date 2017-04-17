@@ -11,7 +11,6 @@ from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import SGDClassifier
 
 from healthcareai.common import helpers
 from healthcareai.common import filters
@@ -215,7 +214,8 @@ class DevelopSupervisedModel(object):
         self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
 
     def save_output_to_csv(self, filename, output):
-        output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
+        #TODO timeRan is borked
+        output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
                                           output['gridSearch_BestScore'],
                                           output['gridSearch_ScoreMetric'],) \
                                          + x for x in list(output.items())], \
@@ -384,24 +384,6 @@ class DevelopSupervisedModel(object):
             n_neighbors=5)
 
         return algorithm.fit(self.X_train, self.y_train)
-
-    def stochastic_gradient_descent_classifier(self, scoring_metric='roc_auc', hyperparameter_grid=None,
-                                               randomized_search=True):
-        if hyperparameter_grid is None:
-            # TODO add sensible SGD classifier hyperparameter grid
-            loss_list = ['hinge', 'log']
-            penalty_list = ['l1', 'l2']
-            alpha_list = [0.0001, 0.001, 0.01, 0.1]
-            hyperparameter_grid = {'loss': loss_list, 'penalty': penalty_list, 'alpha': alpha_list}
-
-        algorithm = prepare_randomized_search(
-            SGDClassifier,
-            scoring_metric,
-            hyperparameter_grid,
-            randomized_search)
-
-        algorithm.fit(self.X_train, self.y_train)
-        return algorithm
 
     def linear(self, cores=4, debug=False):
         # TODO deprecate
@@ -692,6 +674,7 @@ class DevelopSupervisedModel(object):
         }
 
         # Save important things to files
+        # self.save_output_to_csv(complete_filename,output)
         # self.save_output_to_csv(complete_filename,output)
         file_io_utilities.save_dict_object_to_json(complete_filename + '.json', model_validation_metrics)
         file_io_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
