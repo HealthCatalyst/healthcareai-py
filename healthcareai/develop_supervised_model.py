@@ -384,24 +384,6 @@ class DevelopSupervisedModel(object):
 
         return algorithm.fit(self.X_train, self.y_train)
 
-    def stochastic_gradient_descent_classifier(self, scoring_metric='roc_auc', hyperparameter_grid=None,
-                                               randomized_search=True):
-        if hyperparameter_grid is None:
-            # TODO add sensible SGD classifier hyperparameter grid
-            loss_list = ['hinge', 'log']
-            penalty_list = ['l1', 'l2']
-            alpha_list = [0.0001, 0.001, 0.01, 0.1]
-            hyperparameter_grid = {'loss': loss_list, 'penalty': penalty_list, 'alpha': alpha_list}
-
-        algorithm = prepare_randomized_search(
-            SGDClassifier,
-            scoring_metric,
-            hyperparameter_grid,
-            randomized_search)
-
-        algorithm.fit(self.X_train, self.y_train)
-        return algorithm
-
     def linear(self, cores=4, debug=False):
         # TODO deprecate
         """

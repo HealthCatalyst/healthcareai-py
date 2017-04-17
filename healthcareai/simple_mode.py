@@ -41,12 +41,6 @@ class SimpleDevelopSupervisedModel(object):
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
-    def stochastic_gradient_descent_classifier(self):
-        # Train the model
-        trained_model = self._dsm.stochastic_gradient_descent_classifier()
-        # Display the model metrics
-        self.print_performance_metrics(trained_model)
-
     def linear_regression(self):
         # Train the model
         trained_model = self._dsm.linear_regression(randomized_search=False)
