@@ -1,15 +1,16 @@
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from healthcareai.common.transformers import DataFrameImputer
-from healthcareai.common import model_eval
-from healthcareai.common import filters
-from healthcareai.common.healthcareai_error import HealthcareAIError
+import datetime
+import math
+import pyodbc
 
 import numpy as np
 import pandas as pd
-import pyodbc
-import datetime
-import math
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from healthcareai.common import filters
+from healthcareai.common import model_eval
+from healthcareai.common.database_connection_validation import validate_destination_table_connection
+from healthcareai.common.transformers import DataFrameImputer
 
 
 class DeploySupervisedModel(object):
@@ -355,44 +356,3 @@ class DeploySupervisedModel(object):
                 print("""\nAn attempt to complete a transaction has failed.
                       No corresponding transaction found. \nPerhaps you don't
                       have permission to write to this server.""")
-
-
-def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
-    # First, check the connection by inserting test data (and rolling back)
-    db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
-                               SERVER=""" + server + """;
-                               Trusted_Connection=yes;""")
-
-    # The following allows output to work with datetime/datetime2
-    temp_date = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-
-    try:
-        cursor = db_connection.cursor()
-        cursor.execute("""INSERT INTO """ + destination_table + """
-                       (BindingID, BindingNM, LastLoadDTS, """ +
-                       grain_column + """,""" + predicted_column_name + """,
-                       Factor1TXT, Factor2TXT, Factor3TXT)
-                       VALUES (0, 'PyTest', ?, 33, 0.98,
-                       'FirstCol', 'SecondCol', 'ThirdCol')""",
-                       temp_date)
-
-        print("Successfully inserted a test row into {}.".format(destination_table))
-        db_connection.rollback()
-        print("SQL insert successfully rolled back (since it was a test).")
-        write_result = True
-    except pyodbc.DatabaseError:
-        write_result = False
-        error_message = """Failed to insert values into {}. Check that the table exists with right column structure.
-        Your Grain ID column might not match that in your input table.""".format(destination_table)
-        raise HealthcareAIError(error_message)
-
-    finally:
-        try:
-            db_connection.close()
-            result = write_result
-        except pyodbc.DatabaseError:
-            error_message = """An attempt to complete a transaction has failed. No corresponding transaction found.
-            \nPerhaps you don\'t have permission to write to this server."""
-            raise HealthcareAIError(error_message)
-
-    return result
