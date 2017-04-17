@@ -65,7 +65,6 @@ def clfreport(model_type,
 
         if model_type == 'classification':
             y_pred = np.squeeze(algorithm.fit(X_train, y_train).predict_proba(X_test)[:, 1])
-            #y_pred_class = algorithm.fit(X_train, y_train).predict(X_test)
 
             roc_auc = roc_auc_score(y_test, y_pred)
             precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
