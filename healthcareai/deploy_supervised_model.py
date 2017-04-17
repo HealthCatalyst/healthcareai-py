@@ -1,6 +1,5 @@
 import datetime
 import math
-import pyodbc
 
 import numpy as np
 import pandas as pd
@@ -11,18 +10,19 @@ from healthcareai.common import filters
 from healthcareai.common import model_eval
 from healthcareai.common.database_connection_validation import validate_destination_table_connection
 from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common.write_predictions_to_database import write_predictions_to_database
 
 
 class DeploySupervisedModel(object):
     """
     A likely incomplete list of functionality
     - [ ] refactor out data preprocessing pipeline
-    - [ ] retrain on full dataset
-    - [ ] tests db connection
-    - [ ] writes to db
+    - [ ] REMOVE TRAINING ENTIRELY retrain on full dataset
+    - [x] tests db connection
+    - [x] writes to db
     - [ ] loads or saves pickle via model mess
     - [ ] performance on top n factors
-    - [ ] refactor top n factors
+    - [x] refactor top n factors
     """
 
     def __init__(self,
@@ -326,33 +326,5 @@ class DeploySupervisedModel(object):
             print('\nTop rows of 2-d list immediately before insert into db')
             print(pd.DataFrame(output_2dlist[0:3]).head())
 
-        cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
-                                   SERVER=""" + server + """;
-                                   Trusted_Connection=yes;""")
-        cursor = cecnxn.cursor()
-
-        try:
-            cursor.executemany("""insert into """ + dest_db_schema_table + """
-                               (BindingID, BindingNM, LastLoadDTS, """ +
-                               self.grain_column + """,""" + self.predicted_column_name + """,
-                               Factor1TXT, Factor2TXT, Factor3TXT)
-                               values (?,?,?,?,?,?,?,?)""", output_2dlist)
-            cecnxn.commit()
-
-            # Todo: count and display (via pyodbc) how many rows inserted
-            print("\nSuccessfully inserted rows into {}.".
-                  format(dest_db_schema_table))
-
-        except pyodbc.DatabaseError:
-            print("\nFailed to insert values into {}.".
-                  format(dest_db_schema_table))
-            print("Was your test insert successful earlier?")
-            print("If so, what has changed with your entity since then?")
-
-        finally:
-            try:
-                cecnxn.close()
-            except pyodbc.DatabaseError:
-                print("""\nAn attempt to complete a transaction has failed.
-                      No corresponding transaction found. \nPerhaps you don't
-                      have permission to write to this server.""")
+        write_predictions_to_database(self.grain_column, self.predicted_column_name, dest_db_schema_table,
+                                      output_2dlist, server)
