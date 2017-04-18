@@ -4,11 +4,12 @@ import sys
 import pandas as pd
 from io import StringIO
 from healthcareai.simple_mode import SimpleDevelopSupervisedModel
+from healthcareai.tests.helpers import fixture
 
 
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):
     def setUp(self):
-        self.dataframe = pd.read_csv('fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+        self.dataframe = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
         # Drop columns that won't help machine learning
         self.dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
