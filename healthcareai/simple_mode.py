@@ -1,4 +1,4 @@
-from .develop_supervised_model import DevelopSupervisedModel
+from healthcareai.develop_supervised_model import DevelopSupervisedModel
 
 
 class SimpleDevelopSupervisedModel(object):
@@ -14,6 +14,7 @@ class SimpleDevelopSupervisedModel(object):
             self.random_forest_regression()
 
     def knn(self):
+        print('Training knn')
         # Train the model
         trained_model = self._dsm.knn(
             scoring_metric='roc_auc',
@@ -24,24 +25,28 @@ class SimpleDevelopSupervisedModel(object):
         self.print_performance_metrics(trained_model)
 
     def random_forest_regression(self):
+        print('Training random_forest_regression')
         # Train the model
         trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='roc_auc', randomized_search=True)
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
     def random_forest_classification(self):
+        print('Training random_forest_classification')
         # Train the model
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
     def logistic_regression(self):
+        print('Training logistic_regression')
         # Train the model
         trained_model = self._dsm.logistic_regression()
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
     def linear_regression(self):
+        print('Training linear_regression')
         # Train the model
         trained_model = self._dsm.linear_regression(randomized_search=False)
         # Display the model metrics
@@ -49,11 +54,10 @@ class SimpleDevelopSupervisedModel(object):
 
     def ensemble(self):
         if self._dsm.model_type is 'classification':
-            self._dsm.ensemble_classification(
-                scoring_metric='roc_auc'
-            )
+            self._dsm.ensemble_classification(scoring_metric='roc_auc')
         elif self._dsm.model_type is 'regression':
-            # TODO STUB
+            # TODO stub
+            # self._dsm.ensemble_regression(scoring_metric='roc_auc')
             pass
 
     def plot_roc(self):
@@ -61,8 +65,10 @@ class SimpleDevelopSupervisedModel(object):
 
     def print_performance_metrics(self, trained_model):
         """
-        Given a trained model, calculate and print the appropriate performance metrics
-        :param trained_model: A scikit-learn trained algorithm
+        Given a trained model, calculate and print the appropriate performance metrics.
+
+        Args:
+            trained_model (BaseEstimator): A scikit-learn trained algorithm
         """
         performance_metrics = None
 

@@ -14,25 +14,26 @@ def prepare_fit_model_for_factors(model_type, x_train, y_train):
         y_train:
 
     Returns:
-        A fit model. Saves it as a pickle file.
+        A fit model. Also saves it as a pickle file.
     """
 
     if model_type == 'classification':
         algorithm = LogisticRegression()
-        algorithm.fit(x_train, y_train)
     elif model_type == 'regression':
         algorithm = LinearRegression()
-        algorithm.fit(x_train, y_train)
-        save_object_as_pickle('factorlogit.pkl', algorithm)
     else:
         algorithm = None
+
+    if algorithm is not None:
+        algorithm.fit(x_train, y_train)
+        save_object_as_pickle('factorlogit.pkl', algorithm)
 
     return algorithm
 
 
 def find_top_three_factors(trained_model, x_test, debug=False):
     """
-    Given a trained model and an x_test set, reverse engineer the top three featur importances
+    Given a trained model and an x_test set, reverse engineer the top three feature importances
     Args:
         trained_model:
         x_test:
@@ -65,7 +66,7 @@ def find_top_three_factors(trained_model, x_test, debug=False):
         print('X_test before multiplication')
         print(x_test.loc[:3, :])
         print_multiplied_factors(multiplied_factors)
-        print_top_three_factors(first_factor, second_factor, third_factor)
+        print_top_factors(first_factor, second_factor, third_factor, 5)
 
     return first_factor, second_factor, third_factor
 
@@ -77,11 +78,11 @@ def print_multiplied_factors(multiplied_factors):
         print(multiplied_factors[i, :])
 
 
-def print_top_three_factors(first_factor, second_factor, third_factor):
+def print_top_factors(first_factor, second_factor, third_factor, number_to_print):
     """Given factors, unwrap and print them nicely"""
-    print('Top three factors for top five rows:')
+    print('Top three factors for top {} rows:'.format(number_to_print))
     # pretty-print using a dataframe
     print(pd.DataFrame({
-        'first': first_factor[:3],
-        'second': second_factor[:3],
-        'third': third_factor[:3]}))
+        'first': first_factor[:number_to_print],
+        'second': second_factor[:number_to_print],
+        'third': third_factor[:number_to_print]}))
