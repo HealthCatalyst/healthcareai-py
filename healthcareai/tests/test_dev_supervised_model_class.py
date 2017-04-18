@@ -11,7 +11,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def test_random_forest_dev_tune_false(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'])
 
         # Drop uninformative columns
@@ -30,7 +30,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
     def test_random_forest_dev_tune_true_succeeds(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
@@ -46,7 +46,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
     def test_random_forest_dev_tune_true_2_column_raises_error(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'],
                          usecols=cols)
 
@@ -58,7 +58,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
     def test_random_forest_dev_tune_true_2_column_error_message(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'],
                          usecols=cols)
 
@@ -76,7 +76,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def test_linear_dev_tune_false(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
@@ -91,13 +91,13 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
 class TestHelpers(unittest.TestCase):
     def test_class_counter_on_binary(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
         df.dropna(axis=0, how='any', inplace=True)
         result = count_unique_elements_in_column(df, 'ThirtyDayReadmitFLG')
         self.assertEqual(result, 2)
 
     def test_class_counter_on_many(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
         result = count_unique_elements_in_column(df, 'PatientEncounterID')
         self.assertEqual(result, 1000)
 
