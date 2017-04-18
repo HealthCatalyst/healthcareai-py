@@ -326,5 +326,5 @@ class DeploySupervisedModel(object):
             print('\nTop rows of 2-d list immediately before insert into db')
             print(pd.DataFrame(output_2dlist[0:3]).head())
 
-        write_predictions_to_database(self.grain_column, self.predicted_column_name, dest_db_schema_table,
-                                      output_2dlist, server)
+        write_predictions_to_database(server, dest_db_schema_table, self.predicted_column_name, self.grain_column,
+                                      output_2dlist)

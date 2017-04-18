@@ -1,13 +1,13 @@
 import pyodbc
 
 
-def write_predictions_to_database(grain_column, predicted_column_name, dest_db_schema_table, output_2dlist, server):
+def write_predictions_to_database(server, destination_db_schema_table, predicted_column_name, grain_column, output_2dlist):
     cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                SERVER=""" + server + """;
                                Trusted_Connection=yes;""")
     cursor = cecnxn.cursor()
     try:
-        cursor.executemany("""insert into """ + dest_db_schema_table + """
+        cursor.executemany("""insert into """ + destination_db_schema_table + """
                            (BindingID, BindingNM, LastLoadDTS, """ +
                            grain_column + """,""" + predicted_column_name + """,
                            Factor1TXT, Factor2TXT, Factor3TXT)
@@ -16,11 +16,11 @@ def write_predictions_to_database(grain_column, predicted_column_name, dest_db_s
 
         # Todo: count and display (via pyodbc) how many rows inserted
         print("\nSuccessfully inserted rows into {}.".
-              format(dest_db_schema_table))
+              format(destination_db_schema_table))
 
     except pyodbc.DatabaseError:
         print("\nFailed to insert values into {}.".
-              format(dest_db_schema_table))
+              format(destination_db_schema_table))
         print("Was your test insert successful earlier?")
         print("If so, what has changed with your entity since then?")
 
