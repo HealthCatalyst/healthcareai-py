@@ -225,6 +225,10 @@ class DevelopSupervisedModel(object):
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header=False)
 
+    def ensemble_regression(self, scoring_metric='roc_auc', model_by_name=None):
+        # TODO stub
+        pass
+
     def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
         """
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
@@ -237,20 +241,20 @@ class DevelopSupervisedModel(object):
         self.validate_score_metric_for_number_of_classes(scoring_metric)
         score_by_name = {}
 
-        # Here is the default list of algorithms to try
+        # Here is the default list of algorithms to try for the ensemble
+        # Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary
         if model_by_name is None:
             model_by_name = {}
-            model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric).best_estimator_
-            model_by_name['SGD'] = self.stochastic_gradient_descent_classifier(randomized_search=True,
-                                                                               scoring_metric=scoring_metric).best_estimator_
+            model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric)
             model_by_name['Logistic Regression'] = self.logistic_regression()
             model_by_name['Random Forest Classifier'] = self.random_forest_classifier(
                 randomized_search=True,
                 scoring_metric=scoring_metric).best_estimator_
 
         for name, model in model_by_name.items():
-            score = self.calculate_classification_metric(model, scoring_metric=scoring_metric)
-            score_by_name[name] = score
+            # TODO this may need to ferret out each classification score separately
+            score = self.calculate_classification_metric(model)
+            score_by_name[name] = score[scoring_metric]
 
             self.console_log('{} algorithm: score = {}'.format(name, score))
 
@@ -307,12 +311,9 @@ class DevelopSupervisedModel(object):
         :return: the metric
         """
         predictions = trained_model.predict(self.X_test)
-        if scoring_metric is 'roc_auc':
-            result = metrics.roc_auc_score(self.y_test, predictions)
-        if scoring_metric is 'accuracy':
-            result = metrics.accuracy_score(self.y_test, predictions)
+        result = {'roc_auc_score': metrics.roc_auc_score(self.y_test, predictions),
+                  'accuracy': metrics.accuracy_score(self.y_test, predictions)}
 
-        # TODO consider returning an object with multiple metrics (similar to the regression method)
         return result
 
     def calculate_regression_metric(self, trained_model):
@@ -347,7 +348,9 @@ class DevelopSupervisedModel(object):
             # 5 cross validation folds
             cv=5)
 
-        return algorithm.fit(self.X_train, self.y_train)
+        algorithm.fit(self.X_train, self.y_train)
+
+        return algorithm
 
     def linear_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
@@ -382,7 +385,9 @@ class DevelopSupervisedModel(object):
             randomized_search,
             n_neighbors=5)
 
-        return algorithm.fit(self.X_train, self.y_train)
+        algorithm.fit(self.X_train, self.y_train)
+
+        return algorithm
 
     def linear(self, cores=4, debug=False):
         # TODO deprecate
@@ -434,6 +439,7 @@ class DevelopSupervisedModel(object):
             trees=trees)
 
         algorithm.fit(self.X_train, self.y_train)
+
         return algorithm
 
     def random_forest_regressor(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,

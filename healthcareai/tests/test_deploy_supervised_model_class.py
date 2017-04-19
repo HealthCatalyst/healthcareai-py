@@ -10,7 +10,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'])
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
         print(df.head())
@@ -39,7 +39,7 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
 
 class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'])
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
@@ -68,7 +68,7 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
 
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'])
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 
@@ -97,7 +97,7 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
 
 class TestLinearDeploy(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('HCPyDiabetesClinical.csv'),
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
                          na_values=['None'])
         df.drop('PatientID', axis=1, inplace=True)  # drop uninformative column
 

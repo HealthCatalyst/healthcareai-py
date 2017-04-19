@@ -70,7 +70,7 @@ cnxn = pyodbc.connect("""SERVER=localhost;
 For CSV:
 
 ```python
-df = pd.read_csv('healthcareai/tests/fixtures/HCPyDiabetesClinical.csv',
+df = pd.read_csv(DiabetesClincialSampleData.csv,
                  na_values=['None'])
 ```
 
@@ -158,7 +158,7 @@ def main():
 
     # Load in data
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('healthcareai/tests/fixtures/HCPyDiabetesClinical.csv',
+    df = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv',
                     na_values=['None'])
 
     # SQL snippet for reading data into dataframe
