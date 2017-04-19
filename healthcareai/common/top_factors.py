@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
-from healthcareai.common.output_utilities import save_object_as_pickle
+from healthcareai.common.file_io_utilities import save_object_as_pickle
 
 
 def prepare_fit_model_for_factors(model_type, x_train, y_train):
