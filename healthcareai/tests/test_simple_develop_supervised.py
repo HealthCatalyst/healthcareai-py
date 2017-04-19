@@ -67,6 +67,9 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
 
 @contextmanager
 def captured_output():
+    """
+    A quick and dirty context manager that captures STDOUT and STDERR to enable testing of functions that print() things
+    """
     new_out, new_err = StringIO(), StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     try:

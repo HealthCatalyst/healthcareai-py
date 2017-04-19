@@ -53,7 +53,7 @@ def find_top_three_factors(trained_model, x_test, debug=False):
     third_factor = []
 
     # TODO: switch 2-d lists to numpy array
-    # (although would always convert back to list for ceODBC
+    # (although would always convert back to list for ceODBC/PyODBC/whatever db
     for i in range(0, len(multiplied_factors[:, 1])):
         list_of_index_rankings = np.array((-multiplied_factors[i]).argsort().ravel())
         first_factor.append(feature_columns[list_of_index_rankings[0]])
