@@ -17,9 +17,15 @@ def main():
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
+    # Look at the first few rows of your dataframe after the data preparation
+    print(dataframe.head())
+
     # Step 1: Setup healthcareai for developing a model. This prepares your data for model building
-    hcai = SimpleDevelopSupervisedModel(dataframe=dataframe, predicted_column='ThirtyDayReadmitFLG',
-                                        model_type='classification', impute=True, grain_column='PatientEncounterID',
+    hcai = SimpleDevelopSupervisedModel(dataframe=dataframe,
+                                        predicted_column='ThirtyDayReadmitFLG',
+                                        model_type='classification',
+                                        impute=True,
+                                        grain_column='PatientEncounterID',
                                         verbose=False)
 
     # Step 2: Compare two models
@@ -28,20 +34,19 @@ def main():
     hcai.knn()
 
     # Run the random forest model
-    hcai.random_forest()
+    hcai.random_forest_classification()
 
     # Look at the RF feature importance rankings
     # hcai.plot_rffeature_importance(save=False)
 
     # Create ROC plot to compare the two models
-    hcai.plot_roc()
+    # hcai.plot_roc()
 
     print('\nTime:\n', time.time() - t0)
 
     # Run 4 built in algorithms to see which one looks best at first
-    hcai.ensemble()
-
-    hcai.get_advanced_features().random_forest_classifier()
+    # TODO ensemble is broken
+    # hcai.ensemble()
 
 
 if __name__ == "__main__":

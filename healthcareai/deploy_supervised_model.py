@@ -3,14 +3,17 @@ import math
 
 import numpy as np
 import pandas as pd
+
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 
 from healthcareai.common import filters
 from healthcareai.common import model_eval
-from healthcareai.common.database_connection_validation import validate_destination_table_connection
 from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common.file_io_utilities import load_pickle_file
 from healthcareai.common.write_predictions_to_database import write_predictions_to_database
+from healthcareai.common.top_factors import prepare_fit_model_for_factors, find_top_three_factors
+from healthcareai.common.database_connection_validation import validate_destination_table_connection
 
 
 class DeploySupervisedModel(object):
@@ -33,7 +36,7 @@ class DeploySupervisedModel(object):
                  predicted_column,
                  impute,
                  debug=False):
-        self.modeltype = model_type
+        self.model_type = model_type
         if model_type == 'classification':
             self.predicted_column_name = 'PredictedProbNBR'
         else:
@@ -214,12 +217,12 @@ class DeploySupervisedModel(object):
                                               self.grain_column,
                                               self.predicted_column_name)
 
-        if self.modeltype == 'classification' and method == 'linear':
+        if self.model_type == 'classification' and method == 'linear':
 
             algorithm = LogisticRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                model_type=self.modeltype,
+                model_type=self.model_type,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -228,12 +231,12 @@ class DeploySupervisedModel(object):
                 X_test=self.X_test,
                 use_saved_model=use_saved_model)
 
-        elif self.modeltype == 'regression' and method == 'linear':
+        elif self.model_type == 'regression' and method == 'linear':
 
             algorithm = LinearRegression(n_jobs=cores)
 
             self.y_pred = model_eval.clfreport(
-                model_type=self.modeltype,
+                model_type=self.model_type,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -242,7 +245,7 @@ class DeploySupervisedModel(object):
                 X_test=self.X_test,
                 use_saved_model=use_saved_model)
 
-        if self.modeltype == 'classification' and method == 'rf':
+        if self.model_type == 'classification' and method == 'rf':
 
             # TODO: think about moving this to model_eval mtry function
             if not mtry:
@@ -256,7 +259,7 @@ class DeploySupervisedModel(object):
                                                )
 
             self.y_pred = model_eval.clfreport(
-                model_type=self.modeltype,
+                model_type=self.model_type,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -265,7 +268,7 @@ class DeploySupervisedModel(object):
                 X_test=self.X_test,
                 use_saved_model=use_saved_model)
 
-        elif self.modeltype == 'regression' and method == 'rf':
+        elif self.model_type == 'regression' and method == 'rf':
 
             # TODO: think about moving this to model_eval mtry function
             if not mtry:
@@ -279,7 +282,7 @@ class DeploySupervisedModel(object):
                                               )
 
             self.y_pred = model_eval.clfreport(
-                model_type=self.modeltype,
+                model_type=self.model_type,
                 debug=debug,
                 develop_model_mode=False,
                 algo=algorithm,
@@ -288,13 +291,15 @@ class DeploySupervisedModel(object):
                 X_test=self.X_test,
                 use_saved_model=use_saved_model)
 
-        # Calculate three imp columns
-        first_fact, second_fact, third_fact = model_eval.find_top_three_factors(debug,
-                                                                                self.X_train,
-                                                                                self.y_train,
-                                                                                self.X_test,
-                                                                                self.modeltype,
-                                                                                use_saved_model)
+        # Load the saved model or train and save the new model
+        # TODO This might change as deploy no longer trains a model
+        if use_saved_model:
+            trained_model = load_pickle_file('factorlogit.pkl')
+        else:
+            trained_model = prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
+
+        # Get the top three factors from the trained model and X_test set
+        first_fact, second_fact, third_fact = find_top_three_factors(trained_model, self.X_test, debug=debug)
 
         # Convert to base int instead of numpy data type for SQL insert
         grain_column_baseint = [int(self.grain_column_test.iloc[i])
