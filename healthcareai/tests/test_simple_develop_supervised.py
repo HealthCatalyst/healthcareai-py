@@ -27,7 +27,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             hcai.knn()
             output = out.getvalue().strip()
 
-            expected_output_regex = r"Training knn\n{'roc_auc_score': 0.5[0-9]*, 'accuracy': 0.8[0-9]*}"
+            expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.5[0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.5[0-9]*)"
 
             self.assertRegexpMatches(output, expected_output_regex)
 
@@ -44,7 +44,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             hcai.random_forest_classification()
             output = out.getvalue().strip()
 
-            expected_output_regex = r"Training random_forest_classification\n{'roc_auc_score': 0.7[0-9]*, 'accuracy': 0.8[0-9]*}"
+            expected_output_regex = r"Training random_forest_classification\n({?'roc_auc_score': 0.7[0-9]*, 'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*, 'roc_auc_score': 0.7[0-9]*)"
 
             self.assertRegexpMatches(output, expected_output_regex)
 
@@ -60,7 +60,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             hcai.linear_regression()
             output = out.getvalue().strip()
 
-            expected_output_regex = r"Training linear_regression\n.*\n*{'mean_squared_error': 638\.[0-9]*, 'mean_absolute_error': 20\.[0-9]*}"
+            expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 638\.[0-9]*, 'mean_absolute_error': 20\.[0-9]*|{?'mean_absolute_error': 20\.[0-9]*, 'mean_squared_error': 638\.[0-9]*)"
 
             self.assertRegexpMatches(output, expected_output_regex)
 
