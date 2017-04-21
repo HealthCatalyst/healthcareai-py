@@ -19,6 +19,7 @@ from healthcareai.common import file_io_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeGrainColumnDataFilter, DataframeNullValueFilter
 
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
@@ -71,16 +72,18 @@ class DevelopSupervisedModel(object):
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
     def data_preparation(self, impute=False):
-        """Main data preparation method. Chains together small functions that prepare raw data for model building"""
+        """Main data preparation pipeline. Sequentially runs transformers and methods to clean and prepare the data"""
+
         # Drop some columns
-        self.remove_grain_column()
-        self.dataframe = filters.remove_DTS_postfix_columns(self.dataframe)
+        self.dataframe = DataframeGrainColumnDataFilter(self.grain_column_name).fit_transform(self.dataframe)
+        self.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(self.dataframe)
 
         # Perform one of two basic imputation methods
         if impute is True:
-            self.imputation()
+            self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
+            self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
         else:
-            self.drop_rows_with_any_nulls()
+            self.dataframe = DataframeNullValueFilter().fit_transform(self.dataframe)
 
         # Convert, encode and create test/train sets
         self.convert_encode_predicted_col_to_binary_numeric()
@@ -162,11 +165,11 @@ class DevelopSupervisedModel(object):
         #     are no missing values.
         #     Must happen AFTER under/over sampling is done
         #     so that we scale the under/over sampled dataset.
-        #     How to warn the user if they call this method
-        #     at the wrong time?
+        # TODO: How to warn the user if they call this method at the wrong time?
         X_train_scaled_subset = self.X_train[columns_to_scale]
         X_test_scaled_subset = self.X_test[columns_to_scale]
         scaler = StandardScaler()
+
         scaler.fit(X_train_scaled_subset)
 
         X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_train_scaled_subset))
@@ -179,19 +182,12 @@ class DevelopSupervisedModel(object):
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
-    def imputation(self):
-        # TODO should probably automate null imputation?
-        self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
-        self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
 
     def print_out_dataframe_shape_and_head(self, message):
         self.console_log(message)
         self.console_log(self.dataframe.shape)
         self.console_log(self.dataframe.head())
 
-    def drop_rows_with_any_nulls(self):
-        self.dataframe.dropna(axis=0, how='any', inplace=True)
-        self.print_out_dataframe_shape_and_head('\nDataframe after dropping rows with NULLS:')
 
     def train_test_split(self):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
@@ -232,7 +228,8 @@ class DevelopSupervisedModel(object):
 
     def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
         """
-        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
+        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
+        your data.
         """
         # TODO enumerate, document and validate scoring options
         # http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
@@ -683,7 +680,7 @@ class DevelopSupervisedModel(object):
         # self.save_output_to_csv(complete_filename,output)
         # self.save_output_to_csv(complete_filename,output)
         file_io_utilities.save_dict_object_to_json(complete_filename + '.json', model_validation_metrics)
-        file_io_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
+        file_io_utilities.save_object_as_pickle(complete_filename + '.pkl', rs.best_estimator_)
 
         print("Done running random search.")
 

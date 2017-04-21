@@ -7,6 +7,7 @@ import time
 import pandas as pd
 from healthcareai import DevelopSupervisedModel
 from healthcareai.common import filters
+from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter
 
 
 def main():
@@ -36,9 +37,10 @@ def main():
     # Note if you prefer to handle the data prep yourself you may chain together these calls (or other you prefer)
     # Drop some columns
     hcai.remove_grain_column()
-    hcai.dataframe = filters.remove_DTS_postfix_columns(hcai.dataframe)
+    hcai.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(hcai.dataframe)
 
     # Perform one of two basic imputation methods
+    # TODO change to a data pipeline
     hcai.imputation()
     # or simply drop columns with any nulls
     # hcai.drop_rows_with_any_nulls()

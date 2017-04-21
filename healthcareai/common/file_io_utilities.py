@@ -19,7 +19,7 @@ def save_object_as_pickle(filename, object_to_pickle):
     :param filename:
     :param object_to_pickle:
     """
-    with open(filename + '.pkl', 'wb') as open_file:
+    with open(filename, 'wb') as open_file:
         pickle.dump(object_to_pickle, open_file)
 
 

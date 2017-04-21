@@ -14,6 +14,7 @@ from healthcareai.common.file_io_utilities import load_pickle_file
 from healthcareai.common.write_predictions_to_database import write_predictions_to_database
 from healthcareai.common.top_factors import prepare_fit_model_for_factors, find_top_three_factors
 from healthcareai.common.database_connection_validation import validate_destination_table_connection
+from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeGrainColumnDataFilter, DataframeNullValueFilter
 
 
 class DeploySupervisedModel(object):
@@ -53,7 +54,8 @@ class DeploySupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
-        self.df = filters.remove_DTS_postfix_columns(self.df)
+        self.df = DataframeDateTimeColumnSuffixFilter().fit_transform(self.df)
+
 
         if debug:
             print('\nDataframe after removing DTS columns:')
