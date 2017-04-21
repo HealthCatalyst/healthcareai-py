@@ -78,6 +78,7 @@ class DevelopSupervisedModel(object):
         # Drop some columns
         self.dataframe = DataframeGrainColumnDataFilter(self.grain_column_name).fit_transform(self.dataframe)
         self.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(self.dataframe)
+        self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
 
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
@@ -94,7 +95,7 @@ class DevelopSupervisedModel(object):
         self.print_out_dataframe_shape_and_head(
             '\nDataframe after converting to 1/0 instead of Y/N for classification:')
         self.dataframe = DataFrameCreateDummyVariables(self.predicted_column).fit_transform(self.dataframe)
-        self.train_test_split()x`
+        self.train_test_split()
 
     def under_sampling(self, random_state=0):
         # NB: Must be done BEFORE train/test split
@@ -187,13 +188,6 @@ class DevelopSupervisedModel(object):
             self.y_train.shape,
             self.X_test.shape,
             self.y_test.shape))
-
-    def remove_grain_column(self):
-        # Remove grain column
-        if self.grain_column_name is not None:
-            self.dataframe.drop(self.grain_column_name, axis=1, inplace=True)
-
-        self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
 
     def save_output_to_csv(self, filename, output):
         #TODO timeRan is borked
