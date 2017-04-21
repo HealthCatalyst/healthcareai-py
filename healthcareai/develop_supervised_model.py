@@ -13,20 +13,20 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 
 from healthcareai.common import helpers
-from healthcareai.common import filters
 from healthcareai.common import model_eval
 from healthcareai.common import file_io_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-from healthcareai.common.transformers import DataFrameImputer
-from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeGrainColumnDataFilter, DataframeNullValueFilter
+from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary
+from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeGrainColumnDataFilter, \
+    DataframeNullValueFilter
 
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
-from sklearn.preprocessing import StandardScaler 
+from sklearn.preprocessing import StandardScaler
 
 from nltk import ConfusionMatrix
-import json 
+import json
 
 
 class DevelopSupervisedModel(object):
@@ -79,6 +79,8 @@ class DevelopSupervisedModel(object):
         self.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(self.dataframe)
 
         # Perform one of two basic imputation methods
+        # TODO we need to think about making this optional to solve the problem of rare and very predictive values
+        #   where neither imputation or droppig rows is appropriate
         if impute is True:
             self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
             self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
@@ -86,7 +88,9 @@ class DevelopSupervisedModel(object):
             self.dataframe = DataframeNullValueFilter().fit_transform(self.dataframe)
 
         # Convert, encode and create test/train sets
-        self.convert_encode_predicted_col_to_binary_numeric()
+        self.dataframe = DataFrameConvertTargetToBinary(self.model_type, self.predicted_column).fit_transform(self.dataframe)
+        self.print_out_dataframe_shape_and_head(
+            '\nDataframe after converting to 1/0 instead of Y/N for classification:')
         self.encode_categorical_data_as_dummy_variables()
         self.train_test_split()
 
@@ -95,18 +99,6 @@ class DevelopSupervisedModel(object):
         # First switch (temporarily) pred col to numeric (so it's not dummy)
         self.dataframe[self.predicted_column] = pd.to_numeric(arg=self.dataframe[self.predicted_column], errors='raise')
         self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
-
-    def convert_encode_predicted_col_to_binary_numeric(self):
-        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Note that this makes healthcareai only handle N/Y in pred column
-        if self.model_type == 'classification':
-            # Turning off warning around replace
-            pd.options.mode.chained_assignment = None  # default='warn'
-            # TODO: put try/catch here when type = class and predictor is numeric
-            self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
-
-            self.print_out_dataframe_shape_and_head(
-                '\nDataframe after converting to 1/0 instead of Y/N for classification:')
 
     def under_sampling(self, random_state=0):
         # NB: Must be done BEFORE train/test split
@@ -182,12 +174,10 @@ class DevelopSupervisedModel(object):
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
-
     def print_out_dataframe_shape_and_head(self, message):
         self.console_log(message)
         self.console_log(self.dataframe.shape)
         self.console_log(self.dataframe.head())
-
 
     def train_test_split(self):
         y = np.squeeze(self.dataframe[[self.predicted_column]])

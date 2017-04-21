@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary
 
 
 class TestDataframeImputer(unittest.TestCase):
@@ -12,15 +12,21 @@ class TestDataframeImputer(unittest.TestCase):
             ['b', 2, 2],
             [np.nan, np.nan, np.nan]
         ])
+        expected = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            ['b', 4/3.0, 5/3.0]
+        ])
 
         result = DataFrameImputer().fit_transform(df)
 
         self.assertEqual(len(result), 4)
         # Assert no NANs
         self.assertFalse(result.isnull().values.any())
-        # TODO: check that col types remain the same after imputation
         # Assert column types remain identical
         self.assertTrue(list(result.dtypes) == list(df.dtypes))
+        self.assertTrue(expected.equals(result))
 
     def test_imputation_removes_nones(self):
         df = pd.DataFrame([
@@ -28,6 +34,12 @@ class TestDataframeImputer(unittest.TestCase):
             ['b', 1, 1],
             ['b', 2, 2],
             [None, None, None]
+        ])
+        expected = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            ['b', 4 / 3.0, 5 / 3.0]
         ])
 
         result = DataFrameImputer().fit_transform(df)
@@ -56,7 +68,10 @@ class TestDataframeImputer(unittest.TestCase):
 
         self.assertEqual(len(result), 4)
         # Assert imputed values
-        self.assertEqual(result.values.all(), expected.values.all())
+        self.assertTrue(expected.equals(result))
+        # Assert column types remain identical
+        self.assertTrue(list(result.dtypes) == list(df.dtypes))
+
         # Assert column types remain identical
         self.assertTrue(list(result.dtypes) == list(df.dtypes))
 
