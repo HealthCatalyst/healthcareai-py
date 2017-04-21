@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 import unittest
-from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary
+from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary, \
+    DataFrameCreateDummyVariables
 
 
 class TestDataframeImputer(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestDataframeImputer(unittest.TestCase):
             ['a', 1, 2],
             ['b', 1, 1],
             ['b', 2, 2],
-            ['b', 4/3.0, 5/3.0]
+            ['b', 4 / 3.0, 5 / 3.0]
         ])
 
         result = DataFrameImputer().fit_transform(df)
@@ -105,6 +106,43 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
         result = DataFrameConvertTargetToBinary('classification', 'string_outcome').fit_transform(df)
 
         self.assertTrue(expected.equals(result))
+
+
+class TestDataFrameCreateDummyVariables(unittest.TestCase):
+    def test_dummies_for_binary_categorical(self):
+        df = pd.DataFrame({
+            'binary_category': ['a', 'b', 'a'],
+            'aa_outcome': [1, 5, 4]
+        })
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary_category.b': [0, 1, 0]
+        })
+
+        # cast as uint8 which the pandas.get_dummies() outputs
+        expected = expected.astype({'binary_category.b': 'uint8'})
+
+        result = DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+
+        self.assertTrue(result.equals(expected))
+
+    def test_dummies_for_trinary_categorical(self):
+        df = pd.DataFrame({
+            'binary_category': ['a', 'b', 'c'],
+            'aa_outcome': [1, 5, 4]
+        })
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary_category.b': [0, 1, 0],
+            'binary_category.c': [0, 0, 1]
+        })
+
+        # cast as uint8 which the pandas.get_dummies() outputs
+        expected = expected.astype({'binary_category.b': 'uint8', 'binary_category.c': 'uint8'})
+
+        result = DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+
+        self.assertTrue(result.equals(expected))
 
 
 if __name__ == '__main__':

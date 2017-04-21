@@ -35,6 +35,7 @@ class DataFrameImputer(TransformerMixin):
 
         return result
 
+
 class DataFrameConvertTargetToBinary(TransformerMixin):
     """
     Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
@@ -46,7 +47,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
         self.target_column = target_column
 
     def fit(self, X, y=None):
-         # return self for scikit compatibility
+        # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
@@ -57,5 +58,25 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
             pd.options.mode.chained_assignment = None  # default='warn'
             # Replace 'Y'/'N' with 1/0
             X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
+
+        return X
+
+
+class DataFrameCreateDummyVariables(TransformerMixin):
+    """ Convert all categorical columns into dummy/indicator variables. Exclude target column. """
+
+    def __init__(self, target_column):
+        self.target_column = target_column
+
+    def fit(self, X, y=None):
+        # return self for scikit compatibility
+        return self
+
+    def transform(self, X, y=None):
+        # Convert target column to numeric to prevent it from being encoded as dummy variables
+        X[self.target_column] = pd.to_numeric(arg=X[self.target_column], errors='raise')
+
+        # Create dummy variables
+        X = pd.get_dummies(X, drop_first=True, prefix_sep='.')
 
         return X

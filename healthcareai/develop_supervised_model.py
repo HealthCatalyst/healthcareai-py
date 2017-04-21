@@ -17,7 +17,8 @@ from healthcareai.common import model_eval
 from healthcareai.common import file_io_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary
+from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary, \
+    DataFrameCreateDummyVariables
 from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeGrainColumnDataFilter, \
     DataframeNullValueFilter
 
@@ -88,17 +89,12 @@ class DevelopSupervisedModel(object):
             self.dataframe = DataframeNullValueFilter().fit_transform(self.dataframe)
 
         # Convert, encode and create test/train sets
-        self.dataframe = DataFrameConvertTargetToBinary(self.model_type, self.predicted_column).fit_transform(self.dataframe)
+        self.dataframe = DataFrameConvertTargetToBinary(self.model_type, self.predicted_column).fit_transform(
+            self.dataframe)
         self.print_out_dataframe_shape_and_head(
             '\nDataframe after converting to 1/0 instead of Y/N for classification:')
-        self.encode_categorical_data_as_dummy_variables()
-        self.train_test_split()
-
-    def encode_categorical_data_as_dummy_variables(self):
-        # Create dummy vars for all cols but predictedcol
-        # First switch (temporarily) pred col to numeric (so it's not dummy)
-        self.dataframe[self.predicted_column] = pd.to_numeric(arg=self.dataframe[self.predicted_column], errors='raise')
-        self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
+        self.dataframe = DataFrameCreateDummyVariables(self.predicted_column).fit_transform(self.dataframe)
+        self.train_test_split()x`
 
     def under_sampling(self, random_state=0):
         # NB: Must be done BEFORE train/test split
