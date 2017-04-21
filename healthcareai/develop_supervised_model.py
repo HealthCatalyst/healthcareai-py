@@ -26,7 +26,6 @@ from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import StandardScaler
 
-from nltk import ConfusionMatrix
 import json
 
 
@@ -82,7 +81,7 @@ class DevelopSupervisedModel(object):
 
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
-        #   where neither imputation or droppig rows is appropriate
+        #   where neither imputation or dropping rows is appropriate
         if impute is True:
             self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
             self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
@@ -98,6 +97,7 @@ class DevelopSupervisedModel(object):
         self.train_test_split()
 
     def under_sampling(self, random_state=0):
+        # TODO convert to fit transform
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -123,6 +123,7 @@ class DevelopSupervisedModel(object):
         self.dataframe = dataframe_under_sampled
 
     def over_sampling(self, random_state=0):
+        # TODO convert to fit transform
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -148,6 +149,7 @@ class DevelopSupervisedModel(object):
         self.dataframe = dataframe_over_sampled
 
     def feature_scaling(self, columns_to_scale):
+        # TODO convert to fit transform
         # NB: Must happen AFTER self.X_train, self.X_test,
         #     self.y_train, self.y_test are defined.
         #     Must happen AFTER imputation is done so there
@@ -190,7 +192,7 @@ class DevelopSupervisedModel(object):
             self.y_test.shape))
 
     def save_output_to_csv(self, filename, output):
-        #TODO timeRan is borked
+        # TODO timeRan is borked
         output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
                                           output['gridSearch_BestScore'],
                                           output['gridSearch_ScoreMetric'],) \
@@ -400,6 +402,23 @@ class DevelopSupervisedModel(object):
             X_test=self.X_test,
             y_test=self.y_test,
             cores=cores)
+
+    def random_forest_2(self,
+                        trees=200,
+                        scoring_metric='roc_auc',
+                        hyperparameter_grid=None,
+                        randomized_search=True):
+        """A convenience method that allows a user to simply call .random_forest() and get the right one."""
+        if self.model_type == 'classification':
+            self.random_forest_classifier(trees=trees,
+                                          scoring_metric=scoring_metric,
+                                          hyperparameter_grid=hyperparameter_grid,
+                                          randomized_search=randomized_search)
+        elif self.model_type == 'regression':
+            self.random_forest_regressor(trees=200,
+                                         scoring_metric=scoring_metric,
+                                         hyperparameter_grid=hyperparameter_grid,
+                                         randomized_search=randomized_search)
 
     def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
                                  randomized_search=True):
@@ -671,8 +690,6 @@ class DevelopSupervisedModel(object):
     def save_models(self, random_search):
         pass
 
-
-# TODO think about making this a static method?
 def prepare_randomized_search(
         estimator,
         scoring_metric,
@@ -681,15 +698,21 @@ def prepare_randomized_search(
         **non_randomized_estimator_kwargs):
     """
     Given an estimator and various params, initialize an algorithm with optional randomized search.
-    :param estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
-    :param scoring_metric: The scoring metric to optimized for if using random search.
-        See http://scikit-learn.org/stable/modules/model_evaluation.html
-    :param hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
-        through.
-    :param randomized_search: boolean True or False
-    :param non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used
-         when radomized_search is False
-    :return: a scikit learn algorithm ready to `.fit()`
+
+    Args:
+        estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
+        scoring_metric: The scoring metric to optimized for if using random search. See
+            http://scikit-learn.org/stable/modules/model_evaluation.html
+        hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
+            through.
+        randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
+            simple algorithm).
+        **non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used when
+            radomized_search is False
+
+    Returns:
+        estimator: a scikit learn algorithm ready to `.fit()`
+
     """
     if randomized_search:
         algorithm = RandomizedSearchCV(estimator=estimator(),
