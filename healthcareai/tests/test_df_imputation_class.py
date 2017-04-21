@@ -1,65 +1,64 @@
-from healthcareai.common.transformers import DataFrameImputer
 import pandas as pd
 import numpy as np
 import unittest
+from healthcareai.common.transformers import DataFrameImputer
 
 
-class TestImputationRemovesNANs(unittest.TestCase):
-    # TODO: check that col types remain the same after imputation
-    def setUp(self):
-        self.df = pd.DataFrame([
+class TestDataframeImputer(unittest.TestCase):
+    def test_imputation_removes_nans(self):
+        df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
             ['b', 2, 2],
             [np.nan, np.nan, np.nan]
         ])
 
-    def runTest(self):
-        df_final = DataFrameImputer().fit_transform(self.df)
-        self.assertEqual(df_final.isnull().values.any(), False)
+        result = DataFrameImputer().fit_transform(df)
 
-    def tearDown(self):
-        del self.df
+        self.assertEqual(len(result), 4)
+        # Assert no NANs
+        self.assertFalse(result.isnull().values.any())
+        # TODO: check that col types remain the same after imputation
+        # Assert column types remain identical
+        self.assertTrue(list(result.dtypes) == list(df.dtypes))
 
-
-class TestImputationRemovesNones(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame([
+    def test_imputation_removes_nones(self):
+        df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
             ['b', 2, 2],
             [None, None, None]
         ])
 
-    def runTest(self):
-        df_final = DataFrameImputer().fit_transform(self.df)
-        self.assertEqual(df_final.isnull().values.any(), False)
+        result = DataFrameImputer().fit_transform(df)
 
-    def tearDown(self):
-        del self.df
+        self.assertEqual(len(result), 4)
+        self.assertFalse(result.isnull().values.any())
+        # Assert column types remain identical
+        self.assertTrue(list(result.dtypes) == list(df.dtypes))
 
-
-class TestImputationForNumbers(unittest.TestCase):
-    def setUp(self):
-        self.df = pd.DataFrame([
-            ['a',1,2],
-            ['b',1,1],
-            ['b',2,2],
-            [None,None,None]
+    def test_imputation_for_mean_of_numeric_and_mode_for_categorical(self):
+        df = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            [None, None, None]
         ])
 
-    def runTest(self):
-        df_final = DataFrameImputer().fit_transform(self.df)
-        df_correct = pd.DataFrame([
-            ['a',1,2],
-            ['b',1,1],
-            ['b',2,2],
-            ['b',4./3,5./3]
-        ])
-        self.assertEqual(df_final.values.all(), df_correct.values.all())
+        result = DataFrameImputer().fit_transform(df)
 
-    def tearDown(self):
-        del self.df
+        expected = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            ['b', 4. / 3, 5. / 3]
+        ])
+
+        self.assertEqual(len(result), 4)
+        # Assert imputed values
+        self.assertEqual(result.values.all(), expected.values.all())
+        # Assert column types remain identical
+        self.assertTrue(list(result.dtypes) == list(df.dtypes))
 
 
 if __name__ == '__main__':
