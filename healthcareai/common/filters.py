@@ -4,16 +4,20 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_dataframe_input(input):
+    """Simple validation that raises an error if an input is not a pandas dataframe. Silent if it is. """
     if is_dataframe(input) is False:
-        raise HealthcareAIError('This transformer requires a pandas dataframe and you passed in a {}'.format(type(input)))
+        raise HealthcareAIError(
+            'This transformer requires a pandas dataframe and you passed in a {}'.format(type(input)))
 
 
 def is_dataframe(thing):
+    """Simple helper that returns True if an input is a pandas dataframe """
     return issubclass(DataFrame, type(thing))
 
 
 class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
     """Given a pandas dataframe, remove columns with suffix 'DTS'"""
+
     def __init__(self):
         pass
 
@@ -32,6 +36,7 @@ class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
 
 class DataframeGrainColumnDataFilter(TransformerMixin):
     """Given a pandas dataframe, remove the grain column"""
+
     def __init__(self, grain_column_name):
         self.grain_column_name = grain_column_name
 
@@ -49,12 +54,13 @@ class DataframeGrainColumnDataFilter(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    def __init__(self, excluded_columns=[]):
+    def __init__(self, excluded_columns=None):
+        # TODO validate excluded column is a list
         """
         Given a pandas dataframe, return a dataframe after removing any rows with Null values
         :param excluded_columns: an array of column names to ignore
         """
-        self.excluded_columns = excluded_columns
+        self.excluded_columns = excluded_columns or []
 
     def fit(self, X, y=None):
         return self

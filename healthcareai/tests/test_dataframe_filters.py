@@ -1,6 +1,6 @@
 import pandas as pd
 import unittest
-from healthcareai.common.filters import *
+import healthcareai.common.filters as filters
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -12,7 +12,7 @@ class TestIsDataframe(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertTrue(is_dataframe(df))
+        self.assertTrue(filters.is_dataframe(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -24,7 +24,7 @@ class TestIsDataframe(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertFalse(is_dataframe(junk))
+            self.assertFalse(filters.is_dataframe(junk))
 
 
 class TestValidationError(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestValidationError(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertIsNone(validate_dataframe_input(df))
+        self.assertIsNone(filters.validate_dataframe_input(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -47,7 +47,7 @@ class TestValidationError(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, validate_dataframe_input, junk)
+            self.assertRaises(HealthcareAIError, filters.validate_dataframe_input, junk)
 
 
 class TestDataframeColumnSuffixFilter(unittest.TestCase):
@@ -61,7 +61,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, DataframeDateTimeColumnSuffixFilter().fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeDateTimeColumnSuffixFilter().fit_transform, junk)
 
     def test_removes_nothing_when_it_finds_no_matches(self):
         df = pd.DataFrame({
@@ -70,7 +70,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
 
         self.assertEqual(len(result), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
@@ -82,7 +82,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'DTS': [1, 5, 4]
         })
 
-        result = DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -95,7 +95,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_DTS': [1, 5, 4]
         })
 
-        result = DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -108,7 +108,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_dts': [1, 5, 4]
         })
 
-        result = DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender', 'admit_dts']
 
         self.assertEqual(len(result), 3)
@@ -126,7 +126,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, DataframeGrainColumnDataFilter(None).fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeGrainColumnDataFilter(None).fit_transform, junk)
 
     def test_removes_nothing_when_it_finds_no_matches(self):
         df = pd.DataFrame({
@@ -135,7 +135,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
 
         self.assertEqual(len(result), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
@@ -147,7 +147,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'PatientID': [1, 5, 4]
         })
 
-        result = DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -160,7 +160,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'patientid': [1, 5, 4]
         })
 
-        result = DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
         expected = ['category', 'gender', 'patientid']
 
         self.assertEqual(len(result), 3)
@@ -168,6 +168,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
 
 
 class TestDataframeNullValueFilter(unittest.TestCase):
+    # TODO test exclusions!
     def test_raises_error_on_non_dataframe_inputs(self):
         junk_inputs = [
             'foo',
@@ -178,7 +179,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, DataframeGrainColumnDataFilter(None).fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeGrainColumnDataFilter(None).fit_transform, junk)
 
     def test_removes_nothing_when_no_nulls_exist(self):
         df = pd.DataFrame({
@@ -187,7 +188,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = DataframeNullValueFilter().fit_transform(df)
+        result = filters.DataframeNullValueFilter().fit_transform(df)
         self.assertEqual(len(result), 3)
 
     def test_removes_row_with_single_null(self):
@@ -197,7 +198,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
             'age': [1, 5, None]
         })
 
-        result = DataframeNullValueFilter().fit_transform(df)
+        result = filters.DataframeNullValueFilter().fit_transform(df)
         self.assertEqual(len(result), 2)
 
     def test_removes_row_with_all_nulls(self):
@@ -207,7 +208,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
             'age': [1, 5, None]
         })
 
-        result = DataframeNullValueFilter().fit_transform(df)
+        result = filters.DataframeNullValueFilter().fit_transform(df)
         self.assertEqual(len(result), 1)
 
 
