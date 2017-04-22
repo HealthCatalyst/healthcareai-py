@@ -19,13 +19,14 @@ class TestRFDevTuneFalse(unittest.TestCase):
 
         # Convert numeric columns to factor/category columns
         np.random.seed(42)
-        self.o = DevelopSupervisedModel(dataframe=df, model_type='classification',
+        o = DevelopSupervisedModel(dataframe=df, model_type='classification',
                                         predicted_column='ThirtyDayReadmitFLG')
 
-        self.o.data_preparation(impute=True)
-        self.o.random_forest(cores=1)
+        o.data_preparation_pipeline(impute=True)
+        o.train_test_split()
+        o.random_forest(cores=1)
 
-        self.assertAlmostEqual(np.round(self.o.au_roc, 6), 0.965070)
+        self.assertAlmostEqual(np.round(o.au_roc, 6), 0.965070)
 
 
 class TestRFDevTuneTrueRegular(unittest.TestCase):
@@ -37,7 +38,8 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation(impute=True)
+        o.data_preparation_pipeline(impute=True)
+        o.train_test_split()
         o.random_forest(cores=1, tune=True)
 
         self.assertAlmostEqual(np.round(o.au_roc, 6), 0.968028)
@@ -52,7 +54,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation(impute=True)
+        o.data_preparation_pipeline(impute=True)
+        o.train_test_split()
 
         self.assertRaises(HealthcareAIError, o.random_forest, cores=1, tune=True)
 
@@ -64,7 +67,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation(impute=True)
+        o.data_preparation_pipeline(impute=True)
+        o.train_test_split()
 
         try:
             o.random_forest(cores=1, tune=True)
@@ -83,7 +87,8 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation(impute=True)
+        o.data_preparation_pipeline(impute=True)
+        o.train_test_split()
         o.linear(cores=1)
 
         self.assertAlmostEqual(np.round(o.au_roc, 3), 0.672000)

@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 from sklearn import model_selection
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.metrics import roc_curve, auc
@@ -14,7 +15,6 @@ from sklearn.neighbors import KNeighborsClassifier
 
 from healthcareai.common import helpers
 from healthcareai.common import model_eval
-from healthcareai.common import file_io_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary, \
@@ -71,30 +71,30 @@ class DevelopSupervisedModel(object):
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-    def data_preparation(self, impute=False):
+    def data_preparation_pipeline(self, impute=True):
         """Main data preparation pipeline. Sequentially runs transformers and methods to clean and prepare the data"""
+        column_removal_pipeline = Pipeline([
+            ('dts_filter', DataframeDateTimeColumnSuffixFilter()),
+            ('grain_column_filter', DataframeGrainColumnDataFilter(self.grain_column_name)),
+        ])
 
-        # Drop some columns
-        self.dataframe = DataframeGrainColumnDataFilter(self.grain_column_name).fit_transform(self.dataframe)
-        self.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(self.dataframe)
-        self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
+        transformation_pipeline = Pipeline([
+            ('null_row_filter', DataframeNullValueFilter(excluded_columns=None)),
+            ('convert_target_to_binary', DataFrameConvertTargetToBinary(self.model_type, self.predicted_column)),
+            ('dummify', DataFrameCreateDummyVariables(self.predicted_column)),
+        ])
+
+        self.dataframe = column_removal_pipeline.fit_transform(self.dataframe)
 
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
         #   where neither imputation or dropping rows is appropriate
         if impute is True:
             self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
-            self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
-        else:
-            self.dataframe = DataframeNullValueFilter().fit_transform(self.dataframe)
 
-        # Convert, encode and create test/train sets
-        self.dataframe = DataFrameConvertTargetToBinary(self.model_type, self.predicted_column).fit_transform(
-            self.dataframe)
-        self.print_out_dataframe_shape_and_head(
-            '\nDataframe after converting to 1/0 instead of Y/N for classification:')
-        self.dataframe = DataFrameCreateDummyVariables(self.predicted_column).fit_transform(self.dataframe)
-        self.train_test_split()
+        self.dataframe = transformation_pipeline.fit_transform(self.dataframe)
+
+        return self.dataframe
 
     def under_sampling(self, random_state=0):
         # TODO convert to fit transform
