@@ -53,6 +53,8 @@ class SimpleDevelopSupervisedModel(object):
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
+        return trained_model
+
     def ensemble(self):
         if self._dsm.model_type is 'classification':
             self._dsm.ensemble_classification(scoring_metric='roc_auc')
