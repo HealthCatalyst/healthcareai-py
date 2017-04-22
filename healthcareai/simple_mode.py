@@ -4,7 +4,8 @@ from healthcareai.develop_supervised_model import DevelopSupervisedModel
 class SimpleDevelopSupervisedModel(object):
     def __init__(self, dataframe, predicted_column, model_type, impute, grain_column=None, verbose=False):
         self._dsm = DevelopSupervisedModel(dataframe, model_type, predicted_column, grain_column, verbose)
-        self._dsm.data_preparation(impute=impute)
+        self._dsm.dataframe_preparation_pipeline(impute=impute)
+        self._dsm.train_test_split()
 
     def random_forest(self):
         # TODO Convenience method. Probably not needed?

@@ -71,19 +71,23 @@ class DevelopSupervisedModel(object):
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-    def data_preparation_pipeline(self, impute=True):
+    def dataframe_preparation_pipeline(self, impute=True):
         """Main data preparation pipeline. Sequentially runs transformers and methods to clean and prepare the data"""
+        # Note: this could be done more elegantly using FeatureUnions _if_ you are not using pandas dataframes for
+        #   inputs of the later pipelines as FeatureUnion intrinsically converts outputs to numpy arrays.
+
+        # Build pipelines
         column_removal_pipeline = Pipeline([
             ('dts_filter', DataframeDateTimeColumnSuffixFilter()),
             ('grain_column_filter', DataframeGrainColumnDataFilter(self.grain_column_name)),
         ])
-
         transformation_pipeline = Pipeline([
             ('null_row_filter', DataframeNullValueFilter(excluded_columns=None)),
             ('convert_target_to_binary', DataFrameConvertTargetToBinary(self.model_type, self.predicted_column)),
             ('dummify', DataFrameCreateDummyVariables(self.predicted_column)),
         ])
 
+        # Apply the pipelines
         self.dataframe = column_removal_pipeline.fit_transform(self.dataframe)
 
         # Perform one of two basic imputation methods
@@ -91,10 +95,7 @@ class DevelopSupervisedModel(object):
         #   where neither imputation or dropping rows is appropriate
         if impute is True:
             self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
-
         self.dataframe = transformation_pipeline.fit_transform(self.dataframe)
-
-        return self.dataframe
 
     def under_sampling(self, random_state=0):
         # TODO convert to fit transform

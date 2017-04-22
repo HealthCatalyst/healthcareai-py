@@ -22,7 +22,7 @@ class TestRFDevTuneFalse(unittest.TestCase):
         o = DevelopSupervisedModel(dataframe=df, model_type='classification',
                                         predicted_column='ThirtyDayReadmitFLG')
 
-        o.data_preparation_pipeline(impute=True)
+        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
         o.random_forest(cores=1)
 
@@ -38,7 +38,7 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation_pipeline(impute=True)
+        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
         o.random_forest(cores=1, tune=True)
 
@@ -54,7 +54,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation_pipeline(impute=True)
+        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
 
         self.assertRaises(HealthcareAIError, o.random_forest, cores=1, tune=True)
@@ -67,7 +67,7 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation_pipeline(impute=True)
+        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
 
         try:
@@ -87,7 +87,7 @@ class TestLinearDevTuneFalse(unittest.TestCase):
 
         np.random.seed(42)
         o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.data_preparation_pipeline(impute=True)
+        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
         o.linear(cores=1)
 
