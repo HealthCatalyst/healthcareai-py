@@ -8,6 +8,7 @@ import pandas as pd
 from healthcareai import DevelopSupervisedModel
 from healthcareai.common import filters
 from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter
+import healthcareai.pipelines.data_preparation as pipelines
 
 
 def main():
@@ -19,7 +20,37 @@ def main():
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-    # Step 1: Instantiate the main class with your raw data
+    # Step 1: Prepare the data using optional imputation. There are two options for this:
+    ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
+    dataframe = pipelines.dataframe_preparation_pipeline(dataframe,
+                                                         'classification',
+                                                         'PatientEncounterID',
+                                                         'ThirtyDayReadmitFLG',
+                                                         impute=True)
+
+
+    ## Option 2: Do this stuff yourself using healthcare ai methods or your own.
+    # TODO rewrite this portion once the API settles
+    # Note if you prefer to handle the data prep yourself you may chain together these calls (or other you prefer)
+    # TODO convert the rest of ths example to the pipeline way
+    # Drop some columns
+    # hcai.remove_grain_column()
+    # hcai.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(hcai.dataframe)
+
+    # Perform one of two basic imputation methods
+    # TODO change to a data pipeline
+    # hcai.imputation()
+    # or simply drop columns with any nulls
+    # hcai.drop_rows_with_any_nulls()
+
+    # Convert, encode and create test/train sets
+    # TODO change to a data pipeline
+    # hcai.convert_encode_predicted_col_to_binary_numeric()
+    # hcai.encode_categorical_data_as_dummy_variables()
+    # hcai.train_test_split()
+
+
+    # Step 2: Instantiate the main class with your data
     hcai = DevelopSupervisedModel(
         dataframe=dataframe,
         model_type='classification',
@@ -27,27 +58,6 @@ def main():
         grain_column_name='PatientEncounterID',
         verbose=False)
 
-    # Step 2: Prepare the data using optional imputation. There are two options for this:
-
-    ## Option 1: Use built in cleaning, encoding, prep, train/test splitting with optional imputation
-    hcai.data_preparation(impute=True)
-
-    ## Option 2: Do this stuff yourself using healthcare ai methods or your own.
-
-    # Note if you prefer to handle the data prep yourself you may chain together these calls (or other you prefer)
-    # Drop some columns
-    hcai.remove_grain_column()
-    hcai.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(hcai.dataframe)
-
-    # Perform one of two basic imputation methods
-    # TODO change to a data pipeline
-    hcai.imputation()
-    # or simply drop columns with any nulls
-    # hcai.drop_rows_with_any_nulls()
-
-    # Convert, encode and create test/train sets
-    hcai.convert_encode_predicted_col_to_binary_numeric()
-    hcai.encode_categorical_data_as_dummy_variables()
     hcai.train_test_split()
 
     # Step 3: Train some models

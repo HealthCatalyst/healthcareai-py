@@ -7,6 +7,12 @@ from healthcareai import DevelopSupervisedModel
 from healthcareai.tests.helpers import fixture
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.healthcareai_error import HealthcareAIError
+import healthcareai.pipelines.data_preparation as pipelines
+
+# Set some constants to save errors and typing
+CLASSIFICATION = 'classification'
+PREDICTED_COLUMN = 'ThirtyDayReadmitFLG'
+GRAIN_COLUMN_NAME = None
 
 
 class TestRFDevTuneFalse(unittest.TestCase):
@@ -17,12 +23,14 @@ class TestRFDevTuneFalse(unittest.TestCase):
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-        # Convert numeric columns to factor/category columns
         np.random.seed(42)
-        o = DevelopSupervisedModel(dataframe=df, model_type='classification',
-                                        predicted_column='ThirtyDayReadmitFLG')
+        df = pipelines.dataframe_preparation_pipeline(df,
+                                                      CLASSIFICATION,
+                                                      GRAIN_COLUMN_NAME,
+                                                      PREDICTED_COLUMN,
+                                                      impute=True)
+        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
 
-        o.dataframe_preparation_pipeline(impute=True)
         o.train_test_split()
         o.random_forest(cores=1)
 
@@ -37,8 +45,13 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.dataframe_preparation_pipeline(impute=True)
+        df = pipelines.dataframe_preparation_pipeline(df,
+                                                      CLASSIFICATION,
+                                                      GRAIN_COLUMN_NAME,
+                                                      PREDICTED_COLUMN,
+                                                      impute=True)
+        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+
         o.train_test_split()
         o.random_forest(cores=1, tune=True)
 
@@ -53,8 +66,13 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.dataframe_preparation_pipeline(impute=True)
+        df = pipelines.dataframe_preparation_pipeline(df,
+                                                      CLASSIFICATION,
+                                                      GRAIN_COLUMN_NAME,
+                                                      PREDICTED_COLUMN,
+                                                      impute=True)
+        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+
         o.train_test_split()
 
         self.assertRaises(HealthcareAIError, o.random_forest, cores=1, tune=True)
@@ -66,8 +84,13 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.dataframe_preparation_pipeline(impute=True)
+        df = pipelines.dataframe_preparation_pipeline(df,
+                                                      CLASSIFICATION,
+                                                      GRAIN_COLUMN_NAME,
+                                                      PREDICTED_COLUMN,
+                                                      impute=True)
+        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+
         o.train_test_split()
 
         try:
@@ -86,8 +109,13 @@ class TestLinearDevTuneFalse(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        o = DevelopSupervisedModel(dataframe=df, model_type='classification', predicted_column='ThirtyDayReadmitFLG')
-        o.dataframe_preparation_pipeline(impute=True)
+        df = pipelines.dataframe_preparation_pipeline(df,
+                                                      CLASSIFICATION,
+                                                      GRAIN_COLUMN_NAME,
+                                                      PREDICTED_COLUMN,
+                                                      impute=True)
+        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+
         o.train_test_split()
         o.linear(cores=1)
 

@@ -1,10 +1,18 @@
 from healthcareai.develop_supervised_model import DevelopSupervisedModel
+import healthcareai.pipelines.data_preparation as pipelines
 
 
 class SimpleDevelopSupervisedModel(object):
     def __init__(self, dataframe, predicted_column, model_type, impute, grain_column=None, verbose=False):
-        self._dsm = DevelopSupervisedModel(dataframe, model_type, predicted_column, grain_column, verbose)
-        self._dsm.dataframe_preparation_pipeline(impute=impute)
+        # Run the raw data through the data preparation pipeline
+        clean_dataframe = pipelines.dataframe_preparation_pipeline(dataframe,
+                                                                   model_type,
+                                                                   grain_column,
+                                                                   predicted_column,
+                                                                   impute=impute)
+        self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
+
+        # Split the data into train and test
         self._dsm.train_test_split()
 
     def random_forest(self):
