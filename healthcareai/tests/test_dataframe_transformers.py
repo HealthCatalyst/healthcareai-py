@@ -189,9 +189,6 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
         expected = expected.sort(axis=1)
         result = result.sort(axis=1)
 
-        print(result)
-        print(expected)
-
         self.assertTrue(result.equals(expected))
 
 

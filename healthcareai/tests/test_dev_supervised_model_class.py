@@ -12,7 +12,7 @@ import healthcareai.pipelines.data_preparation as pipelines
 # Set some constants to save errors and typing
 CLASSIFICATION = 'classification'
 PREDICTED_COLUMN = 'ThirtyDayReadmitFLG'
-GRAIN_COLUMN_NAME = None
+GRAIN_COLUMN_NAME = 'PatientID'
 
 
 class TestRFDevTuneFalse(unittest.TestCase):
