@@ -126,7 +126,7 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.DataframeGrainColumnDataFilter(None).fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeColumnRemover(None).fit_transform, junk)
 
     def test_removes_nothing_when_it_finds_no_matches(self):
         df = pd.DataFrame({
@@ -135,9 +135,9 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeColumnRemover('PatientID').fit_transform(df)
 
-        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result.columns), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
 
     def test_removes_match(self):
@@ -147,10 +147,10 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'PatientID': [1, 5, 4]
         })
 
-        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeColumnRemover('PatientID').fit_transform(df)
         expected = ['category', 'gender']
 
-        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result.columns), 2)
         self.assertEqual(list(result.columns).sort(), expected.sort())
 
     def test_does_not_remove_lowercase_match(self):
@@ -160,10 +160,23 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
             'patientid': [1, 5, 4]
         })
 
-        result = filters.DataframeGrainColumnDataFilter('PatientID').fit_transform(df)
+        result = filters.DataframeColumnRemover('PatientID').fit_transform(df)
         expected = ['category', 'gender', 'patientid']
 
-        self.assertEqual(len(result), 3)
+        self.assertEqual(len(result.columns), 3)
+        self.assertEqual(list(result.columns).sort(), expected.sort())
+
+    def test_removes_list(self):
+        df = pd.DataFrame({
+            'category': ['a', 'b', 'c'],
+            'gender': ['F', 'M', 'F'],
+            'patientid': [1, 5, 4]
+        })
+
+        result = filters.DataframeColumnRemover(['gender', 'patientid', 'foo']).fit_transform(df)
+        expected = ['category']
+
+        self.assertEqual(len(result.columns), 1)
         self.assertEqual(list(result.columns).sort(), expected.sort())
 
 
@@ -179,7 +192,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.DataframeGrainColumnDataFilter(None).fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeColumnRemover(None).fit_transform, junk)
 
     def test_removes_nothing_when_no_nulls_exist(self):
         df = pd.DataFrame({

@@ -34,3 +34,11 @@ def load_pickle_file(filename):
     except FileNotFoundError as e:
         raise HealthcareAIError(
             'No file named \'{}\' was found. Please verify the file you intend to load'.format(filename))
+
+
+def load_saved_model(filename):
+    """
+    Convenience method for a simple API
+    :param filename:
+    """
+    return load_pickle_file(filename)

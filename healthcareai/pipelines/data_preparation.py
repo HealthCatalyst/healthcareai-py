@@ -10,8 +10,8 @@ def dataframe_preparation_pipeline(dataframe, model_type, grain_column_name, pre
 
     # Build pipelines
     column_removal_pipeline = Pipeline([
-        ('dts_filter', filters.DataframeDateTimeColumnSuffixFilter()),
-        ('grain_column_filter', filters.DataframeGrainColumnDataFilter(grain_column_name)),
+        ('remove_DTS_columns', filters.DataframeDateTimeColumnSuffixFilter()),
+        ('remove_grain_column', filters.DataframeColumnRemover(grain_column_name)),
     ])
     transformation_pipeline = Pipeline([
         ('null_row_filter', filters.DataframeNullValueFilter(excluded_columns=None)),
@@ -29,5 +29,22 @@ def dataframe_preparation_pipeline(dataframe, model_type, grain_column_name, pre
     if impute is True:
         result_dataframe = transformers.DataFrameImputer().fit_transform(result_dataframe)
     result_dataframe = transformation_pipeline.fit_transform(result_dataframe)
+
+    return result_dataframe
+
+
+def dataframe_prediction(dataframe, model_type, grain_column_name, predicted_column, impute=True):
+    """
+    Main prediction data preparation pipeline. Sequentially runs transformers and methods to clean and prepare the
+    before dropping the prediction column
+    """
+
+    # Apply the pipelines
+    # TODO do we want to enforce imputation so that entire rows with null values don't get dropped?
+    # TODO ... or do we want to leave out the null dropping step - and if so, what impact will this have ML-wise?
+    result_dataframe = dataframe_preparation_pipeline(dataframe, model_type, grain_column_name, predicted_column,
+                                                      impute=True)
+    # Remove the predicted column
+    result_dataframe = filters.DataframeColumnRemover(predicted_column).fit_transform(result_dataframe)
 
     return result_dataframe

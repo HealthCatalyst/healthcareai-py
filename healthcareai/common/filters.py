@@ -34,11 +34,11 @@ class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
         return X[filtered_column_names]
 
 
-class DataframeGrainColumnDataFilter(TransformerMixin):
-    """Given a pandas dataframe, remove the grain column"""
+class DataframeColumnRemover(TransformerMixin):
+    """Given a pandas dataframe, remove the given column or columns in list form"""
 
-    def __init__(self, grain_column_name):
-        self.grain_column_name = grain_column_name
+    def __init__(self, columns_to_remove):
+        self.columns_to_remove = columns_to_remove
 
     def fit(self, X, y=None):
         return self
@@ -47,7 +47,7 @@ class DataframeGrainColumnDataFilter(TransformerMixin):
         validate_dataframe_input(X)
 
         # Build a list of all columns except for the grain column'
-        filtered_column_names = [column for column in X.columns if column != self.grain_column_name]
+        filtered_column_names = [c for c in X.columns if c not in self.columns_to_remove]
 
         # return the filtered dataframe
         return X[filtered_column_names]
