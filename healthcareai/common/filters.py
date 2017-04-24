@@ -54,6 +54,7 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
+    """Given a pandas dataframe, remove rows that contain null values in any column except the excluded"""
     def __init__(self, excluded_columns=None):
         # TODO validate excluded column is a list
         """
