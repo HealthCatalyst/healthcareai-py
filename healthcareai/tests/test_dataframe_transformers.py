@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-from healthcareai.common.transformers import DataFrameImputer, DataFrameConvertTargetToBinary, \
-    DataFrameCreateDummyVariables
-
+import healthcareai.common.transformers as transformers
 
 class TestDataframeImputer(unittest.TestCase):
     def test_imputation_removes_nans(self):
@@ -20,7 +18,7 @@ class TestDataframeImputer(unittest.TestCase):
             ['b', 4 / 3.0, 5 / 3.0]
         ])
 
-        result = DataFrameImputer().fit_transform(df)
+        result = transformers.DataFrameImputer().fit_transform(df)
 
         self.assertEqual(len(result), 4)
         # Assert no NANs
@@ -43,7 +41,7 @@ class TestDataframeImputer(unittest.TestCase):
             ['b', 4 / 3.0, 5 / 3.0]
         ])
 
-        result = DataFrameImputer().fit_transform(df)
+        result = transformers.DataFrameImputer().fit_transform(df)
 
         self.assertEqual(len(result), 4)
         self.assertFalse(result.isnull().values.any())
@@ -59,7 +57,7 @@ class TestDataframeImputer(unittest.TestCase):
             [None, None, None]
         ])
 
-        result = DataFrameImputer().fit_transform(df)
+        result = transformers.DataFrameImputer().fit_transform(df)
 
         expected = pd.DataFrame([
             ['a', 1, 2],
@@ -84,7 +82,7 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
             'string_outcome': ['Y', 'N', 'Y']
         })
 
-        result = DataFrameConvertTargetToBinary('regression', 'string_outcome').fit_transform(df)
+        result = transformers.DataFrameConvertTargetToBinary('regression', 'string_outcome').fit_transform(df)
 
         self.assertTrue(df.equals(result))
 
@@ -103,7 +101,7 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
             'string_outcome': [1, 0, 1]
         })
 
-        result = DataFrameConvertTargetToBinary('classification', 'string_outcome').fit_transform(df)
+        result = transformers.DataFrameConvertTargetToBinary('classification', 'string_outcome').fit_transform(df)
 
         self.assertTrue(expected.equals(result))
 
@@ -111,18 +109,23 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 class TestDataFrameCreateDummyVariables(unittest.TestCase):
     def test_dummies_for_binary_categorical(self):
         df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
             'binary_category': ['a', 'b', 'a'],
-            'aa_outcome': [1, 5, 4]
+            'numeric': [1, 2, 1],
         })
         expected = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category.b': [0, 1, 0]
+            'binary_category.b': [0, 1, 0],
+            'numeric': [1, 2, 1],
         })
-
         # cast as uint8 which the pandas.get_dummies() outputs
         expected = expected.astype({'binary_category.b': 'uint8'})
 
-        result = DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort(axis=1)
+        result = result.sort(axis=1)
 
         self.assertTrue(result.equals(expected))
 
@@ -140,7 +143,54 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         # cast as uint8 which the pandas.get_dummies() outputs
         expected = expected.astype({'binary_category.b': 'uint8', 'binary_category.c': 'uint8'})
 
-        result = DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort(axis=1)
+        result = result.sort(axis=1)
+
+        self.assertTrue(result.equals(expected))
+
+
+class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
+    def test_integer_strings(self):
+        df = pd.DataFrame({
+            'integer_strings': ['1', '2', '3'],
+            'binary_category': ['a', 'b', 'a'],
+            'numeric': [1, 2, 1],
+        })
+        expected = pd.DataFrame({
+            'integer_strings': [1, 2, 3],
+            'binary_category': ['a', 'b', 'a'],
+            'numeric': [1, 2, 1],
+        })
+
+        result = transformers.DataFrameConvertColumnToNumeric('integer_strings').fit_transform(df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort(axis=1)
+        result = result.sort(axis=1)
+
+        self.assertTrue(result.equals(expected))
+
+    def test_integer(self):
+        df = pd.DataFrame({
+            'binary_category': ['a', 'b', 'a'],
+            'numeric': [1, 2, 1],
+        })
+        expected = pd.DataFrame({
+            'binary_category': ['a', 'b', 'a'],
+            'numeric': [1, 2, 1],
+        })
+
+        result = transformers.DataFrameConvertColumnToNumeric('numeric').fit_transform(df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort(axis=1)
+        result = result.sort(axis=1)
+
+        print(result)
+        print(expected)
 
         self.assertTrue(result.equals(expected))
 

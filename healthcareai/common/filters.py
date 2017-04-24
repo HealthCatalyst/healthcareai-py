@@ -46,7 +46,7 @@ class DataframeGrainColumnDataFilter(TransformerMixin):
     def transform(self, X, y=None):
         validate_dataframe_input(X)
 
-        # Build a list that contains column names that do not end in 'DTS'
+        # Build a list of all columns except for the grain column'
         filtered_column_names = [column for column in X.columns if column != self.grain_column_name]
 
         # return the filtered dataframe

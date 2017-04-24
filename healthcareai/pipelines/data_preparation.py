@@ -16,7 +16,8 @@ def dataframe_preparation_pipeline(dataframe, model_type, grain_column_name, pre
     transformation_pipeline = Pipeline([
         ('null_row_filter', filters.DataframeNullValueFilter(excluded_columns=None)),
         ('convert_target_to_binary', transformers.DataFrameConvertTargetToBinary(model_type, predicted_column)),
-        ('dummify', transformers.DataFrameCreateDummyVariables(predicted_column)),
+        ('prediction_to_numeric', transformers.DataFrameConvertColumnToNumeric(predicted_column)),
+        ('create_dummy_variables', transformers.DataFrameCreateDummyVariables([predicted_column])),
     ])
 
     # Apply the pipelines
