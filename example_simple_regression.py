@@ -19,6 +19,8 @@ dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.
 # Drop columns that won't help machine learning
 dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
+# TODO what about the test window flag - can we deprecate it?
+
 # Look at the first few rows of your dataframe after the data preparation
 print(dataframe.head())
 
@@ -39,18 +41,12 @@ saved_model_filename = 'linear_regression_2017-04-18.pkl'
 io.save_object_as_pickle(saved_model_filename, trained_linear_model)
 print('model saved as {}'.format(saved_model_filename))
 
-# Now that you have a saved model, run a prediction
-loaded_model = io.load_pickle_file(saved_model_filename)
-print('Model loaded. Type: {}'.format(type(loaded_model)))
-
 # TODO swap out fake data for real databaes sql
 prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
 
-# Set None string to be None type
-prediction_dataframe.replace(['None'], [None], inplace=True)
-
 # Drop columns that won't help machine learning
-prediction_dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+columns_to_remove = ['PatientID', 'InTestWindowFLG']
+prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
 # Run through the preparation pipeline
 prediction_dataframe = pipelines.dataframe_prediction(
@@ -62,6 +58,7 @@ prediction_dataframe = pipelines.dataframe_prediction(
 
 # Load the saved model
 linear_model = io.load_saved_model(saved_model_filename)
+print('Model loaded. Type: {}'.format(type(linear_model)))
 
 # Make some prections
 predictions = linear_model.predict(prediction_dataframe)

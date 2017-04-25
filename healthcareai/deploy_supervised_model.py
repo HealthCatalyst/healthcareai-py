@@ -20,12 +20,12 @@ from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, Dat
 class DeploySupervisedModel(object):
     """
     A likely incomplete list of functionality
-    - [ ] refactor out data preprocessing pipeline
-    - [ ] REMOVE TRAINING ENTIRELY retrain on full dataset
+    - [x] refactor out data preprocessing pipeline
+    - [x] REMOVE TRAINING ENTIRELY retrain on full dataset
     - [x] tests db connection
     - [x] writes to db
-    - [ ] loads or saves pickle via model mess
-    - [ ] performance on top n factors
+    - [x] loads or saves pickle via model mess
+    - [x] performance on top n factors
     - [x] refactor top n factors
     """
 
