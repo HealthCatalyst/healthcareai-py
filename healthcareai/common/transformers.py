@@ -87,7 +87,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
-    """ Convert all categorical columns into dummy/indicator variables. Exclude given columns. """
+    """ Convert a column into numeric variables. """
 
     def __init__(self, column_name):
         self.column_name = column_name
@@ -97,7 +97,6 @@ class DataFrameConvertColumnToNumeric(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        # Convert target column to numeric to prevent it from being encoded as dummy variables
         X[self.column_name] = pd.to_numeric(arg=X[self.column_name], errors='raise')
 
         return X

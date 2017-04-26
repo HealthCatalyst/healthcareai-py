@@ -125,14 +125,7 @@ class TestLinearDeploy(unittest.TestCase):
 
 class TestValidateDestinationTableConnection(unittest.TestCase):
     def test_raises_error_on_table_not_existing(self):
-        try:
-            result = validate_destination_table_connection('localhost', 'foo', 'bar', 'baz')
-            # Fail the test if the above call doesn't throw an error
-            self.fail()
-        except HealthcareAIError as e:
-            expected_message = """Failed to insert values into foo. Check that the table exists with right column structure.
-        Your Grain ID column might not match that in your input table."""
-            self.assertEqual(e.message, expected_message)
+        self.assertRaises(HealthcareAIError, validate_destination_table_connection, 'localhost', 'foo', 'bar', 'baz')
 
     def test_should_succeed(self):
         is_table_connection_valid = validate_destination_table_connection('localhost',
