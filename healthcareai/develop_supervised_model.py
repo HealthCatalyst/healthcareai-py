@@ -11,22 +11,18 @@ from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import SGDClassifier
 
 from healthcareai.common import helpers
-from healthcareai.common import filters
 from healthcareai.common import model_eval
-from healthcareai.common import output_utilities
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-from healthcareai.common.transformers import DataFrameImputer
 
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler
-from sklearn.preprocessing import StandardScaler 
+from sklearn.preprocessing import StandardScaler
 
-from nltk import ConfusionMatrix
-import json 
+import json
+
 
 class DevelopSupervisedModel(object):
     """
@@ -70,42 +66,8 @@ class DevelopSupervisedModel(object):
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-    def data_preparation(self, impute=False):
-        """Main data preparation method. Chains together small functions that prepare raw data for model building"""
-        # Drop some columns
-        self.remove_grain_column()
-        self.dataframe = filters.remove_DTS_postfix_columns(self.dataframe)
-
-        # Perform one of two basic imputation methods
-        if impute is True:
-            self.imputation()
-        else:
-            self.drop_rows_with_any_nulls()
-
-        # Convert, encode and create test/train sets
-        self.convert_encode_predicted_col_to_binary_numeric()
-        self.encode_categorical_data_as_dummy_variables()
-        self.train_test_split()
-
-    def encode_categorical_data_as_dummy_variables(self):
-        # Create dummy vars for all cols but predictedcol
-        # First switch (temporarily) pred col to numeric (so it's not dummy)
-        self.dataframe[self.predicted_column] = pd.to_numeric(arg=self.dataframe[self.predicted_column], errors='raise')
-        self.dataframe = pd.get_dummies(self.dataframe, drop_first=True, prefix_sep='.')
-
-    def convert_encode_predicted_col_to_binary_numeric(self):
-        # Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
-        # Note that this makes healthcareai only handle N/Y in pred column
-        if self.model_type == 'classification':
-            # Turning off warning around replace
-            pd.options.mode.chained_assignment = None  # default='warn'
-            # TODO: put try/catch here when type = class and predictor is numeric
-            self.dataframe[self.predicted_column].replace(['Y', 'N'], [1, 0], inplace=True)
-
-            self.print_out_dataframe_shape_and_head(
-                '\nDataframe after converting to 1/0 instead of Y/N for classification:')
-
     def under_sampling(self, random_state=0):
+        # TODO convert to fit transform
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -131,6 +93,7 @@ class DevelopSupervisedModel(object):
         self.dataframe = dataframe_under_sampled
 
     def over_sampling(self, random_state=0):
+        # TODO convert to fit transform
         # NB: Must be done BEFORE train/test split
         #     so that when we split the under/over sampled
         #     dataset. We do under/over sampling on
@@ -156,17 +119,18 @@ class DevelopSupervisedModel(object):
         self.dataframe = dataframe_over_sampled
 
     def feature_scaling(self, columns_to_scale):
+        # TODO convert to fit transform
         # NB: Must happen AFTER self.X_train, self.X_test,
         #     self.y_train, self.y_test are defined.
         #     Must happen AFTER imputation is done so there
         #     are no missing values.
         #     Must happen AFTER under/over sampling is done
         #     so that we scale the under/over sampled dataset.
-        #     How to warn the user if they call this method
-        #     at the wrong time?
+        # TODO: How to warn the user if they call this method at the wrong time?
         X_train_scaled_subset = self.X_train[columns_to_scale]
         X_test_scaled_subset = self.X_test[columns_to_scale]
         scaler = StandardScaler()
+
         scaler.fit(X_train_scaled_subset)
 
         X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_train_scaled_subset))
@@ -179,19 +143,10 @@ class DevelopSupervisedModel(object):
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
-    def imputation(self):
-        # TODO should probably automate null imputation?
-        self.dataframe = DataFrameImputer().fit_transform(self.dataframe)
-        self.print_out_dataframe_shape_and_head('\nDataframe after doing imputation:')
-
     def print_out_dataframe_shape_and_head(self, message):
         self.console_log(message)
         self.console_log(self.dataframe.shape)
         self.console_log(self.dataframe.head())
-
-    def drop_rows_with_any_nulls(self):
-        self.dataframe.dropna(axis=0, how='any', inplace=True)
-        self.print_out_dataframe_shape_and_head('\nDataframe after dropping rows with NULLS:')
 
     def train_test_split(self):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
@@ -206,15 +161,9 @@ class DevelopSupervisedModel(object):
             self.X_test.shape,
             self.y_test.shape))
 
-    def remove_grain_column(self):
-        # Remove grain column
-        if self.grain_column_name is not None:
-            self.dataframe.drop(self.grain_column_name, axis=1, inplace=True)
-
-        self.console_log('Dataframe after removing Date and Grain columns:\n{}'.format(self.dataframe.head()))
-
     def save_output_to_csv(self, filename, output):
-        output_dataframe = pd.DataFrame([(timeRan, modelType, output['modelLabels'],
+        # TODO timeRan is borked
+        output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
                                           output['gridSearch_BestScore'],
                                           output['gridSearch_ScoreMetric'],) \
                                          + x for x in list(output.items())], \
@@ -231,7 +180,8 @@ class DevelopSupervisedModel(object):
 
     def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
         """
-        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for your data.
+        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
+        your data.
         """
         # TODO enumerate, document and validate scoring options
         # http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
@@ -423,6 +373,23 @@ class DevelopSupervisedModel(object):
             y_test=self.y_test,
             cores=cores)
 
+    def random_forest_2(self,
+                        trees=200,
+                        scoring_metric='roc_auc',
+                        hyperparameter_grid=None,
+                        randomized_search=True):
+        """A convenience method that allows a user to simply call .random_forest() and get the right one."""
+        if self.model_type == 'classification':
+            self.random_forest_classifier(trees=trees,
+                                          scoring_metric=scoring_metric,
+                                          hyperparameter_grid=hyperparameter_grid,
+                                          randomized_search=randomized_search)
+        elif self.model_type == 'regression':
+            self.random_forest_regressor(trees=200,
+                                         scoring_metric=scoring_metric,
+                                         hyperparameter_grid=hyperparameter_grid,
+                                         randomized_search=randomized_search)
+
     def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
                                  randomized_search=True):
         if hyperparameter_grid is None:
@@ -613,78 +580,6 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def randomsearch(self, model, param_grid, cv, n_iter, score_metric):
-        # TODO deprecate or tear apart the important bits.
-
-        rs = RandomizedSearchCV(estimator=model,
-                                scoring=score_metric,
-                                param_distributions=param_grid,
-                                n_iter=n_iter,
-                                cv=cv,
-                                verbose=0,
-                                n_jobs=1)
-        rs.fit(self.X_train, self.y_train)
-
-        ######### Validation metrics #########
-
-        y_predictions = rs.best_estimator_.predict(self.X_test)
-        confusion_matrix = metrics.confusion_matrix(self.y_test, y_predictions)
-        accuracy = metrics.accuracy_score(self.y_test, y_predictions)
-        precision = metrics.precision_score(self.y_test, y_predictions)
-        recall = metrics.recall_score(self.y_test, y_predictions)  # sensitivity
-        specificity = confusion_matrix[0][0] / (confusion_matrix[0][1] + confusion_matrix[0][0])
-        f1 = metrics.f1_score(self.y_test, y_predictions)
-        # print(ConfusionMatrix(list(self.y_test), list(y_predictions)))
-        # print(metrics.classification_report(self.y_test, y_predictions, digits=5))
-
-        # calculate roc_auc_score
-        probabilities = rs.best_estimator_.predict_proba(self.X_test)[:, 1]
-        roc_auc_score = metrics.roc_auc_score(self.y_test, probabilities)
-
-        ######### Make file for output #########
-
-        start_time = str(datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S'))
-        filepath = os.path.abspath(os.path.join(os.getcwd(), os.pardir, "models", start_time))
-        # TODO we may not want to create directories (for example, we may want to just direclty save to azure)
-        # os.makedirs(filepath)
-
-        time_ran = str(datetime.utcnow())
-        filename = model_type + '_' + datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
-        complete_filename = os.path.join(filepath, filename)
-
-        # Setup a dict of important metrics
-        model_validation_metrics = {
-            'model_type': self.model_type,
-            'time_run': time_ran,
-            'data_row_count': self.X_train.shape[0],
-            'data_column_count': self.X_train.shape[1],
-            'data_column_names': self.X_train.columns.tolist(),
-            'param_grid': str(param_grid),
-            'random_search_n_iterations': n_iter,
-            'random_search_grid_scores': str(rs.cv_results_),
-            'random_search_best_score': rs.best_score_,
-            'random_search_model': str(model),
-            'grid_search_score_metric': str(score_metric),
-            'best_estimator': str(rs.best_estimator_),
-            't_estimator_dict': str(rs.best_estimator_.__dict__),
-            'best_model_filename': filename,
-            'best_model_validation_roc_auc': roc_auc_score,
-            'best_model_validation_confusion_matrix': confusion_matrix.tolist(),
-            'best_model_validation_accuracy': accuracy,
-            'best_model_validation_precision': precision,
-            'best_model_validation_recall': recall,
-            'best_model_validation_specificity': specificity,
-            'best_model_validation_f1': f1,
-            'best_model_validation_row_count': self.y_train.shape[0]
-        }
-
-        # Save important things to files
-        # self.save_output_to_csv(complete_filename,output)
-        output_utilities.save_dict_object_to_json(complete_filename + '.json', model_validation_metrics)
-        output_utilities.save_object_as_pickle(complete_filename, rs.best_estimator_)
-
-        print("Done running random search.")
-
     def console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
@@ -692,8 +587,6 @@ class DevelopSupervisedModel(object):
     def save_models(self, random_search):
         pass
 
-
-# TODO think about making this a static method?
 def prepare_randomized_search(
         estimator,
         scoring_metric,
@@ -702,15 +595,21 @@ def prepare_randomized_search(
         **non_randomized_estimator_kwargs):
     """
     Given an estimator and various params, initialize an algorithm with optional randomized search.
-    :param estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
-    :param scoring_metric: The scoring metric to optimized for if using random search.
-        See http://scikit-learn.org/stable/modules/model_evaluation.html
-    :param hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
-        through.
-    :param randomized_search: boolean True or False
-    :param non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used
-         when radomized_search is False
-    :return: a scikit learn algorithm ready to `.fit()`
+
+    Args:
+        estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
+        scoring_metric: The scoring metric to optimized for if using random search. See
+            http://scikit-learn.org/stable/modules/model_evaluation.html
+        hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
+            through.
+        randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
+            simple algorithm).
+        **non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used when
+            radomized_search is False
+
+    Returns:
+        estimator: a scikit learn algorithm ready to `.fit()`
+
     """
     if randomized_search:
         algorithm = RandomizedSearchCV(estimator=estimator(),

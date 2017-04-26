@@ -5,7 +5,7 @@ import pandas as pd
 
 from healthcareai import DeploySupervisedModel
 from healthcareai.tests.helpers import fixture
-from healthcareai.deploy_supervised_model import validate_destination_table_connection
+from healthcareai.common.database_connection_validation import validate_destination_table_connection
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 class TestRFDeployNoTreesNoMtry(unittest.TestCase):

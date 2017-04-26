@@ -19,7 +19,7 @@ def save_object_as_pickle(filename, object_to_pickle):
     :param filename:
     :param object_to_pickle:
     """
-    with open(filename + '.pkl', 'wb') as open_file:
+    with open(filename, 'wb') as open_file:
         pickle.dump(object_to_pickle, open_file)
 
 
@@ -34,3 +34,11 @@ def load_pickle_file(filename):
     except FileNotFoundError as e:
         raise HealthcareAIError(
             'No file named \'{}\' was found. Please verify the file you intend to load'.format(filename))
+
+
+def load_saved_model(filename):
+    """
+    Convenience method for a simple API
+    :param filename:
+    """
+    return load_pickle_file(filename)

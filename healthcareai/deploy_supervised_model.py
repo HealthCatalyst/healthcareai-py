@@ -1,31 +1,32 @@
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-
-import healthcareai.common.top_factors
-from healthcareai.common.transformers import DataFrameImputer
-from healthcareai.common import model_eval
-from healthcareai.common import filters
-from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.top_factors import prepare_fit_model_for_factors, find_top_three_factors
-from healthcareai.common.output_utilities import load_pickle_file, save_object_as_pickle
+import datetime
+import math
 
 import numpy as np
 import pandas as pd
-import pyodbc
-import datetime
-import math
+
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression
+
+from healthcareai.common import filters
+from healthcareai.common import model_eval
+from healthcareai.common.transformers import DataFrameImputer
+from healthcareai.common.file_io_utilities import load_pickle_file
+from healthcareai.common.write_predictions_to_database import write_predictions_to_database
+from healthcareai.common.top_factors import prepare_fit_model_for_factors, find_top_three_factors
+from healthcareai.common.database_connection_validation import validate_destination_table_connection
+from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter, DataframeColumnRemover, DataframeNullValueFilter
 
 
 class DeploySupervisedModel(object):
     """
     A likely incomplete list of functionality
-    - [ ] refactor out data preprocessing pipeline
-    - [ ] retrain on full dataset
-    - [ ] tests db connection
-    - [ ] writes to db
-    - [ ] loads or saves pickle via model mess
-    - [ ] performance on top n factors
-    - [ ] refactor top n factors
+    - [x] refactor out data preprocessing pipeline
+    - [x] REMOVE TRAINING ENTIRELY retrain on full dataset
+    - [x] tests db connection
+    - [x] writes to db
+    - [x] loads or saves pickle via model mess
+    - [x] performance on top n factors
+    - [x] refactor top n factors
     """
 
     def __init__(self,
@@ -53,7 +54,8 @@ class DeploySupervisedModel(object):
             print(self.df.shape)
             print(self.df.head())
 
-        self.df = filters.remove_DTS_postfix_columns(self.df)
+        self.df = DataframeDateTimeColumnSuffixFilter().fit_transform(self.df)
+
 
         if debug:
             print('\nDataframe after removing DTS columns:')
@@ -331,74 +333,5 @@ class DeploySupervisedModel(object):
             print('\nTop rows of 2-d list immediately before insert into db')
             print(pd.DataFrame(output_2dlist[0:3]).head())
 
-        cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
-                                   SERVER=""" + server + """;
-                                   Trusted_Connection=yes;""")
-        cursor = cecnxn.cursor()
-
-        try:
-            cursor.executemany("""insert into """ + dest_db_schema_table + """
-                               (BindingID, BindingNM, LastLoadDTS, """ +
-                               self.grain_column + """,""" + self.predicted_column_name + """,
-                               Factor1TXT, Factor2TXT, Factor3TXT)
-                               values (?,?,?,?,?,?,?,?)""", output_2dlist)
-            cecnxn.commit()
-
-            # Todo: count and display (via pyodbc) how many rows inserted
-            print("\nSuccessfully inserted rows into {}.".
-                  format(dest_db_schema_table))
-
-        except pyodbc.DatabaseError:
-            print("\nFailed to insert values into {}.".
-                  format(dest_db_schema_table))
-            print("Was your test insert successful earlier?")
-            print("If so, what has changed with your entity since then?")
-
-        finally:
-            try:
-                cecnxn.close()
-            except pyodbc.DatabaseError:
-                print("""\nAn attempt to complete a transaction has failed.
-                      No corresponding transaction found. \nPerhaps you don't
-                      have permission to write to this server.""")
-
-
-def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
-    # First, check the connection by inserting test data (and rolling back)
-    db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
-                               SERVER=""" + server + """;
-                               Trusted_Connection=yes;""")
-
-    # The following allows output to work with datetime/datetime2
-    temp_date = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-
-    try:
-        cursor = db_connection.cursor()
-        cursor.execute("""INSERT INTO """ + destination_table + """
-                       (BindingID, BindingNM, LastLoadDTS, """ +
-                       grain_column + """,""" + predicted_column_name + """,
-                       Factor1TXT, Factor2TXT, Factor3TXT)
-                       VALUES (0, 'PyTest', ?, 33, 0.98,
-                       'FirstCol', 'SecondCol', 'ThirdCol')""",
-                       temp_date)
-
-        print("Successfully inserted a test row into {}.".format(destination_table))
-        db_connection.rollback()
-        print("SQL insert successfully rolled back (since it was a test).")
-        write_result = True
-    except pyodbc.DatabaseError:
-        write_result = False
-        error_message = """Failed to insert values into {}. Check that the table exists with right column structure.
-        Your Grain ID column might not match that in your input table.""".format(destination_table)
-        raise HealthcareAIError(error_message)
-
-    finally:
-        try:
-            db_connection.close()
-            result = write_result
-        except pyodbc.DatabaseError:
-            error_message = """An attempt to complete a transaction has failed. No corresponding transaction found.
-            \nPerhaps you don\'t have permission to write to this server."""
-            raise HealthcareAIError(error_message)
-
-    return result
+        write_predictions_to_database(server, dest_db_schema_table, self.predicted_column_name, self.grain_column,
+                                      output_2dlist)
