@@ -17,8 +17,7 @@ GRAIN_COLUMN_NAME = 'PatientID'
 
 class TestRFDevTuneFalse(unittest.TestCase):
     def test_random_forest_dev_tune_false(self):
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
-                         na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)

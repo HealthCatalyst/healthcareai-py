@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
-from healthcareai.common.feature_importances import write_feature_importances
+from healthcareai.common.top_factors import write_feature_importances
 from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
 
 
@@ -27,14 +27,14 @@ def clfreport(model_type,
     """
     Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
     - [x] runs grid search
-    - [ ] save/load a pickled model
+    - [x] save/load a pickled model
     - [ ] print out debug messages
     - [x] train the classifier
     - [ ] print out grid params
     - [ ] calculate metrics
     - [ ] feature importances
     - [ ] logging
-    - [ ] production predictions from pickle file
+    - [x] production predictions from pickle file
     - do some numpy manipulation
         - lines ~50?
     - possible returns:

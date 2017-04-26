@@ -296,12 +296,12 @@ class DeploySupervisedModel(object):
         # Load the saved model or train and save the new model
         # TODO This might change as deploy no longer trains a model
         if use_saved_model:
-            trained_model = load_pickle_file('factorlogit.pkl')
+            trained_factor_model = load_pickle_file('factorlogit.pkl')
         else:
-            trained_model = prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
+            trained_factor_model = prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
 
         # Get the top three factors from the trained model and X_test set
-        first_fact, second_fact, third_fact = find_top_three_factors(trained_model, self.X_test, debug=debug)
+        first_fact, second_fact, third_fact = find_top_three_factors(trained_factor_model, self.X_test, debug=debug)
 
         # Convert to base int instead of numpy data type for SQL insert
         grain_column_baseint = [int(self.grain_column_test.iloc[i])
