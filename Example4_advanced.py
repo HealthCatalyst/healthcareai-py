@@ -22,12 +22,7 @@ def main():
 
     # Step 1: Prepare the data using optional imputation. There are two options for this:
     ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
-    dataframe = pipelines.dataframe_preparation_pipeline(dataframe,
-                                                         'classification',
-                                                         'PatientEncounterID',
-                                                         'ThirtyDayReadmitFLG',
-                                                         impute=True)
-
+    dataframe = pipelines.full_pipeline('classification', 'ThirtyDayReadmitFLG', 'PatientEncounterID', impute=True).fit_transform(dataframe)
 
     ## Option 2: Do this stuff yourself using healthcare ai methods or your own.
     # TODO rewrite this portion once the API settles

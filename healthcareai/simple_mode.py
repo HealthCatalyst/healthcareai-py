@@ -3,13 +3,10 @@ import healthcareai.pipelines.data_preparation as pipelines
 
 
 class SimpleDevelopSupervisedModel(object):
-    def __init__(self, dataframe, predicted_column, model_type, impute, grain_column=None, verbose=False):
+    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
         # Run the raw data through the data preparation pipeline
-        clean_dataframe = pipelines.dataframe_preparation_pipeline(dataframe,
-                                                                   model_type,
-                                                                   grain_column,
-                                                                   predicted_column,
-                                                                   impute=impute)
+        clean_dataframe = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute).fit_transform(dataframe)
+
         self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
 
         # Split the data into train and test

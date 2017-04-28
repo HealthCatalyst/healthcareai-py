@@ -23,12 +23,8 @@ class TestRFDevTuneFalse(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        df = pipelines.dataframe_preparation_pipeline(df,
-                                                      CLASSIFICATION,
-                                                      GRAIN_COLUMN_NAME,
-                                                      PREDICTED_COLUMN,
-                                                      impute=True)
-        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
         o.random_forest(cores=1)
@@ -44,12 +40,8 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        df = pipelines.dataframe_preparation_pipeline(df,
-                                                      CLASSIFICATION,
-                                                      GRAIN_COLUMN_NAME,
-                                                      PREDICTED_COLUMN,
-                                                      impute=True)
-        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
         o.random_forest(cores=1, tune=True)
@@ -65,12 +57,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        df = pipelines.dataframe_preparation_pipeline(df,
-                                                      CLASSIFICATION,
-                                                      GRAIN_COLUMN_NAME,
-                                                      PREDICTED_COLUMN,
-                                                      impute=True)
-        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
 
@@ -83,12 +71,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        df = pipelines.dataframe_preparation_pipeline(df,
-                                                      CLASSIFICATION,
-                                                      GRAIN_COLUMN_NAME,
-                                                      PREDICTED_COLUMN,
-                                                      impute=True)
-        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
 
@@ -108,12 +92,8 @@ class TestLinearDevTuneFalse(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        df = pipelines.dataframe_preparation_pipeline(df,
-                                                      CLASSIFICATION,
-                                                      GRAIN_COLUMN_NAME,
-                                                      PREDICTED_COLUMN,
-                                                      impute=True)
-        o = DevelopSupervisedModel(df, CLASSIFICATION, PREDICTED_COLUMN)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
         o.linear(cores=1)
