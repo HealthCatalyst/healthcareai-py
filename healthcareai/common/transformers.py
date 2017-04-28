@@ -13,13 +13,18 @@ class DataFrameImputer(TransformerMixin):
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
 
-    def __init__(self):
-        self.obj_list = None
+    def __init__(self, impute=True):
+        self.impute = impute
+        self.object_columns = None
         self.fill = None
 
     def fit(self, X, y=None):
+        # Return if not imputing
+        if self.impute is False:
+            return self
+
         # Grab list of object column names before doing imputation
-        self.obj_list = X.select_dtypes(include=['object']).columns.values
+        self.object_columns = X.select_dtypes(include=['object']).columns.values
 
         self.fill = pd.Series([X[c].value_counts().index[0]
                                if X[c].dtype == np.dtype('O') else X[c].mean() for c in X], index=X.columns)
@@ -28,9 +33,13 @@ class DataFrameImputer(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        # Return if not imputing
+        if self.impute is False:
+            return X
+
         result = X.fillna(self.fill)
 
-        for i in self.obj_list:
+        for i in self.object_columns:
             result[i] = result[i].astype(object)
 
         return result
