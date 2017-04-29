@@ -89,12 +89,18 @@ class TrainedSupervisedModel(object):
 
     def prepare_and_subset(self, dataframe):
         """
-        Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns
-        that were in the original model.
+        Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns that were
+         in the original model.
         
         This prevents any unexpected changes to incoming columns from interfering with the predictions.
-        """
 
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+
+        Returns:
+            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
+             columns the model expects.
+        """
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
 
