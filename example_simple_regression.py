@@ -58,12 +58,10 @@ print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model)
 predictions = trained_model.make_predictions(prediction_dataframe)
 # predictions = trained_model.predict(prediction_dataframe)
 
-# Peek at the predictions
 print("Here are the first few predictions")
 print(predictions[0:5])
 
 factors = trained_model.make_factors(prediction_dataframe)
-# Peek at the factors
 print("Here are the first few factors")
 print(factors[0:5])
 
