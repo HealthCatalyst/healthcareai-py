@@ -27,7 +27,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             hcai.knn()
             output = out.getvalue().strip()
 
-            expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.5[0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.5[0-9]*)"
+            expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.[5-6][0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.[5-6][0-9]*)"
 
             self.assertRegexpMatches(output, expected_output_regex)
 
