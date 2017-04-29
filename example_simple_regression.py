@@ -62,6 +62,11 @@ predictions = trained_model.make_predictions(prediction_dataframe)
 print("Here are the first few predictions")
 print(predictions[0:5])
 
+factors = trained_model.make_factors(prediction_dataframe)
+# Peek at the factors
+print("Here are the first few factors")
+print(factors[0:5])
+
 # Save results to csv
 # predictions.to_csv('foo.csv')
 

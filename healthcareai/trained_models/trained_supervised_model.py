@@ -1,7 +1,8 @@
 import pandas as pd
 import healthcareai.common.file_io_utilities as io
-import healthcareai.common.top_factors as top_factors
+import healthcareai.common.top_factors as factors
 from healthcareai.common import filters
+from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 class TrainedSupervisedModel(object):
@@ -37,12 +38,7 @@ class TrainedSupervisedModel(object):
 
     def make_predictions(self, dataframe):
         """ Given a new dataframe, apply data transformations and return a list of predictions """
-        # Run the saved data preparation pipeline
-        prepared_dataframe = self.fit_pipeline.transform(dataframe)
-
-        # Subset the dataframe to only columns that were saved from the original model training
-        # This prevents any unexpected changes to incoming columns from interfering with the predictions.
-        prepared_dataframe = prepared_dataframe[self.column_names]
+        prepared_dataframe = self.prepare_and_subset(dataframe)
 
         # make predictions
         # TODO this will have to be classification or regression aware by using either .predict() or .predictproba()
@@ -51,17 +47,50 @@ class TrainedSupervisedModel(object):
 
         return y_predictions
 
-    def make_factors(self, prepared_dataframe):
-        # ID, predictions, factors
-        factors = pd.DataFrame({
-            'id': [1, 2, 3],
-            'factor1': ['F', 'M', 'F'],
-            'factor2': ['F', 'M', 'F'],
-            'factor3': ['F', 'M', 'F'],
-        })
-        return factors
+    def make_factors(self, dataframe, number_top_features=3):
+        prepared_dataframe = self.prepare_and_subset(dataframe)
 
-    def create_predictions_factors(self, original_df):
+        # Create a list of column names
+        reason_col_names = ['Factor%iTXT' % i for i in range(1, number_top_features + 1)]
+        top_features = factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
+
+        # join top features columns to results dataframe
+        reasons_df = pd.DataFrame(top_features, columns=reason_col_names, index=dataframe.index)
+        results = pd.concat([dataframe, reasons_df], axis=1, join_axes=[dataframe.index])
+
+        return results
+
+    def prepare_and_subset(self, dataframe):
+        """
+        Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns
+        that were in the original model.
+        
+        This prevents any unexpected changes to incoming columns from interfering with the predictions.
+        """
+
+        try:
+            # Raise an error here if any of the columns the model expects are not in the prediction dataframe
+
+            # Run the saved data preparation pipeline
+            prepared_dataframe = self.fit_pipeline.transform(dataframe)
+
+            # Subset the dataframe to only columns that were saved from the original model training
+            prepared_dataframe = prepared_dataframe[self.column_names]
+        except KeyError as ke:
+            error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
+            Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
+            which will be ignored, but you must pass in all the required fields.\n
+            
+            Required fields: {}
+            
+            Given fields: {}
+            
+            Likely missing field(s): {}
+            """.format(self.column_names, list(dataframe.columns), ke)
+            raise HealthcareAIError(error_message)
+
+        return prepared_dataframe
+
         # ID, predictions, factors
 
         factors = self.create_factors(original_df)

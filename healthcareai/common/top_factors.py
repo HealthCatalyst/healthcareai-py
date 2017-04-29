@@ -5,6 +5,32 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from healthcareai.common.file_io_utilities import save_object_as_pickle
 
 
+def top_cols(row):
+    """
+    Sorts (descending) the columns of a dataframe by value or a single row
+    :param row: a row of a pandas data frame
+    :return: an array of column names
+    """
+    return row.sort_values(ascending=False).index.values
+
+
+def top_k_features(df, linear_model, k=3):
+    """
+    Get lists of top features based on an already-fit linear model
+    :param df: The dataframe for which to score top features
+    :param linear_model: A pre-fit scikit learn model instance that has linear
+        coefficients.
+    :return: k lists of top features (the first list is the top features, the
+        second list are the #2 features, etc)
+    """
+    # Multiply the values with the coefficients from the trained model
+    step1 = pd.DataFrame(df.values * linear_model.coef_, columns=df.columns)
+    step2 = step1.apply(top_cols, axis=1)
+
+    results = list(step2.values[:, :k])
+    return results
+
+
 def prepare_fit_model_for_factors(model_type, x_train, y_train):
     """
     Given a model type, train and test data
@@ -32,6 +58,7 @@ def prepare_fit_model_for_factors(model_type, x_train, y_train):
 
 
 def find_top_three_factors(trained_model, x_test, debug=False):
+    # TODO deprecate this once get_top_k_factors is complete
     """
     Given a trained model and an x_test set, reverse engineer the top three feature importances
     Args:
