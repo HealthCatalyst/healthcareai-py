@@ -9,8 +9,8 @@ class TrainedSupervisedModel(object):
                  model,
                  feature_model,
                  fit_pipeline,
-                 # column_names,
-                 prediction_type,
+                 model_type,
+                 column_names,
                  grain_column,
                  prediction_column,
                  y_pred,
@@ -18,8 +18,8 @@ class TrainedSupervisedModel(object):
         self.model = model
         self.feature_model = feature_model
         self.fit_pipeline = fit_pipeline
-        # self.column_names = column_names
-        self.predictiontype = prediction_type
+        self.column_names = column_names
+        self.model_type = model_type
         self.grain_column = grain_column
         self.prediction_column = prediction_column
         self.y_pred = y_pred
@@ -35,38 +35,23 @@ class TrainedSupervisedModel(object):
         io.save_object_as_pickle(filename, self)
         print('Model saved as {}'.format(filename))
 
-    def predict(self, dataframe):
-        """
-        Given a new dataframe, apply data transformations and return a dataframe of predictions
-        Args:
-            dataframe (Pandas.DataFrame): a pandas dataframe
+    def make_predictions(self, dataframe):
+        """ Given a new dataframe, apply data transformations and return a list of predictions """
+        # Run the saved data preparation pipeline
+        prepared_dataframe = self.fit_pipeline.transform(dataframe)
 
-        Returns:
-            Pandas.DataFrame:
-        """
-        # Copy the incoming dataframe so we can rebuild it later
-        df = dataframe.copy()
+        # Subset the dataframe to only columns that were saved from the original model training
+        # This prevents any unexpected changes to incoming columns from interfering with the predictions.
+        prepared_dataframe = prepared_dataframe[self.column_names]
 
-        # join prediction and top features columns to dataframe
-        # TODO should this return a dataframe with the same target column name as the training set?
-        df[self.prediction_column] = self.prep_and_predict(df)
+        # make predictions
+        # TODO this will have to be classification or regression aware by using either .predict() or .predictproba()
+        # y_predictions = self.model.predict_proba(dataframe)[:, 1]
+        y_predictions = self.model.predict(prepared_dataframe)
 
-        # # bring back the grain column and reset the df index
-        # df.insert(0, self.grain_column, dataframe[self.grain_column])
-        # df.reset_index(drop=True, inplace=True)
+        return y_predictions
 
-        return df
-
-    def create_predctions(self, original_df):
-        # ID, predictions
-        fake_results = pd.DataFrame({
-            'id': [1, 2, 3],
-            'gender': ['F', 'M', 'F'],
-            'predictions': [1, 5, 4]
-        })
-        return fake_results
-
-    def create_factors(self, original_df):
+    def make_factors(self, prepared_dataframe):
         # ID, predictions, factors
         factors = pd.DataFrame({
             'id': [1, 2, 3],

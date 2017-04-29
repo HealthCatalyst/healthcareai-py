@@ -55,15 +55,15 @@ print('\n\n')
 print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model), type(trained_model.model)))
 
 # Make some predictions
-# predictions = trained_model.predict_with_factors(prediction_dataframe)
-predictions = trained_model.predict(prediction_dataframe)
+predictions = trained_model.make_predictions(prediction_dataframe)
+# predictions = trained_model.predict(prediction_dataframe)
 
 # Peek at the predictions
 print("Here are the first few predictions")
-print(predictions.head())
+print(predictions[0:5])
 
 # Save results to csv
-predictions.to_csv('foo.csv')
+# predictions.to_csv('foo.csv')
 
 # Save results to db
 # TODO Save results to db
