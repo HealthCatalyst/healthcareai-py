@@ -1,7 +1,6 @@
 import pandas as pd
 import healthcareai.common.file_io_utilities as io
 import healthcareai.common.top_factors as factors
-from healthcareai.common import filters
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -32,6 +31,7 @@ class TrainedSupervisedModel(object):
         Args:
             filename (str): Name of the file
         """
+
         # TODO should this timestamp a model name automatically? (for example 2017-04-26_01.33.55_random_forest.pkl)
         io.save_object_as_pickle(filename, self)
         print('Model saved as {}'.format(filename))
@@ -46,6 +46,7 @@ class TrainedSupervisedModel(object):
         Returns:
             list: A list of predicted values that represents a column
         """
+
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
@@ -67,6 +68,7 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame:  
         """
+
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
@@ -101,6 +103,7 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
              columns the model expects.
         """
+
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
 
@@ -124,13 +127,26 @@ class TrainedSupervisedModel(object):
 
         return prepared_dataframe
 
-        # ID, predictions, factors
+    def make_predictions_with_k_factors(self, dataframe, number_top_features=3):
+        """
+        Given a prediction dataframe, build and return a dataframe with the grain column, the predictions and the top k
+        feautures.
 
-        factors = self.create_factors(original_df)
-        predictions = self.create_predctions(original_df)
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            number_top_features (int): Number of top features per row
 
-        # join top features columns to results dataframe
-        results = pd.concat([predictions, factors], axis=1, join_axes=[original_df.index])
+        Returns:
+            pandas.core.frame.DataFrame:  
+        """
+
+        # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.
+        # Get the factors and predictions
+        results = self.make_factors(dataframe, number_top_features=number_top_features)
+        predictions_list = self.make_predictions(dataframe)
+
+        # Add predictions column to dataframe
+        results[self.prediction_column] = predictions_list
 
         return results
 
@@ -149,29 +165,6 @@ class TrainedSupervisedModel(object):
         # ID, bindings, metadata, otherstuff, predictions, factors
         # TODO stub
         pass
-
-    def prep_and_predict(self, original_df):
-        # Run the saved data preparation pipeline
-        print('prep and prepare:')
-        print(original_df.dtypes)
-
-        original_df = self.fit_pipeline.transform(original_df)
-
-        # Drop the predicted column
-        original_df = filters.DataframeColumnRemover(self.prediction_column).fit_transform(original_df)
-
-        # TODO think about an exclusions list or something so that you don't have to explicitly drop the predicted column
-        # TODO this may make it so that
-        # dataframe = dataframe[[c for c in dataframe.columns if c in self.column_names]]
-
-        # make predictions
-        # TODO this may have to be classification or regression aware by using either .predict() or .predictproba()
-        # y_predictions = self.model.predict_proba(dataframe)[:, 1]
-        y_predictions = self.model.predict(original_df)
-        print('prep and prepare after pipeline:')
-        print(original_df.dtypes)
-
-        return y_predictions
 
     def get_roc_auc(self):
         """

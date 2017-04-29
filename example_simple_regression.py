@@ -65,6 +65,10 @@ factors = trained_model.make_factors(prediction_dataframe, number_top_features=4
 print("Here are the first few factors")
 print(factors[0:5])
 
+predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe)
+print("Here are the first few rows of predictions with factors")
+print(predictions_with_factors_df[0:5])
+
 # Save results to csv
 # predictions.to_csv('foo.csv')
 
