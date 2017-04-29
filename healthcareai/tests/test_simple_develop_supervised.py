@@ -1,21 +1,16 @@
+import sys
 import unittest
 from contextlib import contextmanager
-import sys
-import pandas as pd
 from io import StringIO
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.simple_mode import SimpleDevelopSupervisedModel
-from healthcareai.tests.helpers import fixture
-
-
-def load_sample_dataframe():
-    return pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+import healthcareai.tests.helpers as helpers
 
 
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):
     def test_knn(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=load_sample_dataframe(),
+        hcai = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
                                             predicted_column='ThirtyDayReadmitFLG',
                                             model_type='classification',
                                             impute=True,
@@ -32,7 +27,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_random_forest_classification(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=load_sample_dataframe(),
+        hcai = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
                                             predicted_column='ThirtyDayReadmitFLG',
                                             model_type='classification',
                                             impute=True,
@@ -49,7 +44,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_linear_regression(self):
-        hcai = SimpleDevelopSupervisedModel(load_sample_dataframe(),
+        hcai = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
                                             'SystolicBPNBR',
                                             'regression',
                                             impute=True,
@@ -65,7 +60,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_linear_regression_raises_error_on_missing_columns(self):
-        training_df = load_sample_dataframe()
+        training_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
@@ -81,13 +76,14 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         trained_linear_model = hcai.linear_regression()
 
         # Load a new df for predicting
-        prediction_df = load_sample_dataframe()
+        prediction_df = helpers.load_sample_dataframe()
 
         # Drop columns that model expects
         prediction_df.drop('GenderFLG', axis=1, inplace=True)
 
         # Make some predictions
         self.assertRaises(HealthcareAIError, trained_linear_model.make_predictions, prediction_df)
+
 
 
 @contextmanager

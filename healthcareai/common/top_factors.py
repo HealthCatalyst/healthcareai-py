@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from healthcareai.common.file_io_utilities import save_object_as_pickle
+from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def top_cols(row):
@@ -14,17 +15,28 @@ def top_cols(row):
     return row.sort_values(ascending=False).index.values
 
 
-def top_k_features(df, linear_model, k=3):
+def top_k_features(dataframe, linear_model, k=3):
     """
     Get lists of top features based on an already-fit linear model
-    :param df: The dataframe for which to score top features
-    :param linear_model: A pre-fit scikit learn model instance that has linear
-        coefficients.
-    :return: k lists of top features (the first list is the top features, the
-        second list are the #2 features, etc)
+
+    Args:
+        dataframe (pandas.core.frame.DataFrame): The dataframe for which to score top features 
+        linear_model (sklearn.base.BaseEstimator): A pre-fit scikit learn model instance that has linear coefficients.
+        k (int): k lists of top features (the first list is the top features, the second list are the #2 features, etc)
+
+    Returns:
+        pandas.core.frame.DataFrame: The top features for each row in dataframe format 
+
     """
+    # Basic validation for number of features vs column count
+    max_model_features = len(linear_model.coef_)
+    if k > max_model_features:
+        raise HealthcareAIError('You requested {} number of top features, which is more than the {} features from the'
+                                'original model. Please choose {} or less.'.format(k, max_model_features,
+                                                                                   max_model_features))
+
     # Multiply the values with the coefficients from the trained model
-    step1 = pd.DataFrame(df.values * linear_model.coef_, columns=df.columns)
+    step1 = pd.DataFrame(dataframe.values * linear_model.coef_, columns=dataframe.columns)
     step2 = step1.apply(top_cols, axis=1)
 
     results = list(step2.values[:, :k])

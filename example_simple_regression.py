@@ -61,7 +61,7 @@ predictions = trained_model.make_predictions(prediction_dataframe)
 print("Here are the first few predictions")
 print(predictions[0:5])
 
-factors = trained_model.make_factors(prediction_dataframe)
+factors = trained_model.make_factors(prediction_dataframe, number_top_features=4)
 print("Here are the first few factors")
 print(factors[0:5])
 
