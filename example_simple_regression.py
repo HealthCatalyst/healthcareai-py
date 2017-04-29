@@ -56,19 +56,20 @@ print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model)
 
 # Make some predictions
 predictions = trained_model.make_predictions(prediction_dataframe)
-# predictions = trained_model.predict(prediction_dataframe)
-
 print("Here are the first few predictions")
 print(predictions[0:5])
 
+# Get the important factors
 factors = trained_model.make_factors(prediction_dataframe, number_top_features=4)
 print("Here are the first few factors")
 print(factors[0:5])
 
+# Get predictions with factors
 predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe)
 print("Here are the first few rows of predictions with factors")
 print(predictions_with_factors_df[0:5])
 
+# Get original dataframe with predictions and factors
 original_plus_prections_and_factors = trained_model.make_original_with_predictions_and_features(prediction_dataframe)
 print("Here are the first few rows of original plus predictions with factors")
 print(original_plus_prections_and_factors[0:5])
@@ -78,8 +79,3 @@ print(original_plus_prections_and_factors[0:5])
 
 # Save results to db
 # TODO Save results to db
-
-# Two methods
-# 1. Get back your original dataframe + predictions (in the right place) and row level factors
-# 2. Get back just your predictions, grain_id and factors
-# 3. catalyst-specific dataframe with bindings
