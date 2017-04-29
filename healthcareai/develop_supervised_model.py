@@ -241,11 +241,14 @@ class DevelopSupervisedModel(object):
             json.dump(output, fp, indent=4, sort_keys=True)
 
     def validate_score_metric_for_number_of_classes(self, metric):
-        # TODO make this more robust for other scoring metrics
         """
         Check that a user's choice of scoring metric makes sense with the number of prediction classes
-        :param metric: a string of the scoring metric
+
+        Args:
+            metric (str): a string of the scoring metric
         """
+
+        # TODO make this more robust for other scoring metrics
         classes = count_unique_elements_in_column(self.dataframe, self.predicted_column)
         if classes is 2:
             pass
@@ -253,14 +256,18 @@ class DevelopSupervisedModel(object):
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def calculate_classification_metric(self, trained_model, scoring_metric='roc_auc'):
+    def calculate_classification_metric(self, trained_model):
         """
         Given a trained model, calculate the selected metric
-        :param trained_model: a scikit-learn estimator that has been `.fit()`
-        :param scoring_metric: The scoring metric to optimized for if using random search.
-            See http://scikit-learn.org/stable/modules/model_evaluation.html
-        :return: the metric
+
+        Args:
+            trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+
+        Returns:
+            dict: A dictionary of metrics objects
+
         """
+
         predictions = trained_model.predict(self.X_test)
         result = {'roc_auc_score': metrics.roc_auc_score(self.y_test, predictions),
                   'accuracy': metrics.accuracy_score(self.y_test, predictions)}
@@ -270,8 +277,13 @@ class DevelopSupervisedModel(object):
     def calculate_regression_metric(self, trained_model):
         """
         Given a trained model, calculate the selected metric
-        :param trained_model: a scikit-learn estimator that has been `.fit()`
-        :return: an object with two common regression metrics
+
+        Args:
+            trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+
+        Returns:
+            dict: A dictionary of metrics objects
+
         """
         predictions = trained_model.predict(self.X_test)
         mean_squared_error = metrics.mean_squared_error(self.y_test, predictions)
