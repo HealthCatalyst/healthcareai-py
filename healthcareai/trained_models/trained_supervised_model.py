@@ -81,6 +81,10 @@ class TrainedSupervisedModel(object):
         # Get a 2 dimensional list of all the factors
         top_features = factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
 
+        # Verify that the number of factors matches the number of rows in the original dataframe.
+        if len(top_features) != len(dataframe):
+            raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
+
         # Create a dataframe from the column names and top features
         reasons_df = pd.DataFrame(top_features, columns=reason_col_names, index=dataframe.index)
 
@@ -145,28 +149,47 @@ class TrainedSupervisedModel(object):
         results = self.make_factors(dataframe, number_top_features=number_top_features)
         predictions_list = self.make_predictions(dataframe)
 
+        # Verify that the number of predictions matches the number of rows in the original dataframe.
+        if len(predictions_list) != len(dataframe):
+            raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
+
         # Add predictions column to dataframe
         results[self.prediction_column] = predictions_list
 
         return results
 
-    def create_all(self, original_df):
-        # ID, x1, x2, ..., predictions, factors
+    def make_original_with_predictions_and_features(self, dataframe, number_top_features=3):
+        """
+        Given a prediction dataframe, build and return a dataframe with the all the original columns, the predictions, 
+        and the top k feautures.
 
-        # Get predictions and factors
-        predictions_and_factors = self.create_predictions_factors(original_df)
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            number_top_features (int): Number of top features per row
 
-        # join top features columns to results dataframe
-        results = pd.concat([original_df, predictions_and_factors], axis=1, join_axes=[original_df.index])
+        Returns:
+            pandas.core.frame.DataFrame:  
+        """
+
+        # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.
+        # Get the factors and predictions
+        results = self.make_predictions_with_k_factors(dataframe, number_top_features=number_top_features)
+
+        # replace the original prediction column
+        dataframe.drop([self.prediction_column], axis=1, inplace=True)
+
+        # Join the two dataframes together
+        results = pd.concat([dataframe, results], axis=1)
 
         return results
 
     def create_catalyst(self, original_df):
         # ID, bindings, metadata, otherstuff, predictions, factors
-        # TODO stub
+        # TODO stub - this should build the SAM bindings stuff - particularly in the DH branch
         pass
 
     def get_roc_auc(self):
+        # TODO stubs - may be implemented elsewhere and needs to be moved here.
         """
         Returns the roc_auc of the holdout set from model training.
         """
