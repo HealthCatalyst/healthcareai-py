@@ -57,6 +57,52 @@ class TrainedSupervisedModel(object):
 
         return df
 
+    def create_predctions(self, original_df):
+        # ID, predictions
+        fake_results = pd.DataFrame({
+            'id': [1, 2, 3],
+            'gender': ['F', 'M', 'F'],
+            'predictions': [1, 5, 4]
+        })
+        return fake_results
+
+    def create_factors(self, original_df):
+        # ID, predictions, factors
+        factors = pd.DataFrame({
+            'id': [1, 2, 3],
+            'factor1': ['F', 'M', 'F'],
+            'factor2': ['F', 'M', 'F'],
+            'factor3': ['F', 'M', 'F'],
+        })
+        return factors
+
+    def create_predictions_factors(self, original_df):
+        # ID, predictions, factors
+
+        factors = self.create_factors(original_df)
+        predictions = self.create_predctions(original_df)
+
+        # join top features columns to results dataframe
+        results = pd.concat([predictions, factors], axis=1, join_axes=[original_df.index])
+
+        return results
+
+    def create_all(self, original_df):
+        # ID, x1, x2, ..., predictions, factors
+
+        # Get predictions and factors
+        predictions_and_factors = self.create_predictions_factors(original_df)
+
+        # join top features columns to results dataframe
+        results = pd.concat([original_df, predictions_and_factors], axis=1, join_axes=[original_df.index])
+
+        return results
+
+    def create_catalyst(self, original_df):
+        # ID, bindings, metadata, otherstuff, predictions, factors
+        # TODO stub
+        pass
+
     def prep_and_predict(self, original_df):
         # Run the saved data preparation pipeline
         print('prep and prepare:')
