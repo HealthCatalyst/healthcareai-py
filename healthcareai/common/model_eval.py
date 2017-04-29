@@ -116,6 +116,7 @@ def do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_save
 
         algorithm.fit(X_train, y_train)
         save_object_as_pickle('probability.pkl', algorithm)
+
     if model_type == 'classification':
         y_pred = np.squeeze(algorithm.predict_proba(X_test)[:, 1])
     elif model_type == 'regression':

@@ -11,15 +11,15 @@ from sklearn.linear_model import LinearRegression, LogisticRegressionCV
 from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.preprocessing import StandardScaler
 
 from healthcareai.common import helpers
 from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-
-from imblearn.under_sampling import RandomUnderSampler
-from imblearn.over_sampling import RandomOverSampler
-from sklearn.preprocessing import StandardScaler
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 import json
 
@@ -45,11 +45,11 @@ class DevelopSupervisedModel(object):
     Object representing the cleaned data, against which methods are run
     """
 
-    def __init__(self, dataframe, model_type, predicted_column, grain_column_name=None, verbose=False):
+    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
         self.dataframe = dataframe
         self.model_type = model_type
         self.predicted_column = predicted_column
-        self.grain_column_name = grain_column_name
+        self.grain_column = grain_column
         self.verbose = verbose
         self.X_train = None
         self.X_test = None
@@ -62,6 +62,7 @@ class DevelopSupervisedModel(object):
         self.rfclf = None
         self.au_roc = None
         self.results = None
+        self.pipeline = None
 
         self.console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))

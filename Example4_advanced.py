@@ -50,7 +50,7 @@ def main():
         dataframe=dataframe,
         model_type='classification',
         predicted_column='ThirtyDayReadmitFLG',
-        grain_column_name='PatientEncounterID',
+        grain_column='PatientEncounterID',
         verbose=False)
 
     hcai.train_test_split()

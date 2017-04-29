@@ -72,6 +72,7 @@ def find_top_three_factors(trained_model, x_test, debug=False):
 
 
 def print_multiplied_factors(multiplied_factors):
+    # TODO deprecate this once get_top_k_factors is complete
     """ Given a set of multiplied factors, unwrap and print them """
     print('Multilplied factors:')
     for i in range(0, 3):
@@ -79,6 +80,7 @@ def print_multiplied_factors(multiplied_factors):
 
 
 def print_top_factors(first_factor, second_factor, third_factor, number_to_print):
+    # TODO deprecate this once get_top_k_factors is complete
     """Given factors, unwrap and print them nicely"""
     print('Top three factors for top {} rows:'.format(number_to_print))
     # pretty-print using a dataframe
@@ -86,3 +88,28 @@ def print_top_factors(first_factor, second_factor, third_factor, number_to_print
         'first': first_factor[:number_to_print],
         'second': second_factor[:number_to_print],
         'third': third_factor[:number_to_print]}))
+
+
+def write_feature_importances(importance_attr, col_list):
+    """
+    This function prints an ordered list of rf-related feature importance.
+
+    Parameters
+    ----------
+    importance_attr (attribute) : This is the feature importance atribute
+    from a scikit-learn method that represents feature importances
+    col_list (list) : Vector holding list of column names
+
+    Returns
+    -------
+    Nothing. Simply prints feature importance list to console.
+    """
+    indices = np.argsort(importance_attr)[::-1]
+    print('\nVariable importance:')
+
+    for f in range(0, len(col_list)):
+        print("%d. %s (%f)" % (f + 1, col_list[indices[f]], importance_attr[indices[f]]))
+
+
+if __name__ == "__main__":
+    pass

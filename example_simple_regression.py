@@ -32,14 +32,15 @@ hcai = SimpleDevelopSupervisedModel(
     impute=True,
     grain_column='PatientEncounterID')
 
-# Train the linear regression model
+# # Train the linear regression model
 trained_linear_model = hcai.linear_regression()
-print('Model trained in {} seconds'.format(time.time() - t0))
+print('Model trained in {} seconds\n'.format(time.time() - t0))
 
 # Once you are happy with the result of the trained model, it is time to save the model.
 saved_model_filename = 'linear_regression_2017-04-18.pkl'
-io.save_object_as_pickle(saved_model_filename, trained_linear_model)
-print('model saved as {}'.format(saved_model_filename))
+
+# Save the trained model
+trained_linear_model.save(saved_model_filename)
 
 # TODO swap out fake data for real databaes sql
 prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
@@ -48,23 +49,26 @@ prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincial
 columns_to_remove = ['PatientID', 'InTestWindowFLG']
 prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
-# Run through the preparation pipeline
-prediction_dataframe = pipelines.dataframe_prediction(
-    prediction_dataframe,
-    'regression',
-    'PatientEncounterID',
-    'SystolicBPNBR',
-    impute=True)
-
 # Load the saved model
-linear_model = io.load_saved_model(saved_model_filename)
-print('Model loaded. Type: {}'.format(type(linear_model)))
+trained_model = io.load_saved_model(saved_model_filename)
+print('\n\n')
+print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model), type(trained_model.model)))
 
-# Make some prections
-predictions = linear_model.predict(prediction_dataframe)
-
-# Save the predictions back to your dataframe
-prediction_dataframe['SystolicBPNBR_predicted'] = predictions
+# Make some predictions
+# predictions = trained_model.predict_with_factors(prediction_dataframe)
+predictions = trained_model.predict(prediction_dataframe)
 
 # Peek at the predictions
-print(prediction_dataframe.head())
+print("Here are the first few predictions")
+print(predictions.head())
+
+# Save results to csv
+predictions.to_csv('foo.csv')
+
+# Save results to db
+# TODO Save results to db
+
+# Two methods
+# 1. Get back your original dataframe + predictions (in the right place) and row level factors
+# 2. Get back just your predictions, grain_id and factors
+# 3. catalyst-specific dataframe with bindings

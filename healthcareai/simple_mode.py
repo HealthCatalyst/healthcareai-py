@@ -1,12 +1,23 @@
 from healthcareai.develop_supervised_model import DevelopSupervisedModel
 import healthcareai.pipelines.data_preparation as pipelines
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
+import healthcareai.common.top_factors as factors
 
 
 class SimpleDevelopSupervisedModel(object):
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
-        # Run the raw data through the data preparation pipeline
-        clean_dataframe = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute).fit_transform(dataframe)
+        self.grain_column = grain_column,
+        self.predicted_column = predicted_column,
+        self.grain_column = grain_column,
+        self.grain_column = grain_column,
 
+        # Build the pipeline
+        self.pipeline = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
+
+        # Run the raw data through the data preparation pipeline
+        clean_dataframe = self.pipeline.fit_transform(dataframe)
+
+        # Instantiate the advanced class
         self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
 
         # Split the data into train and test
@@ -58,7 +69,11 @@ class SimpleDevelopSupervisedModel(object):
         # Display the model metrics
         self.print_performance_metrics(trained_model)
 
-        return trained_model
+        trained_factor_model = factors.prepare_fit_model_for_factors(self._dsm.model_type, self._dsm.X_train, self._dsm.y_train)
+
+        foo = TrainedSupervisedModel(trained_model, trained_factor_model, self.pipeline, self._dsm.model_type, self._dsm.grain_column, self._dsm.predicted_column, None, None)
+
+        return foo
 
     def ensemble(self):
         if self._dsm.model_type is 'classification':
