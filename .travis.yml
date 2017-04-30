@@ -1,4 +1,8 @@
 language: python
+notifications:
+  email: false
+  slack:
+    secure: KIZYbmeATHXsbryDcrq6b4H6gtg3vrZIqZArbBpXd9Xp5ApHuGs0PYrYfWWMJmrZH+kNI4OK9DxxFRZdu59955Khev3dNyuGTMS0yRaRvqypi+0LUzbw+ha938l5Y3/OnK0Ke6WvX97r0xDX1vr5c/NMVzecZQGgIzi3PVY9TE1woXabtDlD7yvs2CrGabifGQUfkvEdRgGFUCXqPgckC4I66wVHJp6EWvVqiSPnsmMHEtTUnYmgxlR9YDPKHz/AKVKhvSh3ny4BoLBODqZuHSda4s8vtB8fNQMlXp0L+6lb1Y7tdXurfwUpde4uXfl5iCS8h/6h3Fk2WMjooztDdXCHqPLOKCXcqaJQELlYH4IBZPO/CIz2ljfp8SH4QXn5Bjm4ZJbfYGZiqmwlngJ7TZdtEyVsfL5JzjdsMucL4MOfZSKUypDERZVqdnKZmNfIfe5d410v08zNBrJ0lLezQMAwT+hNJejja88NMlRQKMRDuCxn01hUfGNRkZWyVhpdU6yry7cGSKM5np+/Rnjqf9BXevMv4h3HNpeSCzzugpCZFwOlC31Tny4j/hQOz3CHluNaHTSaf+eFV+6MX+OFIAwuuVTuxC0To5PA59JHkl+XiUssxIDMifsyBRxCm4+fxWZUsYXd0u7l81ultEJ78R41K6cwx2fOxhL3UE3obPQ=
 python:
   - "3.5"
   - "3.5-dev" # 3.5 development branch
@@ -6,6 +10,11 @@ python:
   - "3.6-dev" # 3.6 development branch
   - "3.7-dev" # 3.7 development branch
 # command to install dependencies
-install: "pip install -r dev-requirements.txt"
-# command to run tests
-script: nose
+before_install:
+  - sudo apt-get install python-tk
+  - sudo apt-get install unixodbc-dev
+  - sudo pip install pyodbc
+install:
+  - "pip install -r dev-requirements.txt"
+  - pip install .
+script: "python setup.py nosetests"
