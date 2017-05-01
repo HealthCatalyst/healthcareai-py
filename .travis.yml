@@ -8,9 +8,10 @@ notifications:
 python:
 - '3.5'
 - 3.5-dev
-- '3.6'
-- 3.6-dev
-- 3.7-dev
+# TODO fix these python builds on linux
+#- '3.6'
+#- 3.6-dev
+#- 3.7-dev
 before_install:
 - sudo apt-get install python-tk
 - sudo apt-get install unixodbc-dev
