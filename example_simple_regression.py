@@ -55,23 +55,32 @@ print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model)
 
 # Make some predictions
 predictions = trained_model.make_predictions(prediction_dataframe)
-print("\nHere are the first few predictions")
+print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
 print(predictions[0:5])
 
 # Get the important factors
 factors = trained_model.make_factors(prediction_dataframe, number_top_features=4)
-print("\nHere are the first few factors")
+print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
 print(factors.head())
+print(factors.dtypes)
 
 # Get predictions with factors
 predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe)
-print("\nHere are the first few rows of predictions with factors")
+print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
 print(predictions_with_factors_df.head())
+print(predictions_with_factors_df.dtypes)
 
 # Get original dataframe with predictions and factors
 original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(prediction_dataframe)
-print("\nHere are the first few rows of original plus predictions with factors")
+print('\n\n-------------------[ Original + predictions + factors ]----------------------------------------------------\n')
 print(original_plus_predictions_and_factors.head())
+print(original_plus_predictions_and_factors.dtypes)
+
+# Get original dataframe with predictions and factors
+catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
+print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
+print(catalyst_dataframe.head())
+print(catalyst_dataframe.dtypes)
 
 # Save results to csv
 # predictions.to_csv('foo.csv')

@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 import healthcareai.common.file_io_utilities as io
 import healthcareai.common.top_factors as factors
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -28,6 +29,7 @@ class TrainedSupervisedModel(object):
     def save(self, filename):
         """
         Save this object to a pickle file with the given file name
+        
         Args:
             filename (str): Name of the file
         """
@@ -176,17 +178,33 @@ class TrainedSupervisedModel(object):
         results = self.make_predictions_with_k_factors(dataframe, number_top_features=number_top_features)
 
         # replace the original prediction column
-        dataframe.drop([self.prediction_column], axis=1, inplace=True)
+        original_dataframe = dataframe.drop([self.prediction_column], axis=1)
 
         # Join the two dataframes together
-        results = pd.concat([dataframe, results], axis=1)
+        results = pd.concat([original_dataframe, results], axis=1)
 
         return results
 
-    def create_catalyst(self, original_df):
-        # ID, bindings, metadata, otherstuff, predictions, factors
-        # TODO stub - this should build the SAM bindings stuff - particularly in the DH branch
-        pass
+    def create_catalyst_dataframe(self, dataframe):
+        """
+        Given a prediction dataframe, build and return a dataframe with the health catalyst specific column names, the
+        predictions, and the top 3 feautures.
+
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+
+        Returns:
+            pandas.core.frame.DataFrame:  
+        """
+        # Get predictions and on the top 3 features (catalyst SAMs expect 3 factors)
+        factors_and_predictions_df = self.make_predictions_with_k_factors(dataframe, number_top_features=3)
+
+        # Add all the catalyst-specific columns to back into the SAM
+        factors_and_predictions_df['BindingID'] = 0
+        factors_and_predictions_df['BindingNM'] = 'Python'
+        factors_and_predictions_df['LastLoadDTS'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+
+        return factors_and_predictions_df
 
     def get_roc_auc(self):
         # TODO stubs - may be implemented elsewhere and needs to be moved here.
