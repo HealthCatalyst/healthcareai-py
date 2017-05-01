@@ -126,7 +126,8 @@ class TestLinearDeploy(unittest.TestCase):
     def tearDown(self):
         del self.o
 
-
+@unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+                 "Skipping this on Travis CI.")
 class TestValidateDestinationTableConnection(unittest.TestCase):
     def test_raises_error_on_table_not_existing(self):
         self.assertRaises(HealthcareAIError, validate_destination_table_connection, 'localhost', 'foo', 'bar', 'baz')
