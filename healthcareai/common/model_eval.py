@@ -303,9 +303,13 @@ def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=Fal
         matplotlib.figure.Figure: The matplot figure
     """
 
-    # Calculations
+    # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
+
+    # Linear model calculations
     fpr_linear, tpr_linear, _ = sklearn.metrics.roc_curve(y_test, y_probab_linear)
     roc_auc_linear = sklearn.metrics.auc(fpr_linear, tpr_linear)
+
+    # Random forest model calculations
     fpr_rf, tpr_rf, _ = sklearn.metrics.roc_curve(y_test, y_probab_rf)
     roc_auc_rf = sklearn.metrics.auc(fpr_rf, tpr_rf)
 
@@ -314,9 +318,7 @@ def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=Fal
     if debug:
         print('Linear model:')
         print('FPR, and TRP')
-        print(pd.DataFrame(
-            {'FPR': fpr_linear, 'TPR': tpr_linear}))
-
+        print(pd.DataFrame({'FPR': fpr_linear, 'TPR': tpr_linear}))
         print('Random forest model:')
         print('FPR, and TRP')
         print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))

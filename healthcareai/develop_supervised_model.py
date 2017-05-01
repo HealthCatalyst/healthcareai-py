@@ -379,6 +379,7 @@ class DevelopSupervisedModel(object):
                         hyperparameter_grid=None,
                         randomized_search=True):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
+        # TODO rename to random_forest after the other is deprecated
         if self.model_type == 'classification':
             self.random_forest_classifier(trees=trees,
                                           scoring_metric=scoring_metric,
@@ -532,4 +533,5 @@ class DevelopSupervisedModel(object):
 
     def plot_roc(self, save=False, debug=True):
         """ Show the ROC plot """
+        # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
         model_evaluation.display_roc_plot(self.ytest, self.y_probab_linear, self.y_probab_rf, save=save, debug=debug)

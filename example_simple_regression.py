@@ -50,6 +50,9 @@ prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
 # Load the saved model and print out the metrics
 trained_model = io.load_saved_model(saved_model_filename)
+
+# TODO swap this out for testing
+trained_model = trained_linear_model
 print('\n\n')
 print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model), type(trained_model.model), trained_model.metrics()))
 
