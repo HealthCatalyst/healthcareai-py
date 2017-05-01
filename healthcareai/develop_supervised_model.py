@@ -1,16 +1,16 @@
 import json
 import os
+import sklearn
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import sklearn.metrics as skmetrics
+
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegressionCV
-from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
@@ -19,7 +19,7 @@ from healthcareai.common import helpers
 from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-import healthcareai.common.model_eval as model_evaluation
+from healthcareai.common.randomized_search import prepare_randomized_search
 
 
 class DevelopSupervisedModel(object):
@@ -229,8 +229,8 @@ class DevelopSupervisedModel(object):
         # TODO a similar method should be created for regression metrics
         output = {}
         y_pred = self.results['best_model'].predict(self.X_test)
-        accuracy = skmetrics.accuracy_score(self.y_test, y_pred)
-        confusion_matrix = skmetrics.confusion_matrix(self.y_test, y_pred)
+        accuracy = sklearn.metrics.accuracy_score(self.y_test, y_pred)
+        confusion_matrix = sklearn.metrics.confusion_matrix(self.y_test, y_pred)
         output['accuracy'] = accuracy
         output['confusion_matrix'] = confusion_matrix.tolist()
         output['auc_roc'] = self.results['best_score']
@@ -317,6 +317,8 @@ class DevelopSupervisedModel(object):
             randomized_search)
 
         algorithm.fit(self.X_train, self.y_train)
+
+        # TODO factor model here?
 
         return algorithm
 
@@ -531,43 +533,3 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         """ Show the ROC plot """
         model_evaluation.display_roc_plot(self.ytest, self.y_probab_linear, self.y_probab_rf, save=save, debug=debug)
-
-
-def prepare_randomized_search(
-        estimator,
-        scoring_metric,
-        hyperparameter_grid,
-        randomized_search,
-        **non_randomized_estimator_kwargs):
-    """
-    Given an estimator and various params, initialize an algorithm with optional randomized search.
-
-    Args:
-        estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
-        scoring_metric: The scoring metric to optimized for if using random search. See
-            http://scikit-learn.org/stable/modules/model_evaluation.html
-        hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
-            through.
-        randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
-            simple algorithm).
-        **non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used when
-            radomized_search is False
-
-    Returns:
-        estimator: a scikit learn algorithm ready to `.fit()`
-
-    """
-    if randomized_search:
-        algorithm = RandomizedSearchCV(estimator=estimator(),
-                                       scoring=scoring_metric,
-                                       param_distributions=hyperparameter_grid,
-                                       n_iter=2,
-                                       cv=5,
-                                       verbose=0,
-                                       n_jobs=1)
-
-    else:
-        print('No randomized search. Using {}'.format(estimator))
-        algorithm = estimator(**non_randomized_estimator_kwargs)
-
-    return algorithm
