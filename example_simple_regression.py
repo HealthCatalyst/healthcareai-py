@@ -48,10 +48,10 @@ prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincial
 columns_to_remove = ['PatientID', 'InTestWindowFLG']
 prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
-# Load the saved model
+# Load the saved model and print out the metrics
 trained_model = io.load_saved_model(saved_model_filename)
 print('\n\n')
-print('Trained Model Loaded. Type: {} Model type: {}'.format(type(trained_model), type(trained_model.model)))
+print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model), type(trained_model.model), trained_model.metrics()))
 
 # Make some predictions
 predictions = trained_model.make_predictions(prediction_dataframe)

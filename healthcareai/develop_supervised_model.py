@@ -1,27 +1,25 @@
+import json
 import os
-from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn import metrics
+import sklearn.metrics as skmetrics
+from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegressionCV
-from sklearn.metrics import roc_curve, auc
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.neighbors import KNeighborsClassifier
-from imblearn.under_sampling import RandomUnderSampler
-from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import StandardScaler
 
+import healthcareai.common.model_eval as model_evaluation
 from healthcareai.common import helpers
 from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
-from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
-
-import json
+import healthcareai.common.model_eval as model_evaluation
 
 
 class DevelopSupervisedModel(object):
@@ -204,7 +202,7 @@ class DevelopSupervisedModel(object):
 
         for name, model in model_by_name.items():
             # TODO this may need to ferret out each classification score separately
-            score = self.calculate_classification_metric(model)
+            score = self.classification_metrics(model)
             score_by_name[name] = score[scoring_metric]
 
             self.console_log('{} algorithm: score = {}'.format(name, score))
@@ -231,8 +229,8 @@ class DevelopSupervisedModel(object):
         # TODO a similar method should be created for regression metrics
         output = {}
         y_pred = self.results['best_model'].predict(self.X_test)
-        accuracy = metrics.accuracy_score(self.y_test, y_pred)
-        confusion_matrix = metrics.confusion_matrix(self.y_test, y_pred)
+        accuracy = skmetrics.accuracy_score(self.y_test, y_pred)
+        confusion_matrix = skmetrics.confusion_matrix(self.y_test, y_pred)
         output['accuracy'] = accuracy
         output['confusion_matrix'] = confusion_matrix.tolist()
         output['auc_roc'] = self.results['best_score']
@@ -256,42 +254,29 @@ class DevelopSupervisedModel(object):
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def calculate_classification_metric(self, trained_model):
+    def classification_metrics(self, trained_model):
         """
-        Given a trained model, calculate the selected metric
+        Given a trained model, get performance metrics. This is a thin wrapper around the toolbox metrics
 
         Args:
             trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
 
         Returns:
             dict: A dictionary of metrics objects
-
         """
+        return model_evaluation.calculate_classification_metrics(trained_model, self.X_test, self.y_test)
 
-        predictions = trained_model.predict(self.X_test)
-        result = {'roc_auc_score': metrics.roc_auc_score(self.y_test, predictions),
-                  'accuracy': metrics.accuracy_score(self.y_test, predictions)}
-
-        return result
-
-    def calculate_regression_metric(self, trained_model):
+    def regression_metrics(self, trained_model):
         """
-        Given a trained model, calculate the selected metric
+        Given a trained model, get performance metrics. This is a thin wrapper around the toolbox metrics
 
         Args:
             trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
 
         Returns:
             dict: A dictionary of metrics objects
-
         """
-        predictions = trained_model.predict(self.X_test)
-        mean_squared_error = metrics.mean_squared_error(self.y_test, predictions)
-        mean_absolute_error = metrics.mean_absolute_error(self.y_test, predictions)
-
-        result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
-
-        return result
+        return model_evaluation.calculate_regression_metrics(trained_model, self.X_test, self.y_test)
 
     def logistic_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
@@ -490,60 +475,6 @@ class DevelopSupervisedModel(object):
             tune=tune,
             col_list=self.col_list)
 
-    def plot_roc(self, save=False, debug=False):
-        """
-        Plots roc related to models resulting from linear and random
-        forest methods within the DevelopSupervisedModel step.
-
-        Parameters
-        ----------
-        save (boolean) : Whether to save the plot
-        debug (boolean) : Verbosity of output. If True, shows list of
-        FPR/TPR for each point in the plot (default False)
-
-        Returns
-        -------
-        Nothing. A plot is created and displayed.
-        """
-
-        fpr_linear, tpr_linear, _ = roc_curve(self.y_test,
-                                              self.y_probab_linear)
-        roc_auc_linear = auc(fpr_linear, tpr_linear)
-
-        fpr_rf, tpr_rf, _ = roc_curve(self.y_test, self.y_probab_rf)
-        roc_auc_rf = auc(fpr_rf, tpr_rf)
-
-        # TODO: add cutoff associated with FPR/TPR
-        if debug:
-            print('Linear model:')
-            print('FPR, and TRP')
-            print(pd.DataFrame(
-                {'FPR': fpr_linear, 'TPR': tpr_linear}))
-
-            print('Random forest model:')
-            print('FPR, and TRP')
-            print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))
-
-        plt.figure()
-        plt.plot(fpr_linear, tpr_linear, color='b',
-                 label='Logistic (area = %0.2f)' % roc_auc_linear)
-        plt.plot(fpr_rf, tpr_rf, color='g',
-                 label='RandomForest (area = %0.2f)' % roc_auc_rf)
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver operating characteristic')
-        plt.legend(loc="lower right")
-        if save:
-            plt.savefig('ROC.png')
-            source_path = os.path.dirname(os.path.abspath(__file__))
-            print('\nROC file saved in: {}'.format(source_path))
-            plt.show()
-        else:
-            plt.show()
-
     def plot_rffeature_importance(self, save=False):
         """
         Plots feature importances related to models resulting from
@@ -597,8 +528,10 @@ class DevelopSupervisedModel(object):
         if self.verbose:
             print('DSM: {}'.format(message))
 
-    def save_models(self, random_search):
-        pass
+    def plot_roc(self, save=False, debug=True):
+        """ Show the ROC plot """
+        model_evaluation.display_roc_plot(self.ytest, self.y_probab_linear, self.y_probab_rf, save=save, debug=debug)
+
 
 def prepare_randomized_search(
         estimator,

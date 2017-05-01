@@ -13,7 +13,9 @@ class TrainedSupervisedModel(object):
         - trained estimator
         - trained linear estimator used for row level factor analysis
         - the fit data preparation pipeline used for transforming new data for prediction
+        - calculated metrics
     """
+
     def __init__(self,
                  model,
                  feature_model,
@@ -23,7 +25,8 @@ class TrainedSupervisedModel(object):
                  grain_column,
                  prediction_column,
                  y_pred,
-                 y_actual):
+                 y_actual,
+                 metric_by_name):
         self.model = model
         self.feature_model = feature_model
         self.fit_pipeline = fit_pipeline
@@ -33,6 +36,7 @@ class TrainedSupervisedModel(object):
         self.prediction_column = prediction_column
         self.y_pred = y_pred
         self.y_actual = y_actual
+        self._metric_by_name = metric_by_name
 
     def save(self, filename):
         """
@@ -214,13 +218,9 @@ class TrainedSupervisedModel(object):
 
         return factors_and_predictions_df
 
-    def get_roc_auc(self):
-        # TODO stubs - may be implemented elsewhere and needs to be moved here.
-        """
-        Returns the roc_auc of the holdout set from model training.
-        """
-        pass
-        # return roc_auc_score(self.y_actual, self.y_pred)
+    def metrics(self):
+        """ Return the metrics that were calculated when the model was trained. """
+        return self._metric_by_name
 
     def roc_curve_plot(self):
         # TODO stubs - may be implemented elsewhere and needs to be moved here.

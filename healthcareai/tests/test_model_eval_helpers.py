@@ -25,18 +25,18 @@ class TestCalculateRandomForestCalculateMTry(unittest.TestCase):
 
     def test_non_integer_columns_raises_error(self):
         try:
-            calculate_random_forest_mtry_hyperparameter('foo', 'classification')
+            calculate_random_forest_mtry_hyperparameter('regression_metrics', 'classification')
             # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:
             self.assertEqual(e.message, 'The number_of_columns must be an integer')
 
     def test_bad_model_type_raises_error(self):
-        self.assertRaises(HealthcareAIError, calculate_random_forest_mtry_hyperparameter, 3, 'foo')
+        self.assertRaises(HealthcareAIError, calculate_random_forest_mtry_hyperparameter, 3, 'regression_metrics')
 
     def test_bad_model_type_raises_error_with_correct_message(self):
         try:
-            calculate_random_forest_mtry_hyperparameter(3, 'foo')
+            calculate_random_forest_mtry_hyperparameter(3, 'regression_metrics')
             # Fail the test if the above call doesn't throw an error
             self.fail()
         except HealthcareAIError as e:

@@ -305,6 +305,7 @@ class DeploySupervisedModel(object):
         write_predictions_to_database(server, dest_db_schema_table, self.predicted_column_name, self.grain_column,
                                       output_2dlist)
 
+
 def build_2d_list_for_db_save(trained_factor_model, debug, x_test, grain_column_test, y_pred):
     """ Temporary extraction of db insertion prep for reconstruction """
     # TODO deprecate this
