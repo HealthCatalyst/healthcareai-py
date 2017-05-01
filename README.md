@@ -1,6 +1,8 @@
 # healthcareai
 
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
+[![Code Issues](https://www.quantifiedcode.com/api/v1/project/6316902dcb7a407f84aa56ec58a5c14c/snapshot/origin:85:HEAD/badge.svg)](https://www.quantifiedcode.com/app/project/6316902dcb7a407f84aa56ec58a5c14c)
+[![Build Status](https://travis-ci.org/HealthCatalystSLC/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalystSLC/healthcareai-py)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
