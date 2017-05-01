@@ -71,15 +71,11 @@ class SimpleDevelopSupervisedModel(object):
 
         trained_factor_model = factors.prepare_fit_model_for_factors(self._dsm.model_type, self._dsm.X_train, self._dsm.y_train)
 
-        # TODO keeping these column names as part of the saved model avoids all the hassle of dropping grain and other
-        #   columns that may have been added at a later time. Simply subset the dataframe that comes in to a predict
-        #   call and only use that!
-        column_names = self._dsm.X_test.columns.values
         foo = TrainedSupervisedModel(trained_model,
                                      trained_factor_model,
                                      self.pipeline,
                                      self._dsm.model_type,
-                                     column_names,
+                                     self._dsm.X_test.columns.values,
                                      self._dsm.grain_column,
                                      self._dsm.predicted_column,
                                      None,

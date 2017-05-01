@@ -7,7 +7,6 @@ import pandas as pd
 import time
 
 import healthcareai.common.file_io_utilities as io
-import healthcareai.pipelines.data_preparation as pipelines
 from healthcareai.simple_mode import SimpleDevelopSupervisedModel
 
 # Start a timer
@@ -70,9 +69,9 @@ print("\nHere are the first few rows of predictions with factors")
 print(predictions_with_factors_df.head())
 
 # Get original dataframe with predictions and factors
-original_plus_prections_and_factors = trained_model.make_original_with_predictions_and_features(prediction_dataframe)
+original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(prediction_dataframe)
 print("\nHere are the first few rows of original plus predictions with factors")
-print(original_plus_prections_and_factors.head())
+print(original_plus_predictions_and_factors.head())
 
 # Save results to csv
 # predictions.to_csv('foo.csv')

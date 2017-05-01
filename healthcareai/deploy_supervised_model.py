@@ -300,38 +300,39 @@ class DeploySupervisedModel(object):
         else:
             trained_factor_model = prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
 
-        # Get the top three factors from the trained model and X_test set
-        first_fact, second_fact, third_fact = find_top_three_factors(trained_factor_model, self.X_test, debug=debug)
-
-        # Convert to base int instead of numpy data type for SQL insert
-        grain_column_baseint = [int(self.grain_column_test.iloc[i])
-                                for i in range(0, len(self.grain_column_test))]
-        y_pred_baseint = [float(self.y_pred[i])
-                          for i in range(0, len(self.y_pred))]
-
-        # Create columns for export to SQL Server
-        X_test_length = len(self.X_test.iloc[:, 0])
-        bindingid = [0] * X_test_length
-        bindingnm = ['Python'] * X_test_length
-
-        # Create vector with time to the millisecond
-        lastloaddts = [datetime.datetime.utcnow().
-                       strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]] * \
-            X_test_length
-
-        # Put everything into 2-d list for export
-        output_2dlist = list(zip(bindingid,
-                                 bindingnm,
-                                 lastloaddts,
-                                 grain_column_baseint,
-                                 y_pred_baseint,
-                                 first_fact,
-                                 second_fact,
-                                 third_fact))
-
-        if debug:
-            print('\nTop rows of 2-d list immediately before insert into db')
-            print(pd.DataFrame(output_2dlist[0:3]).head())
+        output_2dlist = build_2d_list_for_db_save(trained_factor_model, debug, self.X_test, self.grain_column_test, self.y_pred)
 
         write_predictions_to_database(server, dest_db_schema_table, self.predicted_column_name, self.grain_column,
                                       output_2dlist)
+
+def build_2d_list_for_db_save(trained_factor_model, debug, x_test, grain_column_test, y_pred):
+    # Get the top three factors from the trained model and X_test set
+    first_fact, second_fact, third_fact = find_top_three_factors(trained_factor_model, x_test, debug=debug)
+
+    # Convert to base int instead of numpy data type for SQL insert
+    grain_column_baseint = [int(grain_column_test.iloc[i])
+                            for i in range(0, len(grain_column_test))]
+    y_pred_baseint = [float(y_pred[i]) for i in range(0, len(y_pred))]
+
+    # Create columns for export to SQL Server
+    x_test_length = len(x_test.iloc[:, 0])
+    bindingid = [0] * x_test_length
+    bindingnm = ['Python'] * x_test_length
+
+    # Create vector with time to the millisecond
+    lastloaddts = [datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]] * x_test_length
+
+    # Put everything into 2-d list for export
+    output_2dlist = list(zip(bindingid,
+                             bindingnm,
+                             lastloaddts,
+                             grain_column_baseint,
+                             y_pred_baseint,
+                             first_fact,
+                             second_fact,
+                             third_fact))
+    if debug:
+        print('\nTop rows of 2-d list immediately before insert into db')
+        print(pd.DataFrame(output_2dlist[0:3]).head())
+
+    return output_2dlist
