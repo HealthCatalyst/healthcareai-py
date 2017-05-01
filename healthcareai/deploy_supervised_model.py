@@ -306,6 +306,8 @@ class DeploySupervisedModel(object):
                                       output_2dlist)
 
 def build_2d_list_for_db_save(trained_factor_model, debug, x_test, grain_column_test, y_pred):
+    """ Temporary extraction of db insertion prep for reconstruction """
+    # TODO deprecate this
     # Get the top three factors from the trained model and X_test set
     first_fact, second_fact, third_fact = find_top_three_factors(trained_factor_model, x_test, debug=debug)
 

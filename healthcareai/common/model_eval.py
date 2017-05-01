@@ -163,7 +163,7 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
     aucType = aucType.upper()
 
     # check to see if AUC is SS or PR. If not, default to SS
-    if aucType != 'SS' and aucType != 'PR':
+    if aucType not in ['SS', 'PR']:
         print('Drawing ROC curve with Sensitivity/Specificity')
         aucType = 'SS'
 
