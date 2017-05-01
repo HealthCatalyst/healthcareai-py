@@ -6,6 +6,14 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 class TrainedSupervisedModel(object):
+    """
+    The meta-object that is created when training supervised models. 
+    
+    This object contains:
+        - trained estimator
+        - trained linear estimator used for row level factor analysis
+        - the fit data preparation pipeline used for transforming new data for prediction
+    """
     def __init__(self,
                  model,
                  feature_model,
