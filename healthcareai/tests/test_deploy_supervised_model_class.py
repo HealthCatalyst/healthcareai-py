@@ -40,6 +40,8 @@ class TestRFDeployNoTreesNoMtry(unittest.TestCase):
         del self.o
 
 
+@unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+                 "Skipping this on Travis CI.")
 class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
@@ -67,7 +69,8 @@ class TestRFDeployNoTreesWithMtry(unittest.TestCase):
     def tearDown(self):
         del self.o
 
-
+@unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+                 "Skipping this on Travis CI.")
 class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
@@ -95,7 +98,8 @@ class TestRFDeployWithTreesNoMtry(unittest.TestCase):
     def tearDown(self):
         del self.o
 
-
+@unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+                 "Skipping this on Travis CI.")
 class TestLinearDeploy(unittest.TestCase):
     def setUp(self):
         df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
@@ -127,6 +131,8 @@ class TestValidateDestinationTableConnection(unittest.TestCase):
     def test_raises_error_on_table_not_existing(self):
         self.assertRaises(HealthcareAIError, validate_destination_table_connection, 'localhost', 'foo', 'bar', 'baz')
 
+    @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+                     "Skipping this on Travis CI.")
     def test_should_succeed(self):
         is_table_connection_valid = validate_destination_table_connection('localhost',
                                                                           '[SAM].[dbo].[HCPyDeployRegressionBASE]',
