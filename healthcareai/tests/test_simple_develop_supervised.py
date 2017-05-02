@@ -6,6 +6,7 @@ from io import StringIO
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.simple_mode import SimpleDevelopSupervisedModel
 import healthcareai.tests.helpers as helpers
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):

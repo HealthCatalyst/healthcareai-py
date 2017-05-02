@@ -316,23 +316,7 @@ class DevelopSupervisedModel(object):
             hyperparameter_grid,
             randomized_search)
 
-        algorithm.fit(self.X_train, self.y_train)
-
-        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
-                                                                     self.X_train,
-                                                                     self.y_train)
-
-        trained_supervised_model = TrainedSupervisedModel(
-            algorithm,
-            trained_factor_model,
-            self.pipeline,
-            self.model_type,
-            self.X_test.columns.values,
-            self.grain_column,
-            self.predicted_column,
-            None,
-            None,
-            self.metrics(algorithm))
+        trained_supervised_model = self.trainer(algorithm)
 
         return trained_supervised_model
 
@@ -420,23 +404,7 @@ class DevelopSupervisedModel(object):
             randomized_search,
             trees=trees)
 
-        algorithm.fit(self.X_train, self.y_train)
-
-        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
-                                                                     self.X_train,
-                                                                     self.y_train)
-
-        trained_supervised_model = TrainedSupervisedModel(
-            algorithm,
-            trained_factor_model,
-            self.pipeline,
-            self.model_type,
-            self.X_test.columns.values,
-            self.grain_column,
-            self.predicted_column,
-            None,
-            None,
-            self.metrics(algorithm))
+        trained_supervised_model = self.trainer(algorithm)
 
         return trained_supervised_model
 
@@ -509,6 +477,24 @@ class DevelopSupervisedModel(object):
             col_list=self.col_list)
 
         return self.rfclf
+
+    def trainer(self, algorithm):
+        algorithm.fit(self.X_train, self.y_train)
+        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
+                                                                     self.X_train,
+                                                                     self.y_train)
+        trained_supervised_model = TrainedSupervisedModel(
+            algorithm,
+            trained_factor_model,
+            self.pipeline,
+            self.model_type,
+            self.X_test.columns.values,
+            self.grain_column,
+            self.predicted_column,
+            None,
+            None,
+            self.metrics(algorithm))
+        return trained_supervised_model
 
     def plot_rffeature_importance(self, save=False):
         # TODO refactor this as a tool + advanced/simple wrapper
