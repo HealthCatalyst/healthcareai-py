@@ -9,17 +9,24 @@ import healthcareai.tests.helpers as helpers
 
 
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):
-    def test_knn(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
-                                            predicted_column='ThirtyDayReadmitFLG',
-                                            model_type='classification',
-                                            impute=True,
-                                            grain_column='PatientEncounterID',
-                                            verbose=False)
+    @classmethod
+    def setUpClass(cls):
+        cls.classification = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
+                                                          predicted_column='ThirtyDayReadmitFLG',
+                                                          model_type='classification',
+                                                          impute=True,
+                                                          grain_column='PatientEncounterID',
+                                                          verbose=False)
+        cls.regression = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
+                                                      'SystolicBPNBR',
+                                                      'regression',
+                                                      impute=True,
+                                                      grain_column='PatientEncounterID')
 
+    def test_knn(self):
         # Hacky way to capture print output since simple prints output instead of returning it.
         with captured_output() as (out, err):
-            hcai.knn()
+            self.classification.knn()
             output = out.getvalue().strip()
 
             expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.[5-6][0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.[5-6][0-9]*)"
@@ -27,16 +34,9 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_random_forest_classification(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
-                                            predicted_column='ThirtyDayReadmitFLG',
-                                            model_type='classification',
-                                            impute=True,
-                                            grain_column='PatientEncounterID',
-                                            verbose=False)
-
         # Hacky way to capture print output since simple prints output instead of returning it.
         with captured_output() as (out, err):
-            hcai.random_forest_classification()
+            self.classification.random_forest_classification()
             output = out.getvalue().strip()
 
             expected_output_regex = r"Training random_forest_classification\n({?'roc_auc_score': 0.[7-8][0-9]*, 'accuracy': 0.[8-9][0-9]*|{?'accuracy': 0.[8-9][0-9]*, 'roc_auc_score': 0.[7-8][0-9]*)"
@@ -44,15 +44,9 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_linear_regression(self):
-        hcai = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
-                                            'SystolicBPNBR',
-                                            'regression',
-                                            impute=True,
-                                            grain_column='PatientEncounterID')
-
         # Hacky way to capture print output since simple prints output instead of returning it.
         with captured_output() as (out, err):
-            hcai.linear_regression()
+            self.regression.linear_regression()
             output = out.getvalue().strip()
 
             expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 6[0-9][0-9]\.[0-9]*, 'mean_absolute_error': 2[0-9]\.[0-9]*|{?'mean_absolute_error': 2[0-9]\.[0-9]*, 'mean_squared_error': 6[0-9][0-9]\.[0-9]*)"
@@ -60,15 +54,9 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_linear_regression(self):
-        hcai = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
-                                            'SystolicBPNBR',
-                                            'regression',
-                                            impute=True,
-                                            grain_column='PatientEncounterID')
-
         # Hacky way to capture print output since simple prints output instead of returning it.
         with captured_output() as (out, err):
-            hcai.linear_regression()
+            self.regression.linear_regression()
             output = out.getvalue().strip()
 
             expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 6[0-9][0-9]\.[0-9]*, 'mean_absolute_error': 2[0-9]\.[0-9]*|{?'mean_absolute_error': 2[0-9]\.[0-9]*, 'mean_squared_error': 6[0-9][0-9]\.[0-9]*)"
@@ -81,15 +69,8 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-        hcai = SimpleDevelopSupervisedModel(
-            training_df,
-            'SystolicBPNBR',
-            'regression',
-            impute=True,
-            grain_column='PatientEncounterID')
-
         # # Train the linear regression model
-        trained_linear_model = hcai.linear_regression()
+        trained_linear_model = self.regression.linear_regression()
 
         # Load a new df for predicting
         prediction_df = helpers.load_sample_dataframe()
