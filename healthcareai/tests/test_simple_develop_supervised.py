@@ -34,34 +34,22 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
             self.assertRegexpMatches(output, expected_output_regex)
 
     def test_random_forest_classification(self):
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            self.classification.random_forest_classification()
-            output = out.getvalue().strip()
+        result = self.classification.random_forest_classification().metrics()
 
-            expected_output_regex = r"Training random_forest_classification\n({?'roc_auc_score': 0.[7-8][0-9]*, 'accuracy': 0.[8-9][0-9]*|{?'accuracy': 0.[8-9][0-9]*, 'roc_auc_score': 0.[7-8][0-9]*)"
+        expected_roc_auc_score = 0.75
+        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
 
-            self.assertRegexpMatches(output, expected_output_regex)
-
-    def test_linear_regression(self):
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            self.regression.linear_regression()
-            output = out.getvalue().strip()
-
-            expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 6[0-9][0-9]\.[0-9]*, 'mean_absolute_error': 2[0-9]\.[0-9]*|{?'mean_absolute_error': 2[0-9]\.[0-9]*, 'mean_squared_error': 6[0-9][0-9]\.[0-9]*)"
-
-            self.assertRegexpMatches(output, expected_output_regex)
+        expected_accuracy = 0.95
+        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
 
     def test_linear_regression(self):
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            self.regression.linear_regression()
-            output = out.getvalue().strip()
+        result = self.regression.linear_regression().metrics()
 
-            expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 6[0-9][0-9]\.[0-9]*, 'mean_absolute_error': 2[0-9]\.[0-9]*|{?'mean_absolute_error': 2[0-9]\.[0-9]*, 'mean_squared_error': 6[0-9][0-9]\.[0-9]*)"
+        expected_mse = 623
+        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
 
-            self.assertRegexpMatches(output, expected_output_regex)
+        expected_mae = 20
+        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
 
     def test_linear_regression_raises_error_on_missing_columns(self):
         training_df = helpers.load_sample_dataframe()
