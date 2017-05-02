@@ -24,6 +24,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
                                                       impute=True,
                                                       grain_column='PatientEncounterID')
 
+
     def test_knn(self):
         trained_knn = self.classification.knn()
 
