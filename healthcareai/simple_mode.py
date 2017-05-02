@@ -12,13 +12,16 @@ class SimpleDevelopSupervisedModel(object):
         self.grain_column = grain_column,
 
         # Build the pipeline
-        self.pipeline = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
+        pipeline = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
 
         # Run the raw data through the data preparation pipeline
-        clean_dataframe = self.pipeline.fit_transform(dataframe)
+        clean_dataframe = pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
         self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
+
+        # Save the pipeline to the parent class
+        self._dsm.pipeline = pipeline
 
         # Split the data into train and test
         self._dsm.train_test_split()
@@ -26,9 +29,9 @@ class SimpleDevelopSupervisedModel(object):
     def random_forest(self):
         # TODO Convenience method. Probably not needed?
         if self._dsm.model_type is 'classification':
-            self.random_forest_classification()
+            return self.random_forest_classification()
         elif self._dsm.model_type is 'regression':
-            self.random_forest_regression()
+            return self.random_forest_regression()
 
     def knn(self):
         print('Training knn')
@@ -49,11 +52,17 @@ class SimpleDevelopSupervisedModel(object):
         self.print_metrics(trained_model)
 
     def random_forest_classification(self):
+        # 2017-05-01
+        # TODO put TrainedSupervisedModel into advanced class and compare how it feels with the linear_regression()
         print('Training random_forest_classification')
+
         # Train the model
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
+
         # Display the model metrics
-        self.print_metrics(trained_model)
+        print(trained_model.metrics())
+
+        return trained_model
 
     def logistic_regression(self):
         print('Training logistic_regression')
@@ -81,7 +90,7 @@ class SimpleDevelopSupervisedModel(object):
         trained_supervised_model = TrainedSupervisedModel(
             trained_model,
             trained_factor_model,
-            self.pipeline,
+            self._dsm.pipeline,
             self._dsm.model_type,
             self._dsm.X_test.columns.values,
             self._dsm.grain_column,
@@ -116,17 +125,12 @@ class SimpleDevelopSupervisedModel(object):
 
     def metrics(self, trained_model):
         """
-        Given a trained model, calculate the appropriate performance metrics.
+        Given a trained model, get the appropriate performance metrics.
 
         Args:
             trained_model (BaseEstimator): A scikit-learn trained algorithm
         """
-        performance_metrics = None
-        if self._dsm.model_type is 'classification':
-            performance_metrics = self._dsm.classification_metrics(trained_model)
-        elif self._dsm.model_type is 'regression':
-            performance_metrics = self._dsm.regression_metrics(trained_model)
-        return performance_metrics
+        return self._dsm.metrics(trained_model)
 
     def get_advanced_features(self):
         return self._dsm

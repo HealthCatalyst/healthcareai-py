@@ -25,11 +25,12 @@ print(dataframe.head())
 
 # Step 1: Setup healthcareai for developing a regression model.
 hcai = SimpleDevelopSupervisedModel(
-    dataframe,
-    'SystolicBPNBR',
-    'regression',
+    dataframe=dataframe,
+    predicted_column='SystolicBPNBR',
+    model_type='regression',
+    grain_column='PatientEncounterID',
     impute=True,
-    grain_column='PatientEncounterID')
+    verbose=False)
 
 # # Train the linear regression model
 trained_linear_model = hcai.linear_regression()

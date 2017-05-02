@@ -15,11 +15,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as model_evaluation
+import healthcareai.common.top_factors as factors
 from healthcareai.common import helpers
 from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.randomized_search import prepare_randomized_search
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 
 class DevelopSupervisedModel(object):
@@ -59,7 +61,7 @@ class DevelopSupervisedModel(object):
         self.col_list = None
         self.rfclf = None
         self.au_roc = None
-        self.results = None
+        self.ensemble_results = None
         self.pipeline = None
 
         self.console_log(
@@ -202,7 +204,7 @@ class DevelopSupervisedModel(object):
 
         for name, model in model_by_name.items():
             # TODO this may need to ferret out each classification score separately
-            score = self.classification_metrics(model)
+            score = self.metrics(model)
             score_by_name[name] = score[scoring_metric]
 
             self.console_log('{} algorithm: score = {}'.format(name, score))
@@ -222,19 +224,22 @@ class DevelopSupervisedModel(object):
                                                                                        best_algorithm_name))
         print('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
-        self.results = results
+        self.ensemble_results = results
         return results
 
     def write_classification_metrics_to_json(self):
         # TODO a similar method should be created for regression metrics
+        # TODO this is really not in the right place
+        if self.ensemble_results is None:
+            raise HealthcareAIError('Ensemble must be run before metrics can be written')
         output = {}
-        y_pred = self.results['best_model'].predict(self.X_test)
+        y_pred = self.ensemble_results['best_model'].predict(self.X_test)
         accuracy = sklearn.metrics.accuracy_score(self.y_test, y_pred)
         confusion_matrix = sklearn.metrics.confusion_matrix(self.y_test, y_pred)
         output['accuracy'] = accuracy
         output['confusion_matrix'] = confusion_matrix.tolist()
-        output['auc_roc'] = self.results['best_score']
-        output['algorithm_name'] = self.results['best_algorithm_name']
+        output['auc_roc'] = self.ensemble_results['best_score']
+        output['algorithm_name'] = self.ensemble_results['best_algorithm_name']
         with open('classification_metrics.json', 'w') as fp:
             json.dump(output, fp, indent=4, sort_keys=True)
 
@@ -254,29 +259,25 @@ class DevelopSupervisedModel(object):
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def classification_metrics(self, trained_model):
+    def metrics(self, trained_model):
         """
-        Given a trained model, get performance metrics. This is a thin wrapper around the toolbox metrics
+        Given a trained model, calculate the appropriate performance metrics.
+        
+        This is intended to be a thin wrapper around the toolbox metrics.
 
         Args:
-            trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
-
-        Returns:
-            dict: A dictionary of metrics objects
+            trained_model (BaseEstimator): A scikit-learn trained algorithm
         """
-        return model_evaluation.calculate_classification_metrics(trained_model, self.X_test, self.y_test)
+        performance_metrics = None
 
-    def regression_metrics(self, trained_model):
-        """
-        Given a trained model, get performance metrics. This is a thin wrapper around the toolbox metrics
+        if self.model_type is 'classification':
+            performance_metrics = model_evaluation.calculate_classification_metrics(trained_model,
+                                                                                    self.X_test,
+                                                                                    self.y_test)
+        elif self.model_type is 'regression':
+            performance_metrics = model_evaluation.calculate_regression_metrics(trained_model, self.X_test, self.y_test)
 
-        Args:
-            trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
-
-        Returns:
-            dict: A dictionary of metrics objects
-        """
-        return model_evaluation.calculate_regression_metrics(trained_model, self.X_test, self.y_test)
+        return performance_metrics
 
     def logistic_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
@@ -408,7 +409,23 @@ class DevelopSupervisedModel(object):
 
         algorithm.fit(self.X_train, self.y_train)
 
-        return algorithm
+        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
+                                                                     self.X_train,
+                                                                     self.y_train)
+
+        trained_supervised_model = TrainedSupervisedModel(
+            algorithm,
+            trained_factor_model,
+            self.pipeline,
+            self.model_type,
+            self.X_test.columns.values,
+            self.grain_column,
+            self.predicted_column,
+            None,
+            None,
+            self.metrics(algorithm))
+
+        return trained_supervised_model
 
     def random_forest_regressor(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
                                 randomized_search=True):
@@ -478,10 +495,12 @@ class DevelopSupervisedModel(object):
             tune=tune,
             col_list=self.col_list)
 
+        return self.rfclf
+
     def plot_rffeature_importance(self, save=False):
+        # TODO refactor this as a tool + advanced/simple wrapper
         """
-        Plots feature importances related to models resulting from
-        and random forest methods within the DevelopSupervisedModel step.
+        Plots feature importances for random forest models
 
         Parameters
         ----------

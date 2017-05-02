@@ -31,9 +31,8 @@ def top_k_features(dataframe, linear_model, k=3):
     # Basic validation for number of features vs column count
     max_model_features = len(linear_model.coef_)
     if k > max_model_features:
-        raise HealthcareAIError('You requested {} number of top features, which is more than the {} features from the'
-                                'original model. Please choose {} or less.'.format(k, max_model_features,
-                                                                                   max_model_features))
+        raise HealthcareAIError('You requested {} top features, which is more than the {} features from the original'
+                                ' model. Please choose {} or less.'.format(k, max_model_features, max_model_features))
 
     # Multiply the values with the coefficients from the trained model
     step1 = pd.DataFrame(dataframe.values * linear_model.coef_, columns=dataframe.columns)
