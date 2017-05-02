@@ -333,9 +333,9 @@ class DevelopSupervisedModel(object):
             randomized_search,
             n_neighbors=5)
 
-        algorithm.fit(self.X_train, self.y_train)
+        trained_supervised_model = self.trainer(algorithm)
 
-        return algorithm
+        return trained_supervised_model
 
     def linear(self, cores=4, debug=False):
         # TODO deprecate

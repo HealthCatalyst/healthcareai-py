@@ -25,17 +25,21 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
                                                       grain_column='PatientEncounterID')
 
     def test_knn(self):
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            self.classification.knn()
-            output = out.getvalue().strip()
+        trained_knn = self.classification.knn()
 
-            expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.[5-6][0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.[5-6][0-9]*)"
+        result = trained_knn.metrics()
+        self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-            self.assertRegexpMatches(output, expected_output_regex)
+        expected_roc_auc_score = 0.65
+        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
+
+        expected_accuracy = 0.88
+        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
 
     def test_random_forest_classification(self):
-        result = self.classification.random_forest_classification().metrics()
+        trained_random_forest = self.classification.random_forest_classification()
+        result = trained_random_forest.metrics()
+        self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
         expected_roc_auc_score = 0.75
         self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
@@ -44,7 +48,10 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
 
     def test_linear_regression(self):
-        result = self.regression.linear_regression().metrics()
+        trained_linear_model = self.regression.linear_regression()
+        self.assertIsInstance(trained_linear_model, TrainedSupervisedModel)
+
+        result = trained_linear_model.metrics()
 
         expected_mse = 623
         self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)

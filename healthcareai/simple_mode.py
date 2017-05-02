@@ -35,16 +35,15 @@ class SimpleDevelopSupervisedModel(object):
 
     def knn(self):
         print('Training knn')
-        # Train the model
-        trained_model = self._dsm.knn(
-            scoring_metric='roc_auc',
-            hyperparameter_grid=None,
-            randomized_search=True)
 
-        # Display the model metrics
-        self.print_metrics(trained_model)
+        # Train the model and display the model metrics
+        trained_model = self._dsm.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
+        print(trained_model.metrics())
+
+        return trained_model
 
     def random_forest_regression(self):
+        # TODO simplify
         print('Training random_forest_regression')
         # Train the model
         trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='roc_auc', randomized_search=True)
@@ -61,6 +60,7 @@ class SimpleDevelopSupervisedModel(object):
         return trained_model
 
     def logistic_regression(self):
+        # TODO simplify
         print('Training logistic_regression')
         # Train the model
         trained_model = self._dsm.logistic_regression()
@@ -77,6 +77,7 @@ class SimpleDevelopSupervisedModel(object):
         return trained_model
 
     def ensemble(self):
+        # TODO simplify
         if self._dsm.model_type is 'classification':
             self._dsm.ensemble_classification(scoring_metric='roc_auc')
         elif self._dsm.model_type is 'regression':
