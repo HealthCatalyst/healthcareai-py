@@ -71,42 +71,6 @@ class TrainedSupervisedModel(object):
 
         return y_predictions
 
-    def make_factors(self, dataframe, number_top_features=3):
-        """
-        Given a prediction dataframe, build and return a list of the top k feautures in dataframe format
-        
-        Args:
-            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
-            number_top_features (int): Number of top features per row
-
-        Returns:
-            pandas.core.frame.DataFrame:  
-        """
-
-        # Run the raw dataframe through the preparation process
-        prepared_dataframe = self.prepare_and_subset(dataframe)
-
-        # Create a new dataframe with the grain column from the original dataframe
-        results = dataframe[[self.grain_column]]
-
-        # Create a list of column names
-        reason_col_names = ['Factor{}TXT'.format(i) for i in range(1, number_top_features + 1)]
-
-        # Get a 2 dimensional list of all the factors
-        top_features = factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
-
-        # Verify that the number of factors matches the number of rows in the original dataframe.
-        if len(top_features) != len(dataframe):
-            raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
-
-        # Create a dataframe from the column names and top features
-        reasons_df = pd.DataFrame(top_features, columns=reason_col_names, index=dataframe.index)
-
-        # Join the top features and results dataframes
-        results = pd.concat([results, reasons_df], axis=1, join_axes=[dataframe.index])
-
-        return results
-
     def prepare_and_subset(self, dataframe):
         """
         Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns that were
@@ -144,6 +108,43 @@ class TrainedSupervisedModel(object):
             raise HealthcareAIError(error_message)
 
         return prepared_dataframe
+
+    def make_factors(self, dataframe, number_top_features=3):
+        """
+        Given a prediction dataframe, build and return a list of the top k feautures in dataframe format
+        
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            number_top_features (int): Number of top features per row
+
+        Returns:
+            pandas.core.frame.DataFrame:  
+        """
+
+        # Run the raw dataframe through the preparation process
+        prepared_dataframe = self.prepare_and_subset(dataframe)
+
+        # Create a new dataframe with the grain column from the original dataframe
+        results = dataframe[[self.grain_column]]
+
+        # Create a list of column names
+        reason_col_names = ['Factor{}TXT'.format(i) for i in range(1, number_top_features + 1)]
+
+        # Get a 2 dimensional list of all the factors
+        top_features = factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
+
+        # Verify that the number of factors matches the number of rows in the original dataframe.
+        if len(top_features) != len(dataframe):
+            raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
+
+        # Create a dataframe from the column names and top features
+        reasons_df = pd.DataFrame(top_features, columns=reason_col_names, index=dataframe.index)
+
+        # Join the top features and results dataframes
+        results = pd.concat([results, reasons_df], axis=1, join_axes=[dataframe.index])
+        # results.set_index(keys=self.grain_column, inplace=True)
+
+        return results
 
     def make_predictions_with_k_factors(self, dataframe, number_top_features=3):
         """

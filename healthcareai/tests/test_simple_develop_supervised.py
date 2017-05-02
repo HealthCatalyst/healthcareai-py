@@ -59,6 +59,22 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
 
             self.assertRegexpMatches(output, expected_output_regex)
 
+    def test_linear_regression(self):
+        hcai = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
+                                            'SystolicBPNBR',
+                                            'regression',
+                                            impute=True,
+                                            grain_column='PatientEncounterID')
+
+        # Hacky way to capture print output since simple prints output instead of returning it.
+        with captured_output() as (out, err):
+            hcai.linear_regression()
+            output = out.getvalue().strip()
+
+            expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 6[0-9][0-9]\.[0-9]*, 'mean_absolute_error': 2[0-9]\.[0-9]*|{?'mean_absolute_error': 2[0-9]\.[0-9]*, 'mean_squared_error': 6[0-9][0-9]\.[0-9]*)"
+
+            self.assertRegexpMatches(output, expected_output_regex)
+
     def test_linear_regression_raises_error_on_missing_columns(self):
         training_df = helpers.load_sample_dataframe()
 
@@ -83,7 +99,6 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
 
         # Make some predictions
         self.assertRaises(HealthcareAIError, trained_linear_model.make_predictions, prediction_df)
-
 
 
 @contextmanager

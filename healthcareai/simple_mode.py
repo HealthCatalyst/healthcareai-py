@@ -77,6 +77,7 @@ class SimpleDevelopSupervisedModel(object):
                                                                      self._dsm.X_train,
                                                                      self._dsm.y_train)
 
+
         trained_supervised_model = TrainedSupervisedModel(
             trained_model,
             trained_factor_model,
