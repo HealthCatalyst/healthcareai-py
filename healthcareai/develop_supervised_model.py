@@ -309,7 +309,6 @@ class DevelopSupervisedModel(object):
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
             pass
-            # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
 
         algorithm = prepare_randomized_search(
             LinearRegression,
@@ -319,9 +318,23 @@ class DevelopSupervisedModel(object):
 
         algorithm.fit(self.X_train, self.y_train)
 
-        # TODO factor model here?
+        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
+                                                                     self.X_train,
+                                                                     self.y_train)
 
-        return algorithm
+        trained_supervised_model = TrainedSupervisedModel(
+            algorithm,
+            trained_factor_model,
+            self.pipeline,
+            self.model_type,
+            self.X_test.columns.values,
+            self.grain_column,
+            self.predicted_column,
+            None,
+            None,
+            self.metrics(algorithm))
+
+        return trained_supervised_model
 
     def knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         if hyperparameter_grid is None:

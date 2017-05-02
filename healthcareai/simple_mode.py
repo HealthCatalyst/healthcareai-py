@@ -52,14 +52,10 @@ class SimpleDevelopSupervisedModel(object):
         self.print_metrics(trained_model)
 
     def random_forest_classification(self):
-        # 2017-05-01
-        # TODO put TrainedSupervisedModel into advanced class and compare how it feels with the linear_regression()
         print('Training random_forest_classification')
 
-        # Train the model
+        # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
-
-        # Display the model metrics
         print(trained_model.metrics())
 
         return trained_model
@@ -73,33 +69,12 @@ class SimpleDevelopSupervisedModel(object):
 
     def linear_regression(self):
         print('Training linear_regression')
-        # Train the model
+
+        # Train the model and display the model metrics
         trained_model = self._dsm.linear_regression(randomized_search=False)
+        print(trained_model.metrics())
 
-        # TODO this pattern should be the same on all the simple methods
-        # Display the model metrics
-        metrics = self.metrics(trained_model)
-        print(metrics)
-
-        # TODO building this object should probably happen in the advanced class
-        trained_factor_model = factors.prepare_fit_model_for_factors(self._dsm.model_type,
-                                                                     self._dsm.X_train,
-                                                                     self._dsm.y_train)
-
-
-        trained_supervised_model = TrainedSupervisedModel(
-            trained_model,
-            trained_factor_model,
-            self._dsm.pipeline,
-            self._dsm.model_type,
-            self._dsm.X_test.columns.values,
-            self._dsm.grain_column,
-            self._dsm.predicted_column,
-            None,
-            None,
-            metrics)
-
-        return trained_supervised_model
+        return trained_model
 
     def ensemble(self):
         if self._dsm.model_type is 'classification':
