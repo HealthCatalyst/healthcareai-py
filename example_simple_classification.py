@@ -70,21 +70,21 @@ def main():
     print(predictions[0:5])
 
     # Get the important factors
-    factors = trained_model.make_factors(prediction_dataframe, number_top_features=1)
+    factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
     print(factors.head())
     print(factors.dtypes)
 
     # Get predictions with factors
     predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe,
-                                                                                number_top_features=1)
+                                                                                number_top_features=3)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
     print(predictions_with_factors_df.head())
     print(predictions_with_factors_df.dtypes)
 
     # Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
-        prediction_dataframe, number_top_features=1)
+        prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
     print(original_plus_predictions_and_factors.head())
     print(original_plus_predictions_and_factors.dtypes)

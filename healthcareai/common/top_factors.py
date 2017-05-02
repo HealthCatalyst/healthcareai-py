@@ -29,7 +29,8 @@ def top_k_features(dataframe, linear_model, k=3):
 
     """
     # Basic validation for number of features vs column count
-    max_model_features = len(linear_model.coef_)
+    # Squeeze the array (which might be 1D or 2D down to 1D
+    max_model_features = len(np.squeeze(linear_model.coef_))
     if k > max_model_features:
         raise HealthcareAIError('You requested {} top features, which is more than the {} features from the original'
                                 ' model. Please choose {} or less.'.format(k, max_model_features, max_model_features))
