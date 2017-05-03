@@ -1,6 +1,6 @@
 import pandas as pd
 from datetime import datetime
-import healthcareai.common.file_io_utilities as io
+import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.top_factors as factors
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
@@ -47,7 +47,7 @@ class TrainedSupervisedModel(object):
         """
 
         # TODO should this timestamp a model name automatically? (for example 2017-04-26_01.33.55_random_forest.pkl)
-        io.save_object_as_pickle(filename, self)
+        io_utilities.save_object_as_pickle(filename, self)
         print('Model saved as {}'.format(filename))
 
     def make_predictions(self, dataframe):

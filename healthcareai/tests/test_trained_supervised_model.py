@@ -4,7 +4,7 @@ import pandas as pd
 
 import healthcareai.tests.helpers as helpers
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.simple_mode import SimpleDevelopSupervisedModel
+from healthcareai.trainer import SupervisedModelTrainer
 
 
 class TestTrainedSupervisedModel(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-        hcai = SimpleDevelopSupervisedModel(
+        hcai = SupervisedModelTrainer(
             training_df,
             'SystolicBPNBR',
             'regression',

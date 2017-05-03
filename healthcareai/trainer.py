@@ -2,7 +2,7 @@ from healthcareai.develop_supervised_model import DevelopSupervisedModel
 import healthcareai.pipelines.data_preparation as pipelines
 
 
-class SimpleDevelopSupervisedModel(object):
+class SupervisedModelTrainer(object):
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
         self.grain_column = grain_column,
         self.predicted_column = predicted_column,

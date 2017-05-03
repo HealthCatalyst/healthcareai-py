@@ -1,12 +1,19 @@
-"""This file is used to create and compare two models on a particular dataset.
-It provides examples of reading from both csv and SQL Server. Note that this
-example can be run as-is after installing healthcare.ai. After you have
-found that one of the models works well on your data, move to Example2
+"""Creates and compares classification models using sample clinical data.
+
+Please use this example to learn about the framework before moving on to the next example.
+
+If you have not installed healthcare.ai, refer to the instructions here:
+  http://healthcareai-py.readthedocs.io
+
+To run this example:
+  python3 example_simple_classification.py
+
+This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import time
 import pandas as pd
-from healthcareai.simple_mode import SimpleDevelopSupervisedModel
-import healthcareai.common.file_io_utilities as io
+from healthcareai.trainer import SupervisedModelTrainer
+import healthcareai.common.file_io_utilities as io_utilities
 
 
 def main():
@@ -19,10 +26,11 @@ def main():
     dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
     # Look at the first few rows of your dataframe after the data preparation
+    print('\n\n-------------------[ training data ]----------------------------------------------------\n')
     print(dataframe.head())
 
     # Step 1: Setup healthcareai for developing a model. This prepares your data for model building
-    hcai = SimpleDevelopSupervisedModel(
+    hcai = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='ThirtyDayReadmitFLG',
         model_type='classification',
@@ -36,7 +44,8 @@ def main():
     # hcai.knn()
 
     # Run the random forest model
-    random_forest = hcai.random_forest()
+    random_forest = hcai.ensemble()
+    # random_forest = hcai.random_forest()
     print('Model trained in {} seconds\n'.format(time.time() - t0))
     print('type: {}'.format(type(random_forest)))
 
@@ -54,7 +63,7 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io.load_saved_model(saved_model_filename)
+    trained_model = io_utilities.load_saved_model(saved_model_filename)
 
     # TODO swap this out for testing
     trained_model = random_forest

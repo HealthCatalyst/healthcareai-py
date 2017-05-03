@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.simple_mode import SimpleDevelopSupervisedModel
+from healthcareai.trainer import SupervisedModelTrainer
 import healthcareai.tests.helpers as helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
@@ -18,18 +18,18 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         columns_to_remove = ['PatientID', 'InTestWindowFLG']
         df.drop(columns_to_remove, axis=1, inplace=True)
 
-        cls.classification = SimpleDevelopSupervisedModel(dataframe=df,
-                                                          predicted_column='ThirtyDayReadmitFLG',
-                                                          model_type='classification',
-                                                          impute=True,
-                                                          grain_column='PatientEncounterID',
-                                                          verbose=False)
-        cls.regression = SimpleDevelopSupervisedModel(df,
+        cls.classification = SupervisedModelTrainer(dataframe=df,
+                                                    predicted_column='ThirtyDayReadmitFLG',
+                                                    model_type='classification',
+                                                    impute=True,
+                                                    grain_column='PatientEncounterID',
+                                                    verbose=False)
+        cls.regression = SupervisedModelTrainer(df,
                                                       'SystolicBPNBR',
                                                       'regression',
-                                                      grain_column='PatientEncounterID',
-                                                      impute=True,
-                                                      verbose=False)
+                                                grain_column='PatientEncounterID',
+                                                impute=True,
+                                                verbose=False)
 
     def test_knn(self):
         trained_knn = self.classification.knn()
