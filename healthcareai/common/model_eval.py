@@ -286,7 +286,7 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     roc_auc = sklearn.metrics.roc_auc_score(y_test, predictions)
     accuracy = sklearn.metrics.accuracy_score(y_test, predictions)
 
-    return {'roc_auc_score': roc_auc, 'accuracy': accuracy}
+    return {'roc_auc': roc_auc, 'accuracy': accuracy}
 
 
 def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=False):

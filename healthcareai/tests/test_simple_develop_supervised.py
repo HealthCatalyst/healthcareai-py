@@ -37,22 +37,16 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         result = trained_knn.metrics()
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        expected_roc_auc_score = 0.65
-        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
-
-        expected_accuracy = 0.88
-        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
+        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     def test_random_forest_classification(self):
         trained_random_forest = self.classification.random_forest_classification()
         result = trained_random_forest.metrics()
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        expected_roc_auc_score = 0.75
-        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
-
-        expected_accuracy = 0.89
-        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
+        helpers.assertBetween(self, 0.65, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
         trained_linear_model = self.regression.linear_regression()
@@ -85,11 +79,20 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         result = trained_lr.metrics()
 
         # TODO is this even a valid test at a 0.5 auc?
-        expected_roc_auc_score = 0.5
-        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
+        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
-        expected_accuracy = 0.85
-        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
+    def test_ensemble_classification(self):
+        trained_ensemble = self.classification.ensemble()
+        self.assertIsInstance(trained_ensemble, TrainedSupervisedModel)
+
+        result = trained_ensemble.metrics()
+
+        helpers.assertBetween(self, 0.7, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+
+    def test_ensemble_regression(self):
+        self.assertRaises(HealthcareAIError, self.regression.ensemble)
 
     def test_linear_regression_raises_error_on_missing_columns(self):
         training_df = helpers.load_sample_dataframe()

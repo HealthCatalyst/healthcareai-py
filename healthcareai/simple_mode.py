@@ -44,7 +44,8 @@ class SimpleDevelopSupervisedModel(object):
         print('Training random_forest_regression')
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error', randomized_search=True)
+        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
+                                                          randomized_search=True)
         print(trained_model.metrics())
 
         return trained_model
@@ -77,13 +78,23 @@ class SimpleDevelopSupervisedModel(object):
         return trained_model
 
     def ensemble(self):
-        # TODO simplify
+        print('Running ensemble training')
+
+        # Train the appropriate ensemble of models and display the model metrics
         if self._dsm.model_type is 'classification':
-            self._dsm.ensemble_classification(scoring_metric='roc_auc')
+            metric = 'roc_auc'
+            trained_model = self._dsm.ensemble_classification(scoring_metric=metric)
         elif self._dsm.model_type is 'regression':
             # TODO stub
-            # self._dsm.ensemble_regression(scoring_metric='roc_auc')
-            pass
+            metric = 'neg_mean_squared_error'
+            trained_model = self._dsm.ensemble_regression(scoring_metric=metric)
+
+        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(
+            metric,
+            type(trained_model.model.estimator).__name__))
+
+        print(trained_model.metrics())
+        return trained_model
 
     def plot_roc(self):
         """ Plot ROC curve """

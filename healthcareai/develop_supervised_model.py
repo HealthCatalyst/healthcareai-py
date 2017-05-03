@@ -26,26 +26,21 @@ from healthcareai.trained_models.trained_supervised_model import TrainedSupervis
 
 class DevelopSupervisedModel(object):
     """
-    This class helps create a model using several common classifiers
-    (reporting AUC) and regressors (reporting MAE/MSE). When instantiating,
-    the data is prepped and one-fifth is held out so model accuracy can be
-    assessed.
-
-    Parameters
-    ----------
-    modeltype (str) : whether the model will be 'classification' or 'regression'
-    df (dataframe) : data that your model is based on
-    predictedcol (str) : y column (in ticks) who's values are being predicted
-    impute (boolean) : whether imputation is done on the data; if not, rows with nulls are removed
-    graincol (str) : OPTIONAL | column (in ticks) that represents the data's grain
-    debug (boolean) : OPTIONAL | verbosity of the output
-
-    Returns
-    -------
-    Object representing the cleaned data, against which methods are run
+    This class helps create a model using several common classifiers (reporting AUC) and regressors
+    (reporting MAE/MSE).
     """
 
     def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
+        """
+        Creates an instance of DevelopSupervisedModel
+        
+        Args:
+            dataframe (pandas.DataFrame): The training data
+            model_type (str): 'classification' or 'regression'
+            predicted_column (str): The name of the predicted/target/label column
+            grain_column (str): The grain column
+            verbose (bool): Verbose output
+        """
         self.dataframe = dataframe
         self.model_type = model_type
         self.predicted_column = predicted_column
@@ -64,7 +59,7 @@ class DevelopSupervisedModel(object):
         self.ensemble_results = None
         self.pipeline = None
 
-        self.console_log(
+        self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
     def under_sampling(self, random_state=0):
@@ -144,11 +139,6 @@ class DevelopSupervisedModel(object):
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
-    def print_out_dataframe_shape_and_head(self, message):
-        self.console_log(message)
-        self.console_log(self.dataframe.shape)
-        self.console_log(self.dataframe.head())
-
     def train_test_split(self):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
@@ -156,13 +146,14 @@ class DevelopSupervisedModel(object):
         self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
             X, y, test_size=.20, random_state=0)
 
-        self.console_log('\nShape of X_train: {}\ny_train: {}\nX_test: {}\ny_test: {}'.format(
+        self._console_log('\nShape of X_train: {}\ny_train: {}\nX_test: {}\ny_test: {}'.format(
             self.X_train.shape,
             self.y_train.shape,
             self.X_test.shape,
             self.y_test.shape))
 
     def save_output_to_csv(self, filename, output):
+        # TODO likely deprecate this and use pandas in examples? - ask CAFE
         # TODO timeRan is borked
         output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
                                           output['gridSearch_BestScore'],
@@ -177,59 +168,61 @@ class DevelopSupervisedModel(object):
 
     def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
         # TODO stub
-        pass
+        raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
 
-    def ensemble_classification(self, scoring_metric='roc_auc', model_by_name=None):
+    def ensemble_classification(self, scoring_metric='roc_auc', trained_model_by_name=None):
         """
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
         """
-        # TODO enumerate, document and validate scoring options
-        # http://scikit-learn.org/stable/modules/model_evaluation.html#common-cases-predefined-values
-        # TODO Does one of those options make the most sense to pick a default?
-        # TODO Can we algorithmically determine the best choice?
-
         self.validate_score_metric_for_number_of_classes(scoring_metric)
         score_by_name = {}
 
         # Here is the default list of algorithms to try for the ensemble
         # Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary
-        if model_by_name is None:
-            model_by_name = {}
-            model_by_name['KNN'] = self.knn(randomized_search=True, scoring_metric=scoring_metric)
-            model_by_name['Logistic Regression'] = self.logistic_regression()
-            model_by_name['Random Forest Classifier'] = self.random_forest_classifier(
-                randomized_search=True,
-                scoring_metric=scoring_metric).best_estimator_
+        if trained_model_by_name is None:
+            # TODO because these now all return TSMs it will be additionally slow by all the factor models.
+            # TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?
+            trained_model_by_name = {
+                'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
+                'Logistic Regression': self.logistic_regression(randomized_search=False),
+                'Random Forest Classifier': self.random_forest_classifier(
+                    randomized_search=True,
+                    scoring_metric=scoring_metric)}
 
-        for name, model in model_by_name.items():
+        for name, model in trained_model_by_name.items():
+            # Unroll estimator from trained supervised model
+            estimator = self._get_estimator_from_trained_supervised_model(model)
+
+            # Get the score objects for the estimator
+            score = self.metrics(estimator)
+            self._console_log('{} algorithm: score = {}'.format(name, score))
+
             # TODO this may need to ferret out each classification score separately
-            score = self.metrics(model)
             score_by_name[name] = score[scoring_metric]
-
-            self.console_log('{} algorithm: score = {}'.format(name, score))
 
         sorted_names_and_scores = sorted(score_by_name.items(), key=lambda x: x[1])
         best_algorithm_name, best_score = sorted_names_and_scores[-1]
-        best_model = model_by_name[best_algorithm_name]
+        best_model = trained_model_by_name[best_algorithm_name]
 
+        # TODO this results object might be deprecated
         results = {
             'best_score': best_score,
             'best_algorithm_name': best_algorithm_name,
             'model_scores': score_by_name,
             'best_model': best_model
         }
-
-        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric,
-                                                                                       best_algorithm_name))
-        print('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
-
         self.ensemble_results = results
-        return results
+
+        self._console_log('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric,
+                                                                                                   best_algorithm_name))
+        self._console_log('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
+
+        return best_model
 
     def write_classification_metrics_to_json(self):
+        # TODO this is really not in the right place. And it might be deprecated, since metrics can be access from TSM
         # TODO a similar method should be created for regression metrics
-        # TODO this is really not in the right place
         if self.ensemble_results is None:
             raise HealthcareAIError('Ensemble must be run before metrics can be written')
         output = {}
@@ -281,8 +274,8 @@ class DevelopSupervisedModel(object):
 
     def logistic_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
-        A light wrapper for Sklearn's logistic regression that performs randomized search over a default (and
-        overideable) hyperparameter grid.
+        A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
+        hyperparameter grid.
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
@@ -297,15 +290,15 @@ class DevelopSupervisedModel(object):
             # 5 cross validation folds
             cv=5)
 
-        trained_supervised_model = self.trainer(algorithm)
+        trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
 
     def linear_regression(self, scoring_metric='neg_mean_squared_error', hyperparameter_grid=None,
                           randomized_search=True):
         """
-        A light wrapper for Sklearn's linear regression that performs randomized search over a default (and
-        overideable) hyperparameter grid.
+        A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
+        hyperparameter grid.
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
@@ -317,11 +310,15 @@ class DevelopSupervisedModel(object):
             hyperparameter_grid,
             randomized_search)
 
-        trained_supervised_model = self.trainer(algorithm)
+        trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
 
     def knn(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+        """
+        A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
+        hyperparameter grid.
+        """
         if hyperparameter_grid is None:
             # TODO add sensible KNN hyperparameter grid
             neighbor_list = list(range(10, 26))
@@ -334,7 +331,7 @@ class DevelopSupervisedModel(object):
             randomized_search,
             n_neighbors=5)
 
-        trained_supervised_model = self.trainer(algorithm)
+        trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
 
@@ -392,6 +389,10 @@ class DevelopSupervisedModel(object):
 
     def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
                                  randomized_search=True):
+        """
+        A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
+        default hyperparameter grid.
+        """
         if hyperparameter_grid is None:
             # TODO add sensible hyperparameter grid
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
@@ -405,7 +406,7 @@ class DevelopSupervisedModel(object):
             randomized_search,
             trees=trees)
 
-        trained_supervised_model = self.trainer(algorithm)
+        trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
 
@@ -414,6 +415,10 @@ class DevelopSupervisedModel(object):
                                 scoring_metric='neg_mean_squared_error',
                                 hyperparameter_grid=None,
                                 randomized_search=True):
+        """
+        A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
+        default hyperparameter grid.
+        """
         if hyperparameter_grid is None:
             # TODO add sensible hyperparameter grid
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
@@ -427,7 +432,7 @@ class DevelopSupervisedModel(object):
             randomized_search,
             trees=trees)
 
-        trained_supervised_model = self.trainer(algorithm)
+        trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
 
@@ -483,14 +488,16 @@ class DevelopSupervisedModel(object):
 
         return self.rfclf
 
-    def trainer(self, algorithm):
+    def _trainer(self, algorithm, include_factor_model=True):
+        # TODO should the factor model be either 1) optional or 2) separate?
         algorithm.fit(self.X_train, self.y_train)
-        trained_factor_model = factors.prepare_fit_model_for_factors(self.model_type,
-                                                                     self.X_train,
-                                                                     self.y_train)
+        if include_factor_model:
+            factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
+        else:
+            factor_model = None
         trained_supervised_model = TrainedSupervisedModel(
             algorithm,
-            trained_factor_model,
+            factor_model,
             self.pipeline,
             self.model_type,
             self.X_test.columns.values,
@@ -550,7 +557,7 @@ class DevelopSupervisedModel(object):
         else:
             plt.show()
 
-    def console_log(self, message):
+    def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
 
@@ -558,3 +565,19 @@ class DevelopSupervisedModel(object):
         """ Show the ROC plot """
         # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
         model_evaluation.display_roc_plot(self.ytest, self.y_probab_linear, self.y_probab_rf, save=save, debug=debug)
+
+    def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
+        """
+        Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+        Args:
+            trained_supervised_model (TrainedSupervisedModel): 
+
+        Returns:
+            sklearn.base.BaseEstimator: 
+
+        """
+        if hasattr(trained_supervised_model.model, 'best_estimator_'):
+            estimator = trained_supervised_model.model.best_estimator_
+        else:
+            estimator = trained_supervised_model.model
+        return estimator

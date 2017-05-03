@@ -35,7 +35,6 @@ def prepare_randomized_search(
                                        n_jobs=1)
 
     else:
-        print('No randomized search. Using {}'.format(estimator))
         algorithm = estimator(**non_randomized_estimator_kwargs)
 
     return algorithm
