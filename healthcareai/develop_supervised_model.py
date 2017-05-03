@@ -297,9 +297,9 @@ class DevelopSupervisedModel(object):
             # 5 cross validation folds
             cv=5)
 
-        algorithm.fit(self.X_train, self.y_train)
+        trained_supervised_model = self.trainer(algorithm)
 
-        return algorithm
+        return trained_supervised_model
 
     def linear_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
         """
@@ -408,7 +408,10 @@ class DevelopSupervisedModel(object):
 
         return trained_supervised_model
 
-    def random_forest_regressor(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
+    def random_forest_regressor(self,
+                                trees=200,
+                                scoring_metric='neg_mean_squared_error',
+                                hyperparameter_grid=None,
                                 randomized_search=True):
         if hyperparameter_grid is None:
             # TODO add sensible hyperparameter grid
@@ -423,8 +426,9 @@ class DevelopSupervisedModel(object):
             randomized_search,
             trees=trees)
 
-        algorithm.fit(self.X_train, self.y_train)
-        return algorithm
+        trained_supervised_model = self.trainer(algorithm)
+
+        return trained_supervised_model
 
     def random_forest(self, cores=4, trees=200, tune=False, debug=False):
         # TODO deprecate after replacements are implemented.

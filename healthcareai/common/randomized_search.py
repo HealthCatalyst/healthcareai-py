@@ -11,10 +11,10 @@ def prepare_randomized_search(
     Given an estimator and various params, initialize an algorithm with optional randomized search.
 
     Args:
-        estimator: a scikit-learn estimator (for example: KNeighborsClassifier)
-        scoring_metric: The scoring metric to optimized for if using random search. See
+        estimator (sklearn.base.BaseEstimator): a scikit-learn estimator (for example: KNeighborsClassifier)
+        scoring_metric (str): The scoring metric to optimized for if using random search. See
             http://scikit-learn.org/stable/modules/model_evaluation.html
-        hyperparameter_grid: An object containing key value pairs of the specific hyperparameter space to search
+        hyperparameter_grid (dict): An object containing key value pairs of the specific hyperparameter space to search
             through.
         randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
             simple algorithm).
@@ -22,7 +22,7 @@ def prepare_randomized_search(
             radomized_search is False
 
     Returns:
-        estimator: a scikit learn algorithm ready to `.fit()`
+        sklearn.base.BaseEstimator: a scikit learn algorithm ready to `.fit()`
 
     """
     if randomized_search:

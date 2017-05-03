@@ -43,12 +43,13 @@ class SimpleDevelopSupervisedModel(object):
         return trained_model
 
     def random_forest_regression(self):
-        # TODO simplify
         print('Training random_forest_regression')
-        # Train the model
-        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='roc_auc', randomized_search=True)
-        # Display the model metrics
-        self.print_metrics(trained_model)
+
+        # Train the model and display the model metrics
+        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error', randomized_search=True)
+        print(trained_model.metrics())
+
+        return trained_model
 
     def random_forest_classification(self):
         print('Training random_forest_classification')
@@ -60,12 +61,13 @@ class SimpleDevelopSupervisedModel(object):
         return trained_model
 
     def logistic_regression(self):
-        # TODO simplify
         print('Training logistic_regression')
-        # Train the model
-        trained_model = self._dsm.logistic_regression()
-        # Display the model metrics
-        self.print_metrics(trained_model)
+
+        # Train the model and display the model metrics
+        trained_model = self._dsm.logistic_regression(randomized_search=False)
+        print(trained_model.metrics())
+
+        return trained_model
 
     def linear_regression(self):
         print('Training linear_regression')

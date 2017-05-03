@@ -12,18 +12,24 @@ from healthcareai.trained_models.trained_supervised_model import TrainedSupervis
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.classification = SimpleDevelopSupervisedModel(dataframe=helpers.load_sample_dataframe(),
+        df = helpers.load_sample_dataframe()
+
+        # Drop columns that won't help machine learning
+        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        df.drop(columns_to_remove, axis=1, inplace=True)
+
+        cls.classification = SimpleDevelopSupervisedModel(dataframe=df,
                                                           predicted_column='ThirtyDayReadmitFLG',
                                                           model_type='classification',
                                                           impute=True,
                                                           grain_column='PatientEncounterID',
                                                           verbose=False)
-        cls.regression = SimpleDevelopSupervisedModel(helpers.load_sample_dataframe(),
+        cls.regression = SimpleDevelopSupervisedModel(df,
                                                       'SystolicBPNBR',
                                                       'regression',
+                                                      grain_column='PatientEncounterID',
                                                       impute=True,
-                                                      grain_column='PatientEncounterID')
-
+                                                      verbose=False)
 
     def test_knn(self):
         trained_knn = self.classification.knn()
@@ -45,7 +51,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         expected_roc_auc_score = 0.75
         self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
 
-        expected_accuracy = 0.95
+        expected_accuracy = 0.89
         self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
 
     def test_linear_regression(self):
@@ -54,11 +60,36 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
 
         result = trained_linear_model.metrics()
 
-        expected_mse = 623
+        expected_mse = 638
         self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
 
         expected_mae = 20
         self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+
+    def test_random_forest_regression(self):
+        trained_rf_regressor = self.regression.random_forest_regression()
+        self.assertIsInstance(trained_rf_regressor, TrainedSupervisedModel)
+
+        result = trained_rf_regressor.metrics()
+
+        expected_mse = 630
+        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-2)
+
+        expected_mae = 18
+        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+
+    def test_logistic_regression(self):
+        trained_lr = self.classification.logistic_regression()
+        self.assertIsInstance(trained_lr, TrainedSupervisedModel)
+
+        result = trained_lr.metrics()
+
+        # TODO is this even a valid test at a 0.5 auc?
+        expected_roc_auc_score = 0.5
+        self.assertAlmostEqual(expected_roc_auc_score, result['roc_auc_score'], places=0)
+
+        expected_accuracy = 0.85
+        self.assertAlmostEqual(expected_accuracy, result['accuracy'], places=1)
 
     def test_linear_regression_raises_error_on_missing_columns(self):
         training_df = helpers.load_sample_dataframe()
