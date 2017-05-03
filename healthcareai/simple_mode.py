@@ -1,7 +1,5 @@
 from healthcareai.develop_supervised_model import DevelopSupervisedModel
 import healthcareai.pipelines.data_preparation as pipelines
-from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
-import healthcareai.common.top_factors as factors
 
 
 class SimpleDevelopSupervisedModel(object):
