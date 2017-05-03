@@ -175,7 +175,7 @@ class DevelopSupervisedModel(object):
         # save files locally #
         output_dataframe.to_csv(filename + '.txt', header=False)
 
-    def ensemble_regression(self, scoring_metric='roc_auc', model_by_name=None):
+    def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
         # TODO stub
         pass
 
@@ -301,7 +301,8 @@ class DevelopSupervisedModel(object):
 
         return trained_supervised_model
 
-    def linear_regression(self, scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True):
+    def linear_regression(self, scoring_metric='neg_mean_squared_error', hyperparameter_grid=None,
+                          randomized_search=True):
         """
         A light wrapper for Sklearn's linear regression that performs randomized search over a default (and
         overideable) hyperparameter grid.
@@ -384,7 +385,7 @@ class DevelopSupervisedModel(object):
                                           hyperparameter_grid=hyperparameter_grid,
                                           randomized_search=randomized_search)
         elif self.model_type == 'regression':
-            self.random_forest_regressor(trees=200,
+            self.random_forest_regressor(trees=trees,
                                          scoring_metric=scoring_metric,
                                          hyperparameter_grid=hyperparameter_grid,
                                          randomized_search=randomized_search)
