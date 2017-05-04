@@ -9,10 +9,8 @@ import time
 import healthcareai.common.file_io_utilities as io_utilities
 from healthcareai.trainer import SupervisedModelTrainer
 
-def main():
-    # Start a timer
-    t0 = time.time()
 
+def main():
     # CSV snippet for reading data into dataframe
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
 
@@ -33,10 +31,11 @@ def main():
         impute=True,
         verbose=False)
 
-    # # Train the linear regression model
-    # trained_linear_model = hcai.linear_regression()
-    trained_linear_model = hcai.random_forest_regression()
-    print('Model trained in {} seconds\n'.format(time.time() - t0))
+    # Train a linear regression model
+    trained_linear_model = hcai.linear_regression()
+
+    # Train a random forest model
+    trained_random_forest = hcai.random_forest_regression()
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'linear_regression_2017-04-18.pkl'
@@ -79,9 +78,9 @@ def main():
     print(predictions_with_factors_df.dtypes)
 
     # Get original dataframe with predictions and factors
-    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(prediction_dataframe)
-    print(
-        '\n\n-------------------[ Original + predictions + factors ]----------------------------------------------------\n')
+    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
+        prediction_dataframe)
+    print('\n\n-------------------[ Original + predictions + factors ]--------------------------\n')
     print(original_plus_predictions_and_factors.head())
     print(original_plus_predictions_and_factors.dtypes)
 
@@ -96,6 +95,7 @@ def main():
 
     # Save results to db
     # TODO Save results to db
+
 
 if __name__ == "__main__":
     main()

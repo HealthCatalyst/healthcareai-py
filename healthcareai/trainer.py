@@ -1,3 +1,4 @@
+import time
 from healthcareai.develop_supervised_model import DevelopSupervisedModel
 import healthcareai.pipelines.data_preparation as pipelines
 
@@ -25,6 +26,7 @@ class SupervisedModelTrainer(object):
         self._dsm.train_test_split()
 
     def random_forest(self):
+        """ Train a random forest model and print out the model performance metrics. """
         # TODO Convenience method. Probably not needed?
         if self._dsm.model_type is 'classification':
             return self.random_forest_classification()
@@ -32,53 +34,76 @@ class SupervisedModelTrainer(object):
             return self.random_forest_regression()
 
     def knn(self):
-        print('Training knn')
+        """ Train a knn model and print out the model performance metrics. """
+        model_name = 'KNN'
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
 
         return trained_model
 
     def random_forest_regression(self):
-        print('Training random_forest_regression')
+        """ Train a random forest regression model and print out the model performance metrics. """
+        model_name = 'Random Forest Regression'
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
                                                           randomized_search=True)
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
 
         return trained_model
 
     def random_forest_classification(self):
-        print('Training random_forest_classification')
+        """ Train a random forest classification model and print out the model performance metrics. """
+        model_name = 'Random Forest Classification'
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
 
         return trained_model
 
     def logistic_regression(self):
-        print('Training logistic_regression')
+        """ Train a logistic regression model and print out the model performance metrics. """
+        model_name = 'Logistic Regression'
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.logistic_regression(randomized_search=False)
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
 
         return trained_model
 
     def linear_regression(self):
-        print('Training linear_regression')
+        """ Train a linear regression model and print out the model performance metrics. """
+        model_name = 'Linear Regression'
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.linear_regression(randomized_search=False)
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
 
         return trained_model
 
     def ensemble(self):
-        print('Running ensemble training')
+        """ Train a ensemble model and print out the model performance metrics. """
+        model_name = 'ensemble {}'.format(self._dsm.model_type)
+        print('Training {}'.format(model_name))
+        t0 = time.time()
 
         # Train the appropriate ensemble of models and display the model metrics
         if self._dsm.model_type is 'classification':
@@ -93,7 +118,9 @@ class SupervisedModelTrainer(object):
             metric,
             type(trained_model.model.estimator).__name__))
 
+        print_training_timer(model_name, t0)
         print(trained_model.metrics())
+
         return trained_model
 
     def plot_roc(self):
@@ -121,3 +148,15 @@ class SupervisedModelTrainer(object):
 
     def get_advanced_features(self):
         return self._dsm
+
+
+def print_training_timer(model_name, start_timestamp):
+    """ Given an original timestamp, prints the amount of time that has passed. 
+
+    Args:
+        start_timestamp (float): Start time 
+        model_name (str): model name
+    """
+    stop_time = time.time()
+    delta_time = round(stop_time - start_timestamp, 2)
+    print('Trained a {} model in {} seconds'.format(model_name, delta_time))

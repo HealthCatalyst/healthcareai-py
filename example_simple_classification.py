@@ -17,8 +17,6 @@ import healthcareai.common.file_io_utilities as io_utilities
 
 
 def main():
-    t0 = time.time()
-
     # CSV snippet for reading data into dataframe
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
 
@@ -38,22 +36,23 @@ def main():
         impute=True,
         verbose=False)
 
-    # Step 2: Compare two models
+    # Train a KNN model
+    trained_knn = hcai.knn()
 
-    # Run the KNN model
-    # hcai.knn()
+    # Train a logistic regression model
+    trained_logistic_regression = hcai.logistic_regression()
 
-    # Run the random forest model
-    random_forest = hcai.ensemble()
-    # random_forest = hcai.random_forest()
-    print('Model trained in {} seconds\n'.format(time.time() - t0))
-    print('type: {}'.format(type(random_forest)))
+    # Train a random forest model
+    trained_random_forest = hcai.random_forest()
+
+    # Train a suite of built in algorithms to see which one looks best
+    trained_ensemble = hcai.ensemble()
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'random_forest_2017-05-01.pkl'
 
     # Save the trained model
-    random_forest.save(saved_model_filename)
+    trained_random_forest.save(saved_model_filename)
 
     # TODO swap out fake data for real databaes sql
     prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
@@ -64,9 +63,8 @@ def main():
 
     # Load the saved model and print out the metrics
     trained_model = io_utilities.load_saved_model(saved_model_filename)
-
     # TODO swap this out for testing
-    trained_model = random_forest
+    trained_model = trained_random_forest
 
     print('\n\n')
     print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model),
@@ -99,10 +97,10 @@ def main():
     print(original_plus_predictions_and_factors.dtypes)
 
     # Get original dataframe with predictions and factors
-    # catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
-    # print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
-    # print(catalyst_dataframe.head())
-    # print(catalyst_dataframe.dtypes)
+    catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
+    print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
+    print(catalyst_dataframe.head())
+    print(catalyst_dataframe.dtypes)
 
     # Save results to csv
     # predictions.to_csv('foo.csv')
@@ -118,10 +116,6 @@ def main():
     # Create ROC plot to compare the two models
     # TODO this is broken - it might look like tools.plot_roc(models=[random_forest, linear, knn])
     # hcai.plot_roc()
-
-    # Run 4 built in algorithms to see which one looks best at first
-    # TODO ensemble is broken
-    # hcai.ensemble()
 
 
 if __name__ == "__main__":

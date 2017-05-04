@@ -279,6 +279,7 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
         dict: A dictionary of metrics objects
     """
     # Get binary classification predictions
+    # TODO make predict_proba for user and predict for metric calculations
     predictions = np.squeeze(trained_model.predict(x_test))
     y_test = np.squeeze(y_test)
 
