@@ -5,6 +5,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
+    # TODO make this database agnostic
     # First, check the connection by inserting test data (and rolling back)
     db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                SERVER=""" + server + """;
@@ -30,7 +31,11 @@ def validate_destination_table_connection(server, destination_table, grain_colum
     except pyodbc.DatabaseError:
         write_result = False
         error_message = """Failed to insert values into {}. Check that the table exists with right column structure.
-        Your Grain ID column might not match that in your input table.""".format(destination_table)
+        Here are some things you should check:
+        1. Your Grain ID column might not match that in your input table.
+        2. Output column is 'predictedprobNBR' for classification, 'predictedvalueNBR' for regression
+        3. Data types are incorrect.
+        """.format(destination_table)
         raise HealthcareAIError(error_message)
 
     finally:

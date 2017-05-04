@@ -1,68 +1,116 @@
+import sys
 import unittest
 from contextlib import contextmanager
-import sys
-import pandas as pd
 from io import StringIO
-from healthcareai.simple_mode import SimpleDevelopSupervisedModel
-from healthcareai.tests.helpers import fixture
+
+from healthcareai.common.healthcareai_error import HealthcareAIError
+from healthcareai.trainer import SupervisedModelTrainer
+import healthcareai.tests.helpers as helpers
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 
 class TestSimpleDevelopSupervisedModel(unittest.TestCase):
-    def setUp(self):
-        self.dataframe = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+    @classmethod
+    def setUpClass(cls):
+        df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        self.dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        df.drop(columns_to_remove, axis=1, inplace=True)
+
+        cls.classification = SupervisedModelTrainer(dataframe=df,
+                                                    predicted_column='ThirtyDayReadmitFLG',
+                                                    model_type='classification',
+                                                    impute=True,
+                                                    grain_column='PatientEncounterID',
+                                                    verbose=False)
+        cls.regression = SupervisedModelTrainer(df,
+                                                      'SystolicBPNBR',
+                                                      'regression',
+                                                grain_column='PatientEncounterID',
+                                                impute=True,
+                                                verbose=False)
 
     def test_knn(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=self.dataframe,
-                                            predicted_column='ThirtyDayReadmitFLG',
-                                            model_type='classification',
-                                            impute=True,
-                                            grain_column='PatientEncounterID',
-                                            verbose=False)
+        trained_knn = self.classification.knn()
 
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            hcai.knn()
-            output = out.getvalue().strip()
+        result = trained_knn.metrics()
+        self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-            expected_output_regex = r"Training knn\n({?'roc_auc_score': 0.5[0-9]*.*'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*.*'roc_auc_score': 0.5[0-9]*)"
-
-            self.assertRegexpMatches(output, expected_output_regex)
+        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     def test_random_forest_classification(self):
-        hcai = SimpleDevelopSupervisedModel(dataframe=self.dataframe,
-                                            predicted_column='ThirtyDayReadmitFLG',
-                                            model_type='classification',
-                                            impute=True,
-                                            grain_column='PatientEncounterID',
-                                            verbose=False)
+        trained_random_forest = self.classification.random_forest_classification()
+        result = trained_random_forest.metrics()
+        self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            hcai.random_forest_classification()
-            output = out.getvalue().strip()
-
-            expected_output_regex = r"Training random_forest_classification\n({?'roc_auc_score': 0.7[0-9]*, 'accuracy': 0.8[0-9]*|{?'accuracy': 0.8[0-9]*, 'roc_auc_score': 0.7[0-9]*)"
-
-            self.assertRegexpMatches(output, expected_output_regex)
+        helpers.assertBetween(self, 0.65, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
-        hcai = SimpleDevelopSupervisedModel(self.dataframe,
-                                            'SystolicBPNBR',
-                                            'regression',
-                                            impute=True,
-                                            grain_column='PatientEncounterID')
+        trained_linear_model = self.regression.linear_regression()
+        self.assertIsInstance(trained_linear_model, TrainedSupervisedModel)
 
-        # Hacky way to capture print output since simple prints output instead of returning it.
-        with captured_output() as (out, err):
-            hcai.linear_regression()
-            output = out.getvalue().strip()
+        result = trained_linear_model.metrics()
 
-            expected_output_regex = r"Training linear_regression\n(.*\n)?({?'mean_squared_error': 638\.[0-9]*, 'mean_absolute_error': 20\.[0-9]*|{?'mean_absolute_error': 20\.[0-9]*, 'mean_squared_error': 638\.[0-9]*)"
+        expected_mse = 638
+        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
 
-            self.assertRegexpMatches(output, expected_output_regex)
+        expected_mae = 20
+        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+
+    def test_random_forest_regression(self):
+        trained_rf_regressor = self.regression.random_forest_regression()
+        self.assertIsInstance(trained_rf_regressor, TrainedSupervisedModel)
+
+        result = trained_rf_regressor.metrics()
+
+        expected_mse = 630
+        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-2)
+
+        expected_mae = 18
+        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+
+    def test_logistic_regression(self):
+        trained_lr = self.classification.logistic_regression()
+        self.assertIsInstance(trained_lr, TrainedSupervisedModel)
+
+        result = trained_lr.metrics()
+
+        # TODO is this even a valid test at a 0.5 auc?
+        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+
+    def test_ensemble_classification(self):
+        trained_ensemble = self.classification.ensemble()
+        self.assertIsInstance(trained_ensemble, TrainedSupervisedModel)
+
+        result = trained_ensemble.metrics()
+
+        helpers.assertBetween(self, 0.7, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+
+    def test_ensemble_regression(self):
+        self.assertRaises(HealthcareAIError, self.regression.ensemble)
+
+    def test_linear_regression_raises_error_on_missing_columns(self):
+        training_df = helpers.load_sample_dataframe()
+
+        # Drop columns that won't help machine learning
+        training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+
+        # # Train the linear regression model
+        trained_linear_model = self.regression.linear_regression()
+
+        # Load a new df for predicting
+        prediction_df = helpers.load_sample_dataframe()
+
+        # Drop columns that model expects
+        prediction_df.drop('GenderFLG', axis=1, inplace=True)
+
+        # Make some predictions
+        self.assertRaises(HealthcareAIError, trained_linear_model.make_predictions, prediction_df)
 
 
 @contextmanager

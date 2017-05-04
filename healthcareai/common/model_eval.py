@@ -1,13 +1,16 @@
 import math
+import os
 
-import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import sklearn
+from matplotlib import pyplot as plt
 from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
-from healthcareai.common.feature_importances import write_feature_importances
+from healthcareai.common.top_factors import write_feature_importances
 from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
 
 
@@ -27,14 +30,14 @@ def clfreport(model_type,
     """
     Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
     - [x] runs grid search
-    - [ ] save/load a pickled model
+    - [x] save/load a pickled model
     - [ ] print out debug messages
     - [x] train the classifier
     - [ ] print out grid params
     - [ ] calculate metrics
     - [ ] feature importances
     - [ ] logging
-    - [ ] production predictions from pickle file
+    - [x] production predictions from pickle file
     - do some numpy manipulation
         - lines ~50?
     - possible returns:
@@ -82,7 +85,6 @@ def clfreport(model_type,
         else:
             print("No hyper-parameter tuning was done.")
 
-
         # TODO: refactor this logic to be simpler
         # These returns are TIGHTLY coupled with their uses in develop and deploy. Both will have to be unwound together
         has_importances = hasattr(algorithm, 'feature_importances_')
@@ -116,6 +118,7 @@ def do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_save
 
         algorithm.fit(X_train, y_train)
         save_object_as_pickle('probability.pkl', algorithm)
+
     if model_type == 'classification':
         y_pred = np.squeeze(algorithm.predict_proba(X_test)[:, 1])
     elif model_type == 'regression':
@@ -162,7 +165,7 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
     aucType = aucType.upper()
 
     # check to see if AUC is SS or PR. If not, default to SS
-    if aucType != 'SS' and aucType != 'PR':
+    if aucType not in ['SS', 'PR']:
         print('Drawing ROC curve with Sensitivity/Specificity')
         aucType = 'SS'
 
@@ -172,7 +175,7 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         area = auc(fpr, tpr)
         print('Area under ROC curve (AUC): %0.2f' % area)
         # get ideal cutoffs for suggestions
-        d = (fpr - 0)**2 + (tpr - 1)**2
+        d = (fpr - 0) ** 2 + (tpr - 1) ** 2
         ind = np.where(d == np.min(d))
         bestTpr = tpr[ind]
         bestFpr = fpr[ind]
@@ -201,7 +204,7 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
                  'BestTpr': bestTpr[0],
                  'BestFpr': bestFpr[0]})
     # Compute PR curve and PR area
-    else: # must be PR
+    else:  # must be PR
         # Compute Precision-Recall and plot curve
         precision, recall, thresh = precision_recall_curve(labels, predictions)
         area = average_precision_score(labels, predictions)
@@ -212,12 +215,12 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         bestPre = precision[ind]
         bestRec = recall[ind]
         cutoff = thresh[ind]
-        print( "Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-               % (cutoff, bestPre, bestRec))
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
+              % (cutoff, bestPre, bestRec))
         if allCutoffsFlg is True:
             print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
             for i in range(len(thresh)):
-                print('%5.2f %6.2f %10.2f' %(thresh[i],precision[i], recall[i]))
+                print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
 
         # plot PR curve
         if plotFlg is True:
@@ -233,10 +236,118 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
                 area))
             plt.legend(loc="lower right")
             plt.show()
-        return({'AU_PR':area,
-                'BestCutoff':cutoff[0],
-                'BestPrecision':bestPre[0],
-                'BestRecall':bestRec[0]})
+        return ({'AU_PR': area,
+                 'BestCutoff': cutoff[0],
+                 'BestPrecision': bestPre[0],
+                 'BestRecall': bestRec[0]})
+
+
+def calculate_regression_metrics(trained_model, x_test, y_test):
+    """
+    Given a trained model, calculate metrics
+
+    Args:
+        trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+        x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
+
+    Returns:
+        dict: A dictionary of metrics objects
+    """
+    # Get predictions
+    predictions = trained_model.predict(x_test)
+
+    # Calculate individual metrics
+    mean_squared_error = sklearn.metrics.mean_squared_error(y_test, predictions)
+    mean_absolute_error = sklearn.metrics.mean_absolute_error(y_test, predictions)
+
+    result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
+
+    return result
+
+
+def calculate_classification_metrics(trained_model, x_test, y_test):
+    """
+    Given a trained model, calculate metrics
+
+    Args:
+        trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
+        y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+
+    Returns:
+        dict: A dictionary of metrics objects
+    """
+    # Get binary classification predictions
+    # TODO make predict_proba for user and predict for metric calculations
+    predictions = np.squeeze(trained_model.predict(x_test))
+    y_test = np.squeeze(y_test)
+
+    # Build a dictionary of calculated metrics
+    roc_auc = sklearn.metrics.roc_auc_score(y_test, predictions)
+    accuracy = sklearn.metrics.accuracy_score(y_test, predictions)
+
+    return {'roc_auc': roc_auc, 'accuracy': accuracy}
+
+
+def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=False):
+    """
+    Generates a ROC plot for linear and random forest models
+
+    Args:
+        y_test (list): A 1d list of predictions
+        y_probab_linear: 
+        y_probab_rf: 
+        save: Whether to save the plot
+        debug: Verbosity of output. If True, shows list of FPR/TPR for each point in the plot (default False)
+
+    Returns:
+        matplotlib.figure.Figure: The matplot figure
+    """
+
+    # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
+
+    # Linear model calculations
+    fpr_linear, tpr_linear, _ = sklearn.metrics.roc_curve(y_test, y_probab_linear)
+    roc_auc_linear = sklearn.metrics.auc(fpr_linear, tpr_linear)
+
+    # Random forest model calculations
+    fpr_rf, tpr_rf, _ = sklearn.metrics.roc_curve(y_test, y_probab_rf)
+    roc_auc_rf = sklearn.metrics.auc(fpr_rf, tpr_rf)
+
+    # TODO: add cutoff associated with FPR/TPR
+
+    if debug:
+        print('Linear model:')
+        print('FPR, and TRP')
+        print(pd.DataFrame({'FPR': fpr_linear, 'TPR': tpr_linear}))
+        print('Random forest model:')
+        print('FPR, and TRP')
+        print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))
+
+    plt.figure()
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic')
+    plt.legend(loc="lower right")
+
+    plt.plot(fpr_linear, tpr_linear, color='b', label='Logistic (area = %0.2f)' % roc_auc_linear)
+    plt.plot(fpr_rf, tpr_rf, color='g', label='RandomForest (area = %0.2f)' % roc_auc_rf)
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+
+    if save:
+        plt.savefig('ROC.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nROC file saved in: {}'.format(source_path))
+        plt.show()
+    else:
+        plt.show()
+
+    # return figure if anyone wants to save or manipulate it in another way
+    # return figure
+
 
 if __name__ == "__main__":
     pass

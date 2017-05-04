@@ -40,7 +40,7 @@ def main():
 
     # Step 1: compare two models
     o = DevelopSupervisedModel(dataframe='classification', model_type='classification',
-                               predicted_column='ThirtyDayReadmitFLG', grain_column_name='PatientEncounterID')
+                               predicted_column='ThirtyDayReadmitFLG', grain_column='PatientEncounterID')
 
     # Run the linear model
     o.linear(cores=1)

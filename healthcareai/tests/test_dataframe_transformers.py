@@ -3,7 +3,29 @@ import numpy as np
 import unittest
 import healthcareai.common.transformers as transformers
 
+
 class TestDataframeImputer(unittest.TestCase):
+    def test_imputation_false_returns_unmodified(self):
+        df = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            ['a', None, None]
+        ])
+        expected = pd.DataFrame([
+            ['a', 1, 2],
+            ['b', 1, 1],
+            ['b', 2, 2],
+            ['a', None, None]
+        ])
+
+        result = transformers.DataFrameImputer(impute=False).fit_transform(df)
+
+        self.assertEqual(len(result), 4)
+        # Assert column types remain identical
+        self.assertTrue(list(result.dtypes) == list(df.dtypes))
+        self.assertTrue(expected.equals(result))
+
     def test_imputation_removes_nans(self):
         df = pd.DataFrame([
             ['a', 1, 2],
@@ -42,7 +64,6 @@ class TestDataframeImputer(unittest.TestCase):
         ])
 
         result = transformers.DataFrameImputer().fit_transform(df)
-
         self.assertEqual(len(result), 4)
         self.assertFalse(result.isnull().values.any())
         # Assert column types remain identical
