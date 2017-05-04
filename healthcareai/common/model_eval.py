@@ -278,16 +278,26 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     Returns:
         dict: A dictionary of metrics objects
     """
-    # Get binary classification predictions
-    # TODO make predict_proba for user and predict for metric calculations
-    predictions = np.squeeze(trained_model.predict(x_test))
+    # Squeeze down y_test to 1D
     y_test = np.squeeze(y_test)
 
-    # Build a dictionary of calculated metrics
-    roc_auc = sklearn.metrics.roc_auc_score(y_test, predictions)
-    accuracy = sklearn.metrics.accuracy_score(y_test, predictions)
+    # Get binary classification predictions
+    binary_predictions = np.squeeze(trained_model.predict(x_test))
 
-    return {'roc_auc': roc_auc, 'accuracy': accuracy}
+    # Get probability classification predictions
+    probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:,1])
+
+    # Calculate some metrics
+    precision, recall, thresholds = precision_recall_curve(y_test, probability_predictions)
+    pr_auc = auc(recall, precision)
+    roc_auc = sklearn.metrics.roc_auc_score(y_test, binary_predictions)
+    accuracy = sklearn.metrics.accuracy_score(y_test, binary_predictions)
+
+    return {
+        'roc_auc': roc_auc,
+        'accuracy': accuracy,
+        'pr_auc': pr_auc,
+        }
 
 
 def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=False):
