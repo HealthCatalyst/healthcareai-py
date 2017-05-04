@@ -285,7 +285,7 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     binary_predictions = np.squeeze(trained_model.predict(x_test))
 
     # Get probability classification predictions
-    probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:,1])
+    probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:, 1])
 
     # Calculate some metrics
     precision, recall, thresholds = precision_recall_curve(y_test, probability_predictions)
@@ -297,7 +297,7 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
         'roc_auc': roc_auc,
         'accuracy': accuracy,
         'pr_auc': pr_auc,
-        }
+    }
 
 
 def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=False):
