@@ -399,9 +399,8 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         plt.savefig('ROC.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
         print('\nROC plot saved in: {}'.format(source_path))
-        plt.show()
-    else:
-        plt.show()
+
+    plt.show()
 
 
 if __name__ == "__main__":
