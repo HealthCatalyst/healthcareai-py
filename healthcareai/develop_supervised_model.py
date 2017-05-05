@@ -514,54 +514,44 @@ class DevelopSupervisedModel(object):
             self.metrics(algorithm))
         return trained_supervised_model
 
-    def plot_rffeature_importance(self, save=False):
-        # TODO refactor this as a tool + advanced/simple wrapper
-        """
-        Plots feature importances for random forest models
+    def plot_rffeature_importance(self, trained_rf_classifier, x_train, feature_names, save=False):
+        """ Plots feature importances for random forest models """
 
-        Parameters
-        ----------
-        save (boolean) : Whether to save the plot
-
-        Returns
-        -------
-        Nothing. A plot is created and displayed.
-        """
+        # TODO deals with randomized search - can this be nuked?
+        if hasattr(trained_rf_classifier, 'best_estimator_'):
+            # If this was a randomized search estimator, extract the best one
+            best_rf = trained_rf_classifier.best_estimator_
+        else:
+            # Otherwise, use the single model
+            best_rf = trained_rf_classifier
 
         # Arrange columns in order of importance
-        if hasattr(self.rfclf, 'best_estimator_'):
-            importances = self.rfclf.best_estimator_.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.best_estimator_.estimators_],
-                axis=0)
-        else:
-            importances = self.rfclf.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.estimators_],
-                axis=0)
-
+        importances = best_rf.feature_importances_
+        feature_importances = [tree.feature_importances_ for tree in best_rf.estimators_]
+        standard_deviations = np.std(feature_importances, axis=0)
         indices = np.argsort(importances)[::-1]
-        namelist = [self.col_list[i] for i in indices]
+        namelist = [feature_names[i] for i in indices]
 
-        # Plot these columns
+        # Set up the plot
         plt.figure()
         plt.title("Feature importances")
-        plt.bar(range(self.X_train.shape[1]),
-                importances[indices], color="r",
-                yerr=std[indices], align="center")
-        plt.xticks(range(self.X_train.shape[1]), namelist, rotation=90)
-        plt.xlim([-1, self.X_train.shape[1]])
+
+        # Plot each feature
+        shape_SOMETHING = x_train.shape[1]
+        range_SOMETHING = range(shape_SOMETHING)
+
+        plt.bar(range_SOMETHING, importances[indices], color="r", yerr=standard_deviations[indices], align="center")
+        plt.xticks(range_SOMETHING, namelist, rotation=90)
+        plt.xlim([-1, shape_SOMETHING])
         plt.gca().set_ylim(bottom=0)
         plt.tight_layout()
+
         if save:
             plt.savefig('FeatureImportances.png')
             source_path = os.path.dirname(os.path.abspath(__file__))
             print('\nFeature importances saved in: {}'.format(source_path))
-            plt.show()
-        else:
-            plt.show()
+
+        plt.show()
 
     def _console_log(self, message):
         if self.verbose:
@@ -570,7 +560,7 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         # TODO this is broken and may not even be implemented - use the toolbox?
         pass
-    
+
     def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
         """
         Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
