@@ -122,6 +122,10 @@ def main():
     # Create a comparison ROC plot multiple models
     hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression])
 
+    # TODO make this more elegant - figure out where/how it should be accessed
+    # TODO should it be part of a .random_forest() call?
+    # Plot the feature importances from a random forest model
+    hcaieval.plot_rf_from_tsm(trained_random_forest, hcai._dsm.X_train)
 
 if __name__ == "__main__":
     main()

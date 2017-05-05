@@ -338,11 +338,15 @@ def tsm_comparison_roc_plot(trained_supervised_model):
             # The assumption here is that each TSM was trained on the same train test split,
             # which happens when instantiating SupervisedModelTrainer
             test_set_actual = model.test_set_actual
+    else:
+        # TODO test this
+        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
     roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
 def build_model_prediction_dictionary(trained_supervised_model):
+    # TODO low priority, but test this
     """
     Given a single trained supervised model build a simple dictionary containing the model name and predictions from the
     test set. Raises an error if 
@@ -403,8 +407,15 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
     plt.show()
 
 
-def plot_rffeature_importance(trained_rf_classifier, x_train, feature_names, save=False):
+def plot_rf_from_tsm(trained_supervised_model, x_train):
+    # TODO does this belong here or in TSM...?
+    tsm = trained_supervised_model
+    plot_random_forest_feature_importance(tsm.model, x_train, tsm.column_names)
+
+
+def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
     """ Plots feature importances for random forest models """
+    # TODO random forest validation - raise error if used with another algorithm
 
     # TODO deals with randomized search - can this be nuked?
     if hasattr(trained_rf_classifier, 'best_estimator_'):
@@ -426,6 +437,7 @@ def plot_rffeature_importance(trained_rf_classifier, x_train, feature_names, sav
     plt.title("Feature importances")
 
     # Plot each feature
+    # TODO name these sanely
     shape_SOMETHING = x_train.shape[1]
     range_SOMETHING = range(shape_SOMETHING)
 
