@@ -100,7 +100,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertTrue(set(expected) == set(results))
 
     def test_metrics_returns_object(self):
-        self.assertIsInstance(self.trained_linear_model.metrics(), dict)
+        self.assertIsInstance(self.trained_linear_model.metrics, dict)
 
     def test_prepare_and_subset_returns_dataframe(self):
         self.assertIsInstance(self.trained_linear_model.prepare_and_subset(self.prediction_df), pd.DataFrame)
