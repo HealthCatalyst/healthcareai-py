@@ -10,10 +10,11 @@ To run this example:
 
 This code uses the DiabetesClinicalSampleData.csv source file.
 """
-import time
 import pandas as pd
+
 from healthcareai.trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
+import healthcareai.common.model_eval as hcaieval
 
 
 def main():
@@ -64,12 +65,12 @@ def main():
     # Load the saved model and print out the metrics
     trained_model = io_utilities.load_saved_model(saved_model_filename)
     # TODO swap this out for testing
-    trained_model = trained_random_forest
+    # trained_model = trained_random_forest
 
     print('\n\n')
     print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model),
                                                                                         type(trained_model.model),
-                                                                                        trained_model.metrics()))
+                                                                                        trained_model.metrics))
 
     # Make some predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
@@ -108,14 +109,18 @@ def main():
     # Save results to db
     # TODO Save results to db
 
-
     # Look at the RF feature importance rankings
     # TODO this is broken
     # hcai.get_advanced_features().plot_rffeature_importance(save=False)
 
     # Create ROC plot to compare the two models
     # TODO this is broken - it might look like tools.plot_roc(models=[random_forest, linear, knn])
-    # hcai.plot_roc()
+
+    # Create a single ROC plot from the trained model
+    trained_model.roc_curve_plot()
+
+    # Create a comparison ROC plot multiple models
+    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression])
 
 
 if __name__ == "__main__":

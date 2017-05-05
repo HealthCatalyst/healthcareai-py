@@ -491,6 +491,12 @@ class DevelopSupervisedModel(object):
     def _trainer(self, algorithm, include_factor_model=True):
         # TODO should the factor model be either 1) optional or 2) separate?
         algorithm.fit(self.X_train, self.y_train)
+
+        if self.model_type == 'classification':
+            self.test_set_predicted = algorithm.predict_proba(self.X_test)
+        elif self.model_type == 'regression':
+            self.test_set_predicted = algorithm.predict(self.X_test)
+
         if include_factor_model:
             factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
         else:
@@ -503,8 +509,8 @@ class DevelopSupervisedModel(object):
             self.X_test.columns.values,
             self.grain_column,
             self.predicted_column,
-            None,
-            None,
+            self.test_set_predicted,
+            self.y_test,
             self.metrics(algorithm))
         return trained_supervised_model
 
@@ -562,10 +568,9 @@ class DevelopSupervisedModel(object):
             print('DSM: {}'.format(message))
 
     def plot_roc(self, save=False, debug=True):
-        """ Show the ROC plot """
-        # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
-        model_evaluation.display_roc_plot(self.ytest, self.y_probab_linear, self.y_probab_rf, save=save, debug=debug)
-
+        # TODO this is broken and may not even be implemented - use the toolbox?
+        pass
+    
     def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
         """
         Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search

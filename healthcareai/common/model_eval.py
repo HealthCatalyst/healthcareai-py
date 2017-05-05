@@ -4,12 +4,14 @@ import os
 import numpy as np
 import pandas as pd
 import sklearn
+# from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 from matplotlib import pyplot as plt
 from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import GridSearchCV
 
+from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.top_factors import write_feature_importances
 from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
 
@@ -300,63 +302,106 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     }
 
 
-def display_roc_plot(y_test, y_probab_linear, y_probab_rf, save=False, debug=False):
+"""
+Generates a ROC plot for linear and random forest models
+
+Args:
+    y_test (list): A 1d list of predictions
+    save: Whether to save the plot
+    debug: Verbosity of output. If True, shows list of FPR/TPR for each point in the plot (default False)
+
+Returns:
+    matplotlib.figure.Figure: The matplot figure
+"""
+
+
+def tsm_comparison_roc_plot(trained_supervised_model):
     """
-    Generates a ROC plot for linear and random forest models
+    Given a single or list of trained supervised models, plot a roc curve for each one
+    
+    Args:
+        trained_supervised_model (list | TrainedSupervisedModel): 
+    """
+    predictions_by_model = []
+    # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
+    # if isinstance(trained_supervised_model, TrainedSupervisedModel):
+    if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
+        entry = build_model_prediction_dictionary(trained_supervised_model)
+        predictions_by_model.append(entry)
+        test_set_actual = trained_supervised_model.test_set_actual
+    elif isinstance(trained_supervised_model, list):
+        for model in trained_supervised_model:
+            entry = build_model_prediction_dictionary(model)
+            predictions_by_model.append(entry)
+
+            # TODO so, you could check for different GUIDs that could be saved in each TSM!
+            # The assumption here is that each TSM was trained on the same train test split,
+            # which happens when instantiating SupervisedModelTrainer
+            test_set_actual = model.test_set_actual
+
+    roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
+
+
+def build_model_prediction_dictionary(trained_supervised_model):
+    """
+    Given a single trained supervised model build a simple dictionary containing the model name and predictions from the
+    test set. Raises an error if 
 
     Args:
-        y_test (list): A 1d list of predictions
-        y_probab_linear: 
-        y_probab_rf: 
-        save: Whether to save the plot
-        debug: Verbosity of output. If True, shows list of FPR/TPR for each point in the plot (default False)
+        trained_supervised_model (TrainedSupervisedModel): 
 
     Returns:
-        matplotlib.figure.Figure: The matplot figure
+        dict: 
     """
+    if trained_supervised_model.model_type == 'regression':
+        raise HealthcareAIError('ROC plots are not used to evaluate regression models.')
 
-    # TODO refactor this to take an arbitrary number of models rather than just a linear and random forest
+    name = trained_supervised_model.model_name
+    # predictions = first_class_prediction_from_binary_probabilities(trained_supervised_model.test_set_predictions)
+    predictions = np.squeeze(trained_supervised_model.test_set_predictions[:, 1])
 
-    # Linear model calculations
-    fpr_linear, tpr_linear, _ = sklearn.metrics.roc_curve(y_test, y_probab_linear)
-    roc_auc_linear = sklearn.metrics.auc(fpr_linear, tpr_linear)
+    return {name: predictions}
 
-    # Random forest model calculations
-    fpr_rf, tpr_rf, _ = sklearn.metrics.roc_curve(y_test, y_probab_rf)
-    roc_auc_rf = sklearn.metrics.auc(fpr_rf, tpr_rf)
 
-    # TODO: add cutoff associated with FPR/TPR
-
-    if debug:
-        print('Linear model:')
-        print('FPR, and TRP')
-        print(pd.DataFrame({'FPR': fpr_linear, 'TPR': tpr_linear}))
-        print('Random forest model:')
-        print('FPR, and TRP')
-        print(pd.DataFrame({'FPR': fpr_rf, 'TPR': tpr_rf}))
-
+def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # Initialize plot
     plt.figure()
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic')
     plt.legend(loc="lower right")
-
-    plt.plot(fpr_linear, tpr_linear, color='b', label='Logistic (area = %0.2f)' % roc_auc_linear)
-    plt.plot(fpr_rf, tpr_rf, color='g', label='RandomForest (area = %0.2f)' % roc_auc_rf)
-    plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [0, 1], 'k--')
+
+    # TODO hack to convert to array if it is a single dictionary
+    if isinstance(y_predictions_by_model, dict):
+        y_predictions_by_model = [y_predictions_by_model]
+
+    # Calculate and plot for each model
+    for model in y_predictions_by_model:
+        model_name, y_predictions = model.popitem()
+        # calculate metrics
+        fpr, tpr, _ = sklearn.metrics.roc_curve(y_test, y_predictions)
+        roc_auc_linear = sklearn.metrics.auc(fpr, tpr)
+
+        if debug:
+            print('{} model:'.format(model_name))
+            print(pd.DataFrame({'FPR': fpr, 'TPR': tpr}))
+
+        # TODO deal with colors ...
+        # plot the line
+        plt.plot(fpr, tpr, color='b', label='{} (area = {})'.format(model_name, roc_auc_linear))
+
+    # TODO: add cutoff associated with FPR/TPR
 
     if save:
         plt.savefig('ROC.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
-        print('\nROC file saved in: {}'.format(source_path))
+        print('\nROC plot saved in: {}'.format(source_path))
         plt.show()
     else:
         plt.show()
-
-    # return figure if anyone wants to save or manipulate it in another way
-    # return figure
 
 
 if __name__ == "__main__":

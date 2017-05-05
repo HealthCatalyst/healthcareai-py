@@ -1,7 +1,9 @@
+import numpy as np
 import pandas as pd
 from datetime import datetime
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.top_factors as factors
+from healthcareai.common.model_eval import tsm_comparison_roc_plot
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -24,24 +26,29 @@ class TrainedSupervisedModel(object):
                  column_names,
                  grain_column,
                  prediction_column,
-                 y_pred,
-                 y_actual,
+                 test_set_predictions,
+                 test_set_actual,
                  metric_by_name):
         self.model = model
         self.feature_model = feature_model
         self.fit_pipeline = fit_pipeline
         self.column_names = column_names
-        self.model_type = model_type
+        self._model_type = model_type
         self.grain_column = grain_column
         self.prediction_column = prediction_column
-        self.y_pred = y_pred
-        self.y_actual = y_actual
+        self.test_set_predictions = test_set_predictions
+        self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
 
     @property
     def model_name(self):
         """ Model name extracted from the class type """
         return type(self.model).__name__
+
+    @property
+    def model_type(self):
+        """ Model type (regression or classification) """
+        return self._model_type
 
     @property
     def metrics(self):
@@ -230,8 +237,7 @@ class TrainedSupervisedModel(object):
         return factors_and_predictions_df
 
     def roc_curve_plot(self):
-        # TODO stubs - may be implemented elsewhere and needs to be moved here.
         """
         Returns a plot of the roc curve of the holdout set from model training.
         """
-        pass
+        tsm_comparison_roc_plot(self)

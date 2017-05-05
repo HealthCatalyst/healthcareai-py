@@ -123,11 +123,6 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-    def plot_roc(self):
-        """ Plot ROC curve """
-        # TODO This will not work without a linear and random forest model for now until the base function is refactored
-        self._dsm.plot_roc(save=False, debug=False)
-
     def print_metrics(self, trained_model):
         """
         Given a trained model, calculate and print the appropriate performance metrics.
