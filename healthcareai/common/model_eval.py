@@ -403,5 +403,45 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
     plt.show()
 
 
+def plot_rffeature_importance(trained_rf_classifier, x_train, feature_names, save=False):
+    """ Plots feature importances for random forest models """
+
+    # TODO deals with randomized search - can this be nuked?
+    if hasattr(trained_rf_classifier, 'best_estimator_'):
+        # If this was a randomized search estimator, extract the best one
+        best_rf = trained_rf_classifier.best_estimator_
+    else:
+        # Otherwise, use the single model
+        best_rf = trained_rf_classifier
+
+    # Arrange columns in order of importance
+    importances = best_rf.feature_importances_
+    feature_importances = [tree.feature_importances_ for tree in best_rf.estimators_]
+    standard_deviations = np.std(feature_importances, axis=0)
+    indices = np.argsort(importances)[::-1]
+    namelist = [feature_names[i] for i in indices]
+
+    # Set up the plot
+    plt.figure()
+    plt.title("Feature importances")
+
+    # Plot each feature
+    shape_SOMETHING = x_train.shape[1]
+    range_SOMETHING = range(shape_SOMETHING)
+
+    plt.bar(range_SOMETHING, importances[indices], color="r", yerr=standard_deviations[indices], align="center")
+    plt.xticks(range_SOMETHING, namelist, rotation=90)
+    plt.xlim([-1, shape_SOMETHING])
+    plt.gca().set_ylim(bottom=0)
+    plt.tight_layout()
+
+    if save:
+        plt.savefig('FeatureImportances.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nFeature importances saved in: {}'.format(source_path))
+
+    plt.show()
+
+
 if __name__ == "__main__":
     pass
