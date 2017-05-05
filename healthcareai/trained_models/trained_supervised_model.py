@@ -38,6 +38,16 @@ class TrainedSupervisedModel(object):
         self.y_actual = y_actual
         self._metric_by_name = metric_by_name
 
+    @property
+    def model_name(self):
+        """ Model name extracted from the class type """
+        return type(self.model).__name__
+
+    @property
+    def metrics(self):
+        """ Return the metrics that were calculated when the model was trained. """
+        return self._metric_by_name
+
     def save(self, filename):
         """
         Save this object to a pickle file with the given file name
@@ -218,10 +228,6 @@ class TrainedSupervisedModel(object):
         factors_and_predictions_df['LastLoadDTS'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
         return factors_and_predictions_df
-
-    def metrics(self):
-        """ Return the metrics that were calculated when the model was trained. """
-        return self._metric_by_name
 
     def roc_curve_plot(self):
         # TODO stubs - may be implemented elsewhere and needs to be moved here.

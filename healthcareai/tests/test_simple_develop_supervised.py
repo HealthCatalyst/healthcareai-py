@@ -34,7 +34,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
     def test_knn(self):
         trained_knn = self.classification.knn()
 
-        result = trained_knn.metrics()
+        result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
         helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
@@ -42,7 +42,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
 
     def test_random_forest_classification(self):
         trained_random_forest = self.classification.random_forest_classification()
-        result = trained_random_forest.metrics()
+        result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
         helpers.assertBetween(self, 0.65, 0.8, result['roc_auc'])
@@ -52,7 +52,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         trained_linear_model = self.regression.linear_regression()
         self.assertIsInstance(trained_linear_model, TrainedSupervisedModel)
 
-        result = trained_linear_model.metrics()
+        result = trained_linear_model.metrics
 
         expected_mse = 638
         self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
@@ -64,7 +64,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         trained_rf_regressor = self.regression.random_forest_regression()
         self.assertIsInstance(trained_rf_regressor, TrainedSupervisedModel)
 
-        result = trained_rf_regressor.metrics()
+        result = trained_rf_regressor.metrics
 
         expected_mse = 630
         self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-2)
@@ -76,7 +76,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         trained_lr = self.classification.logistic_regression()
         self.assertIsInstance(trained_lr, TrainedSupervisedModel)
 
-        result = trained_lr.metrics()
+        result = trained_lr.metrics
 
         # TODO is this even a valid test at a 0.5 auc?
         helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
@@ -86,7 +86,7 @@ class TestSimpleDevelopSupervisedModel(unittest.TestCase):
         trained_ensemble = self.classification.ensemble()
         self.assertIsInstance(trained_ensemble, TrainedSupervisedModel)
 
-        result = trained_ensemble.metrics()
+        result = trained_ensemble.metrics
 
         helpers.assertBetween(self, 0.7, 0.8, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])

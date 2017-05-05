@@ -1,6 +1,7 @@
 import time
-from healthcareai.develop_supervised_model import DevelopSupervisedModel
+
 import healthcareai.pipelines.data_preparation as pipelines
+from healthcareai.develop_supervised_model import DevelopSupervisedModel
 
 
 class SupervisedModelTrainer(object):
@@ -42,7 +43,7 @@ class SupervisedModelTrainer(object):
         # Train the model and display the model metrics
         trained_model = self._dsm.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
@@ -56,7 +57,7 @@ class SupervisedModelTrainer(object):
         trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
                                                           randomized_search=True)
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
@@ -69,7 +70,7 @@ class SupervisedModelTrainer(object):
         # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
@@ -82,7 +83,7 @@ class SupervisedModelTrainer(object):
         # Train the model and display the model metrics
         trained_model = self._dsm.logistic_regression(randomized_search=False)
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
@@ -95,7 +96,7 @@ class SupervisedModelTrainer(object):
         # Train the model and display the model metrics
         trained_model = self._dsm.linear_regression(randomized_search=False)
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
@@ -114,12 +115,11 @@ class SupervisedModelTrainer(object):
             metric = 'neg_mean_squared_error'
             trained_model = self._dsm.ensemble_regression(scoring_metric=metric)
 
-        print('Based on the scoring metric {}, the best algorithm found is: {}'.format(
-            metric,
-            type(trained_model.model.estimator).__name__))
+        print(
+            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric, trained_model.model_name))
 
         print_training_timer(model_name, t0)
-        print(trained_model.metrics())
+        print(trained_model.metrics)
 
         return trained_model
 
