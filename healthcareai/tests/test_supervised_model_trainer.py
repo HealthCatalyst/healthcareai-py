@@ -41,7 +41,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     def test_random_forest_classification(self):
-        trained_random_forest = self.classification_trainer.random_forest_classification()
+        # Force plot to save to prevent blocking
+        trained_random_forest = self.classification_trainer.random_forest_classification(save_plot=True)
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 

@@ -43,8 +43,8 @@ def main():
     # Train a logistic regression model
     trained_logistic_regression = hcai.logistic_regression()
 
-    # Train a random forest model
-    trained_random_forest = hcai.random_forest()
+    # Train a random forest model and save the feature importance plot
+    trained_random_forest = hcai.random_forest(save_plot=True)
 
     # Train a suite of built in algorithms to see which one looks best
     trained_ensemble = hcai.ensemble()
@@ -109,10 +109,6 @@ def main():
     # Save results to db
     # TODO Save results to db
 
-    # Look at the RF feature importance rankings
-    # TODO this is broken
-    # hcai.get_advanced_features().plot_rffeature_importance(save=False)
-
     # Create ROC plot to compare the two models
     # TODO this is broken - it might look like tools.plot_roc(models=[random_forest, linear, knn])
 
@@ -120,12 +116,8 @@ def main():
     trained_model.roc_curve_plot()
 
     # Create a comparison ROC plot multiple models
-    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression])
+    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
 
-    # TODO make this more elegant - figure out where/how it should be accessed
-    # TODO should it be part of a .random_forest() call?
-    # Plot the feature importances from a random forest model
-    hcaieval.plot_rf_from_tsm(trained_random_forest, hcai._dsm.X_train)
 
 if __name__ == "__main__":
     main()
