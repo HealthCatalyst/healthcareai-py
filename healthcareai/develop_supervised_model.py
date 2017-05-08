@@ -1,8 +1,8 @@
 import json
-
+import sklearn
 import numpy as np
 import pandas as pd
-import sklearn
+
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
@@ -189,7 +189,7 @@ class DevelopSupervisedModel(object):
 
         for name, model in trained_model_by_name.items():
             # Unroll estimator from trained supervised model
-            estimator = self._get_estimator_from_trained_supervised_model(model)
+            estimator = model_evaluation.get_estimator_from_trained_supervised_model(model)
 
             # Get the score objects for the estimator
             score = self.metrics(estimator)
@@ -518,19 +518,3 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         # TODO this is broken and may not even be implemented - use the toolbox?
         pass
-
-    def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
-        """
-        Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
-        Args:
-            trained_supervised_model (TrainedSupervisedModel): 
-
-        Returns:
-            sklearn.base.BaseEstimator: 
-
-        """
-        if hasattr(trained_supervised_model.model, 'best_estimator_'):
-            estimator = trained_supervised_model.model.best_estimator_
-        else:
-            estimator = trained_supervised_model.model
-        return estimator

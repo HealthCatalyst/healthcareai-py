@@ -432,12 +432,7 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         save (bool): True to save the plot, false to display it in a blocking thread
     """
     # Unwrap estimator if it is a sklearn randomized search estimator
-    if hasattr(trained_rf_classifier, 'best_estimator_'):
-        # If this was a randomized search estimator, extract the best one
-        best_rf = trained_rf_classifier.best_estimator_
-    else:
-        # Otherwise, use the single model
-        best_rf = trained_rf_classifier
+    best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
 
     # Validate estimator is a random forest classifier and raise error if it is not
     if not isinstance(best_rf, sklearn.ensemble.RandomForestClassifier):
@@ -484,3 +479,23 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
 
 if __name__ == "__main__":
     pass
+
+
+def get_estimator_from_trained_supervised_model(trained_supervised_model):
+    """
+    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+
+    """
+    if hasattr(trained_supervised_model, 'best_estimator_'):
+        estimator = trained_supervised_model.best_estimator_
+    elif hasattr(trained_supervised_model, 'model'):
+        estimator = trained_supervised_model.model
+    else:
+        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
+
+    return estimator
