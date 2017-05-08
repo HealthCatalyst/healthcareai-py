@@ -58,7 +58,7 @@ def main():
     print('\n\n')
     print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model),
                                                                                         type(trained_model.model),
-                                                                                        trained_model.metrics()))
+                                                                                        trained_model.metrics))
 
     # Make some predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
