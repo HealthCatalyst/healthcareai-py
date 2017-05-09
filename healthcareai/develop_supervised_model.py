@@ -187,6 +187,7 @@ class DevelopSupervisedModel(object):
                 'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
                 'Logistic Regression': self.logistic_regression(randomized_search=False),
                 'Random Forest Classifier': self.random_forest_classifier(
+                    trees=200,
                     randomized_search=True,
                     scoring_metric=scoring_metric)}
 
@@ -377,17 +378,17 @@ class DevelopSupervisedModel(object):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
         # TODO rename to random_forest after the other is deprecated
         if self.model_type == 'classification':
-            self.random_forest_classifier(trees=trees,
-                                          scoring_metric=scoring_metric,
-                                          hyperparameter_grid=hyperparameter_grid,
-                                          randomized_search=randomized_search)
+            return self.random_forest_classifier(trees=trees,
+                                                 scoring_metric=scoring_metric,
+                                                 hyperparameter_grid=hyperparameter_grid,
+                                                 randomized_search=randomized_search)
         elif self.model_type == 'regression':
-            self.random_forest_regressor(trees=trees,
-                                         scoring_metric=scoring_metric,
-                                         hyperparameter_grid=hyperparameter_grid,
-                                         randomized_search=randomized_search)
+            return self.random_forest_regressor(trees=trees,
+                                                scoring_metric=scoring_metric,
+                                                hyperparameter_grid=hyperparameter_grid,
+                                                randomized_search=randomized_search)
 
-    def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
+    def random_forest_classifier(self, trees, scoring_metric='roc_auc', hyperparameter_grid=None,
                                  randomized_search=True):
         """
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
@@ -404,7 +405,7 @@ class DevelopSupervisedModel(object):
             scoring_metric,
             hyperparameter_grid,
             randomized_search,
-            trees=trees)
+            n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -430,63 +431,11 @@ class DevelopSupervisedModel(object):
             scoring_metric,
             hyperparameter_grid,
             randomized_search,
-            trees=trees)
+            n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
-
-    def random_forest(self, cores=4, trees=200, tune=False, debug=False):
-        # TODO deprecate after replacements are implemented.
-        """
-        This method creates and assesses the accuracy of a logistic regression
-        model.
-
-        Parameters
-        ----------
-        cores (num) : Number of cores to use (default 4)
-        trees (num) : Number of trees in the random forest (default 200)
-        tune (boolean) : Whether to tune hyperparameters. This iterates number
-        of trees from 100, 250, and 500.
-        debug (boolean) : Verbosity of output (default False)
-
-        Returns
-        -------
-        Nothing. Output to console describes model accuracy.
-        """
-
-        # TODO: refactor, such that each algo doesn't need an if/else tree
-        if self.model_type == 'classification':
-            algo = RandomForestClassifier(n_estimators=trees,
-                                          verbose=(2 if debug is True else 0))
-
-        elif self.model_type == 'regression':
-            algo = RandomForestRegressor(n_estimators=trees,
-                                         verbose=(2 if debug is True else 0))
-
-        else:  # Here to appease pep8
-            algo = None
-
-        params = {'max_features': helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
-                                                                                      self.model_type)}
-
-        self.col_list = self.X_train.columns.values
-
-        self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
-            model_type=self.model_type,
-            debug=debug,
-            develop_model_mode=True,
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            param=params,
-            cores=cores,
-            tune=tune,
-            col_list=self.col_list)
-
-        return self.rfclf
 
     def _trainer(self, algorithm, include_factor_model=True):
         # TODO should the factor model be either 1) optional or 2) separate?
@@ -570,7 +519,7 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         # TODO this is broken and may not even be implemented - use the toolbox?
         pass
-    
+
     def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
         """
         Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
