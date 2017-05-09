@@ -281,7 +281,7 @@ class DevelopSupervisedModel(object):
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
             pass
-            # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+            hyperparameter_grid = {'Cs': 10}
 
         algorithm = prepare_randomized_search(
             LogisticRegressionCV,
@@ -335,40 +335,6 @@ class DevelopSupervisedModel(object):
         trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
-
-    def linear(self, cores=4, debug=False):
-        # TODO deprecate
-        """
-        This method creates and assesses the accuracy of a logistic regression
-        model.
-
-        Parameters
-        ----------
-        cores (num) : Number of cores to use (default 4)
-        debug (boolean) : Verbosity of output (default False)
-
-        Returns
-        -------
-        Nothing. Output to console describes model accuracy.
-        """
-
-        if self.model_type == 'classification':
-            algo = LogisticRegressionCV(cv=5)
-        elif self.model_type == 'regression':
-            algo = LinearRegression()
-        else:
-            algo = None
-
-        self.y_probab_linear, self.au_roc = model_eval.clfreport(
-            model_type=self.model_type,
-            debug=debug,
-            develop_model_mode=True,
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            cores=cores)
 
     def random_forest(self,
                       trees=200,
