@@ -69,24 +69,33 @@ class TrainedSupervisedModel(object):
 
     def make_predictions(self, dataframe):
         """
-        Given a new dataframe, apply data transformations and return a list of predictions 
+        Given a new dataframe, apply data transformations and return a dataframe of predictions 
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
 
         Returns:
-            list: A list of predicted values that represents a column
+            pandas.core.frame.DataFrame: A dataframe containing the grain id and predicted values
         """
 
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
-        # make predictions
-        # TODO this will have to be classification or regression aware by using either .predict() or .predictproba()
-        # y_predictions = self.model.predict_proba(dataframe)[:, 1]
-        y_predictions = self.model.predict(prepared_dataframe)
+        # make predictions returning probabity of a class or value of regression
+        if self.model_type == 'classification':
+            # Only save the prediction of one of the two classes
+            y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
+        elif self.model_type == 'regression':
+            y_predictions = self.model.predict(prepared_dataframe)
+        else:
+            raise HealthcareAIError('Model type appears to be neither regression or classification.')
 
-        return y_predictions
+        # Create a new dataframe with the grain column from the original dataframe
+        results = pd.DataFrame()
+        results[self.grain_column] = dataframe[[self.grain_column]]
+        results['Prediction'] = y_predictions
+
+        return results
 
     def prepare_and_subset(self, dataframe):
         """
@@ -179,14 +188,14 @@ class TrainedSupervisedModel(object):
         # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.
         # Get the factors and predictions
         results = self.make_factors(dataframe, number_top_features=number_top_features)
-        predictions_list = self.make_predictions(dataframe)
+        predictions = self.make_predictions(dataframe)
 
         # Verify that the number of predictions matches the number of rows in the original dataframe.
-        if len(predictions_list) != len(dataframe):
+        if len(predictions) != len(dataframe):
             raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
 
         # Add predictions column to dataframe
-        results[self.prediction_column] = predictions_list
+        results['Prediction'] = predictions['Prediction']
 
         return results
 
