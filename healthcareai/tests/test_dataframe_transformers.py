@@ -229,19 +229,60 @@ class TestDataframeUnderSampler(unittest.TestCase):
     def test_returns_dataframe(self):
         self.assertTrue(isinstance(self.result, pd.DataFrame))
 
+    def test_returns_smaller_dataframe(self):
+        self.assertLess(len(self.result), len(self.df))
+
     def test_returns_balanced_classes(self):
         # For sanity, verify that the original classes were imbalanced
         original_value_counts = self.df['at_risk'].value_counts()
-        original_true_count = original_value_counts[0]
-        original_false_count = original_value_counts[1]
+        original_true_count = original_value_counts[1]
+        original_false_count = original_value_counts[0]
 
         self.assertNotEqual(original_true_count, original_false_count)
 
         # Verify that the new classes are balanced
         value_counts = self.result['at_risk'].value_counts()
-        true_count = value_counts[0]
-        false_count = value_counts[1]
+        true_count = value_counts[1]
+        false_count = value_counts[0]
 
+        self.assertEqual(true_count, false_count)
+
+
+class TestDataframeOverSampler(unittest.TestCase):
+    def setUp(self):
+        # Build an imbalanced dataframe (20% True at_risk)
+        self.df = pd.DataFrame({'id': [1, 2, 3, 4, 5, 6, 7, 8],
+                                'is_male': [1, 0, 1, 0, 0, 0, 1, 1],
+                                'height': [100, 80, 70, 85, 100, 80, 70, 85],
+                                'weight': [99, 46, 33, 44, 99, 46, 33, 44],
+                                'at_risk': [True, False, False, False, True, False, False, False],
+                                })
+
+        self.result = transformers.DataFrameOverSampling('at_risk', random_seed=42).fit_transform(self.df)
+        # print(self.df.head(10))
+        # print(self.result.head(12))
+
+    def test_returns_dataframe(self):
+        self.assertTrue(isinstance(self.result, pd.DataFrame))
+
+    def test_returns_larger_dataframe(self):
+        self.assertGreater(len(self.result), len(self.df))
+
+    def test_returns_balanced_classes(self):
+        # For sanity, verify that the original classes were imbalanced
+        original_value_counts = self.df['at_risk'].value_counts()
+        original_true_count = original_value_counts[1]
+        original_false_count = original_value_counts[0]
+
+        self.assertNotEqual(original_true_count, original_false_count)
+
+        # Verify that the new classes are balanced
+        value_counts = self.result['at_risk'].value_counts()
+        true_count = value_counts[1]
+        false_count = value_counts[0]
+
+        # print('True Counts: {} --> {}, False Counts: {} --> {}'.format(original_true_count, true_count,
+                                                                       original_false_count, false_count))
         self.assertEqual(true_count, false_count)
 
 

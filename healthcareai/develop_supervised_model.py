@@ -62,32 +62,6 @@ class DevelopSupervisedModel(object):
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-    def over_sampling(self, random_state=0):
-        # TODO convert to fit transform
-        # NB: Must be done BEFORE train/test split
-        #     so that when we split the under/over sampled
-        #     dataset. We do under/over sampling on
-        #     the entire dataframe.
-        #     Must be done after imputation, since
-        #     under/over sampling will not work with
-        #     missing values.
-        #     Must be done after target column is converted to
-        #     numerical value (so under/over sampling from
-        #     imblearn works).
-        y = np.squeeze(self.dataframe[[self.predicted_column]])
-        X = self.dataframe.drop([self.predicted_column], axis=1)
-
-        over_sampler = RandomOverSampler(random_state=random_state)
-        X_over_sampled, y_over_sampled = over_sampler.fit_sample(X, y)
-
-        X_over_sampled = pd.DataFrame(X_over_sampled)
-        X_over_sampled.columns = X.columns
-        y_over_sampled = pd.Series(y_over_sampled)
-
-        dataframe_over_sampled = X_over_sampled
-        dataframe_over_sampled[self.predicted_column] = y_over_sampled
-        self.dataframe = dataframe_over_sampled
-
     def feature_scaling(self, columns_to_scale):
         # TODO convert to fit transform
         # NB: Must happen AFTER self.X_train, self.X_test,
