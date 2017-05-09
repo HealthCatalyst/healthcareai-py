@@ -28,11 +28,11 @@ class TestRandomForestClassification(unittest.TestCase):
         self.trainer.train_test_split()
 
     def test_random_forest_no_tuning(self):
-        rf = self.trainer.random_forest_2(trees=200, randomized_search=False)
+        rf = self.trainer.random_forest(trees=200, randomized_search=False)
         assertBetween(self, 0.8, 0.97, rf.metrics['roc_auc'])
 
     def test_random_forest_tuning(self):
-        rf = self.trainer.random_forest_2(trees=200, randomized_search=True)
+        rf = self.trainer.random_forest(trees=200, randomized_search=True)
         assertBetween(self, 0.8, 0.97, rf.metrics['roc_auc'])
 
     def test_random_foarest_tuning_2_column_raises_error(self):
@@ -48,7 +48,7 @@ class TestRandomForestClassification(unittest.TestCase):
 
         trainer.train_test_split()
 
-        self.assertRaises(HealthcareAIError, trainer.random_forest_2, trees=200, randomized_search=True)
+        self.assertRaises(HealthcareAIError, trainer.random_forest, trees=200, randomized_search=True)
 
 class TestLinearDevTuneFalse(unittest.TestCase):
     def test_linear_dev_tune_false(self):

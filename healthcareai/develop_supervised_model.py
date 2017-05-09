@@ -370,11 +370,11 @@ class DevelopSupervisedModel(object):
             y_test=self.y_test,
             cores=cores)
 
-    def random_forest_2(self,
-                        trees=200,
-                        scoring_metric='roc_auc',
-                        hyperparameter_grid=None,
-                        randomized_search=True):
+    def random_forest(self,
+                      trees=200,
+                      scoring_metric='roc_auc',
+                      hyperparameter_grid=None,
+                      randomized_search=True):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
         # TODO rename to random_forest after the other is deprecated
         if self.model_type == 'classification':
