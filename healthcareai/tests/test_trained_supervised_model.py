@@ -47,8 +47,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     def test_top_k_factors_raises_error_on_more_features_than_model_has(self):
         self.assertRaises(HealthcareAIError, self.trained_linear_model.make_factors, self.prediction_df, 10)
 
-    def test_predictions_is_numpy_array(self):
-        self.assertIsInstance(self.predictions, np.ndarray)
+    def test_predictions_is_dataframe(self):
+        self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
 
     def test_predictions_are_same_length_as_input(self):
         self.assertEqual(len(self.predictions), len(self.prediction_df))
