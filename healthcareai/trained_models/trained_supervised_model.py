@@ -81,10 +81,14 @@ class TrainedSupervisedModel(object):
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
-        # make predictions
-        # TODO this will have to be classification or regression aware by using either .predict() or .predictproba()
-        # y_predictions = self.model.predict_proba(dataframe)[:, 1]
-        y_predictions = self.model.predict(prepared_dataframe)
+        # make predictions returning probabity of a class or value of regression
+        if self.model_type == 'classification':
+            # Only save the prediction of one of the two classes
+            y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
+        elif self.model_type == 'regression':
+            y_predictions = self.model.predict(prepared_dataframe)
+        else:
+            raise HealthcareAIError('Model type appears to be neither regression or classification.')
 
         return y_predictions
 
