@@ -2,6 +2,9 @@ import unittest
 
 import numpy as np
 import pandas as pd
+from healthcareai.tests import helpers
+
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 from healthcareai import DevelopSupervisedModel
 from healthcareai.tests.helpers import fixture, assertBetween
@@ -23,7 +26,8 @@ class TestRFDevTuneFalse(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
         o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
@@ -40,13 +44,40 @@ class TestRFDevTuneTrueRegular(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
         o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
         o.random_forest(cores=1, tune=True)
 
         self.assertAlmostEqual(np.round(o.au_roc, 6), 0.968028)
+
+
+class RandomForestClassification2(unittest.TestCase):
+    # TODO consolidate after merges
+    @classmethod
+    def setUpClass(cls):
+        df = helpers.load_sample_dataframe()
+
+        # Drop columns that won't help machine learning
+        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        df.drop(columns_to_remove, axis=1, inplace=True)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
+
+        cls.classification_trainer = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN,
+                                                            GRAIN_COLUMN_NAME)
+        cls.classification_trainer.train_test_split()
+
+    def test_random_forest_classification(self):
+        # Force plot to save to prevent blocking
+        trained_random_forest = self.classification_trainer.random_forest_2(trees=200)
+        result = trained_random_forest.metrics
+        self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
+
+        helpers.assertBetween(self, 0.65, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
 
 class TestRFDevTuneTrue2ColError(unittest.TestCase):
@@ -57,7 +88,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
         o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
@@ -71,7 +103,8 @@ class TestRFDevTuneTrue2ColError(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
         o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()
@@ -92,7 +125,8 @@ class TestLinearDevTuneFalse(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True).fit_transform(df)
         o = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         o.train_test_split()

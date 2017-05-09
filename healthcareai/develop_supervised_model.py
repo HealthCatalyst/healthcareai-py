@@ -374,12 +374,12 @@ class DevelopSupervisedModel(object):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
         # TODO rename to random_forest after the other is deprecated
         if self.model_type == 'classification':
-            self.random_forest_classifier(trees=trees,
+            return self.random_forest_classifier(trees=trees,
                                           scoring_metric=scoring_metric,
                                           hyperparameter_grid=hyperparameter_grid,
                                           randomized_search=randomized_search)
         elif self.model_type == 'regression':
-            self.random_forest_regressor(trees=trees,
+            return self.random_forest_regressor(trees=trees,
                                          scoring_metric=scoring_metric,
                                          hyperparameter_grid=hyperparameter_grid,
                                          randomized_search=randomized_search)
