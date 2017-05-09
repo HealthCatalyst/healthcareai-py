@@ -50,13 +50,6 @@ class DevelopSupervisedModel(object):
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        # TODO implement (or avoid) these attributes, which really might be methods
-        self.y_probab_linear = None
-        self.y_probab_rf = None
-        self.col_list = None
-        self.rfclf = None
-        self.au_roc = None
-        self.ensemble_results = None
         self.pipeline = None
 
         self._console_log(
@@ -206,36 +199,11 @@ class DevelopSupervisedModel(object):
         best_algorithm_name, best_score = sorted_names_and_scores[-1]
         best_model = trained_model_by_name[best_algorithm_name]
 
-        # TODO this results object might be deprecated
-        results = {
-            'best_score': best_score,
-            'best_algorithm_name': best_algorithm_name,
-            'model_scores': score_by_name,
-            'best_model': best_model
-        }
-        self.ensemble_results = results
-
         self._console_log('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric,
                                                                                                    best_algorithm_name))
         self._console_log('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
         return best_model
-
-    def write_classification_metrics_to_json(self):
-        # TODO this is really not in the right place. And it might be deprecated, since metrics can be access from TSM
-        # TODO a similar method should be created for regression metrics
-        if self.ensemble_results is None:
-            raise HealthcareAIError('Ensemble must be run before metrics can be written')
-        output = {}
-        y_pred = self.ensemble_results['best_model'].predict(self.X_test)
-        accuracy = sklearn.metrics.accuracy_score(self.y_test, y_pred)
-        confusion_matrix = sklearn.metrics.confusion_matrix(self.y_test, y_pred)
-        output['accuracy'] = accuracy
-        output['confusion_matrix'] = confusion_matrix.tolist()
-        output['auc_roc'] = self.ensemble_results['best_score']
-        output['algorithm_name'] = self.ensemble_results['best_algorithm_name']
-        with open('classification_metrics.json', 'w') as fp:
-            json.dump(output, fp, indent=4, sort_keys=True)
 
     def validate_score_metric_for_number_of_classes(self, metric):
         """
