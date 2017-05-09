@@ -36,7 +36,7 @@ class TestRandomForestClassification(unittest.TestCase):
     def test_random_forest_tuning(self):
         rf = self.trainer.random_forest(trees=200, randomized_search=True)
         self.assertIsInstance(rf, TrainedSupervisedModel)
-        assertBetween(self, 0.8, 0.97, rf.metrics['roc_auc'])
+        assertBetween(self, 0.7, 0.97, rf.metrics['roc_auc'])
 
     def test_random_foarest_tuning_2_column_raises_error(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
