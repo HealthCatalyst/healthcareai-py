@@ -62,32 +62,6 @@ class DevelopSupervisedModel(object):
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
 
-    def under_sampling(self, random_state=0):
-        # TODO convert to fit transform
-        # NB: Must be done BEFORE train/test split
-        #     so that when we split the under/over sampled
-        #     dataset. We do under/over sampling on
-        #     the entire dataframe.
-        #     Must be done after imputation, since
-        #     under/over sampling will not work with
-        #     missing values.
-        #     Must be done after target column is converted to
-        #     numerical value (so under/over sampling from
-        #     imblearn works).
-        y = np.squeeze(self.dataframe[[self.predicted_column]])
-        X = self.dataframe.drop([self.predicted_column], axis=1)
-
-        under_sampler = RandomUnderSampler(random_state=random_state)
-        X_under_sampled, y_under_sampled = under_sampler.fit_sample(X, y)
-
-        X_under_sampled = pd.DataFrame(X_under_sampled)
-        X_under_sampled.columns = X.columns
-        y_under_sampled = pd.Series(y_under_sampled)
-
-        dataframe_under_sampled = X_under_sampled
-        dataframe_under_sampled[self.predicted_column] = y_under_sampled
-        self.dataframe = dataframe_under_sampled
-
     def over_sampling(self, random_state=0):
         # TODO convert to fit transform
         # NB: Must be done BEFORE train/test split
