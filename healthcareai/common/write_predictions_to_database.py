@@ -2,17 +2,17 @@ import pyodbc
 import healthcareai.common.database_connection_validation as db_validation
 
 def write_predictions_to_database(server, destination_db_schema_table, predicted_column_name, grain_column, output_2dlist):
-    cecnxn = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
+    db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                SERVER=""" + server + """;
                                Trusted_Connection=yes;""")
-    cursor = cecnxn.cursor()
+    cursor = db_connection.cursor()
     try:
         cursor.executemany("""insert into """ + destination_db_schema_table + """
                            (BindingID, BindingNM, LastLoadDTS, """ +
                            grain_column + """,""" + predicted_column_name + """,
                            Factor1TXT, Factor2TXT, Factor3TXT)
                            values (?,?,?,?,?,?,?,?)""", output_2dlist)
-        cecnxn.commit()
+        db_connection.commit()
 
         # Todo: count and display (via pyodbc) how many rows inserted
         print("\nSuccessfully inserted rows into {}.".
@@ -28,7 +28,7 @@ def write_predictions_to_database(server, destination_db_schema_table, predicted
 
     finally:
         try:
-            cecnxn.close()
+            db_connection.close()
         except pyodbc.DatabaseError:
             print("""\nAn attempt to complete a transaction has failed.
                   No corresponding transaction found. \nPerhaps you don't
