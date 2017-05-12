@@ -1,11 +1,11 @@
-import math
 import os
+import math
+import sklearn
 
 import numpy as np
 import pandas as pd
-import sklearn
-# from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 from matplotlib import pyplot as plt
+
 from sklearn.metrics import average_precision_score, precision_recall_curve
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.metrics import roc_auc_score, roc_curve, auc
@@ -338,11 +338,15 @@ def tsm_comparison_roc_plot(trained_supervised_model):
             # The assumption here is that each TSM was trained on the same train test split,
             # which happens when instantiating SupervisedModelTrainer
             test_set_actual = model.test_set_actual
+    else:
+        # TODO test this
+        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
     roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
 def build_model_prediction_dictionary(trained_supervised_model):
+    # TODO low priority, but test this
     """
     Given a single trained supervised model build a simple dictionary containing the model name and predictions from the
     test set. Raises an error if 
@@ -399,10 +403,126 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         plt.savefig('ROC.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
         print('\nROC plot saved in: {}'.format(source_path))
-        plt.show()
+
+    plt.show()
+
+
+def plot_rf_from_tsm(trained_supervised_model, x_train, save=False):
+    """
+    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+        x_train (numpy.array): A 2D numpy array that was used for training 
+        save (bool): True to save the plot, false to display it in a blocking thread
+    """
+    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
+    column_names = trained_supervised_model.column_names
+    plot_random_forest_feature_importance(model, x_train, column_names, save=save)
+
+
+def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
+    """
+    Given a scikit learn random forest classifier, an x_train array, the feature names save or display a feature
+    importance plot.
+    
+    Args:
+        trained_rf_classifier (sklearn.ensemble.RandomForestClassifier): 
+        x_train (numpy.array): A 2D numpy array that was used for training 
+        feature_names (list): Column names in the x_train set
+        save (bool): True to save the plot, false to display it in a blocking thread
+    """
+    # Unwrap estimator if it is a sklearn randomized search estimator
+    # best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
+    best_rf = trained_rf_classifier
+    # Validate estimator is a random forest classifier and raise error if it is not
+    if not isinstance(best_rf, sklearn.ensemble.RandomForestClassifier):
+        print(type(trained_rf_classifier))
+        raise HealthcareAIError('Feature plotting only works with a scikit learn RandomForestClassifier.')
+
+    # Arrange columns in order of importance
+    # TODO this portion could probably be extracted and tested, since the plot is difficult to test
+    importances = best_rf.feature_importances_
+    feature_importances = [tree.feature_importances_ for tree in best_rf.estimators_]
+    standard_deviations = np.std(feature_importances, axis=0)
+    indices = np.argsort(importances)[::-1]
+    namelist = [feature_names[i] for i in indices]
+
+    # Turn off interactive mode
+    plt.ioff()
+
+    # Set up the plot
+    figure = plt.figure()
+    plt.title("Feature importances")
+
+    # Plot each feature
+    # TODO name these sanely
+    x_train_shape = x_train.shape[1]
+    x_train_range = range(x_train_shape)
+
+    plt.bar(x_train_range, importances[indices], color="r", yerr=standard_deviations[indices], align="center")
+    plt.xticks(x_train_range, namelist, rotation=90)
+    plt.xlim([-1, x_train_shape])
+    plt.gca().set_ylim(bottom=0)
+    plt.tight_layout()
+
+    # Save or display the plot
+    if save:
+        plt.savefig('FeatureImportances.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nFeature importances saved in: {}'.format(source_path))
+
+        # Close the figure so it does not get displayed
+        plt.close(figure)
     else:
         plt.show()
 
 
 if __name__ == "__main__":
     pass
+
+
+def get_estimator_from_trained_supervised_model(trained_supervised_model):
+    """
+    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+
+    """
+    # Validate input is a TSM
+    if type(trained_supervised_model).__name__ != 'TrainedSupervisedModel':
+        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
+    """
+    1. check if it is a TSM
+        Y: proceed
+        N: raise error?
+    2. check if tsm.model is a meta estimator
+        Y: extract best_estimator_
+        N: return tsm.model
+    """
+    # Check if tsm.model is a meta estimator
+    result = get_estimator_from_meta_estimator(trained_supervised_model.model)
+
+    return result
+
+
+def get_estimator_from_meta_estimator(model):
+    """
+    Given an instance of a trained sklearn estimator, return the main estimator, regardless of random search
+    Args:
+        model (sklearn.base.BaseEstimator): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+    """
+    if not issubclass(type(model), sklearn.base.BaseEstimator):
+        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
+
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+        result = model.best_estimator_
+    else:
+        result = model
+        
+    return result

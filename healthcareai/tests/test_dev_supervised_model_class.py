@@ -2,6 +2,8 @@ import unittest
 
 import numpy as np
 import pandas as pd
+
+from healthcareai.tests import helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 from healthcareai import DevelopSupervisedModel

@@ -1,8 +1,10 @@
 import numpy as np
 import pandas as pd
+import sklearn
 from datetime import datetime
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.top_factors as factors
+import healthcareai.common.model_eval as model_evaluation
 from healthcareai.common.model_eval import tsm_comparison_roc_plot
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
@@ -43,7 +45,10 @@ class TrainedSupervisedModel(object):
     @property
     def model_name(self):
         """ Model name extracted from the class type """
-        return type(self.model).__name__
+        model = model_evaluation.get_estimator_from_meta_estimator(self.model)
+        name = type(model).__name__
+
+        return name
 
     @property
     def model_type(self):

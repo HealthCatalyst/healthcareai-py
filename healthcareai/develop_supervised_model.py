@@ -1,8 +1,5 @@
 import json
-import os
 import sklearn
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -10,7 +7,7 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV
+from sklearn.linear_model import LinearRegression, LogisticRegressionCV, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
@@ -186,7 +183,7 @@ class DevelopSupervisedModel(object):
 
         for name, model in trained_model_by_name.items():
             # Unroll estimator from trained supervised model
-            estimator = self._get_estimator_from_trained_supervised_model(model)
+            estimator = model_evaluation.get_estimator_from_trained_supervised_model(model)
 
             # Get the score objects for the estimator
             score = self.metrics(estimator)
@@ -248,16 +245,13 @@ class DevelopSupervisedModel(object):
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
-            pass
-            hyperparameter_grid = {'Cs': 10}
+            hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100]}
 
         algorithm = prepare_randomized_search(
-            LogisticRegressionCV,
+            LogisticRegression,
             scoring_metric,
             hyperparameter_grid,
-            randomized_search,
-            # 5 cross validation folds
-            cv=5)
+            randomized_search)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -397,55 +391,6 @@ class DevelopSupervisedModel(object):
             self.metrics(algorithm))
         return trained_supervised_model
 
-    def plot_rffeature_importance(self, save=False):
-        # TODO refactor this as a tool + advanced/simple wrapper
-        """
-        Plots feature importances for random forest models
-
-        Parameters
-        ----------
-        save (boolean) : Whether to save the plot
-
-        Returns
-        -------
-        Nothing. A plot is created and displayed.
-        """
-
-        # Arrange columns in order of importance
-        if hasattr(self.rfclf, 'best_estimator_'):
-            importances = self.rfclf.best_estimator_.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.best_estimator_.estimators_],
-                axis=0)
-        else:
-            importances = self.rfclf.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.estimators_],
-                axis=0)
-
-        indices = np.argsort(importances)[::-1]
-        namelist = [self.col_list[i] for i in indices]
-
-        # Plot these columns
-        plt.figure()
-        plt.title("Feature importances")
-        plt.bar(range(self.X_train.shape[1]),
-                importances[indices], color="r",
-                yerr=std[indices], align="center")
-        plt.xticks(range(self.X_train.shape[1]), namelist, rotation=90)
-        plt.xlim([-1, self.X_train.shape[1]])
-        plt.gca().set_ylim(bottom=0)
-        plt.tight_layout()
-        if save:
-            plt.savefig('FeatureImportances.png')
-            source_path = os.path.dirname(os.path.abspath(__file__))
-            print('\nFeature importances saved in: {}'.format(source_path))
-            plt.show()
-        else:
-            plt.show()
-
     def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
@@ -453,19 +398,3 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         # TODO this is broken and may not even be implemented - use the toolbox?
         pass
-
-    def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
-        """
-        Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
-        Args:
-            trained_supervised_model (TrainedSupervisedModel): 
-
-        Returns:
-            sklearn.base.BaseEstimator: 
-
-        """
-        if hasattr(trained_supervised_model.model, 'best_estimator_'):
-            estimator = trained_supervised_model.model.best_estimator_
-        else:
-            estimator = trained_supervised_model.model
-        return estimator
