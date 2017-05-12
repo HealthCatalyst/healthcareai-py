@@ -1,12 +1,11 @@
 import sqlalchemy
 import pandas as pd
-
+import urllib
 import healthcareai.common.database_connection_validation as db_validation
 
 
 def build_mssql_connection_string(server):
-    # https://www.connectionstrings.com/
-    return 'DRIVER={SQL Server Native Client 11.0}; SERVER={}; Trusted_Connection=yes;'.format(server)
+    return 'DRIVER={SQL Server Native Client 11.0};SERVER=' + server + ';Trusted_Connection=yes;'
 
 
 def build_mysql_connection_string(server, database, userid, password):
@@ -14,13 +13,19 @@ def build_mysql_connection_string(server, database, userid, password):
 
 
 def build_sqlite_connection_string(file_path):
-    # https://www.connectionstrings.com/
     return 'Data Source={};Version=3;'.format(file_path)
 
 
 def build_sqlite_in_memory_connection_string():
-    # https://www.connectionstrings.com/
     return 'Data Source=:memory:;Version=3;New=True;'
+
+
+def build_mssql_engine(server):
+    # TODO highest level abstraction
+    connection_string = build_mssql_connection_string(server)
+    params = urllib.parse.quote_plus(connection_string)
+    engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+    return engine
 
 
 def db_agnostic_writing(connection_string, destination_db_schema_table, dataframe):
