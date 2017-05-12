@@ -29,7 +29,7 @@ def main():
     print(dataframe.head())
 
     # Step 1: Setup healthcareai for developing a model. This prepares your data for model building
-    hcai = SupervisedModelTrainer(
+    hcai_trainer = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='ThirtyDayReadmitFLG',
         model_type='classification',
@@ -38,22 +38,22 @@ def main():
         verbose=False)
 
     # Train a KNN model
-    trained_knn = hcai.knn()
+    trained_knn = hcai_trainer.knn()
 
     # Train a logistic regression model
-    trained_logistic_regression = hcai.logistic_regression()
+    trained_logistic_regression = hcai_trainer.logistic_regression()
 
-    # Train a random forest model
-    trained_random_forest = hcai.random_forest()
+    # Train a random forest model and save the feature importance plot
+    trained_random_forest = hcai_trainer.random_forest(save_plot=True)
 
     # Train a suite of built in algorithms to see which one looks best
-    trained_ensemble = hcai.ensemble()
+    trained_ensemble = hcai_trainer.ensemble()
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'random_forest_2017-05-01.pkl'
 
     # Save the trained model
-    trained_random_forest.save(saved_model_filename)
+    # trained_random_forest.save(saved_model_filename)
 
     # TODO swap out fake data for real databaes sql
     prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
@@ -109,18 +109,11 @@ def main():
     # Save results to db
     # TODO Save results to db
 
-    # Look at the RF feature importance rankings
-    # TODO this is broken
-    # hcai.get_advanced_features().plot_rffeature_importance(save=False)
-
-    # Create ROC plot to compare the two models
-    # TODO this is broken - it might look like tools.plot_roc(models=[random_forest, linear, knn])
-
     # Create a single ROC plot from the trained model
     trained_model.roc_curve_plot()
 
     # Create a comparison ROC plot multiple models
-    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression])
+    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
 
 
 if __name__ == "__main__":
