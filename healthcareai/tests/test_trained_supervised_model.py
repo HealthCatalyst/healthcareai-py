@@ -47,8 +47,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     def test_top_k_factors_raises_error_on_more_features_than_model_has(self):
         self.assertRaises(HealthcareAIError, self.trained_linear_model.make_factors, self.prediction_df, 10)
 
-    def test_predictions_is_numpy_array(self):
-        self.assertIsInstance(self.predictions, np.ndarray)
+    def test_predictions_is_dataframe(self):
+        self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
 
     def test_predictions_are_same_length_as_input(self):
         self.assertEqual(len(self.predictions), len(self.prediction_df))
@@ -71,7 +71,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(len(self.predictions_with_3_factors), len(self.prediction_df))
 
     def test_predictions_with_factors_columns(self):
-        expected = ['PatientEncounterID', 'SystolicBPNBR', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT']
+        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction']
         results = self.predictions_with_3_factors.columns.values
         self.assertTrue(set(expected) == set(results))
 
@@ -82,8 +82,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(len(self.original_with_predictions_3_factors), len(self.prediction_df))
 
     def test_original_with_predictions_factors_columns(self):
-        expected = ['PatientEncounterID', 'SystolicBPNBR', 'LDLNBR', 'A1CNBR', 'GenderFLG', 'ThirtyDayReadmitFLG',
-                    'Factor1TXT', 'Factor2TXT', 'Factor3TXT']
+        expected = ['PatientEncounterID', 'LDLNBR', 'A1CNBR', 'GenderFLG', 'ThirtyDayReadmitFLG',
+                    'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction']
         results = self.original_with_predictions_3_factors.columns.values
         self.assertTrue(set(expected) == set(results))
 
@@ -94,7 +94,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(len(self.catalyst_dataframe), len(self.prediction_df))
 
     def test_catalyst_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'SystolicBPNBR', 'BindingID',
+        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction', 'BindingID',
                     'BindingNM', 'LastLoadDTS']
         results = self.catalyst_dataframe.columns.values
         self.assertTrue(set(expected) == set(results))

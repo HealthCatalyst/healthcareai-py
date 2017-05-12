@@ -1,8 +1,5 @@
 import json
-import os
 import sklearn
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -10,7 +7,7 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV
+from sklearn.linear_model import LinearRegression, LogisticRegressionCV, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
@@ -50,13 +47,6 @@ class DevelopSupervisedModel(object):
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        # TODO implement (or avoid) these attributes, which really might be methods
-        self.y_probab_linear = None
-        self.y_probab_rf = None
-        self.col_list = None
-        self.rfclf = None
-        self.au_roc = None
-        self.ensemble_results = None
         self.pipeline = None
 
         self._console_log(
@@ -187,12 +177,13 @@ class DevelopSupervisedModel(object):
                 'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
                 'Logistic Regression': self.logistic_regression(randomized_search=False),
                 'Random Forest Classifier': self.random_forest_classifier(
+                    trees=200,
                     randomized_search=True,
                     scoring_metric=scoring_metric)}
 
         for name, model in trained_model_by_name.items():
             # Unroll estimator from trained supervised model
-            estimator = self._get_estimator_from_trained_supervised_model(model)
+            estimator = model_evaluation.get_estimator_from_trained_supervised_model(model)
 
             # Get the score objects for the estimator
             score = self.metrics(estimator)
@@ -205,36 +196,11 @@ class DevelopSupervisedModel(object):
         best_algorithm_name, best_score = sorted_names_and_scores[-1]
         best_model = trained_model_by_name[best_algorithm_name]
 
-        # TODO this results object might be deprecated
-        results = {
-            'best_score': best_score,
-            'best_algorithm_name': best_algorithm_name,
-            'model_scores': score_by_name,
-            'best_model': best_model
-        }
-        self.ensemble_results = results
-
         self._console_log('Based on the scoring metric {}, the best algorithm found is: {}'.format(scoring_metric,
                                                                                                    best_algorithm_name))
         self._console_log('{} {} = {}'.format(best_algorithm_name, scoring_metric, best_score))
 
         return best_model
-
-    def write_classification_metrics_to_json(self):
-        # TODO this is really not in the right place. And it might be deprecated, since metrics can be access from TSM
-        # TODO a similar method should be created for regression metrics
-        if self.ensemble_results is None:
-            raise HealthcareAIError('Ensemble must be run before metrics can be written')
-        output = {}
-        y_pred = self.ensemble_results['best_model'].predict(self.X_test)
-        accuracy = sklearn.metrics.accuracy_score(self.y_test, y_pred)
-        confusion_matrix = sklearn.metrics.confusion_matrix(self.y_test, y_pred)
-        output['accuracy'] = accuracy
-        output['confusion_matrix'] = confusion_matrix.tolist()
-        output['auc_roc'] = self.ensemble_results['best_score']
-        output['algorithm_name'] = self.ensemble_results['best_algorithm_name']
-        with open('classification_metrics.json', 'w') as fp:
-            json.dump(output, fp, indent=4, sort_keys=True)
 
     def validate_score_metric_for_number_of_classes(self, metric):
         """
@@ -279,16 +245,13 @@ class DevelopSupervisedModel(object):
         """
         if hyperparameter_grid is None:
             # TODO sensible default hyperparameter grid
-            pass
-            # hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+            hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100]}
 
         algorithm = prepare_randomized_search(
-            LogisticRegressionCV,
+            LogisticRegression,
             scoring_metric,
             hyperparameter_grid,
-            randomized_search,
-            # 5 cross validation folds
-            cv=5)
+            randomized_search)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -335,59 +298,25 @@ class DevelopSupervisedModel(object):
 
         return trained_supervised_model
 
-    def linear(self, cores=4, debug=False):
-        # TODO deprecate
-        """
-        This method creates and assesses the accuracy of a logistic regression
-        model.
-
-        Parameters
-        ----------
-        cores (num) : Number of cores to use (default 4)
-        debug (boolean) : Verbosity of output (default False)
-
-        Returns
-        -------
-        Nothing. Output to console describes model accuracy.
-        """
-
-        if self.model_type == 'classification':
-            algo = LogisticRegressionCV(cv=5)
-        elif self.model_type == 'regression':
-            algo = LinearRegression()
-        else:
-            algo = None
-
-        self.y_probab_linear, self.au_roc = model_eval.clfreport(
-            model_type=self.model_type,
-            debug=debug,
-            develop_model_mode=True,
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            cores=cores)
-
-    def random_forest_2(self,
-                        trees=200,
-                        scoring_metric='roc_auc',
-                        hyperparameter_grid=None,
-                        randomized_search=True):
+    def random_forest(self,
+                      trees=200,
+                      scoring_metric='roc_auc',
+                      hyperparameter_grid=None,
+                      randomized_search=True):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
         # TODO rename to random_forest after the other is deprecated
         if self.model_type == 'classification':
-            self.random_forest_classifier(trees=trees,
-                                          scoring_metric=scoring_metric,
-                                          hyperparameter_grid=hyperparameter_grid,
-                                          randomized_search=randomized_search)
+            return self.random_forest_classifier(trees=trees,
+                                                 scoring_metric=scoring_metric,
+                                                 hyperparameter_grid=hyperparameter_grid,
+                                                 randomized_search=randomized_search)
         elif self.model_type == 'regression':
-            self.random_forest_regressor(trees=trees,
-                                         scoring_metric=scoring_metric,
-                                         hyperparameter_grid=hyperparameter_grid,
-                                         randomized_search=randomized_search)
+            return self.random_forest_regressor(trees=trees,
+                                                scoring_metric=scoring_metric,
+                                                hyperparameter_grid=hyperparameter_grid,
+                                                randomized_search=randomized_search)
 
-    def random_forest_classifier(self, trees=200, scoring_metric='roc_auc', hyperparameter_grid=None,
+    def random_forest_classifier(self, trees, scoring_metric='roc_auc', hyperparameter_grid=None,
                                  randomized_search=True):
         """
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
@@ -404,7 +333,7 @@ class DevelopSupervisedModel(object):
             scoring_metric,
             hyperparameter_grid,
             randomized_search,
-            trees=trees)
+            n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -430,63 +359,11 @@ class DevelopSupervisedModel(object):
             scoring_metric,
             hyperparameter_grid,
             randomized_search,
-            trees=trees)
+            n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
         return trained_supervised_model
-
-    def random_forest(self, cores=4, trees=200, tune=False, debug=False):
-        # TODO deprecate after replacements are implemented.
-        """
-        This method creates and assesses the accuracy of a logistic regression
-        model.
-
-        Parameters
-        ----------
-        cores (num) : Number of cores to use (default 4)
-        trees (num) : Number of trees in the random forest (default 200)
-        tune (boolean) : Whether to tune hyperparameters. This iterates number
-        of trees from 100, 250, and 500.
-        debug (boolean) : Verbosity of output (default False)
-
-        Returns
-        -------
-        Nothing. Output to console describes model accuracy.
-        """
-
-        # TODO: refactor, such that each algo doesn't need an if/else tree
-        if self.model_type == 'classification':
-            algo = RandomForestClassifier(n_estimators=trees,
-                                          verbose=(2 if debug is True else 0))
-
-        elif self.model_type == 'regression':
-            algo = RandomForestRegressor(n_estimators=trees,
-                                         verbose=(2 if debug is True else 0))
-
-        else:  # Here to appease pep8
-            algo = None
-
-        params = {'max_features': helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
-                                                                                      self.model_type)}
-
-        self.col_list = self.X_train.columns.values
-
-        self.y_probab_rf, self.au_roc, self.rfclf = model_eval.clfreport(
-            model_type=self.model_type,
-            debug=debug,
-            develop_model_mode=True,
-            algo=algo,
-            X_train=self.X_train,
-            y_train=self.y_train,
-            X_test=self.X_test,
-            y_test=self.y_test,
-            param=params,
-            cores=cores,
-            tune=tune,
-            col_list=self.col_list)
-
-        return self.rfclf
 
     def _trainer(self, algorithm, include_factor_model=True):
         # TODO should the factor model be either 1) optional or 2) separate?
@@ -514,55 +391,6 @@ class DevelopSupervisedModel(object):
             self.metrics(algorithm))
         return trained_supervised_model
 
-    def plot_rffeature_importance(self, save=False):
-        # TODO refactor this as a tool + advanced/simple wrapper
-        """
-        Plots feature importances for random forest models
-
-        Parameters
-        ----------
-        save (boolean) : Whether to save the plot
-
-        Returns
-        -------
-        Nothing. A plot is created and displayed.
-        """
-
-        # Arrange columns in order of importance
-        if hasattr(self.rfclf, 'best_estimator_'):
-            importances = self.rfclf.best_estimator_.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.best_estimator_.estimators_],
-                axis=0)
-        else:
-            importances = self.rfclf.feature_importances_
-            std = np.std(
-                [tree.feature_importances_ for tree in
-                 self.rfclf.estimators_],
-                axis=0)
-
-        indices = np.argsort(importances)[::-1]
-        namelist = [self.col_list[i] for i in indices]
-
-        # Plot these columns
-        plt.figure()
-        plt.title("Feature importances")
-        plt.bar(range(self.X_train.shape[1]),
-                importances[indices], color="r",
-                yerr=std[indices], align="center")
-        plt.xticks(range(self.X_train.shape[1]), namelist, rotation=90)
-        plt.xlim([-1, self.X_train.shape[1]])
-        plt.gca().set_ylim(bottom=0)
-        plt.tight_layout()
-        if save:
-            plt.savefig('FeatureImportances.png')
-            source_path = os.path.dirname(os.path.abspath(__file__))
-            print('\nFeature importances saved in: {}'.format(source_path))
-            plt.show()
-        else:
-            plt.show()
-
     def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
@@ -570,19 +398,3 @@ class DevelopSupervisedModel(object):
     def plot_roc(self, save=False, debug=True):
         # TODO this is broken and may not even be implemented - use the toolbox?
         pass
-    
-    def _get_estimator_from_trained_supervised_model(self, trained_supervised_model):
-        """
-        Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
-        Args:
-            trained_supervised_model (TrainedSupervisedModel): 
-
-        Returns:
-            sklearn.base.BaseEstimator: 
-
-        """
-        if hasattr(trained_supervised_model.model, 'best_estimator_'):
-            estimator = trained_supervised_model.model.best_estimator_
-        else:
-            estimator = trained_supervised_model.model
-        return estimator

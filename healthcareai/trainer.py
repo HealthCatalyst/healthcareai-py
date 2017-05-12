@@ -1,6 +1,7 @@
 import time
 
 import healthcareai.pipelines.data_preparation as pipelines
+import healthcareai.common.model_eval as hcaieval
 from healthcareai.develop_supervised_model import DevelopSupervisedModel
 
 
@@ -26,11 +27,11 @@ class SupervisedModelTrainer(object):
         # Split the data into train and test
         self._dsm.train_test_split()
 
-    def random_forest(self):
+    def random_forest(self, save_plot=False):
         """ Train a random forest model and print out the model performance metrics. """
         # TODO Convenience method. Probably not needed?
         if self._dsm.model_type is 'classification':
-            return self.random_forest_classification()
+            return self.random_forest_classification(save_plot=save_plot)
         elif self._dsm.model_type is 'regression':
             return self.random_forest_regression()
 
@@ -61,7 +62,7 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-    def random_forest_classification(self):
+    def random_forest_classification(self, save_plot=False):
         """ Train a random forest classification model and print out the model performance metrics. """
         model_name = 'Random Forest Classification'
         print('Training {}'.format(model_name))
@@ -71,6 +72,9 @@ class SupervisedModelTrainer(object):
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
         print_training_timer(model_name, t0)
         print(trained_model.metrics)
+
+        # Save or show the feature importance graph
+        hcaieval.plot_rf_from_tsm(trained_model, self._dsm.X_train, save=save_plot)
 
         return trained_model
 
