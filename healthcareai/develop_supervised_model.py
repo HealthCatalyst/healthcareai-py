@@ -3,18 +3,15 @@ import sklearn
 import numpy as np
 import pandas as pd
 
-from imblearn.over_sampling import RandomOverSampler
-from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as model_evaluation
 import healthcareai.common.top_factors as factors
 from healthcareai.common import helpers
-from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.randomized_search import prepare_randomized_search
