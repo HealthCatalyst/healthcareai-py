@@ -415,7 +415,7 @@ def plot_rf_from_tsm(trained_supervised_model, x_train, save=False):
         x_train (numpy.array): A 2D numpy array that was used for training 
         save (bool): True to save the plot, false to display it in a blocking thread
     """
-    model = trained_supervised_model.model
+    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
     column_names = trained_supervised_model.column_names
     plot_random_forest_feature_importance(model, x_train, column_names, save=save)
 
@@ -432,8 +432,8 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         save (bool): True to save the plot, false to display it in a blocking thread
     """
     # Unwrap estimator if it is a sklearn randomized search estimator
-    best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
-
+    # best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
+    best_rf = trained_rf_classifier
     # Validate estimator is a random forest classifier and raise error if it is not
     if not isinstance(best_rf, sklearn.ensemble.RandomForestClassifier):
         print(type(trained_rf_classifier))
@@ -491,11 +491,38 @@ def get_estimator_from_trained_supervised_model(trained_supervised_model):
         sklearn.base.BaseEstimator: 
 
     """
-    if hasattr(trained_supervised_model, 'best_estimator_'):
-        estimator = trained_supervised_model.best_estimator_
-    elif hasattr(trained_supervised_model, 'model'):
-        estimator = trained_supervised_model.model
-    else:
+    # Validate input is a TSM
+    if type(trained_supervised_model).__name__ != 'TrainedSupervisedModel':
         raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
+    """
+    1. check if it is a TSM
+        Y: proceed
+        N: raise error?
+    2. check if tsm.model is a meta estimator
+        Y: extract best_estimator_
+        N: return tsm.model
+    """
+    # Check if tsm.model is a meta estimator
+    result = get_estimator_from_meta_estimator(trained_supervised_model.model)
 
-    return estimator
+    return result
+
+
+def get_estimator_from_meta_estimator(model):
+    """
+    Given an instance of a trained sklearn estimator, return the main estimator, regardless of random search
+    Args:
+        model (sklearn.base.BaseEstimator): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+    """
+    if not issubclass(type(model), sklearn.base.BaseEstimator):
+        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
+
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+        result = model.best_estimator_
+    else:
+        result = model
+        
+    return result
