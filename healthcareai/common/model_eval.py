@@ -368,12 +368,13 @@ def build_model_prediction_dictionary(trained_supervised_model):
 
 
 def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # TODO make the colors randomly generated from rgb values
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
     plt.figure()
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver operating characteristic')
-    plt.legend(loc="lower right")
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.plot([0, 1], [0, 1], 'k--')
@@ -383,7 +384,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         y_predictions_by_model = [y_predictions_by_model]
 
     # Calculate and plot for each model
-    for model in y_predictions_by_model:
+    for i, model in enumerate(y_predictions_by_model):
         model_name, y_predictions = model.popitem()
         # calculate metrics
         fpr, tpr, _ = sklearn.metrics.roc_curve(y_test, y_predictions)
@@ -395,8 +396,11 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
 
         # TODO deal with colors ...
         # plot the line
-        plt.plot(fpr, tpr, color='b', label='{} (area = {})'.format(model_name, roc_auc_linear))
+        temp_color = colors[i]
+        label = '{} (area = {})'.format(model_name, round(roc_auc_linear, 2))
+        plt.plot(fpr, tpr, color=temp_color, label=label)
 
+    plt.legend(loc="lower right")
     # TODO: add cutoff associated with FPR/TPR
 
     if save:
