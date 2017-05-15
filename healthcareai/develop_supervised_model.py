@@ -3,18 +3,15 @@ import sklearn
 import numpy as np
 import pandas as pd
 
-from imblearn.over_sampling import RandomOverSampler
-from imblearn.under_sampling import RandomUnderSampler
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegressionCV, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as model_evaluation
 import healthcareai.common.top_factors as factors
 from healthcareai.common import helpers
-from healthcareai.common import model_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.randomized_search import prepare_randomized_search
@@ -51,58 +48,6 @@ class DevelopSupervisedModel(object):
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
-
-    def under_sampling(self, random_state=0):
-        # TODO convert to fit transform
-        # NB: Must be done BEFORE train/test split
-        #     so that when we split the under/over sampled
-        #     dataset. We do under/over sampling on
-        #     the entire dataframe.
-        #     Must be done after imputation, since
-        #     under/over sampling will not work with
-        #     missing values.
-        #     Must be done after target column is converted to
-        #     numerical value (so under/over sampling from
-        #     imblearn works).
-        y = np.squeeze(self.dataframe[[self.predicted_column]])
-        X = self.dataframe.drop([self.predicted_column], axis=1)
-
-        under_sampler = RandomUnderSampler(random_state=random_state)
-        X_under_sampled, y_under_sampled = under_sampler.fit_sample(X, y)
-
-        X_under_sampled = pd.DataFrame(X_under_sampled)
-        X_under_sampled.columns = X.columns
-        y_under_sampled = pd.Series(y_under_sampled)
-
-        dataframe_under_sampled = X_under_sampled
-        dataframe_under_sampled[self.predicted_column] = y_under_sampled
-        self.dataframe = dataframe_under_sampled
-
-    def over_sampling(self, random_state=0):
-        # TODO convert to fit transform
-        # NB: Must be done BEFORE train/test split
-        #     so that when we split the under/over sampled
-        #     dataset. We do under/over sampling on
-        #     the entire dataframe.
-        #     Must be done after imputation, since
-        #     under/over sampling will not work with
-        #     missing values.
-        #     Must be done after target column is converted to
-        #     numerical value (so under/over sampling from
-        #     imblearn works).
-        y = np.squeeze(self.dataframe[[self.predicted_column]])
-        X = self.dataframe.drop([self.predicted_column], axis=1)
-
-        over_sampler = RandomOverSampler(random_state=random_state)
-        X_over_sampled, y_over_sampled = over_sampler.fit_sample(X, y)
-
-        X_over_sampled = pd.DataFrame(X_over_sampled)
-        X_over_sampled.columns = X.columns
-        y_over_sampled = pd.Series(y_over_sampled)
-
-        dataframe_over_sampled = X_over_sampled
-        dataframe_over_sampled[self.predicted_column] = y_over_sampled
-        self.dataframe = dataframe_over_sampled
 
     def feature_scaling(self, columns_to_scale):
         # TODO convert to fit transform
