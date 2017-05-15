@@ -6,6 +6,8 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
     # TODO make this database agnostic
+    # TODO If this becomes db agnostic, we will have to use something with transactions that can be rolled back
+    # TODO ... to validate write permissions. Like sqlalchemy. Ugh.
     # First, check the connection by inserting test data (and rolling back)
     db_connection = pyodbc.connect("""DRIVER={SQL Server Native Client 11.0};
                                SERVER=""" + server + """;

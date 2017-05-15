@@ -15,6 +15,7 @@ import pandas as pd
 from healthcareai.trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.model_eval as hcaieval
+import healthcareai.common.write_predictions_to_database as hcaidb
 
 
 def main():
@@ -106,8 +107,14 @@ def main():
     # Save results to csv
     # predictions.to_csv('foo.csv')
 
-    # Save results to db
-    # TODO Save results to db
+    # Save predictions to MSSQL db
+    server = 'HC2169'
+    database = 'SAM'
+    table = 'foo9'
+    schema = 'dbo'
+    engine = hcaidb.build_mssql_engine(server, database)
+
+    catalyst_dataframe.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     # Create a single ROC plot from the trained model
     trained_model.roc_curve_plot()
