@@ -11,6 +11,8 @@ To run this example:
 This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
+import sqlalchemy
+import sqlite3
 
 from healthcareai.trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
@@ -50,6 +52,14 @@ def main():
     # Train a suite of built in algorithms to see which one looks best
     trained_ensemble = hcai_trainer.ensemble()
 
+    # # Evaluate the model with various plots
+    # Create a single ROC plot from the trained model
+    trained_random_forest.roc_curve_plot()
+
+    # Create a comparison ROC plot multiple models
+    hcaieval.tsm_comparison_roc_plot(
+        [trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
+
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'random_forest_2017-05-01.pkl'
 
@@ -69,58 +79,81 @@ def main():
     # trained_model = trained_random_forest
 
     print('\n\n')
-    print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model),
-                                                                                        type(trained_model.model),
-                                                                                        trained_model.metrics))
+    print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(
+        type(trained_model),
+        type(trained_model.model),
+        trained_model.metrics))
 
-    # Make some predictions
+    # # Make predictions. Please note that there are four different formats you can choose from. All are shown
+    #    here, though you only need one.
+
+    # ## Make some predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
     print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
     print(predictions[0:5])
 
-    # Get the important factors
+    # ## Get the important factors
     factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
     print(factors.head())
     print(factors.dtypes)
 
-    # Get predictions with factors
+    # ## Get predictions with factors
     predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe,
                                                                                 number_top_features=3)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
     print(predictions_with_factors_df.head())
     print(predictions_with_factors_df.dtypes)
 
-    # Get original dataframe with predictions and factors
+    # ## Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
         prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
     print(original_plus_predictions_and_factors.head())
     print(original_plus_predictions_and_factors.dtypes)
 
-    # Get original dataframe with predictions and factors
+    # # Save your predictions. You can save predictions to a csv or database. Examples are shown below
+
+    # ## Save results to csv
+    predictions_with_factors_df.to_csv('foo.csv')
+
+    # ## MSSQL using Trusted Connections
+    server = 'localhost'
+    database = 'my_database'
+    table = 'predictions_output'
+    schema = 'dbo'
+    engine = hcaidb.build_mssql_engine(server, database)
+    predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
+
+    # ## MySQL using standard authentication
+    server = 'localhost'
+    database = 'my_database'
+    userid = 'fake_user'
+    password = 'fake_password'
+    table = 'prediction_output'
+
+    # mysql_connection_string = 'mysql://{}:{}@{}/{}'.format(userid, password, server, database)
+    mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+    mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
+    predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
+
+    # ## SQLite
+    path_to_database_file = 'database.db'
+    table = 'prediction_output'
+
+    connection = sqlite3.connect(path_to_database_file)
+    predictions_with_factors_df.to_sql(table, connection)
+
+
+    # TODO leave this commented out for open source first
+    # Health Catalyst EDW specific instructions
+    # ##
     catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
     print(catalyst_dataframe.head())
     print(catalyst_dataframe.dtypes)
-
-    # Save results to csv
-    # predictions.to_csv('foo.csv')
-
-    # Save predictions to MSSQL db
-    server = 'HC2169'
-    database = 'SAM'
-    table = 'foo9'
-    schema = 'dbo'
-    engine = hcaidb.build_mssql_engine(server, database)
-
     catalyst_dataframe.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
-    # Create a single ROC plot from the trained model
-    trained_model.roc_curve_plot()
-
-    # Create a comparison ROC plot multiple models
-    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
 
 
 if __name__ == "__main__":
