@@ -261,8 +261,6 @@ class TrainedSupervisedModel(object):
             schema (str): the optional schema
             predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
         """
-        # Verify that pyodbc is loaded
-        hcaidb.validate_pyodbc_is_loaded()
 
         # Make predictions in specific format
         sam_df = self.create_catalyst_dataframe(dataframe)
@@ -277,11 +275,31 @@ class TrainedSupervisedModel(object):
 
         try:
             engine = hcaidb.build_mssql_engine(server, database)
-            hcaidb.write_to_mssql(engine, table, sam_df, schema=schema)
+            hcaidb.write_to_db_agnostic(engine, table, sam_df, schema=schema)
         except HealthcareAIError as hcaie:
             # Run validation and alert user
             hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
             raise HealthcareAIError(hcaie.message)
+
+    def predict_to_sqlite(self, dataframe, database, table, predicted_column_name=None):
+        # Make predictions in specific format
+        sam_df = self.create_catalyst_dataframe(dataframe)
+
+        # Rename prediction column to default based on model type or given one
+        if predicted_column_name is None:
+            if self.model_type == 'classification':
+                predicted_column_name = 'PredictedProbNBR'
+            elif self.model_type == 'regression':
+                predicted_column_name = 'PredictedValueNBR'
+        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
+
+        # try:
+        engine = hcaidb.build_sqlite_engine(database)
+        hcaidb.write_to_db_agnostic(engine, table, sam_df)
+        # except HealthcareAIError as hcaie:
+            # Run validation and alert user
+            # hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
+            # raise HealthcareAIError(hcaie.message)
 
     def roc_curve_plot(self):
         """ Returns a plot of the roc curve of the holdout set from model training. """

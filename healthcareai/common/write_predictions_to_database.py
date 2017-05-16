@@ -1,8 +1,9 @@
+import sys
 import sqlalchemy
 import pandas as pd
 import urllib
 
-import sys
+import sqlite3
 
 try:
     import pyodbc
@@ -26,10 +27,10 @@ def build_mysql_connection_string(server, database, userid, password):
     # return 'Server={};Database={};Uid={};Pwd={}; '.format(server, database, userid, password)
 
 
-def build_sqlite_connection_string(file_path):
-    # TODO stub
-    pass
-    # return 'Data Source={};Version=3;'.format(file_path)
+def build_sqlite_engine(file_path):
+    validate_sqlite3_is_loaded()
+    engine = sqlite3.connect(file_path)
+    return engine
 
 
 def build_sqlite_in_memory_connection_string():
@@ -69,31 +70,38 @@ def validate_pyodbc_is_loaded():
         raise HealthcareAIError('Using this function requires installation of pyodbc.')
 
 
-def write_to_mssql(engine, table, dataframe, schema=None):
+def validate_sqlite3_is_loaded():
+    """ Simple check that alerts user if they are do not have pyodbc installed, which is not a requirement """
+    if 'sqlite3' not in sys.modules:
+        raise HealthcareAIError('Using this function requires installation of sqlite3.')
+
+
+def write_to_db_agnostic(engine, table, dataframe, schema=None):
     """
-    Given a MSSQL database engine using pyodbc, writes a database to a table
+    Given an sqlalchemy engine or sqlite connection, writes a dataframe to a table
     Args:
-        engine (sqlalchemy.engine.base.Engine): the database engine
+        engine (sqlalchemy.engine.base.Engine, sqlite3.Connection): the database engine or connection object
         table (str): destination table
         dataframe (pandas.DataFrame): the data to write
         schema (str): the optional database schema
     """
-    # Verify that pyodbc is loaded
-    validate_pyodbc_is_loaded()
-
     # Validate inputs
-    if not isinstance(engine, sqlalchemy.engine.base.Engine):
-        raise HealthcareAIError('Engine required, a {} was given'.format(type(dataframe)))
+    is_engine = isinstance(engine, sqlalchemy.engine.base.Engine)
+    is_sqlite_connection = isinstance(engine, sqlite3.Connection)
+    if not is_engine and not is_sqlite_connection:
+        raise HealthcareAIError('sqlalchemy engine or sqlite connection required, a {} was given'.format(type(engine)))
     if not is_dataframe(dataframe):
         raise HealthcareAIError('Dataframe required, a {} was given'.format(type(dataframe)))
     if not isinstance(table, str):
-        raise HealthcareAIError('Table name required, a {} was given'.format(type(dataframe)))
+        raise HealthcareAIError('Table name required, a {} was given'.format(type(table)))
+
+    # Verify that tables exist for sqlalchemy/sqlite databases
+    if is_engine and not does_table_exist(engine, table, schema):
+        raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
+    elif is_sqlite_connection:
+        verify_sqlite_table_exists(engine, table)
 
     try:
-        # Verify table exits
-        if not does_table_exist(engine, table, schema):
-            raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
-
         # Count before
         before_count = pd.read_sql('select count(*) from {}'.format(table), engine).iloc[0][0]
 
@@ -105,7 +113,24 @@ def write_to_mssql(engine, table, dataframe, schema=None):
         delta = after_count - before_count
         print('\nSuccessfully inserted {} rows. Dataframe contained {} rows'.format(delta, len(dataframe)))
 
-    except pyodbc.DatabaseError:
+    # TODO catch other errors here:
+    except (sqlalchemy.exc.SQLAlchemyError, sqlite3.Error, pd.io.sql.DatabaseError):
         raise HealthcareAIError("""Failed to insert values into {}.\n
+        Please verify that the table [{}] exists.\n
         Was your test insert successful earlier?\n
-        If so, what has changed with your database/table/entity since then?""".format(table))
+        If so, what has changed with your database/table/entity since then?""".format(table, table))
+
+
+def verify_sqlite_table_exists(connection, table):
+    """
+    Verifies that a table exsits on a sqlite engine. Raises error if it does not exist.
+    
+    Args:
+        connection (sqlite.Connection): sqlite connection
+        table (str): table name
+    """
+    cursor = connection.execute('select name from sqlite_master where type="table"')
+    table_names = cursor.fetchall()
+
+    if table not in table_names:
+        raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
