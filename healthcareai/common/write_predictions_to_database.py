@@ -1,11 +1,22 @@
 import sqlalchemy
 import pandas as pd
 import urllib
-import healthcareai.common.database_connection_validation as db_validation
+
+import sys
+
+try:
+    import pyodbc
+
+    pyodbc_is_loaded = True
+except ImportError:
+    pyodbc_is_loaded = False
+
+from healthcareai.common.filters import is_dataframe
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def build_mssql_connection_string(server, database):
+    """ Given a server and database name, build a Trusted Connection MSSQL connection string """
     return 'DRIVER={SQL Server Native Client 11.0};Server=' + server + ';Database=' + database + ';Trusted_Connection=yes;'
 
 
@@ -28,7 +39,18 @@ def build_sqlite_in_memory_connection_string():
 
 
 def build_mssql_engine(server, database):
-    # TODO highest level abstraction
+    """
+    Given a server and database name, build a Trusted Connection MSSQL database engine. NOTE: Requires `pyodbc`
+    Args:
+        server (str): Server name 
+        database (str): Database name
+
+    Returns:
+        sqlalchemy.engine.base.Engine: an sqlalchemy connection engine
+    """
+    # Verify that pyodbc is loaded
+    validate_pyodbc_is_loaded()
+
     connection_string = build_mssql_connection_string(server, database)
     params = urllib.parse.quote_plus(connection_string)
     engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
@@ -36,40 +58,54 @@ def build_mssql_engine(server, database):
     return engine
 
 
-def verify_table_exists(engine, table, schema=None):
+def does_table_exist(engine, table, schema=None):
+    """ Checks if a table exists on a given database engine with an optional schema """
     return engine.has_table(table, schema=schema)
 
 
-def db_agnostic_writing(connection_string, table, dataframe, schema=None):
-    # TODO nuke the 2d list portion - why do this if pandas is the end?
-    # TODO Validate input types
+def validate_pyodbc_is_loaded():
+    """ Simple check that alerts user if they are do not have pyodbc installed, which is not a requirement """
+    if 'pyodbc' not in sys.modules:
+        raise HealthcareAIError('Using this function requires installation of pyodbc.')
+
+
+def write_to_mssql(engine, table, dataframe, schema=None):
+    """
+    Given a MSSQL database engine using pyodbc, writes a database to a table
+    Args:
+        engine (sqlalchemy.engine.base.Engine): the database engine
+        table (str): destination table
+        dataframe (pandas.DataFrame): the data to write
+        schema (str): the optional database schema
+    """
+    # Verify that pyodbc is loaded
+    validate_pyodbc_is_loaded()
+
+    # Validate inputs
+    if not isinstance(engine, sqlalchemy.engine.base.Engine):
+        raise HealthcareAIError('Engine required, a {} was given'.format(type(dataframe)))
+    if not is_dataframe(dataframe):
+        raise HealthcareAIError('Dataframe required, a {} was given'.format(type(dataframe)))
+    if not isinstance(table, str):
+        raise HealthcareAIError('Table name required, a {} was given'.format(type(dataframe)))
 
     try:
-        # Set up engine
-        engine = sqlalchemy.create_engine(connection_string)
-
         # Verify table exits
-        if not verify_table_exists(engine, table, schema):
-            raise HealthcareAIError('Destination table does not exist. Please create it.')
+        if not does_table_exist(engine, table, schema):
+            raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
 
         # Count before
         before_count = pd.read_sql('select count(*) from {}'.format(table), engine).iloc[0][0]
 
-        # Insert
-        dataframe.to_sql(engine)
+        # Insert into database
+        dataframe.to_sql(table, engine, if_exists='append', index=False)
 
         # Count after
         after_count = pd.read_sql('select count(*) from {}'.format(table), engine).iloc[0][0]
         delta = after_count - before_count
-
         print('\nSuccessfully inserted {} rows. Dataframe contained {} rows'.format(delta, len(dataframe)))
 
-    # TODO need to find a good list of errors to catch here and how to test them
-    except RuntimeError:
-        print("\nFailed to insert values into {}.".format(table))
-        print("Was your test insert successful earlier?")
-        print("If so, what has changed with your entity since then?")
-
-        # TODO make another method that takes a connection string
-        db_validation.validate_table_connection(server, table, grain_column,
-                                                            predicted_column_name)
+    except pyodbc.DatabaseError:
+        raise HealthcareAIError("""Failed to insert values into {}.\n
+        Was your test insert successful earlier?\n
+        If so, what has changed with your database/table/entity since then?""".format(table))

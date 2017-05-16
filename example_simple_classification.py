@@ -87,7 +87,7 @@ def main():
     # # Make predictions. Please note that there are four different formats you can choose from. All are shown
     #    here, though you only need one.
 
-    # ## Make some predictions
+    ## Make some predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
     print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
     print(predictions[0:5])
@@ -112,9 +112,9 @@ def main():
     print(original_plus_predictions_and_factors.head())
     print(original_plus_predictions_and_factors.dtypes)
 
-    # # Save your predictions. You can save predictions to a csv or database. Examples are shown below
+    # Save your predictions. You can save predictions to a csv or database. Examples are shown below
 
-    # ## Save results to csv
+    ## Save results to csv
     predictions_with_factors_df.to_csv('foo.csv')
 
     # ## MSSQL using Trusted Connections
@@ -125,7 +125,7 @@ def main():
     engine = hcaidb.build_mssql_engine(server, database)
     predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
-    # ## MySQL using standard authentication
+    ## MySQL using standard authentication
     server = 'localhost'
     database = 'my_database'
     userid = 'fake_user'
@@ -146,7 +146,7 @@ def main():
 
 
     # TODO leave this commented out for open source first
-    # Health Catalyst EDW specific instructions
+    # Health Catalyst EDW specific instructions.
     # ##
     catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
@@ -154,6 +154,11 @@ def main():
     print(catalyst_dataframe.dtypes)
     catalyst_dataframe.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
+    server = 'localhost'
+    database = 'SAM'
+    table = 'HCPyDeployClassificationBASE'
+    schema = 'dbo'
+    trained_knn.predict_to_catalyst_sam(prediction_dataframe, server, database, table, schema)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
-import numpy as np
 import pandas as pd
-import sklearn
 from datetime import datetime
+
 import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.top_factors as factors
 import healthcareai.common.model_eval as model_evaluation
-from healthcareai.common.model_eval import tsm_comparison_roc_plot
+import healthcareai.common.top_factors as factors
+import healthcareai.common.write_predictions_to_database as hcaidb
+import healthcareai.common.database_connection_validation as hcaidbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -250,8 +250,39 @@ class TrainedSupervisedModel(object):
 
         return factors_and_predictions_df
 
+    def predict_to_catalyst_sam(self, dataframe, server, database, table, schema=None, predicted_column_name=None):
+        """
+        Given a dataframe you want predictions on, make predictions and save them to a catalyst-specific EDW table.
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            server (str): the target server name
+            database (str): the database name
+            table (str): the destination table name
+            schema (str): the optional schema
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
+        """
+        # Verify that pyodbc is loaded
+        hcaidb.validate_pyodbc_is_loaded()
+
+        # Make predictions in specific format
+        sam_df = self.create_catalyst_dataframe(dataframe)
+
+        # Rename prediction column to default based on model type or given one
+        if predicted_column_name is None:
+            if self.model_type == 'classification':
+                predicted_column_name = 'PredictedProbNBR'
+            elif self.model_type == 'regression':
+                predicted_column_name = 'PredictedValueNBR'
+        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
+
+        try:
+            engine = hcaidb.build_mssql_engine(server, database)
+            hcaidb.write_to_mssql(engine, table, sam_df, schema=schema)
+        except HealthcareAIError as hcaie:
+            # Run validation and alert user
+            hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
+            raise HealthcareAIError(hcaie.message)
+
     def roc_curve_plot(self):
-        """
-        Returns a plot of the roc curve of the holdout set from model training.
-        """
-        tsm_comparison_roc_plot(self)
+        """ Returns a plot of the roc curve of the holdout set from model training. """
+        model_evaluation.tsm_comparison_roc_plot(self)
