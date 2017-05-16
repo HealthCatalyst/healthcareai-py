@@ -130,7 +130,9 @@ def verify_sqlite_table_exists(connection, table):
         table (str): table name
     """
     cursor = connection.execute('select name from sqlite_master where type="table"')
-    table_names = cursor.fetchall()
+    raw = cursor.fetchall()
+    # unwrap tuples
+    table_names = [x[0] for x in raw]
 
     if table not in table_names:
         raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))

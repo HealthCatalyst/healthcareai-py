@@ -281,9 +281,28 @@ class TrainedSupervisedModel(object):
             hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
             raise HealthcareAIError(hcaie.message)
 
-    def predict_to_sqlite(self, dataframe, database, table, predicted_column_name=None):
-        # Make predictions in specific format
-        sam_df = self.create_catalyst_dataframe(dataframe)
+    def predict_to_sqlite(self,
+                          prediction_dataframe,
+                          database,
+                          table,
+                          prediction_generator,
+                          predicted_column_name=None):
+        """
+        Given a dataframe you want predictions on, make predictions and save them to an sqlite table
+
+        Args:
+            prediction_dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            database (str): database file name
+            table (str): table name
+            prediction_generator (method): one of the trained supervised model prediction methods
+            predicted_column_name (str): optional column name
+        """
+        # validate inputs
+        if type(prediction_generator).__name__ != 'method':
+            raise HealthcareAIError('Use of this method requires a prediction generator from a trained supervised model')
+
+        # Get predictions from given generator
+        sam_df = prediction_generator(prediction_dataframe)
 
         # Rename prediction column to default based on model type or given one
         if predicted_column_name is None:
@@ -291,15 +310,10 @@ class TrainedSupervisedModel(object):
                 predicted_column_name = 'PredictedProbNBR'
             elif self.model_type == 'regression':
                 predicted_column_name = 'PredictedValueNBR'
-        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
 
-        # try:
+        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
         engine = hcaidb.build_sqlite_engine(database)
         hcaidb.write_to_db_agnostic(engine, table, sam_df)
-        # except HealthcareAIError as hcaie:
-            # Run validation and alert user
-            # hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
-            # raise HealthcareAIError(hcaie.message)
 
     def roc_curve_plot(self):
         """ Returns a plot of the roc curve of the holdout set from model training. """

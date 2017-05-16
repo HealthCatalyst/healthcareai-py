@@ -1,23 +1,5 @@
-"""Creates and compares classification models using sample clinical data.
-
-Please use this example to learn about the framework before moving on to the next example.
-
-If you have not installed healthcare.ai, refer to the instructions here:
-  http://healthcareai-py.readthedocs.io
-
-To run this example:
-  python3 example_simple_classification.py
-
-This code uses the DiabetesClinicalSampleData.csv source file.
-"""
 import pandas as pd
-import sqlalchemy
-import sqlite3
-
 from healthcareai.trainer import SupervisedModelTrainer
-import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.model_eval as hcaieval
-import healthcareai.common.write_predictions_to_database as hcaidb
 
 
 def main():
@@ -57,12 +39,10 @@ def main():
         type(trained_knn.model),
         trained_knn.metrics))
 
-    # Save your predictions. You can save predictions to a csv or database. Examples are shown below
-
-    # ## SQLite
+    # Save your predictions to a sqlite database.
     path_to_database_file = 'database.db'
-    table = 'predictions'
-    trained_knn.predict_to_sqlite(prediction_dataframe, path_to_database_file, table)
+    table = 'PredictionClassificationBASE'
+    trained_knn.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_knn.make_factors)
 
 
 if __name__ == "__main__":

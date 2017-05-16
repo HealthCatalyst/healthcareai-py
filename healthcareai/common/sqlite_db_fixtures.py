@@ -1,3 +1,6 @@
+"""
+This file creates catalyst-EDW specific tables
+"""
 import sqlite3
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -7,7 +10,7 @@ def drop_table(db_name, table_name):
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
-    query = 'DROP TABLE IF EXISTS {}};'.format(table_name)
+    query = 'DROP TABLE IF EXISTS {};'.format(table_name)
     cursor.execute(query)
 
 
@@ -28,12 +31,12 @@ def setup_deploy_tables(db_name):
     cursor = db.cursor()
 
     # Drop tables
-    drop_table(db_name, 'HCPyDeployClassificationBASE')
-    drop_table(db_name, 'HCPyDeployRegressionBASE')
+    drop_table(db_name, 'PredictionClassificationBASE')
+    drop_table(db_name, 'PredictionRegressionBASE')
 
     # Set up tables
     classification_table_setup = """
-       CREATE TABLE IF NOT EXISTS HCPyDeployClassificationBASE (
+       CREATE TABLE IF NOT EXISTS PredictionClassificationBASE (
             BindingID [int] ,
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -46,7 +49,7 @@ def setup_deploy_tables(db_name):
     cursor.execute(classification_table_setup)
 
     regression_table_setup = """
-        CREATE TABLE IF NOT EXISTS HCPyDeployRegressionBASE (
+        CREATE TABLE IF NOT EXISTS PredictionRegressionBASE (
             BindingID [int],
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -59,8 +62,8 @@ def setup_deploy_tables(db_name):
     cursor.execute(regression_table_setup)
 
     # Verify both are empty
-    a = is_table_empty('foo2.db', 'HCPyDeployClassificationBASE')
-    b = is_table_empty('foo2.db', 'HCPyDeployRegressionBASE')
+    a = is_table_empty(db_name, 'PredictionClassificationBASE')
+    b = is_table_empty(db_name, 'PredictionRegressionBASE')
 
     if a and b:
         return True
