@@ -51,6 +51,11 @@ class TrainedSupervisedModel(object):
         return name
 
     @property
+    def hyperparameters(self):
+        """ Best hyperparameters found if model is a meta estimator """
+        return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
+
+    @property
     def model_type(self):
         """ Model type (regression or classification) """
         return self._model_type
