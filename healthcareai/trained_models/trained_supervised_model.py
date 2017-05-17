@@ -295,7 +295,7 @@ class TrainedSupervisedModel(object):
             database (str): database file name
             table (str): table name
             prediction_generator (method): one of the trained supervised model prediction methods
-            predicted_column_name (str): optional column name
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
         """
         # validate inputs
         if type(prediction_generator).__name__ != 'method':
