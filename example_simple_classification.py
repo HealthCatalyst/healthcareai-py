@@ -28,7 +28,7 @@ def main():
     print('\n\n-------------------[ training data ]----------------------------------------------------\n')
     print(dataframe.head())
 
-    # Step 1: Setup healthcareai for developing a model. This prepares your data for model building
+    # Step 1: Setup healthcareai for training a model. This prepares your data for model building
     hcai_trainer = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='ThirtyDayReadmitFLG',

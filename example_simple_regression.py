@@ -22,7 +22,7 @@ def main():
     # Look at the first few rows of your dataframe after the data preparation
     print(dataframe.head())
 
-    # Step 1: Setup healthcareai for developing a regression model.
+    # Step 1: Setup healthcareai for training a regression model.
     hcai = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='SystolicBPNBR',

@@ -6,7 +6,7 @@ import pandas as pd
 from healthcareai.tests import helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
-from healthcareai import DevelopSupervisedModel
+from healthcareai import AdvancedSupervisedModelTrainer
 from healthcareai.tests.helpers import fixture, assertBetween
 from healthcareai.common.helpers import count_unique_elements_in_column
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -27,7 +27,7 @@ class TestRandomForestClassification(unittest.TestCase):
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        self.trainer = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
         self.trainer.train_test_split()
 
     def test_random_forest_no_tuning(self):
@@ -49,7 +49,7 @@ class TestRandomForestClassification(unittest.TestCase):
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        trainer = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         trainer.train_test_split()
 
@@ -66,7 +66,7 @@ class TestLogisticRegression(unittest.TestCase):
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        self.trainer = DevelopSupervisedModel(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
 
         self.trainer.train_test_split()
 

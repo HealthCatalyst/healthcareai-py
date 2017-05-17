@@ -2,7 +2,7 @@ import time
 
 import healthcareai.pipelines.data_preparation as pipelines
 import healthcareai.common.model_eval as hcaieval
-from healthcareai.develop_supervised_model import DevelopSupervisedModel
+from healthcareai.advanced_trainer import AdvancedSupervisedModelTrainer
 
 
 class SupervisedModelTrainer(object):
@@ -19,7 +19,7 @@ class SupervisedModelTrainer(object):
         clean_dataframe = pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
+        self._dsm = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column, grain_column, verbose)
 
         # Save the pipeline to the parent class
         self._dsm.pipeline = pipeline

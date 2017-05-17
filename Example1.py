@@ -3,7 +3,7 @@ It provides examples of reading from both csv and SQL Server. Note that this
 example can be run as-is after installing healthcare.ai. After you have
 found that one of the models works well on your data, move to Example2
 """
-from healthcareai import DevelopSupervisedModel
+from healthcareai import AdvancedSupervisedModelTrainer
 import pandas as pd
 import time
 
@@ -39,8 +39,8 @@ def main():
     df.drop(['PatientID','InTestWindowFLG'],axis=1,inplace=True)
 
     # Step 1: compare two models
-    o = DevelopSupervisedModel(dataframe='classification', model_type='classification',
-                               predicted_column='ThirtyDayReadmitFLG', grain_column='PatientEncounterID')
+    o = AdvancedSupervisedModelTrainer(dataframe='classification', model_type='classification',
+                                       predicted_column='ThirtyDayReadmitFLG', grain_column='PatientEncounterID')
 
     # Run the linear model
     o.linear(cores=1)

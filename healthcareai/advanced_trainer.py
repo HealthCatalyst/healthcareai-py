@@ -18,7 +18,7 @@ from healthcareai.common.randomized_search import prepare_randomized_search
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 
-class DevelopSupervisedModel(object):
+class AdvancedSupervisedModelTrainer(object):
     """
     This class helps create a model using several common classifiers (reporting AUC) and regressors
     (reporting MAE/MSE).
@@ -26,7 +26,7 @@ class DevelopSupervisedModel(object):
 
     def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
         """
-        Creates an instance of DevelopSupervisedModel
+        Creates an instance of AdvancedSupervisedModelTrainer
         
         Args:
             dataframe (pandas.DataFrame): The training data

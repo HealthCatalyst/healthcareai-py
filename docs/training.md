@@ -1,6 +1,6 @@
 # Developing and comparing models
 
-## What is `DevelopSupervisedModel`?
+## What is `SupervisedModelTrainer`?
 
 -   This class let's one create and compare custom models on diverse
     datasets.
@@ -52,7 +52,7 @@ df = pd.read_csv(DiabetesClincialSampleData.csv,
 
 ## Step 2: Set your data-prep parameters
 
-The `DevelopSupervisedModel` class cleans and prepares the data before
+The `SupervisedModelTrainer` class cleans and prepares the data before
 model creation
 
 -   **Return**: an object.
@@ -75,7 +75,7 @@ model creation
 Example code:
 
 ```python
-o = DevelopSupervisedModel(modeltype='classification',
+o = SupervisedModelTrainer(modeltype='classification',
                            df=df,
                            predictedcol='ThirtyDayReadmitFLG',
                            graincol='PatientEncounterID', #OPTIONAL
@@ -135,7 +135,7 @@ o.plot_roc(debug=False,
 Note: you can run (out-of-the-box) from the healthcareai-py folder:
 
 ```python
-from healthcareai import DevelopSupervisedModel
+from healthcareai import SupervisedModelTrainer
 import pandas as pd
 import time
 
@@ -172,7 +172,7 @@ def main():
     df.drop(['PatientID','InTestWindowFLG'],axis=1,inplace=True)
 
     # Step 1: compare two models
-    o = DevelopSupervisedModel(modeltype='classification',
+    o = SupervisedModelTrainer(modeltype='classification',
                             df=df,
                             predictedcol='ThirtyDayReadmitFLG',
                             graincol='PatientEncounterID', #OPTIONAL
