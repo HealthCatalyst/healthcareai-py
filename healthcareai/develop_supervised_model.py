@@ -189,7 +189,6 @@ class DevelopSupervisedModel(object):
         hyperparameter grid.
         """
         if hyperparameter_grid is None:
-            # TODO sensible default hyperparameter grid
             hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100]}
 
         algorithm = prepare_randomized_search(
@@ -209,7 +208,7 @@ class DevelopSupervisedModel(object):
         hyperparameter grid.
         """
         if hyperparameter_grid is None:
-            # TODO sensible default hyperparameter grid
+            hyperparameter_grid = {"fit_intercept": [True, False]}
             pass
 
         algorithm = prepare_randomized_search(
@@ -228,9 +227,7 @@ class DevelopSupervisedModel(object):
         hyperparameter grid.
         """
         if hyperparameter_grid is None:
-            # TODO add sensible KNN hyperparameter grid
-            neighbor_list = list(range(10, 26))
-            hyperparameter_grid = {'n_neighbors': neighbor_list, 'weights': ['uniform', 'distance']}
+            hyperparameter_grid = {'n_neighbors': list(range(5, 26)), 'weights': ['uniform', 'distance']}
 
         algorithm = prepare_randomized_search(
             KNeighborsClassifier,
@@ -268,7 +265,6 @@ class DevelopSupervisedModel(object):
         default hyperparameter grid.
         """
         if hyperparameter_grid is None:
-            # TODO add sensible hyperparameter grid
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
@@ -294,7 +290,6 @@ class DevelopSupervisedModel(object):
         default hyperparameter grid.
         """
         if hyperparameter_grid is None:
-            # TODO add sensible hyperparameter grid
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
