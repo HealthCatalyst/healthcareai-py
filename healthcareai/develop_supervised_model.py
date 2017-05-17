@@ -120,7 +120,7 @@ class DevelopSupervisedModel(object):
             # TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?
             trained_model_by_name = {
                 'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
-                'Logistic Regression': self.logistic_regression(randomized_search=False),
+                'Logistic Regression': self.logistic_regression(randomized_search=True),
                 'Random Forest Classifier': self.random_forest_classifier(
                     trees=200,
                     randomized_search=True,
