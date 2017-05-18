@@ -156,100 +156,95 @@ def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_
     Returns
     -------
     """
-    # Error check for uneven length predictions and labels
+    # Input validation
+    auc_type = auc_type.upper()
+    if auc_type not in ['SS', 'PR']:
+        raise HealthcareAIError("Please choose either 'SS' or 'PR'")
+
     if len(predictions) != len(true_values):
         raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
-    # make AUC type upper case.
-    auc_type = auc_type.upper()
-
-    # check to see if AUC is SS or PR. If not, default to SS
-    if auc_type not in ['SS', 'PR']:
-        print('Drawing ROC curve with Sensitivity/Specificity')
-        auc_type = 'SS'
-
-    # Compute ROC curve and ROC area
+    # switch for types
+    # TODO there really isn't much shared code here, should it be two separate functions anyway?
     if auc_type == 'SS':
-        fpr, tpr, thresh = skmetrics.roc_curve(true_values, predictions)
-        area = skmetrics.auc(fpr, tpr)
+        return roc_curve(predictions, show_all_cutoffs, show_plot, true_values)
+    elif auc_type == 'PR':
+        return pr_curve(predictions, show_all_cutoffs, show_plot, true_values)
+
+
+def roc_curve(predictions, show_all_cutoffs, show_plot, true_values):
+    fpr, tpr, thresh = skmetrics.roc_curve(true_values, predictions)
+    area = skmetrics.auc(fpr, tpr)
+    # TODO this should be a return and printed elsewhere
+    print('Area under ROC curve (AUC): %0.2f' % area)
+    # get ideal cutoffs for suggestions
+    d = (fpr - 0) ** 2 + (tpr - 1) ** 2
+    # TODO this might have the same bug the r package had
+    ind = np.where(d == np.min(d))[0]
+    best_tpr = tpr[ind]
+    best_fpr = fpr[ind]
+    cutoff = thresh[ind]
+    # TODO this should be a return and printed elsewhere
+    print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, best_tpr, best_fpr))
+    if show_all_cutoffs is True:
 
         # TODO this should be a return and printed elsewhere
-        print('Area under ROC curve (AUC): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (fpr - 0) ** 2 + (tpr - 1) ** 2
-        ind = np.where(d == np.min(d))
-        best_tpr = tpr[ind]
-        best_fpr = fpr[ind]
-        cutoff = thresh[ind]
+        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
+        for i in range(len(thresh)):
+            print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
 
+    if show_plot is True:
+        plot_builder(fpr, tpr, 'Receiver operating characteristic curve', 'False Positive Rate', 'True Positive Rate',
+                     'ROC curve (area = %0.2f)' % area)
+
+    return {'ROC_AUC': area,
+            'best_cutoff': cutoff[0],
+            'best_true_positive_rate': best_tpr[0],
+            'best_false_positive_rate': best_fpr[0]}
+
+
+def pr_curve(predictions, show_all_cutoffs, show_plot, true_values):
+    # Compute Precision-Recall and plot curve
+    precision, recall, thresh = skmetrics.precision_recall_curve(true_values, predictions)
+    area = skmetrics.average_precision_score(true_values, predictions)
+    # TODO this should be a return and printed elsewhere
+    print('Area under PR curve (AU_PR): %0.2f' % area)
+    # get ideal cutoffs for suggestions
+    d = (precision - 1) ** 2 + (recall - 1) ** 2
+    ind = np.where(d == np.min(d))
+    best_precision = precision[ind]
+    best_recall = recall[ind]
+    cutoff = thresh[ind]
+    # TODO this should be a return and printed elsewhere
+    print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
+          % (cutoff, best_precision, best_recall))
+    if show_all_cutoffs is True:
         # TODO this should be a return and printed elsewhere
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, best_tpr, best_fpr))
-        if show_all_cutoffs is True:
+        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
+        for i in range(len(thresh)):
+            print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
 
-            # TODO this should be a return and printed elsewhere
-            print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-            for i in range(len(thresh)):
-                print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
+    if show_plot is True:
+        plot_builder(recall, precision, 'Precision-Recall AUC={0:0.2f}'.format(area), 'Recall', 'Precision',
+                     'Precision-Recall curve' % area)
 
-        # plot ROC curve
-        if show_plot is True:
-            plt.figure()
-            plt.plot(fpr, tpr, color='darkorange',
-                     lw=2, label='ROC curve (area = %0.2f)' % area)
-            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-            plt.xlim([0.0, 1.0])
-            plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
-            plt.title('Receiver operating characteristic curve')
-            plt.legend(loc="lower right")
-            plt.show()
-        return {'ROC_AUC': area,
-                'best_cutoff': cutoff[0],
-                'best_true_positive_rate': best_tpr[0],
-                'best_false_positive_rate': best_fpr[0]}
+    return {'PR_AUC': area,
+            'best_cutoff': cutoff[0],
+            'best_precision': best_precision[0],
+            'best_recall': best_recall[0]}
 
-    # Compute PR curve and PR area
-    else:  # must be PR
-        # Compute Precision-Recall and plot curve
-        precision, recall, thresh = skmetrics.precision_recall_curve(true_values, predictions)
-        area = skmetrics.average_precision_score(true_values, predictions)
 
-        # TODO this should be a return and printed elsewhere
-        print('Area under PR curve (AU_PR): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (precision - 1) ** 2 + (recall - 1) ** 2
-        ind = np.where(d == np.min(d))
-        best_precision = precision[ind]
-        best_recall = recall[ind]
-        cutoff = thresh[ind]
-
-        # TODO this should be a return and printed elsewhere
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-              % (cutoff, best_precision, best_recall))
-
-        if show_all_cutoffs is True:
-            # TODO this should be a return and printed elsewhere
-            print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-            for i in range(len(thresh)):
-                print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
-
-        # plot PR curve
-        if show_plot is True:
-            # Plot Precision-Recall curve
-            plt.figure()
-            plt.plot(recall, precision, lw=2, color='darkred', label='Precision-Recall curve' % area)
-            plt.xlabel('Recall')
-            plt.ylabel('Precision')
-            plt.ylim([0.0, 1.05])
-            plt.xlim([0.0, 1.0])
-            plt.title('Precision-Recall AUC={0:0.2f}'.format(area))
-            plt.legend(loc="lower right")
-            plt.show()
-        return {'PR_AUC': area,
-                'best_cutoff': cutoff[0],
-                'best_precision': best_precision[0],
-                'best_recall': best_recall[0]}
+def plot_builder(x, y, title, x_label, y_label, line_label):
+    plt.figure()
+    plt.plot(x, y, color='darkorange', lw=2, label=line_label)
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend(loc="lower right")
+    plt.show()
 
 
 def calculate_regression_metrics(trained_model, x_test, y_test):
