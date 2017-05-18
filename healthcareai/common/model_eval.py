@@ -6,9 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from sklearn.metrics import average_precision_score, precision_recall_curve
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.metrics import roc_auc_score, roc_curve, auc
+import sklearn.metrics as skmetrics
 from sklearn.model_selection import GridSearchCV
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -142,7 +140,7 @@ def print_classification_metrics(pr_auc, roc_auc):
     print('\nAU_PR Score:', pr_auc)
 
 
-def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):
+def generate_auc(predictions, labels, auc_type='SS', show_plot=False, show_all_cutoffs=False):
     # TODO refactor this
     """
     This function creates an ROC or PR curve and calculates the area under it.
@@ -151,9 +149,9 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
     ----------
     predictions (list) : predictions coming from an ML algorithm of length n.
     labels (list) : true label values corresponding to the predictions. Also length n.
-    aucType (str) : either 'SS' for ROC curve or 'PR' for precision recall curve. Defaults to 'SS'
-    plotFlg (bol) : True will return plots. Defaults to False.
-    allCutoffsFlg (bol) : True will return plots. Defaults to False.
+    auc_type (str) : either 'SS' for ROC curve or 'PR' for precision recall curve. Defaults to 'SS'
+    show_plot (bol) : True will return plots. Defaults to False.
+    show_all_cutoffs (bol) : True will return plots. Defaults to False.
 
     Returns
     -------
@@ -164,17 +162,19 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         raise Exception('Data vectors are not equal length!')
 
     # make AUC type upper case.
-    aucType = aucType.upper()
+    auc_type = auc_type.upper()
 
     # check to see if AUC is SS or PR. If not, default to SS
-    if aucType not in ['SS', 'PR']:
+    if auc_type not in ['SS', 'PR']:
         print('Drawing ROC curve with Sensitivity/Specificity')
-        aucType = 'SS'
+        auc_type = 'SS'
 
     # Compute ROC curve and ROC area
-    if aucType == 'SS':
-        fpr, tpr, thresh = roc_curve(labels, predictions)
-        area = auc(fpr, tpr)
+    if auc_type == 'SS':
+        fpr, tpr, thresh = skmetrics.roc_curve(labels, predictions)
+        area = skmetrics.auc(fpr, tpr)
+
+        # TODO this should be a return and printed elsewhere
         print('Area under ROC curve (AUC): %0.2f' % area)
         # get ideal cutoffs for suggestions
         d = (fpr - 0) ** 2 + (tpr - 1) ** 2
@@ -182,14 +182,18 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         bestTpr = tpr[ind]
         bestFpr = fpr[ind]
         cutoff = thresh[ind]
+
+        # TODO this should be a return and printed elsewhere
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, bestTpr, bestFpr))
-        if allCutoffsFlg is True:
+        if show_all_cutoffs is True:
+
+            # TODO this should be a return and printed elsewhere
             print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
             for i in range(len(thresh)):
                 print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
 
         # plot ROC curve
-        if plotFlg is True:
+        if show_plot is True:
             plt.figure()
             plt.plot(fpr, tpr, color='darkorange',
                      lw=2, label='ROC curve (area = %0.2f)' % area)
@@ -201,15 +205,18 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
             plt.title('Receiver operating characteristic curve')
             plt.legend(loc="lower right")
             plt.show()
-        return ({'AU_ROC': area,
-                 'BestCutoff': cutoff[0],
-                 'BestTpr': bestTpr[0],
-                 'BestFpr': bestFpr[0]})
+        return {'AU_ROC': area,
+                'BestCutoff': cutoff[0],
+                'BestTpr': bestTpr[0],
+                'BestFpr': bestFpr[0]}
+
     # Compute PR curve and PR area
     else:  # must be PR
         # Compute Precision-Recall and plot curve
-        precision, recall, thresh = precision_recall_curve(labels, predictions)
-        area = average_precision_score(labels, predictions)
+        precision, recall, thresh = skmetrics.precision_recall_curve(labels, predictions)
+        area = skmetrics.average_precision_score(labels, predictions)
+
+        # TODO this should be a return and printed elsewhere
         print('Area under PR curve (AU_PR): %0.2f' % area)
         # get ideal cutoffs for suggestions
         d = (precision - 1) ** 2 + (recall - 1) ** 2
@@ -217,31 +224,33 @@ def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=
         bestPre = precision[ind]
         bestRec = recall[ind]
         cutoff = thresh[ind]
+
+        # TODO this should be a return and printed elsewhere
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
               % (cutoff, bestPre, bestRec))
-        if allCutoffsFlg is True:
+
+        if show_all_cutoffs is True:
+            # TODO this should be a return and printed elsewhere
             print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
             for i in range(len(thresh)):
                 print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
 
         # plot PR curve
-        if plotFlg is True:
+        if show_plot is True:
             # Plot Precision-Recall curve
             plt.figure()
-            plt.plot(recall, precision, lw=2, color='darkred',
-                     label='Precision-Recall curve' % area)
+            plt.plot(recall, precision, lw=2, color='darkred', label='Precision-Recall curve' % area)
             plt.xlabel('Recall')
             plt.ylabel('Precision')
             plt.ylim([0.0, 1.05])
             plt.xlim([0.0, 1.0])
-            plt.title('Precision-Recall AUC={0:0.2f}'.format(
-                area))
+            plt.title('Precision-Recall AUC={0:0.2f}'.format(area))
             plt.legend(loc="lower right")
             plt.show()
-        return ({'AU_PR': area,
-                 'BestCutoff': cutoff[0],
-                 'BestPrecision': bestPre[0],
-                 'BestRecall': bestRec[0]})
+        return {'AU_PR': area,
+                'BestCutoff': cutoff[0],
+                'BestPrecision': bestPre[0],
+                'BestRecall': bestRec[0]}
 
 
 def calculate_regression_metrics(trained_model, x_test, y_test):
@@ -260,8 +269,8 @@ def calculate_regression_metrics(trained_model, x_test, y_test):
     predictions = trained_model.predict(x_test)
 
     # Calculate individual metrics
-    mean_squared_error = sklearn.metrics.mean_squared_error(y_test, predictions)
-    mean_absolute_error = sklearn.metrics.mean_absolute_error(y_test, predictions)
+    mean_squared_error = skmetrics.mean_squared_error(y_test, predictions)
+    mean_absolute_error = skmetrics.mean_absolute_error(y_test, predictions)
 
     result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
 
@@ -290,10 +299,10 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:, 1])
 
     # Calculate some metrics
-    precision, recall, thresholds = precision_recall_curve(y_test, probability_predictions)
-    pr_auc = auc(recall, precision)
-    roc_auc = sklearn.metrics.roc_auc_score(y_test, binary_predictions)
-    accuracy = sklearn.metrics.accuracy_score(y_test, binary_predictions)
+    precision, recall, thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
+    pr_auc = skmetrics.auc(recall, precision)
+    roc_auc = skmetrics.roc_auc_score(y_test, binary_predictions)
+    accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
 
     return {
         'roc_auc': roc_auc,
@@ -387,8 +396,8 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
     for i, model in enumerate(y_predictions_by_model):
         model_name, y_predictions = model.popitem()
         # calculate metrics
-        fpr, tpr, _ = sklearn.metrics.roc_curve(y_test, y_predictions)
-        roc_auc_linear = sklearn.metrics.auc(fpr, tpr)
+        fpr, tpr, _ = skmetrics.roc_curve(y_test, y_predictions)
+        roc_auc_linear = skmetrics.auc(fpr, tpr)
 
         if debug:
             print('{} model:'.format(model_name))
@@ -528,5 +537,5 @@ def get_estimator_from_meta_estimator(model):
         result = model.best_estimator_
     else:
         result = model
-        
+
     return result

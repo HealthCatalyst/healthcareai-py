@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.model_eval import GenerateAUC, plot_random_forest_feature_importance
+from healthcareai.common.model_eval import generate_auc, plot_random_forest_feature_importance
 
 
 class TestROC(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestROC(unittest.TestCase):
 
     def runTest(self):
         # ROC_AUC
-        out = GenerateAUC(self.df['a'], self.df['b'], 'SS', False, False)
+        out = generate_auc(self.df['a'], self.df['b'], 'SS', False, False)
         self.assertAlmostEqual(round(out['AU_ROC'], 4), 0.9433)
         self.assertAlmostEqual(round(out['BestTpr'], 4), 0.9565)
         self.assertAlmostEqual(round(out['BestFpr'], 4), 0.2338)
@@ -35,7 +35,7 @@ class TestPR(unittest.TestCase):
 
     def runTest(self):
         # PR_AUC
-        out = GenerateAUC(self.df['a'], self.df['b'], 'PR', False, False)
+        out = generate_auc(self.df['a'], self.df['b'], 'PR', False, False)
         self.assertAlmostEqual(round(out['AU_PR'], 4), 0.8622)
         self.assertAlmostEqual(round(out['BestPrecision'], 4), 0.8000)
         self.assertAlmostEqual(round(out['BestRecall'], 4), 0.6957)
