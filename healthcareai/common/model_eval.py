@@ -141,7 +141,7 @@ def print_classification_metrics(pr_auc, roc_auc):
 
 
 def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_all_cutoffs=False):
-    # TODO refactor this
+    # TODO remove this and just use two separate functions (the one ROC plotter already works)
     """
     This function creates an ROC or PR curve and calculates the area under it.
 
@@ -157,33 +157,38 @@ def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_
     -------
     """
     # Input validation
+    # input validation
+    validate_predictions_and_labels_are_equal_length(predictions, true_values)
     auc_type = auc_type.upper()
     if auc_type not in ['SS', 'PR']:
         raise HealthcareAIError("Please choose either 'SS' or 'PR'")
 
-    if len(predictions) != len(true_values):
-        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
-
     # switch for types
     # TODO there really isn't much shared code here, should it be two separate functions anyway?
     if auc_type == 'SS':
-        return roc_curve(predictions, show_all_cutoffs, show_plot, true_values)
+        return roc_curve(predictions, true_values, show_all_cutoffs, show_plot)
     elif auc_type == 'PR':
-        return pr_curve(predictions, show_all_cutoffs, show_plot, true_values)
+        return pr_curve(predictions, true_values, show_all_cutoffs, show_plot)
 
 
-def roc_curve(predictions, show_all_cutoffs, show_plot, true_values):
+def roc_curve(predictions, true_values, show_all_cutoffs, show_plot):
+    """ Compute ROC AUC and plot curve """
+    validate_predictions_and_labels_are_equal_length(predictions, true_values)
+
     fpr, tpr, thresh = skmetrics.roc_curve(true_values, predictions)
     area = skmetrics.auc(fpr, tpr)
+
     # TODO this should be a return and printed elsewhere
     print('Area under ROC curve (AUC): %0.2f' % area)
-    # get ideal cutoffs for suggestions
+    # get ideal cutoffs for suggestions (upper left, or 0,1)
     d = (fpr - 0) ** 2 + (tpr - 1) ** 2
+
     # TODO this might have the same bug the r package had
     ind = np.where(d == np.min(d))[0]
     best_tpr = tpr[ind]
     best_fpr = fpr[ind]
     cutoff = thresh[ind]
+
     # TODO this should be a return and printed elsewhere
     print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, best_tpr, best_fpr))
     if show_all_cutoffs is True:
@@ -203,18 +208,24 @@ def roc_curve(predictions, show_all_cutoffs, show_plot, true_values):
             'best_false_positive_rate': best_fpr[0]}
 
 
-def pr_curve(predictions, show_all_cutoffs, show_plot, true_values):
-    # Compute Precision-Recall and plot curve
+def pr_curve(predictions, true_values, show_all_cutoffs, show_plot):
+    """ Compute Precision-Recall AUC and plot curve """
+    validate_predictions_and_labels_are_equal_length(predictions, true_values)
+
     precision, recall, thresh = skmetrics.precision_recall_curve(true_values, predictions)
     area = skmetrics.average_precision_score(true_values, predictions)
+
     # TODO this should be a return and printed elsewhere
     print('Area under PR curve (AU_PR): %0.2f' % area)
-    # get ideal cutoffs for suggestions
+    # get ideal cutoffs for suggestions (upper right or 1,1)
     d = (precision - 1) ** 2 + (recall - 1) ** 2
-    ind = np.where(d == np.min(d))
+
+    # TODO this might have the same bug the r package had
+    ind = np.where(d == np.min(d))[0]
     best_precision = precision[ind]
     best_recall = recall[ind]
     cutoff = thresh[ind]
+
     # TODO this should be a return and printed elsewhere
     print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
           % (cutoff, best_precision, best_recall))
@@ -234,7 +245,13 @@ def pr_curve(predictions, show_all_cutoffs, show_plot, true_values):
             'best_recall': best_recall[0]}
 
 
+def validate_predictions_and_labels_are_equal_length(predictions, true_values):
+    if len(predictions) != len(true_values):
+        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
+
+
 def plot_builder(x, y, title, x_label, y_label, line_label):
+    """ Plot builder for AUC curves """
     plt.figure()
     plt.plot(x, y, color='darkorange', lw=2, label=line_label)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -371,6 +388,7 @@ def build_model_prediction_dictionary(trained_supervised_model):
 
 
 def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # TODO make a version of this that plots PR curves and kill the other plotters
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot

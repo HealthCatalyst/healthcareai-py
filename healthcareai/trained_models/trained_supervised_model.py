@@ -5,7 +5,6 @@ from datetime import datetime
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.top_factors as factors
 import healthcareai.common.model_eval as model_evaluation
-from healthcareai.common.model_eval import tsm_comparison_roc_plot
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -254,4 +253,4 @@ class TrainedSupervisedModel(object):
         """
         Returns a plot of the roc curve of the holdout set from model training.
         """
-        tsm_comparison_roc_plot(self)
+        model_evaluation.tsm_comparison_roc_plot(self)
