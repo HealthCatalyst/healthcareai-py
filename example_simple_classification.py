@@ -114,6 +114,7 @@ def main():
 
     # Create a comparison ROC plot multiple models
     hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
+    trained_random_forest.roc()
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ class TrainedSupervisedModel(object):
                  grain_column,
                  prediction_column,
                  test_set_predictions,
+                 test_set_class_labels,
                  test_set_actual,
                  metric_by_name):
         self.model = model
@@ -38,6 +39,7 @@ class TrainedSupervisedModel(object):
         self.grain_column = grain_column
         self.prediction_column = prediction_column
         self.test_set_predictions = test_set_predictions
+        self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
 
@@ -250,7 +252,28 @@ class TrainedSupervisedModel(object):
         return factors_and_predictions_df
 
     def roc_curve_plot(self):
-        """
-        Returns a plot of the roc curve of the holdout set from model training.
-        """
+        """ Returns a plot of the roc curve of the holdout set from model training. """
+        self.validate_classification()
         model_evaluation.tsm_comparison_roc_plot(self)
+
+    def roc(self):
+        self.validate_classification()
+        roc = model_evaluation.compute_roc(self.test_set_class_labels, self.test_set_actual)
+        # TODO print these nicely for users
+        print(roc)
+
+        # TODO this should be a return and printed elsewhere
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+
+        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
+        for i in range(len(roc['thresholds'])):
+            print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
+
+    def validate_classification(self):
+        """
+        Checks that a model is classification and raises an error if it is not. Run this on any method that only makes
+        sense for classification.
+        """
+        # TODO add binary check and rename to validate_binary_classification
+        if self.model_type != 'classification':
+            raise HealthcareAIError('This function only runs on a binary classification model.')

@@ -156,7 +156,6 @@ def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_
     Returns
     -------
     """
-    # Input validation
     # input validation
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
     auc_type = auc_type.upper()
@@ -166,46 +165,35 @@ def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_
     # switch for types
     # TODO there really isn't much shared code here, should it be two separate functions anyway?
     if auc_type == 'SS':
-        return roc_curve(predictions, true_values, show_all_cutoffs, show_plot)
+        return compute_roc(predictions, true_values)
     elif auc_type == 'PR':
         return pr_curve(predictions, true_values, show_all_cutoffs, show_plot)
 
 
-def roc_curve(predictions, true_values, show_all_cutoffs, show_plot):
-    """ Compute ROC AUC and plot curve """
+def compute_roc(predictions, true_values):
+    """ Compute TPRs, FPRs, best cutoff and AUC """
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
-    fpr, tpr, thresh = skmetrics.roc_curve(true_values, predictions)
-    area = skmetrics.auc(fpr, tpr)
+    false_positive_rates, true_postitive_rates, thresholds = skmetrics.roc_curve(true_values, predictions)
+    area = skmetrics.auc(false_positive_rates, true_postitive_rates)
 
-    # TODO this should be a return and printed elsewhere
-    print('Area under ROC curve (AUC): %0.2f' % area)
     # get ideal cutoffs for suggestions (upper left, or 0,1)
-    d = (fpr - 0) ** 2 + (tpr - 1) ** 2
+    d = (false_positive_rates - 0) ** 2 + (true_postitive_rates - 1) ** 2
 
     # TODO this might have the same bug the r package had
     ind = np.where(d == np.min(d))[0]
-    best_tpr = tpr[ind]
-    best_fpr = fpr[ind]
-    cutoff = thresh[ind]
-
-    # TODO this should be a return and printed elsewhere
-    print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, best_tpr, best_fpr))
-    if show_all_cutoffs is True:
-
-        # TODO this should be a return and printed elsewhere
-        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-        for i in range(len(thresh)):
-            print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
-
-    if show_plot is True:
-        plot_builder(fpr, tpr, 'Receiver operating characteristic curve', 'False Positive Rate', 'True Positive Rate',
-                     'ROC curve (area = %0.2f)' % area)
+    best_tpr = true_postitive_rates[ind]
+    best_fpr = false_positive_rates[ind]
+    cutoff = thresholds[ind]
 
     return {'ROC_AUC': area,
             'best_cutoff': cutoff[0],
             'best_true_positive_rate': best_tpr[0],
-            'best_false_positive_rate': best_fpr[0]}
+            'best_false_positive_rate': best_fpr[0],
+            'tpr': true_postitive_rates,
+            'fpr': false_positive_rates,
+            'thresholds': thresholds
+            }
 
 
 def pr_curve(predictions, true_values, show_all_cutoffs, show_plot):
@@ -385,6 +373,17 @@ def build_model_prediction_dictionary(trained_supervised_model):
     predictions = np.squeeze(trained_supervised_model.test_set_predictions[:, 1])
 
     return {name: predictions}
+
+
+def roc_plot_from_cutoffs(true_positive_rates, false_positive_rates, auc):
+    # TODO I think this is redundant and can be eliminated
+    plot_builder(
+        x=false_positive_rates,
+        y=true_positive_rates,
+        title='Receiver operating characteristic curve',
+        x_label='False Positive Rate',
+        y_label='True Positive Rate',
+        line_label='ROC curve AUC = {}'.format(auc))
 
 
 def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
