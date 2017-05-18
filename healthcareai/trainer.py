@@ -63,7 +63,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_classification(self, save_plot=False):
-        """ Train a random forest classification model and print out the model performance metrics. """
+        """ Train a random forest classification model, print out performance metrics and show a ROC plot. """
         model_name = 'Random Forest Classification'
         print('Training {}'.format(model_name))
         t0 = time.time()
