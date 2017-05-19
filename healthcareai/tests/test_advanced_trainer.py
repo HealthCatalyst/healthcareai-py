@@ -72,7 +72,7 @@ class TestLogisticRegression(unittest.TestCase):
 
         lr = self.trainer.logistic_regression(randomized_search=False)
         self.assertIsInstance(lr, TrainedSupervisedModel)
-        assertBetween(self, 0.5, 0.69, lr.metrics['roc_auc'])
+        assertBetween(self, 0.5, 0.8, lr.metrics['roc_auc'])
 
 
 class TestHelpers(unittest.TestCase):

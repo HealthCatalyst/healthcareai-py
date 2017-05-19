@@ -88,12 +88,12 @@ def validate_predictions_and_labels_are_equal_length(predictions, true_values):
         raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
-def calculate_regression_metrics(trained_model, x_test, y_test):
+def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained model, calculate metrics
+    Given a trained estimator, calculate metrics
 
     Args:
-        trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
 
@@ -101,7 +101,7 @@ def calculate_regression_metrics(trained_model, x_test, y_test):
         dict: A dictionary of metrics objects
     """
     # Get predictions
-    predictions = trained_model.predict(x_test)
+    predictions = trained_sklearn_estimator.predict(x_test)
 
     # Calculate individual metrics
     mean_squared_error = skmetrics.mean_squared_error(y_test, predictions)
@@ -112,12 +112,12 @@ def calculate_regression_metrics(trained_model, x_test, y_test):
     return result
 
 
-def calculate_classification_metrics(trained_model, x_test, y_test):
+def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained model, calculate metrics
+    Given a trained estimator, calculate metrics
 
     Args:
-        trained_model (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
 
@@ -128,10 +128,10 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     y_test = np.squeeze(y_test)
 
     # Get binary classification predictions
-    binary_predictions = np.squeeze(trained_model.predict(x_test))
+    binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
 
     # Get probability classification predictions
-    probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:, 1])
+    probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
 
     # Calculate some metrics
     precision, recall, thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
@@ -166,7 +166,7 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
     # if isinstance(trained_supervised_model, TrainedSupervisedModel):
     if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
-        entry = build_model_prediction_dictionary(trained_supervised_model)
+        entry = build_classification_model_prediction_dictionary(trained_supervised_model)
         predictions_by_model.append(entry)
         test_set_actual = trained_supervised_model.test_set_actual
     elif isinstance(trained_supervised_model, list):
@@ -176,7 +176,7 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
             if type(model).__name__ != 'TrainedSupervisedModel':
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
 
-            entry = build_model_prediction_dictionary(model)
+            entry = build_classification_model_prediction_dictionary(model)
             predictions_by_model.append(entry)
 
             # TODO so, you could check for different GUIDs that could be saved in each TSM!
@@ -190,7 +190,7 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     plotter(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
-def build_model_prediction_dictionary(trained_supervised_model):
+def build_classification_model_prediction_dictionary(trained_supervised_model):
     # TODO low priority, but test this
     """
     Given a single trained supervised model build a simple dictionary containing the model name and predictions from the
@@ -200,13 +200,12 @@ def build_model_prediction_dictionary(trained_supervised_model):
         trained_supervised_model (TrainedSupervisedModel): 
 
     Returns:
-        dict: 
+        dict: predictions by model name
     """
-    if trained_supervised_model.model_type == 'regression':
+    if trained_supervised_model.is_regression:
         raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
 
     name = trained_supervised_model.model_name
-    # predictions = first_class_prediction_from_binary_probabilities(trained_supervised_model.test_set_predictions)
     predictions = np.squeeze(trained_supervised_model.test_set_predictions[:, 1])
 
     return {name: predictions}

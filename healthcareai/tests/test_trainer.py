@@ -82,9 +82,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_lr.metrics
 
-        # TODO is this even a valid test at a 0.5 auc?
-        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
-        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_classification(self):
         trained_ensemble = self.classification_trainer.ensemble()
@@ -93,7 +92,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_ensemble.metrics
 
         helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
-        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):
         self.assertRaises(HealthcareAIError, self.regression_trainer.ensemble)

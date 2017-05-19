@@ -53,6 +53,18 @@ class TrainedSupervisedModel(object):
         return name
 
     @property
+    def is_classification(self):
+        # TODO test this
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'classification'
+
+    @property
+    def is_regression(self):
+        # TODO test this
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'regression'
+
+    @property
     def hyperparameters(self):
         """ Best hyperparameters found if model is a meta estimator """
         return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
@@ -94,10 +106,10 @@ class TrainedSupervisedModel(object):
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
         # make predictions returning probabity of a class or value of regression
-        if self.model_type == 'classification':
+        if self.is_classification:
             # Only save the prediction of one of the two classes
             y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
-        elif self.model_type == 'regression':
+        elif self.is_regression:
             y_predictions = self.model.predict(prepared_dataframe)
         else:
             raise HealthcareAIError('Model type appears to be neither regression or classification.')
@@ -276,9 +288,9 @@ class TrainedSupervisedModel(object):
 
         # Rename prediction column to default based on model type or given one
         if predicted_column_name is None:
-            if self.model_type == 'classification':
+            if self.is_classification:
                 predicted_column_name = 'PredictedProbNBR'
-            elif self.model_type == 'regression':
+            elif self.is_regression:
                 predicted_column_name = 'PredictedValueNBR'
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
 
@@ -308,16 +320,17 @@ class TrainedSupervisedModel(object):
         """
         # validate inputs
         if type(prediction_generator).__name__ != 'method':
-            raise HealthcareAIError('Use of this method requires a prediction generator from a trained supervised model')
+            raise HealthcareAIError(
+                'Use of this method requires a prediction generator from a trained supervised model')
 
         # Get predictions from given generator
         sam_df = prediction_generator(prediction_dataframe)
 
         # Rename prediction column to default based on model type or given one
         if predicted_column_name is None:
-            if self.model_type == 'classification':
+            if self.is_classification:
                 predicted_column_name = 'PredictedProbNBR'
-            elif self.model_type == 'regression':
+            elif self.is_regression:
                 predicted_column_name = 'PredictedValueNBR'
 
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
