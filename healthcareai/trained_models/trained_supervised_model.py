@@ -257,6 +257,7 @@ class TrainedSupervisedModel(object):
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
 
     def roc(self):
+        """ Prints out ROC details and returns them with cutoffs. """
         self.validate_classification()
         roc = model_evaluation.compute_roc(self.test_set_class_labels, self.test_set_actual)
         print(roc)
@@ -268,12 +269,15 @@ class TrainedSupervisedModel(object):
         for i in range(len(roc['thresholds'])):
             print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
 
+        return roc
+
     def pr_curve_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
 
     def pr(self):
+        """ Prints out PR details and returns them with cutoffs. """
         self.validate_classification()
         pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
         print(pr)
@@ -285,6 +289,8 @@ class TrainedSupervisedModel(object):
         print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
         for i in range(len(pr['thresholds'])):
             print('%5.2f %6.2f %10.2f' % (pr['thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+
+        return pr
 
     def validate_classification(self):
         """
