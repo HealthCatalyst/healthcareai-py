@@ -5,7 +5,7 @@ found that one of the models works well on your data, move to Example2
 """
 import time
 import pandas as pd
-from healthcareai import DevelopSupervisedModel
+from healthcareai import AdvancedSupervisedModelTrainer
 from healthcareai.common import filters
 from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter
 import healthcareai.pipelines.data_preparation as pipelines
@@ -46,7 +46,7 @@ def main():
 
 
     # Step 2: Instantiate the main class with your data
-    hcai = DevelopSupervisedModel(
+    hcai = AdvancedSupervisedModelTrainer(
         dataframe=dataframe,
         model_type='classification',
         predicted_column='ThirtyDayReadmitFLG',
