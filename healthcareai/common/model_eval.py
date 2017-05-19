@@ -167,7 +167,7 @@ def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_
     if auc_type == 'SS':
         return compute_roc(predictions, true_values)
     elif auc_type == 'PR':
-        return pr_curve(predictions, true_values, show_all_cutoffs, show_plot)
+        return compute_pr(predictions, true_values)
 
 
 def compute_roc(predictions, true_values):
@@ -196,15 +196,13 @@ def compute_roc(predictions, true_values):
             }
 
 
-def pr_curve(predictions, true_values, show_all_cutoffs, show_plot):
-    """ Compute Precision-Recall AUC and plot curve """
+def compute_pr(predictions, true_values):
+    """ Compute Precision-Recall, thresholds and AUC """
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
-    precision, recall, thresh = skmetrics.precision_recall_curve(true_values, predictions)
+    precision, recall, thresholds = skmetrics.precision_recall_curve(true_values, predictions)
     area = skmetrics.average_precision_score(true_values, predictions)
 
-    # TODO this should be a return and printed elsewhere
-    print('Area under PR curve (AU_PR): %0.2f' % area)
     # get ideal cutoffs for suggestions (upper right or 1,1)
     d = (precision - 1) ** 2 + (recall - 1) ** 2
 
@@ -212,25 +210,16 @@ def pr_curve(predictions, true_values, show_all_cutoffs, show_plot):
     ind = np.where(d == np.min(d))[0]
     best_precision = precision[ind]
     best_recall = recall[ind]
-    cutoff = thresh[ind]
-
-    # TODO this should be a return and printed elsewhere
-    print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-          % (cutoff, best_precision, best_recall))
-    if show_all_cutoffs is True:
-        # TODO this should be a return and printed elsewhere
-        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-        for i in range(len(thresh)):
-            print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
-
-    if show_plot is True:
-        plot_builder(recall, precision, 'Precision-Recall AUC={0:0.2f}'.format(area), 'Recall', 'Precision',
-                     'Precision-Recall curve' % area)
+    ideal_cutoff = thresholds[ind]
 
     return {'PR_AUC': area,
-            'best_cutoff': cutoff[0],
+            'best_cutoff': ideal_cutoff[0],
             'best_precision': best_precision[0],
-            'best_recall': best_recall[0]}
+            'best_recall': best_recall[0],
+            'precisions': precision,
+            'recalls': recall,
+            'thresholds': thresholds
+            }
 
 
 def validate_predictions_and_labels_are_equal_length(predictions, true_values):
@@ -324,6 +313,8 @@ Returns:
 
 
 def tsm_comparison_roc_plot(trained_supervised_model):
+    # TODO either put a switch on this because it is all shared code except the last part or
+    # TODO make a small wrapper for ROC and PR
     """
     Given a single or list of trained supervised models, plot a roc curve for each one
     
@@ -353,6 +344,38 @@ def tsm_comparison_roc_plot(trained_supervised_model):
     roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
+def tsm_comparison_pr_plot(trained_supervised_model):
+    # TODO either put a switch on this because it is all shared code except the last part or
+    # TODO make a small wrapper for ROC and PR
+    """
+    Given a single or list of trained supervised models, plot a pr curve for each one
+    
+    Args:
+        trained_supervised_model (list | TrainedSupervisedModel): 
+    """
+    predictions_by_model = []
+    # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
+    # if isinstance(trained_supervised_model, TrainedSupervisedModel):
+    if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
+        entry = build_model_prediction_dictionary(trained_supervised_model)
+        predictions_by_model.append(entry)
+        test_set_actual = trained_supervised_model.test_set_actual
+    elif isinstance(trained_supervised_model, list):
+        for model in trained_supervised_model:
+            entry = build_model_prediction_dictionary(model)
+            predictions_by_model.append(entry)
+
+            # TODO so, you could check for different GUIDs that could be saved in each TSM!
+            # The assumption here is that each TSM was trained on the same train test split,
+            # which happens when instantiating SupervisedModelTrainer
+            test_set_actual = model.test_set_actual
+    else:
+        # TODO test this
+        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
+
+    pr_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
+
+
 def build_model_prediction_dictionary(trained_supervised_model):
     # TODO low priority, but test this
     """
@@ -376,7 +399,7 @@ def build_model_prediction_dictionary(trained_supervised_model):
 
 
 def roc_plot_from_cutoffs(true_positive_rates, false_positive_rates, auc):
-    # TODO I think this is redundant and can be eliminated
+    # TODO I think this is redundant and can be eliminated, or could this be the base that the other plotter uses?
     plot_builder(
         x=false_positive_rates,
         y=true_positive_rates,
@@ -417,7 +440,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         # TODO deal with colors ...
         # plot the line
         temp_color = colors[i]
-        label = '{} (area = {})'.format(model_name, round(roc_auc_linear, 2))
+        label = '{} (AUC = {})'.format(model_name, round(roc_auc_linear, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
 
     plt.legend(loc="lower right")
@@ -427,6 +450,50 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         plt.savefig('ROC.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
         print('\nROC plot saved in: {}'.format(source_path))
+
+    plt.show()
+
+
+def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # TODO make a version of this that plots PR curves and kill the other plotters
+    # TODO make the colors randomly generated from rgb values
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    # Initialize plot
+    plt.figure()
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curves')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [1, 0], 'k--')
+
+    # TODO hack to convert to array if it is a single dictionary
+    if isinstance(y_predictions_by_model, dict):
+        y_predictions_by_model = [y_predictions_by_model]
+
+    # Calculate and plot for each model
+    for i, model in enumerate(y_predictions_by_model):
+        model_name, y_predictions = model.popitem()
+        # calculate metrics
+        precision, recall, _thresholds = skmetrics.precision_recall_curve(y_test, y_predictions)
+        area = skmetrics.average_precision_score(y_test, y_predictions)
+
+        if debug:
+            print('{} model:'.format(model_name))
+            print(pd.DataFrame({'Recall': recall, 'Precision': precision}))
+
+        # plot the line
+        temp_color = colors[i]
+        label = '{} (AUC = {})'.format(model_name, round(area, 2))
+        plt.plot(recall, precision, color=temp_color, label=label)
+
+    plt.legend(loc="lower right")
+    # TODO: add cutoff associated with P/R
+
+    if save:
+        plt.savefig('PR.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nPR plot saved in: {}'.format(source_path))
 
     plt.show()
 

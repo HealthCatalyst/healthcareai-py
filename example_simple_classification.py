@@ -113,7 +113,10 @@ def main():
     trained_model.roc_curve_plot()
 
     # Create a comparison ROC plot multiple models
-    hcaieval.tsm_comparison_roc_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
+    hcaieval.tsm_comparison_roc_plot(
+        [trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
+    # Create a comparison PR plot multiple models
+    hcaieval.tsm_comparison_pr_plot([trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
     trained_random_forest.roc()
 
 

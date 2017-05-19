@@ -263,11 +263,32 @@ class TrainedSupervisedModel(object):
         print(roc)
 
         # TODO this should be a return and printed elsewhere
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
+            roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
         print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
         for i in range(len(roc['thresholds'])):
             print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
+
+    def pr_curve_plot(self):
+        """ Returns a plot of the roc curve of the holdout set from model training. """
+        # TODO doesn't work
+        self.validate_classification()
+        model_evaluation.tsm_comparison_pr_plot(self)
+
+    def pr(self):
+        self.validate_classification()
+        pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
+        # TODO print these nicely for users
+        print(pr)
+
+        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['PR_AUC']))
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
+              % (pr['best_cutoff'], pr['best_precision'], pr['best_recall']))
+
+        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
+        for i in range(len(pr['thresholds'])):
+            print('%5.2f %6.2f %10.2f' % (pr['thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
 
     def validate_classification(self):
         """
