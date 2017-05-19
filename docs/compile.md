@@ -1,5 +1,9 @@
 # Compiling Python files to an exe
 
+## Python 3.6 Note
+
+Please note that as of 2017-03-31 this process will not work if the machine is running Python 3.6.
+
 ## Why might I want to do this?
 
 Note: this is optional to model deployment. When working in with
@@ -16,14 +20,14 @@ machine that you want to keep pure. If you're using a OS X, one can
 
 ## How does this relate to healthcare.ai?
 
-After you've been able to [deploy](http://healthcare.ai/py/deploy.html)
+After you've been able to [deploy](http://healthcareai-py.readthedocs.io/en/latest/deploy)
 predictions from your model back to SQL Server, you may want to compile
 your .py file to an exe.
 
 ## The workflow of saving and compiling a model to exe
 
 1)  Train and save your model by running your
-    [deploy](http://healthcare.ai/py/deploy.html) .py file with the
+    [deploy](http://healthcareai-py.readthedocs.io/en/latest/deploy) .py file with the
     `use_saved_model=False` argument, such that two pkl files are
     created
 2)  checked that you can run the model from from the pkl files, by

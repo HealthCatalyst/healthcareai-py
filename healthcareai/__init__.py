@@ -1,5 +1,8 @@
-from .develop_supervised_model import DevelopSupervisedModel
+from .advanced_trainer import AdvancedSupervisedModelTrainer
+from .trainer import SupervisedModelTrainer
+
 
 __all__ = [
-    'DevelopSupervisedModel'
+    'AdvancedSupervisedModelTrainer',
+    'SupervisedModelTrainer'
 ]

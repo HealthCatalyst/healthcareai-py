@@ -1,10 +1,11 @@
-import numpy as np
 import pandas as pd
-import sklearn
 from datetime import datetime
+
 import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.top_factors as factors
 import healthcareai.common.model_eval as model_evaluation
+import healthcareai.common.top_factors as factors
+import healthcareai.common.write_predictions_to_database as hcaidb
+import healthcareai.common.database_connection_validation as hcaidbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -50,6 +51,11 @@ class TrainedSupervisedModel(object):
         name = type(model).__name__
 
         return name
+
+    @property
+    def hyperparameters(self):
+        """ Best hyperparameters found if model is a meta estimator """
+        return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
 
     @property
     def model_type(self):
@@ -122,6 +128,8 @@ class TrainedSupervisedModel(object):
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
 
             # Run the saved data preparation pipeline
+            # TODO dummies will not run if a prediction dataframe only has: 1 row or all the same value in a categorical
+            # TODO column
             prepared_dataframe = self.fit_pipeline.transform(dataframe)
 
             # Subset the dataframe to only columns that were saved from the original model training
@@ -250,6 +258,71 @@ class TrainedSupervisedModel(object):
         factors_and_predictions_df['LastLoadDTS'] = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
         return factors_and_predictions_df
+
+    def predict_to_catalyst_sam(self, dataframe, server, database, table, schema=None, predicted_column_name=None):
+        """
+        Given a dataframe you want predictions on, make predictions and save them to a catalyst-specific EDW table.
+        Args:
+            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            server (str): the target server name
+            database (str): the database name
+            table (str): the destination table name
+            schema (str): the optional schema
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
+        """
+
+        # Make predictions in specific format
+        sam_df = self.create_catalyst_dataframe(dataframe)
+
+        # Rename prediction column to default based on model type or given one
+        if predicted_column_name is None:
+            if self.model_type == 'classification':
+                predicted_column_name = 'PredictedProbNBR'
+            elif self.model_type == 'regression':
+                predicted_column_name = 'PredictedValueNBR'
+        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
+
+        try:
+            engine = hcaidb.build_mssql_engine(server, database)
+            hcaidb.write_to_db_agnostic(engine, table, sam_df, schema=schema)
+        except HealthcareAIError as hcaie:
+            # Run validation and alert user
+            hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
+            raise HealthcareAIError(hcaie.message)
+
+    def predict_to_sqlite(self,
+                          prediction_dataframe,
+                          database,
+                          table,
+                          prediction_generator,
+                          predicted_column_name=None):
+        """
+        Given a dataframe you want predictions on, make predictions and save them to an sqlite table
+
+        Args:
+            prediction_dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
+            database (str): database file name
+            table (str): table name
+            prediction_generator (method): one of the trained supervised model prediction methods
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
+        """
+        # validate inputs
+        if type(prediction_generator).__name__ != 'method':
+            raise HealthcareAIError('Use of this method requires a prediction generator from a trained supervised model')
+
+        # Get predictions from given generator
+        sam_df = prediction_generator(prediction_dataframe)
+
+        # Rename prediction column to default based on model type or given one
+        if predicted_column_name is None:
+            if self.model_type == 'classification':
+                predicted_column_name = 'PredictedProbNBR'
+            elif self.model_type == 'regression':
+                predicted_column_name = 'PredictedValueNBR'
+
+        sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
+        engine = hcaidb.build_sqlite_engine(database)
+        hcaidb.write_to_db_agnostic(engine, table, sam_df)
 
     def roc_curve_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """

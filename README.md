@@ -2,11 +2,11 @@
 
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
 [![Code Issues](https://www.quantifiedcode.com/api/v1/project/6316902dcb7a407f84aa56ec58a5c14c/snapshot/origin:85:HEAD/badge.svg)](https://www.quantifiedcode.com/app/project/6316902dcb7a407f84aa56ec58a5c14c)
-[![Build Status](https://travis-ci.org/HealthCatalystSLC/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalystSLC/healthcareai-py)
+[![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalystSLC/healthcareai-py/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalyst/healthcareai-py/master/LICENSE)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
@@ -41,7 +41,8 @@ We recommend using the Anaconda python distribution when working on Windows. The
 You may need to install the following dependencies:
 - `sudo apt-get install python-tk`
 - `sudo pip install pyodbc`
-    - Note you'll might run into trouble with the `pyodbc` dependency. You may first need to run `sudo apt-get install unixodbc-dev` then retry `sudo pip install pyodbc`. Credit [stackoverflow](http://stackoverflow.com/questions/2960339/unable-to-install-pyodbc-on-linux)
+    - Note you'll might run into trouble with the `pyodbc` dependency. You may first need to run `sudo apt-get install
+    unixodbc-dev` then retry `sudo pip install pyodbc`. Credit [stackoverflow](http://stackoverflow.com/questions/2960339/unable-to-install-pyodbc-on-linux)
 
 Once you have the dependencies satisfied run `pip install healthcareai` or `sudo pip install healthcareai`
 
@@ -60,9 +61,13 @@ Once you have the dependencies satisfied run `pip install healthcareai` or `sudo
 
 ### Verify Installation
 
-To verify that *healthcareai* installed correctly, open a terminal and run `python`. This opens an interactive python console (also known as a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)). Then enter this command: `from healthcareai import develop_supervised_model` and hit enter. If no error is thrown, you are ready to rock.
+To verify that *healthcareai* installed correctly, open a terminal and run `python`. This opens an interactive python
+console (also known as a [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop)). Then enter this
+command: `from healthcareai import SupervisedModelTrainer` and hit enter. If no error is thrown, you are ready to rock.
 
-If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html) or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) so we can help others along this process.
+If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html)
+or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai
+tag) so we can help others along this process.
 
 ## Getting started
 
@@ -97,10 +102,11 @@ Note that we're currently working on easy connections to other types of database
 ## For Issues
 
 - Double check that the code follows the examples [here](http://healthcareai-py.readthedocs.io/en/latest/)
-- If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
+- If you're still seeing an error, create a post in [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) that contains
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
     * Crystal clear steps for reproducing the error
+- You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalystSLC/healthcareai-py/issues/new)
 
 ## Contributing
 
@@ -130,7 +136,8 @@ Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/he
         git merge --no-ff origin/master
         ```
     * Again, check that the unit tests are passing
-7. Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
+7. Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code
+review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
 
 ## PyPI Package Creation and Updating
 
@@ -138,14 +145,21 @@ Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/he
 
 First, read this [Packaging and Distributing Projects](https://packaging.python.org/distributing/) guide.
 
-It's also worth noting that while this *should* be done on the [pypi test site](https://testpypi.python.org/pypi), I've run into a great deal of trouble with conflicting guides authenticating to the test site. So be smart about this.
+It's also worth noting that while this *should* be done on the [pypi test site](https://testpypi.python.org/pypi), I've
+run into a great deal of trouble with conflicting guides authenticating to the test site. So be smart about this.
 
 1. **Build a source distribution**: from python3 (ran in windows anaconda python 3) run `python setup.py sdist`
-2. **Register the package** by using the [form on pypi](https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=healthcareai). Upload your `PKG-INFO` that was generated inside the `.egg` file.
+2. **Register the package** by using the[form on pypi](https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=healthcareai).
+Upload your `PKG-INFO` that was generated inside the `.egg` file.
 3. **Upload the package** using [twine](https://pypi.python.org/pypi/twine)
     - `twine upload dist/healthcareai-<version>.tar.gz`
-    - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before you push to github.
-4. Verify install on all three platforms (linux, macOS, windows) by first `pip uninstall healthcareai` and then `pip install healthcareai`, followed by a `from healthcareai import develop_supervised_model` in a python REPL.
+    - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the
+    version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before
+    you push to github.
+4. Verify install on all three platforms (linux, macOS, windows) by:
+    1. `pip uninstall healthcareai`
+    2. `pip install healthcareai`
+    3. From a python console, type `from healthcareai import SupervisedModelTrainer`
 
 ### Release process (Including Read The Docs)
 

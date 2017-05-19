@@ -4,10 +4,11 @@ example can be run as-is after installing healthcare.ai. After you have
 found that one of the models works well on your data, move to Example2
 """
 import pandas as pd
-import time
 
 import healthcareai.common.file_io_utilities as io_utilities
 from healthcareai.trainer import SupervisedModelTrainer
+import healthcareai.common.write_predictions_to_database as hcaidb
+
 
 
 def main():
@@ -22,7 +23,7 @@ def main():
     # Look at the first few rows of your dataframe after the data preparation
     print(dataframe.head())
 
-    # Step 1: Setup healthcareai for developing a regression model.
+    # Step 1: Setup healthcareai for training a regression model.
     hcai = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='SystolicBPNBR',
@@ -93,8 +94,14 @@ def main():
     # Save results to csv
     # predictions.to_csv('foo.csv')
 
-    # Save results to db
-    # TODO Save results to db
+    # Save predictions to MSSQL db
+    server = 'HC2169'
+    database = 'SAM'
+    table = 'foo9'
+    schema = 'dbo'
+    engine = hcaidb.build_mssql_engine(server, database)
+
+    catalyst_dataframe.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
 
 if __name__ == "__main__":

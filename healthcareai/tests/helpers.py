@@ -27,6 +27,10 @@ def load_sample_dataframe():
     return pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
 
+def load_factors_dataframe():
+    return pd.read_csv(fixture('top_factors.csv'), na_values=['None'])
+
+
 def assertBetween(self, min, max, input):
     """Fail if value is not between min and max (inclusive)."""
     self.assertGreaterEqual(input, min)

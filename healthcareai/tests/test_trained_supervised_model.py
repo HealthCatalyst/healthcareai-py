@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 import pandas as pd
 
 import healthcareai.tests.helpers as helpers
@@ -52,25 +51,11 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)
 
-    def test_top_k_factors_raises_error_on_more_features_than_model_has(self):
-        self.assertRaises(HealthcareAIError, self.trained_linear_model.make_factors, self.prediction_df, 10)
-
     def test_predictions_is_dataframe(self):
         self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
 
     def test_predictions_are_same_length_as_input(self):
         self.assertEqual(len(self.predictions), len(self.prediction_df))
-
-    def test_factors_return_is_dataframe(self):
-        self.assertIsInstance(self.factors, pd.DataFrame)
-
-    def test_factors_are_same_length_as_input(self):
-        self.assertEqual(len(self.factors), len(self.prediction_df))
-
-    def test_factors_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT']
-        results = self.factors.columns.values
-        self.assertTrue(set(expected) == set(results))
 
     def test_predictions_with_factors_return_is_dataframe(self):
         self.assertIsInstance(self.predictions_with_3_factors, pd.DataFrame)

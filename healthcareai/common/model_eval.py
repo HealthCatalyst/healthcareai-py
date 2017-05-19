@@ -1,5 +1,4 @@
 import os
-import math
 import sklearn
 
 import numpy as np
@@ -7,137 +6,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 import sklearn.metrics as skmetrics
-from sklearn.model_selection import GridSearchCV
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.top_factors import write_feature_importances
-from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
-
-
-def clfreport(model_type,
-              debug,
-              develop_model_mode,
-              algo,
-              X_train,
-              y_train,
-              X_test,
-              y_test=None,
-              param=None,
-              cores=4,
-              tune=False,
-              use_saved_model=False,
-              col_list=None):
-    """
-    Given a model type, algorithm and test data, do/return/save/side effect the following in no particular order:
-    - [x] runs grid search
-    - [x] save/load a pickled model
-    - [ ] print out debug messages
-    - [x] train the classifier
-    - [ ] print out grid params
-    - [ ] calculate metrics
-    - [ ] feature importances
-    - [ ] logging
-    - [x] production predictions from pickle file
-    - do some numpy manipulation
-        - lines ~50?
-    - possible returns:
-        - a single prediction
-        - a prediction and an roc_auc score
-        - spits out feature importances (if they exist)
-        - saves a pickled model
-
-    Note this serves at least 3 uses
-    """
-
-    # Initialize conditional vars that depend on ifelse to avoid PC warning
-    y_pred_class = None
-    y_pred = None
-    algorithm = algo
-
-    # compare algorithms
-    if develop_model_mode is True:
-        if tune:
-            # Set up grid search
-            algorithm = GridSearchCV(algo, param, cv=5, scoring='roc_auc', n_jobs=cores)
-
-        if debug:
-            print('\nalgorithm object right before fitting main model:')
-            print(algorithm)
-
-        print('\n', algo)
-
-        if model_type == 'classification':
-            y_pred = np.squeeze(algorithm.fit(X_train, y_train).predict_proba(X_test)[:, 1])
-
-            roc_auc = roc_auc_score(y_test, y_pred)
-            precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
-            pr_auc = auc(recall, precision)
-
-            print_classification_metrics(pr_auc, roc_auc)
-        elif model_type == 'regression':
-            y_pred = algorithm.fit(X_train, y_train).predict(X_test)
-
-            print_regression_metrics(y_pred, y_pred_class, y_test)
-
-        if hasattr(algorithm, 'best_params_') and tune:
-            print("Best hyper-parameters found after tuning:")
-            print(algorithm.best_params_)
-        else:
-            print("No hyper-parameter tuning was done.")
-
-        # TODO: refactor this logic to be simpler
-        # These returns are TIGHTLY coupled with their uses in develop and deploy. Both will have to be unwound together
-        has_importances = hasattr(algorithm, 'feature_importances_')
-        has_best_estimator = hasattr(algorithm, 'best_estimator_')
-
-        if not has_importances and not has_best_estimator:
-            # Return without printing variable importance for linear case
-            return y_pred, roc_auc
-        elif has_importances:
-            # Print variable importance if rf and not tuning
-            write_feature_importances(algorithm.feature_importances_, col_list)
-            return y_pred, roc_auc, algorithm
-        elif hasattr(algorithm.best_estimator_, 'feature_importances_'):
-            # Print variable importance if rf and tuning
-            write_feature_importances(algorithm.best_estimator_.feature_importances_, col_list)
-            return y_pred, roc_auc, algorithm
-
-    elif develop_model_mode is False:
-        y_pred = do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_saved_model, y_pred, y_train)
-
-    # TODO is it possible to get to this return if you are in develop_model_mode?
-    return y_pred
-
-
-def do_deploy_mode_stuff(X_test, X_train, algorithm, debug, model_type, use_saved_model, y_pred, y_train):
-    if use_saved_model is True:
-        algorithm = load_pickle_file('probability.pkl')
-    else:
-        if debug:
-            print('\nclf object right before fitting main model:')
-
-        algorithm.fit(X_train, y_train)
-        save_object_as_pickle('probability.pkl', algorithm)
-
-    if model_type == 'classification':
-        y_pred = np.squeeze(algorithm.predict_proba(X_test)[:, 1])
-    elif model_type == 'regression':
-        y_pred = algorithm.predict(X_test)
-    return y_pred
-
-
-def print_regression_metrics(y_pred, y_pred_class, y_test):
-    print('##########################################################')
-    print('Model accuracy:')
-    print('\nRMSE error:', math.sqrt(mean_squared_error(y_test, y_pred_class)))
-    print('\nMean absolute error:', mean_absolute_error(y_test, y_pred), '\n')
-    print('##########################################################')
-
-
-def print_classification_metrics(pr_auc, roc_auc):
-    print('\nMetrics:')
-    print('AU_ROC ScoreX:', roc_auc)
-    print('\nAU_PR Score:', pr_auc)
 
 
 def compute_roc(predictions, true_values):
@@ -542,9 +412,28 @@ def get_estimator_from_meta_estimator(model):
         result = model.best_estimator_
     else:
         result = model
-
+        
     return result
 
 
-if __name__ == "__main__":
+def get_hyperparameters_from_meta_estimator(model):
+    """
+    Given an instance of a trained sklearn estimator, return the best hyperparameters if it is a meta estimator
+    Args:
+        model (sklearn.base.BaseEstimator): 
+
+    Returns:
+        dict: The best hyperparameters 
+    """
+    if not issubclass(type(model), sklearn.base.BaseEstimator):
+        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
+
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+        result = model.best_params_
+    else:
+        result = None
+
+    return result
+
+if __name__ == '__main__':
     pass

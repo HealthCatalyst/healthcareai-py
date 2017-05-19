@@ -2,7 +2,7 @@ import time
 
 import healthcareai.pipelines.data_preparation as pipelines
 import healthcareai.common.model_eval as hcaieval
-from healthcareai.develop_supervised_model import DevelopSupervisedModel
+from healthcareai.advanced_trainer import AdvancedSupervisedModelTrainer
 
 
 class SupervisedModelTrainer(object):
@@ -19,7 +19,7 @@ class SupervisedModelTrainer(object):
         clean_dataframe = pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._dsm = DevelopSupervisedModel(clean_dataframe, model_type, predicted_column, grain_column, verbose)
+        self._dsm = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column, grain_column, verbose)
 
         # Save the pipeline to the parent class
         self._dsm.pipeline = pipeline
@@ -43,8 +43,7 @@ class SupervisedModelTrainer(object):
 
         # Train the model and display the model metrics
         trained_model = self._dsm.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
@@ -57,21 +56,19 @@ class SupervisedModelTrainer(object):
         # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
                                                           randomized_search=True)
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
     def random_forest_classification(self, save_plot=False):
-        """ Train a random forest classification model and print out the model performance metrics. """
+        """ Train a random forest classification model, print out performance metrics and show a ROC plot. """
         model_name = 'Random Forest Classification'
         print('Training {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
         trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         # Save or show the feature importance graph
         hcaieval.plot_rf_from_tsm(trained_model, self._dsm.X_train, save=save_plot)
@@ -86,8 +83,7 @@ class SupervisedModelTrainer(object):
 
         # Train the model and display the model metrics
         trained_model = self._dsm.logistic_regression(randomized_search=False)
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
@@ -99,8 +95,7 @@ class SupervisedModelTrainer(object):
 
         # Train the model and display the model metrics
         trained_model = self._dsm.linear_regression(randomized_search=False)
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
@@ -122,8 +117,7 @@ class SupervisedModelTrainer(object):
         print(
             'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric, trained_model.model_name))
 
-        print_training_timer(model_name, t0)
-        print(trained_model.metrics)
+        print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
@@ -159,3 +153,18 @@ def print_training_timer(model_name, start_timestamp):
     stop_time = time.time()
     delta_time = round(stop_time - start_timestamp, 2)
     print('Trained a {} model in {} seconds'.format(model_name, delta_time))
+
+
+def print_training_results(model_name, t0, trained_model):
+    """
+    Print metrics, stats and hyperparameters of a training.
+    Args:
+        model_name (str): Name of the model 
+        t0 (float): Training start time
+        trained_model (TrainedSupervisedModel): The trained supervised model
+    """
+    print_training_timer(model_name, t0)
+    print('Model metrics: {}'.format(trained_model.metrics))
+
+    hyperparameters = hcaieval.get_hyperparameters_from_meta_estimator(trained_model.model)
+    print('Best hyperparameters found are: {}'.format(hyperparameters))
