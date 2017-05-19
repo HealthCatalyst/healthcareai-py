@@ -126,6 +126,8 @@ class TrainedSupervisedModel(object):
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
 
             # Run the saved data preparation pipeline
+            # TODO dummies will not run if a prediction dataframe only has: 1 row or all the same value in a categorical
+            # TODO column
             prepared_dataframe = self.fit_pipeline.transform(dataframe)
 
             # Subset the dataframe to only columns that were saved from the original model training
