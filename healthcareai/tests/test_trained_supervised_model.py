@@ -32,7 +32,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
         # Train the models
         cls.trained_linear_model = regression_trainer.linear_regression()
-        cls.trained_random_forset = classification_trainer.random_forest(save_plot=True)
+        cls.trained_lr = classification_trainer.logistic_regression()
 
         # Load a new df for predicting
         cls.prediction_df = helpers.load_sample_dataframe()
@@ -117,10 +117,10 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.trained_linear_model.validate_classification)
 
     def test_pr_returns_dict(self):
-        self.assertIsInstance(self.trained_random_forset.pr(), dict)
+        self.assertIsInstance(self.trained_lr.pr(), dict)
 
     def test_roc_returns_dict(self):
-        self.assertIsInstance(self.trained_random_forset.roc(), dict)
+        self.assertIsInstance(self.trained_lr.roc(), dict)
 
 
 if __name__ == '__main__':
