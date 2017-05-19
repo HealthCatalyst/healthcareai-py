@@ -252,7 +252,7 @@ class TrainedSupervisedModel(object):
         return factors_and_predictions_df
 
     def roc_curve_plot(self):
-        """ Returns a plot of the roc curve of the holdout set from model training. """
+        """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
         model_evaluation.tsm_comparison_roc_plot(self)
 
@@ -271,8 +271,7 @@ class TrainedSupervisedModel(object):
             print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
 
     def pr_curve_plot(self):
-        """ Returns a plot of the roc curve of the holdout set from model training. """
-        # TODO doesn't work
+        """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
         model_evaluation.tsm_comparison_pr_plot(self)
 
