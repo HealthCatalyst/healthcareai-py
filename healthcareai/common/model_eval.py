@@ -140,38 +140,18 @@ def print_classification_metrics(pr_auc, roc_auc):
     print('\nAU_PR Score:', pr_auc)
 
 
-def generate_auc(predictions, true_values, auc_type='SS', show_plot=False, show_all_cutoffs=False):
-    # TODO remove this and just use two separate functions (the one ROC plotter already works)
-    """
-    This function creates an ROC or PR curve and calculates the area under it.
-
-    Parameters
-    ----------
-    predictions (list) : predictions coming from an ML algorithm of length n.
-    true_values (list) : true label values corresponding to the predictions. Also length n.
-    auc_type (str) : either 'SS' for ROC curve or 'PR' for precision recall curve. Defaults to 'SS'
-    show_plot (bol) : True will return plots. Defaults to False.
-    show_all_cutoffs (bol) : True will return plots. Defaults to False.
-
-    Returns
-    -------
-    """
-    # input validation
-    validate_predictions_and_labels_are_equal_length(predictions, true_values)
-    auc_type = auc_type.upper()
-    if auc_type not in ['SS', 'PR']:
-        raise HealthcareAIError("Please choose either 'SS' or 'PR'")
-
-    # switch for types
-    # TODO there really isn't much shared code here, should it be two separate functions anyway?
-    if auc_type == 'SS':
-        return compute_roc(predictions, true_values)
-    elif auc_type == 'PR':
-        return compute_pr(predictions, true_values)
-
-
 def compute_roc(predictions, true_values):
-    """ Compute TPRs, FPRs, best cutoff and AUC """
+    """
+    Compute TPRs, FPRs, best cutoff and AUC
+    
+    Args:
+        predictions (list) : predictions coming from an ML algorithm of length n.
+        true_values (list) : true label values corresponding to the predictions. Also length n.
+
+    Returns:
+        dict: 
+
+    """
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
     false_positive_rates, true_postitive_rates, thresholds = skmetrics.roc_curve(true_values, predictions)
@@ -197,7 +177,18 @@ def compute_roc(predictions, true_values):
 
 
 def compute_pr(predictions, true_values):
-    """ Compute Precision-Recall, thresholds and AUC """
+    """ 
+    Compute Precision-Recall, thresholds and AUC
+
+    Args:
+        predictions (list) : predictions coming from an ML algorithm of length n.
+        true_values (list) : true label values corresponding to the predictions. Also length n.
+
+    Returns:
+        dict: 
+
+    """
+
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
     precision, recall, thresholds = skmetrics.precision_recall_curve(true_values, predictions)
@@ -225,20 +216,6 @@ def compute_pr(predictions, true_values):
 def validate_predictions_and_labels_are_equal_length(predictions, true_values):
     if len(predictions) != len(true_values):
         raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
-
-
-def plot_builder(x, y, title, x_label, y_label, line_label):
-    """ Plot builder for AUC curves """
-    plt.figure()
-    plt.plot(x, y, color='darkorange', lw=2, label=line_label)
-    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.legend(loc="lower right")
-    plt.show()
 
 
 def calculate_regression_metrics(trained_model, x_test, y_test):
@@ -361,19 +338,8 @@ def build_model_prediction_dictionary(trained_supervised_model):
     return {name: predictions}
 
 
-def roc_plot_from_cutoffs(true_positive_rates, false_positive_rates, auc):
-    # TODO I think this is redundant and can be eliminated, or could this be the base that the other plotter uses?
-    plot_builder(
-        x=false_positive_rates,
-        y=true_positive_rates,
-        title='Receiver operating characteristic curve',
-        x_label='False Positive Rate',
-        y_label='True Positive Rate',
-        line_label='ROC curve AUC = {}'.format(auc))
-
-
 def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
-    # TODO make a version of this that plots PR curves and kill the other plotters
+    # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
@@ -418,7 +384,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
 
 
 def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
-    # TODO make a version of this that plots PR curves and kill the other plotters
+    # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
