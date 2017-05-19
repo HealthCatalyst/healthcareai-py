@@ -3,6 +3,7 @@ import sklearn
 
 import numpy as np
 import pandas as pd
+from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
 import healthcareai.common.model_eval as hcai_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -47,6 +48,15 @@ class TestPlotRandomForestFeatureImportance(unittest.TestCase):
             None,
             None,
             save=False)
+
+
+class TestTSMClassificationComparisonPlots(unittest.TestCase):
+    def test_raises_error_on_non_tsm(self):
+        self.assertRaises(HealthcareAIError, hcai_eval.tsm_classification_comparison_plots, 'foo')
+
+    def test_raises_error_on_list_with_non_tsm(self):
+        bad_list = ['foo']
+        self.assertRaises(HealthcareAIError, hcai_eval.tsm_classification_comparison_plots, bad_list)
 
 
 if __name__ == '__main__':

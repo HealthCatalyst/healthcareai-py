@@ -301,6 +301,11 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
         test_set_actual = trained_supervised_model.test_set_actual
     elif isinstance(trained_supervised_model, list):
         for model in trained_supervised_model:
+            # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
+            # if isinstance(trained_supervised_model, TrainedSupervisedModel):
+            if type(model).__name__ != 'TrainedSupervisedModel':
+                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
+
             entry = build_model_prediction_dictionary(model)
             predictions_by_model.append(entry)
 
@@ -309,7 +314,6 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
             # which happens when instantiating SupervisedModelTrainer
             test_set_actual = model.test_set_actual
     else:
-        # TODO test this
         raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
     # Plot with the selected plotter
@@ -329,7 +333,7 @@ def build_model_prediction_dictionary(trained_supervised_model):
         dict: 
     """
     if trained_supervised_model.model_type == 'regression':
-        raise HealthcareAIError('ROC plots are not used to evaluate regression models.')
+        raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
 
     name = trained_supervised_model.model_name
     # predictions = first_class_prediction_from_binary_probabilities(trained_supervised_model.test_set_predictions)
