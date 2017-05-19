@@ -79,7 +79,7 @@ If on Windows, [install both](http://stackoverflow.com/a/11278818/5636012_SQL) S
 
 ### Create some tables in your database
 
-- Create tables ([on localhost](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/localhost_config.md)) within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
+- Create tables ([on localhost](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/docs/localhost_config.md)) within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 

@@ -2,11 +2,11 @@
 
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
 [![Code Issues](https://www.quantifiedcode.com/api/v1/project/6316902dcb7a407f84aa56ec58a5c14c/snapshot/origin:85:HEAD/badge.svg)](https://www.quantifiedcode.com/app/project/6316902dcb7a407f84aa56ec58a5c14c)
-[![Build Status](https://travis-ci.org/HealthCatalystSLC/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalystSLC/healthcareai-py)
+[![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalystSLC/healthcareai-py/master/LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalyst/healthcareai-py/master/LICENSE)
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
@@ -97,10 +97,11 @@ Note that we're currently working on easy connections to other types of database
 ## For Issues
 
 - Double check that the code follows the examples [here](http://healthcareai-py.readthedocs.io/en/latest/)
-- If you're still seeing an error, [create a post in our Google Group](https://groups.google.com/forum/#!forum/healthcareai-users) that contains
+- If you're still seeing an error, create a post in [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) that contains
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
     * Crystal clear steps for reproducing the error
+- You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalystSLC/healthcareai-py/issues/new)
 
 ## Contributing
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - AzureBlogStorageHelper class to make storing text & pickled objects simple.
+- table_archiver() utility function makes it easy to create a timestamped history from any table.
 
 ### Changed
 

@@ -1,7 +1,0 @@
-Need to figure out a workaround or update for this old ceODBC library
-
-'ceODBC>=2.0.1',
-
-dependency_links=[
-  'https://github.com/chicagofire/ceodbc/tarball/master#egg-package=2.0.1'
-],
