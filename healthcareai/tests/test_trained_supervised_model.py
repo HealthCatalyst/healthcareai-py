@@ -16,15 +16,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-        hcai = SupervisedModelTrainer(
+        regression_trainer = SupervisedModelTrainer(
             training_df,
             'SystolicBPNBR',
             'regression',
             impute=True,
             grain_column='PatientEncounterID')
 
-        # Train the linear regression model
-        cls.trained_linear_model = hcai.linear_regression()
+        classification_trainer = SupervisedModelTrainer(
+            training_df,
+            'ThirtyDayReadmitFLG',
+            'classification',
+            impute=True,
+            grain_column='PatientEncounterID')
+
+        # Train the models
+        cls.trained_linear_model = regression_trainer.linear_regression()
+        cls.trained_random_forset = classification_trainer.random_forest(save_plot=True)
 
         # Load a new df for predicting
         cls.prediction_df = helpers.load_sample_dataframe()
@@ -107,6 +115,12 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
     def test_validate_classification_raises_error_on_regression(self):
         self.assertRaises(HealthcareAIError, self.trained_linear_model.validate_classification)
+
+    def test_pr_returns_dict(self):
+        self.assertIsInstance(self.trained_random_forset.pr(), dict)
+
+    def test_roc_returns_dict(self):
+        self.assertIsInstance(self.trained_random_forset.roc(), dict)
 
 
 if __name__ == '__main__':
