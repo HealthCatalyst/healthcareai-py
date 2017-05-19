@@ -8,10 +8,12 @@ docs_dir: docs
 pages:
     - Introduction: index.md
     - Getting started: getting_started.md
+    - Profiling Your Data: profiling_your_data.md
     - FAQ: FAQ.md
     - Hints and tips: hints.md
     - Training and comparing models.md: training.md
     - Saving and deploying a model: deploy.md
     - Compiling python files to an executable: compile.md
+    - Utilities: utilities.md
 
 google_analytics: ['UA-85609357-1', 'auto']
