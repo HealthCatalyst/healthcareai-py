@@ -323,6 +323,7 @@ class DevelopSupervisedModel(object):
             factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
         else:
             factor_model = None
+
         trained_supervised_model = TrainedSupervisedModel(
             algorithm,
             factor_model,
