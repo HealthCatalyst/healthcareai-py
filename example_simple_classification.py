@@ -112,6 +112,9 @@ def main():
     # Create a single ROC plot from the trained model
     trained_model.roc_curve_plot()
 
+    # Create a single PR plot from the trained model
+    trained_model.pr_curve_plot()
+
     # Create a comparison ROC plot multiple models
     hcaieval.tsm_classification_comparison_plots(
         trained_supervised_model=[trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble],
