@@ -254,15 +254,13 @@ class TrainedSupervisedModel(object):
     def roc_curve_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_comparison_roc_plot(self)
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
 
     def roc(self):
         self.validate_classification()
         roc = model_evaluation.compute_roc(self.test_set_class_labels, self.test_set_actual)
-        # TODO print these nicely for users
         print(roc)
 
-        # TODO this should be a return and printed elsewhere
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
             roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
@@ -273,12 +271,11 @@ class TrainedSupervisedModel(object):
     def pr_curve_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_comparison_pr_plot(self)
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
 
     def pr(self):
         self.validate_classification()
         pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
-        # TODO print these nicely for users
         print(pr)
 
         print('Area under Precision Recall curve (AU_PR): {}'.format(pr['PR_AUC']))

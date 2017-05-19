@@ -299,28 +299,22 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     }
 
 
-"""
-Generates a ROC plot for linear and random forest models
-
-Args:
-    y_test (list): A 1d list of predictions
-    save: Whether to save the plot
-    debug: Verbosity of output. If True, shows list of FPR/TPR for each point in the plot (default False)
-
-Returns:
-    matplotlib.figure.Figure: The matplot figure
-"""
-
-
-def tsm_comparison_roc_plot(trained_supervised_model):
-    # TODO either put a switch on this because it is all shared code except the last part or
-    # TODO make a small wrapper for ROC and PR
+def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC'):
     """
-    Given a single or list of trained supervised models, plot a roc curve for each one
+    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
     
     Args:
-        trained_supervised_model (list | TrainedSupervisedModel): 
+        plot_type (str): 'ROC' (default) or 'PR' 
+        trained_supervised_model (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
     """
+    # Input validation plus switching
+    if plot_type == 'ROC':
+        plotter = roc_plot_from_predictions
+    elif plot_type == 'PR':
+        plotter = pr_plot_from_predictions
+    else:
+        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
+
     predictions_by_model = []
     # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
     # if isinstance(trained_supervised_model, TrainedSupervisedModel):
@@ -341,39 +335,8 @@ def tsm_comparison_roc_plot(trained_supervised_model):
         # TODO test this
         raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
-    roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
-
-
-def tsm_comparison_pr_plot(trained_supervised_model):
-    # TODO either put a switch on this because it is all shared code except the last part or
-    # TODO make a small wrapper for ROC and PR
-    """
-    Given a single or list of trained supervised models, plot a pr curve for each one
-    
-    Args:
-        trained_supervised_model (list | TrainedSupervisedModel): 
-    """
-    predictions_by_model = []
-    # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
-    # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-    if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
-        entry = build_model_prediction_dictionary(trained_supervised_model)
-        predictions_by_model.append(entry)
-        test_set_actual = trained_supervised_model.test_set_actual
-    elif isinstance(trained_supervised_model, list):
-        for model in trained_supervised_model:
-            entry = build_model_prediction_dictionary(model)
-            predictions_by_model.append(entry)
-
-            # TODO so, you could check for different GUIDs that could be saved in each TSM!
-            # The assumption here is that each TSM was trained on the same train test split,
-            # which happens when instantiating SupervisedModelTrainer
-            test_set_actual = model.test_set_actual
-    else:
-        # TODO test this
-        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
-
-    pr_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
+    # Plot with the selected plotter
+    plotter(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
 def build_model_prediction_dictionary(trained_supervised_model):
