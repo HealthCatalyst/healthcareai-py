@@ -420,8 +420,7 @@ def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=F
         label = '{} (AUC = {})'.format(model_name, round(area, 2))
         plt.plot(recall, precision, color=temp_color, label=label)
 
-    plt.legend(loc="lower right")
-    # TODO: add cutoff associated with P/R
+    plt.legend(loc="lower left")
 
     if save:
         plt.savefig('PR.png')
@@ -479,7 +478,6 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     plt.title("Feature importances")
 
     # Plot each feature
-    # TODO name these sanely
     x_train_shape = x_train.shape[1]
     x_train_range = range(x_train_shape)
 
@@ -499,10 +497,6 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         plt.close(figure)
     else:
         plt.show()
-
-
-if __name__ == "__main__":
-    pass
 
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
@@ -550,3 +544,7 @@ def get_estimator_from_meta_estimator(model):
         result = model
 
     return result
+
+
+if __name__ == "__main__":
+    pass
