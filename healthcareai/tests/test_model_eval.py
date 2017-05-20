@@ -17,7 +17,7 @@ class TestROC(unittest.TestCase):
         df['b'] = b
 
         # ROC_AUC
-        out = hcai_eval.compute_roc(df['a'], df['b'])
+        out = hcai_eval.compute_roc(df['b'], df['a'])
         self.assertAlmostEqual(round(out['ROC_AUC'], 4), 0.9433)
         self.assertAlmostEqual(round(out['best_true_positive_rate'], 4), 0.9565)
         self.assertAlmostEqual(round(out['best_false_positive_rate'], 4), 0.2338)

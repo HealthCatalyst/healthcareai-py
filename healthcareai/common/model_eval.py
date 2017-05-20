@@ -10,7 +10,7 @@ import sklearn.metrics as skmetrics
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
-def compute_roc(predictions, true_values):
+def compute_roc(true_values, predictions):
     """
     Compute TPRs, FPRs, best cutoff and AUC
     
