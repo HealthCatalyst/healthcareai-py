@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
 import healthcareai.common.file_io_utilities as io_utilities
@@ -332,8 +333,9 @@ class TrainedSupervisedModel(object):
     def roc(self):
         """ Prints out ROC details and returns them with cutoffs. """
         self.validate_classification()
-        roc = model_evaluation.compute_roc(self.test_set_class_labels, self.test_set_actual)
-        print(roc)
+        # Get probability of first class (the predictions are probabilities for each class)
+        predictions = np.squeeze(self.test_set_predictions[:, 1])
+        roc = model_evaluation.compute_roc(self.test_set_actual, predictions)
 
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
             roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
