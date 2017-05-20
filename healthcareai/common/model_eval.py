@@ -25,7 +25,7 @@ def compute_roc(true_values, predictions):
     validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
     false_positive_rates, true_postitive_rates, thresholds = skmetrics.roc_curve(true_values, predictions)
-    area = skmetrics.auc(false_positive_rates, true_postitive_rates)
+    area = skmetrics.roc_auc_score(true_values, predictions)
 
     # get ideal cutoffs for suggestions (upper left, or 0,1)
     d = (false_positive_rates - 0) ** 2 + (true_postitive_rates - 1) ** 2
@@ -136,7 +136,7 @@ def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     # Calculate some metrics
     precision, recall, thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
     pr_auc = skmetrics.auc(recall, precision)
-    roc_auc = skmetrics.roc_auc_score(y_test, binary_predictions)
+    roc_auc = skmetrics.roc_auc_score(y_test, probability_predictions)
     accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
 
     return {
