@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime
 
 import healthcareai.common.file_io_utilities as io_utilities
@@ -29,6 +30,7 @@ class TrainedSupervisedModel(object):
                  grain_column,
                  prediction_column,
                  test_set_predictions,
+                 test_set_class_labels,
                  test_set_actual,
                  metric_by_name):
         self.model = model
@@ -39,6 +41,7 @@ class TrainedSupervisedModel(object):
         self.grain_column = grain_column
         self.prediction_column = prediction_column
         self.test_set_predictions = test_set_predictions
+        self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
 
@@ -323,5 +326,52 @@ class TrainedSupervisedModel(object):
         hcaidb.write_to_db_agnostic(engine, table, sam_df)
 
     def roc_curve_plot(self):
-        """ Returns a plot of the roc curve of the holdout set from model training. """
-        model_evaluation.tsm_comparison_roc_plot(self)
+        """ Returns a plot of the ROC curve of the holdout set from model training. """
+        self.validate_classification()
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
+
+    def roc(self):
+        """ Prints out ROC details and returns them with cutoffs. """
+        self.validate_classification()
+        # Get probability of first class (the predictions are probabilities for each class)
+        predictions = np.squeeze(self.test_set_predictions[:, 1])
+        roc = model_evaluation.compute_roc(self.test_set_actual, predictions)
+
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
+            roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+
+        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
+        for i in range(len(roc['thresholds'])):
+            print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
+
+        return roc
+
+    def pr_curve_plot(self):
+        """ Returns a plot of the PR curve of the holdout set from model training. """
+        self.validate_classification()
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
+
+    def pr(self):
+        """ Prints out PR details and returns them with cutoffs. """
+        self.validate_classification()
+        pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
+        print(pr)
+
+        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['PR_AUC']))
+        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
+              % (pr['best_cutoff'], pr['best_precision'], pr['best_recall']))
+
+        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
+        for i in range(len(pr['thresholds'])):
+            print('%5.2f %6.2f %10.2f' % (pr['thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+
+        return pr
+
+    def validate_classification(self):
+        """
+        Checks that a model is classification and raises an error if it is not. Run this on any method that only makes
+        sense for classification.
+        """
+        # TODO add binary check and rename to validate_binary_classification
+        if self.model_type != 'classification':
+            raise HealthcareAIError('This function only runs on a binary classification model.')

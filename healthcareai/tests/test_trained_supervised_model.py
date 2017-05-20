@@ -2,6 +2,7 @@ import unittest
 import pandas as pd
 
 import healthcareai.tests.helpers as helpers
+from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.trainer import SupervisedModelTrainer
 
 
@@ -14,15 +15,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
-        hcai = SupervisedModelTrainer(
+        regression_trainer = SupervisedModelTrainer(
             training_df,
             'SystolicBPNBR',
             'regression',
             impute=True,
             grain_column='PatientEncounterID')
 
-        # Train the linear regression model
-        cls.trained_linear_model = hcai.linear_regression()
+        classification_trainer = SupervisedModelTrainer(
+            training_df,
+            'ThirtyDayReadmitFLG',
+            'classification',
+            impute=True,
+            grain_column='PatientEncounterID')
+
+        # Train the models
+        cls.trained_linear_model = regression_trainer.linear_regression()
+        cls.trained_lr = classification_trainer.logistic_regression()
 
         # Load a new df for predicting
         cls.prediction_df = helpers.load_sample_dataframe()
@@ -88,6 +97,15 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
     def test_prepare_and_subset_returns_dataframe(self):
         self.assertIsInstance(self.trained_linear_model.prepare_and_subset(self.prediction_df), pd.DataFrame)
+
+    def test_validate_classification_raises_error_on_regression(self):
+        self.assertRaises(HealthcareAIError, self.trained_linear_model.validate_classification)
+
+    def test_pr_returns_dict(self):
+        self.assertIsInstance(self.trained_lr.pr(), dict)
+
+    def test_roc_returns_dict(self):
+        self.assertIsInstance(self.trained_lr.roc(), dict)
 
 
 if __name__ == '__main__':

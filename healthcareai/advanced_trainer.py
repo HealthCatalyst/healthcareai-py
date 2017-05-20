@@ -309,10 +309,19 @@ class AdvancedSupervisedModelTrainer(object):
         # TODO should the factor model be either 1) optional or 2) separate?
         algorithm.fit(self.X_train, self.y_train)
 
+        # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
+        # test set is saved inside the object, but it allows for generation of plots later.
+        # TODO Pickle the cutoff lists of thresholds/TPR/FPR/Sens/Spec so that ROC plots can be generated on the fly
+        # TODO see https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
+        # PEP 8
+        test_set_predicted = None
+        test_set_class_labels = None
         if self.model_type == 'classification':
-            self.test_set_predicted = algorithm.predict_proba(self.X_test)
+            # Save both the probabilities and labels
+            test_set_predicted = algorithm.predict_proba(self.X_test)
+            test_set_class_labels = algorithm.predict(self.X_test)
         elif self.model_type == 'regression':
-            self.test_set_predicted = algorithm.predict(self.X_test)
+            test_set_predicted = algorithm.predict(self.X_test)
 
         if include_factor_model:
             factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
@@ -320,22 +329,20 @@ class AdvancedSupervisedModelTrainer(object):
             factor_model = None
 
         trained_supervised_model = TrainedSupervisedModel(
-            algorithm,
-            factor_model,
-            self.pipeline,
-            self.model_type,
-            self.X_test.columns.values,
-            self.grain_column,
-            self.predicted_column,
-            self.test_set_predicted,
-            self.y_test,
-            self.metrics(algorithm))
+            model=algorithm,
+            feature_model=factor_model,
+            fit_pipeline=self.pipeline,
+            model_type=self.model_type,
+            column_names=self.X_test.columns.values,
+            grain_column=self.grain_column,
+            prediction_column=self.predicted_column,
+            test_set_predictions=test_set_predicted,
+            test_set_class_labels=test_set_class_labels,
+            test_set_actual=self.y_test,
+            metric_by_name=self.metrics(algorithm))
+
         return trained_supervised_model
 
     def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
-
-    def plot_roc(self, save=False, debug=True):
-        # TODO this is broken and may not even be implemented - use the toolbox?
-        pass

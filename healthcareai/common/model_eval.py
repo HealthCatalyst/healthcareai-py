@@ -1,121 +1,91 @@
 import os
-import math
 import sklearn
 
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from sklearn.metrics import average_precision_score, precision_recall_curve
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.metrics import roc_auc_score, roc_curve, auc
-from sklearn.model_selection import GridSearchCV
+import sklearn.metrics as skmetrics
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.top_factors import write_feature_importances
-from healthcareai.common.file_io_utilities import save_object_as_pickle, load_pickle_file
 
 
-def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):
-    # TODO refactor this
+def compute_roc(true_values, predictions):
     """
-    This function creates an ROC or PR curve and calculates the area under it.
+    Compute TPRs, FPRs, best cutoff and AUC
+    
+    Args:
+        predictions (list) : predictions coming from an ML algorithm of length n.
+        true_values (list) : true label values corresponding to the predictions. Also length n.
 
-    Parameters
-    ----------
-    predictions (list) : predictions coming from an ML algorithm of length n.
-    labels (list) : true label values corresponding to the predictions. Also length n.
-    aucType (str) : either 'SS' for ROC curve or 'PR' for precision recall curve. Defaults to 'SS'
-    plotFlg (bol) : True will return plots. Defaults to False.
-    allCutoffsFlg (bol) : True will return plots. Defaults to False.
+    Returns:
+        dict: 
 
-    Returns
-    -------
-    AUC (float) : either AU_ROC or AU_PR
     """
-    # Error check for uneven length predictions and labels
-    if len(predictions) != len(labels):
-        raise Exception('Data vectors are not equal length!')
+    validate_predictions_and_labels_are_equal_length(predictions, true_values)
 
-    # make AUC type upper case.
-    aucType = aucType.upper()
+    false_positive_rates, true_postitive_rates, thresholds = skmetrics.roc_curve(true_values, predictions)
+    area = skmetrics.auc(false_positive_rates, true_postitive_rates)
 
-    # check to see if AUC is SS or PR. If not, default to SS
-    if aucType not in ['SS', 'PR']:
-        print('Drawing ROC curve with Sensitivity/Specificity')
-        aucType = 'SS'
+    # get ideal cutoffs for suggestions (upper left, or 0,1)
+    d = (false_positive_rates - 0) ** 2 + (true_postitive_rates - 1) ** 2
 
-    # Compute ROC curve and ROC area
-    if aucType == 'SS':
-        fpr, tpr, thresh = roc_curve(labels, predictions)
-        area = auc(fpr, tpr)
-        print('Area under ROC curve (AUC): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (fpr - 0) ** 2 + (tpr - 1) ** 2
-        ind = np.where(d == np.min(d))
-        bestTpr = tpr[ind]
-        bestFpr = fpr[ind]
-        cutoff = thresh[ind]
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, bestTpr, bestFpr))
-        if allCutoffsFlg is True:
-            print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-            for i in range(len(thresh)):
-                print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
+    # TODO this might have the same bug the r package had
+    ind = np.where(d == np.min(d))[0]
+    best_tpr = true_postitive_rates[ind]
+    best_fpr = false_positive_rates[ind]
+    cutoff = thresholds[ind]
 
-        # plot ROC curve
-        if plotFlg is True:
-            plt.figure()
-            plt.plot(fpr, tpr, color='darkorange',
-                     lw=2, label='ROC curve (area = %0.2f)' % area)
-            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-            plt.xlim([0.0, 1.0])
-            plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
-            plt.title('Receiver operating characteristic curve')
-            plt.legend(loc="lower right")
-            plt.show()
-        return ({'AU_ROC': area,
-                 'BestCutoff': cutoff[0],
-                 'BestTpr': bestTpr[0],
-                 'BestFpr': bestFpr[0]})
-    # Compute PR curve and PR area
-    else:  # must be PR
-        # Compute Precision-Recall and plot curve
-        precision, recall, thresh = precision_recall_curve(labels, predictions)
-        area = average_precision_score(labels, predictions)
-        print('Area under PR curve (AU_PR): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (precision - 1) ** 2 + (recall - 1) ** 2
-        ind = np.where(d == np.min(d))
-        bestPre = precision[ind]
-        bestRec = recall[ind]
-        cutoff = thresh[ind]
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-              % (cutoff, bestPre, bestRec))
-        if allCutoffsFlg is True:
-            print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-            for i in range(len(thresh)):
-                print('%5.2f %6.2f %10.2f' % (thresh[i], precision[i], recall[i]))
+    return {'ROC_AUC': area,
+            'best_cutoff': cutoff[0],
+            'best_true_positive_rate': best_tpr[0],
+            'best_false_positive_rate': best_fpr[0],
+            'tpr': true_postitive_rates,
+            'fpr': false_positive_rates,
+            'thresholds': thresholds
+            }
 
-        # plot PR curve
-        if plotFlg is True:
-            # Plot Precision-Recall curve
-            plt.figure()
-            plt.plot(recall, precision, lw=2, color='darkred',
-                     label='Precision-Recall curve' % area)
-            plt.xlabel('Recall')
-            plt.ylabel('Precision')
-            plt.ylim([0.0, 1.05])
-            plt.xlim([0.0, 1.0])
-            plt.title('Precision-Recall AUC={0:0.2f}'.format(
-                area))
-            plt.legend(loc="lower right")
-            plt.show()
-        return ({'AU_PR': area,
-                 'BestCutoff': cutoff[0],
-                 'BestPrecision': bestPre[0],
-                 'BestRecall': bestRec[0]})
+
+def compute_pr(predictions, true_values):
+    """ 
+    Compute Precision-Recall, thresholds and AUC
+
+    Args:
+        predictions (list) : predictions coming from an ML algorithm of length n.
+        true_values (list) : true label values corresponding to the predictions. Also length n.
+
+    Returns:
+        dict: 
+
+    """
+
+    validate_predictions_and_labels_are_equal_length(predictions, true_values)
+
+    precision, recall, thresholds = skmetrics.precision_recall_curve(true_values, predictions)
+    area = skmetrics.average_precision_score(true_values, predictions)
+
+    # get ideal cutoffs for suggestions (upper right or 1,1)
+    d = (precision - 1) ** 2 + (recall - 1) ** 2
+
+    # TODO this might have the same bug the r package had
+    ind = np.where(d == np.min(d))[0]
+    best_precision = precision[ind]
+    best_recall = recall[ind]
+    ideal_cutoff = thresholds[ind]
+
+    return {'PR_AUC': area,
+            'best_cutoff': ideal_cutoff[0],
+            'best_precision': best_precision[0],
+            'best_recall': best_recall[0],
+            'precisions': precision,
+            'recalls': recall,
+            'thresholds': thresholds
+            }
+
+
+def validate_predictions_and_labels_are_equal_length(predictions, true_values):
+    if len(predictions) != len(true_values):
+        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
 def calculate_regression_metrics(trained_model, x_test, y_test):
@@ -134,8 +104,8 @@ def calculate_regression_metrics(trained_model, x_test, y_test):
     predictions = trained_model.predict(x_test)
 
     # Calculate individual metrics
-    mean_squared_error = sklearn.metrics.mean_squared_error(y_test, predictions)
-    mean_absolute_error = sklearn.metrics.mean_absolute_error(y_test, predictions)
+    mean_squared_error = skmetrics.mean_squared_error(y_test, predictions)
+    mean_absolute_error = skmetrics.mean_absolute_error(y_test, predictions)
 
     result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
 
@@ -164,10 +134,10 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     probability_predictions = np.squeeze(trained_model.predict_proba(x_test)[:, 1])
 
     # Calculate some metrics
-    precision, recall, thresholds = precision_recall_curve(y_test, probability_predictions)
-    pr_auc = auc(recall, precision)
-    roc_auc = sklearn.metrics.roc_auc_score(y_test, binary_predictions)
-    accuracy = sklearn.metrics.accuracy_score(y_test, binary_predictions)
+    precision, recall, thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
+    pr_auc = skmetrics.auc(recall, precision)
+    roc_auc = skmetrics.roc_auc_score(y_test, binary_predictions)
+    accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
 
     return {
         'roc_auc': roc_auc,
@@ -176,13 +146,22 @@ def calculate_classification_metrics(trained_model, x_test, y_test):
     }
 
 
-def tsm_comparison_roc_plot(trained_supervised_model):
+def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC'):
     """
-    Given a single or list of trained supervised models, plot a roc curve for each one
+    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
     
     Args:
-        trained_supervised_model (list | TrainedSupervisedModel): 
+        plot_type (str): 'ROC' (default) or 'PR' 
+        trained_supervised_model (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
     """
+    # Input validation plus switching
+    if plot_type == 'ROC':
+        plotter = roc_plot_from_predictions
+    elif plot_type == 'PR':
+        plotter = pr_plot_from_predictions
+    else:
+        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
+
     predictions_by_model = []
     # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
     # if isinstance(trained_supervised_model, TrainedSupervisedModel):
@@ -192,6 +171,11 @@ def tsm_comparison_roc_plot(trained_supervised_model):
         test_set_actual = trained_supervised_model.test_set_actual
     elif isinstance(trained_supervised_model, list):
         for model in trained_supervised_model:
+            # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
+            # if isinstance(trained_supervised_model, TrainedSupervisedModel):
+            if type(model).__name__ != 'TrainedSupervisedModel':
+                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
+
             entry = build_model_prediction_dictionary(model)
             predictions_by_model.append(entry)
 
@@ -200,10 +184,10 @@ def tsm_comparison_roc_plot(trained_supervised_model):
             # which happens when instantiating SupervisedModelTrainer
             test_set_actual = model.test_set_actual
     else:
-        # TODO test this
         raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
-    roc_plot_from_predictions(test_set_actual, predictions_by_model, save=False, debug=False)
+    # Plot with the selected plotter
+    plotter(test_set_actual, predictions_by_model, save=False, debug=False)
 
 
 def build_model_prediction_dictionary(trained_supervised_model):
@@ -219,7 +203,7 @@ def build_model_prediction_dictionary(trained_supervised_model):
         dict: 
     """
     if trained_supervised_model.model_type == 'regression':
-        raise HealthcareAIError('ROC plots are not used to evaluate regression models.')
+        raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
 
     name = trained_supervised_model.model_name
     # predictions = first_class_prediction_from_binary_probabilities(trained_supervised_model.test_set_predictions)
@@ -229,6 +213,7 @@ def build_model_prediction_dictionary(trained_supervised_model):
 
 
 def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
@@ -248,8 +233,8 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
     for i, model in enumerate(y_predictions_by_model):
         model_name, y_predictions = model.popitem()
         # calculate metrics
-        fpr, tpr, _ = sklearn.metrics.roc_curve(y_test, y_predictions)
-        roc_auc_linear = sklearn.metrics.auc(fpr, tpr)
+        fpr, tpr, _ = skmetrics.roc_curve(y_test, y_predictions)
+        roc_auc_linear = skmetrics.auc(fpr, tpr)
 
         if debug:
             print('{} model:'.format(model_name))
@@ -258,7 +243,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         # TODO deal with colors ...
         # plot the line
         temp_color = colors[i]
-        label = '{} (area = {})'.format(model_name, round(roc_auc_linear, 2))
+        label = '{} (AUC = {})'.format(model_name, round(roc_auc_linear, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
 
     plt.legend(loc="lower right")
@@ -268,6 +253,49 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         plt.savefig('ROC.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
         print('\nROC plot saved in: {}'.format(source_path))
+
+    plt.show()
+
+
+def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+    # TODO consolidate this and PR plotter into 1 function
+    # TODO make the colors randomly generated from rgb values
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    # Initialize plot
+    plt.figure()
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curves')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [1, 0], 'k--')
+
+    # TODO hack to convert to array if it is a single dictionary
+    if isinstance(y_predictions_by_model, dict):
+        y_predictions_by_model = [y_predictions_by_model]
+
+    # Calculate and plot for each model
+    for i, model in enumerate(y_predictions_by_model):
+        model_name, y_predictions = model.popitem()
+        # calculate metrics
+        precision, recall, _thresholds = skmetrics.precision_recall_curve(y_test, y_predictions)
+        area = skmetrics.average_precision_score(y_test, y_predictions)
+
+        if debug:
+            print('{} model:'.format(model_name))
+            print(pd.DataFrame({'Recall': recall, 'Precision': precision}))
+
+        # plot the line
+        temp_color = colors[i]
+        label = '{} (AUC = {})'.format(model_name, round(area, 2))
+        plt.plot(recall, precision, color=temp_color, label=label)
+
+    plt.legend(loc="lower left")
+
+    if save:
+        plt.savefig('PR.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nPR plot saved in: {}'.format(source_path))
 
     plt.show()
 
@@ -320,7 +348,6 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     plt.title("Feature importances")
 
     # Plot each feature
-    # TODO name these sanely
     x_train_shape = x_train.shape[1]
     x_train_range = range(x_train_shape)
 
@@ -385,7 +412,7 @@ def get_estimator_from_meta_estimator(model):
         result = model.best_estimator_
     else:
         result = model
-
+        
     return result
 
 

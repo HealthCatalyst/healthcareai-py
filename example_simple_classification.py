@@ -56,9 +56,18 @@ def main():
     # Create a single ROC plot from the trained model
     trained_random_forest.roc_curve_plot()
 
+    # Create a single PR plot from the trained model
+    trained_random_forest.pr_curve_plot()
+
     # Create a comparison ROC plot multiple models
-    hcaieval.tsm_comparison_roc_plot(
-        [trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble])
+    hcaieval.tsm_classification_comparison_plots(
+        trained_supervised_model=[trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble],
+        plot_type='ROC')
+
+    # Create a comparison PR plot multiple models
+    hcaieval.tsm_classification_comparison_plots(
+        trained_supervised_model=[trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble],
+        plot_type='PR')
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'random_forest_2017-05-01.pkl'
@@ -143,7 +152,6 @@ def main():
 
     connection = sqlite3.connect(path_to_database_file)
     predictions_with_factors_df.to_sql(table, connection)
-
 
     # TODO leave this commented out for open source first
     # Health Catalyst EDW specific instructions.

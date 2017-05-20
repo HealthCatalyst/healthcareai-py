@@ -92,7 +92,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.7, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):
