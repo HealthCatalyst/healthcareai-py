@@ -143,7 +143,7 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     return {'accuracy': accuracy, **roc, **pr}
 
 
-def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC'):
+def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC', save=False):
     """
     Given a single or list of trained supervised models, plot a ROC or PR curve for each one
     
@@ -183,7 +183,7 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
         raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
     # Plot with the selected plotter
-    plotter(metrics_by_model, save=False, debug=False)
+    plotter(metrics_by_model, save=save, debug=False)
 
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):

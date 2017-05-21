@@ -1,11 +1,11 @@
 # Getting started with healthcare.ai
 
-## What can you do with this package?
+## What can you do with these tools?
 
 - Fill in missing data via imputation
-- Create and compare models based on your data
+- Train and compare models based on your data
 - Save a model to produce daily predictions
-- Write predictions back to a database
+- Write predictions back to a database or csv file
 - Learn what factor drives each prediction
 
 ## Installation
@@ -19,10 +19,10 @@
 - Run `conda remove scipy`
 - Run `conda install scipy`
 - Run `conda install scikit-learn`
- Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
-    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
-    2. Install the latest release with pip run `pip install healthcareai`
-    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+   Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
+     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
+     2. Install the latest release with pip run `pip install healthcareai`
+     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
 
 #### Why Anaconda?
 
@@ -44,7 +44,7 @@ Once you have the dependencies satisfied run `pip install healthcareai` or `sudo
 - `pip install healthcareai` or `sudo pip install healthcareai`
 
 ### Linux and macOS (via docker)
- 
+
 - Install [docker](https://docs.docker.com/engine/installation/)
 - Clone this repo (look for the green button on the repo main page)
 - cd into the cloned directory
@@ -65,7 +65,7 @@ If you did get an error, or run into other installation issues, please [let us k
 - Open Sphinx (which installed with Anaconda) and copy the examples into a new file
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
-  
+
 ```sql
 CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
  [BindingID] [int] ,
@@ -87,11 +87,11 @@ CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
  [Factor2TXT] [varchar] (255),
  [Factor3TXT] [varchar] (255))
 ```
-Note that we're currently working on easy connections to other types of databases.
+Note that there are examples that write to other databases (MySQL, SQLite)
 
 ## For Issues
 
-- Double check that the code follows the examples in these documents.
+- Double check that the code follsows the examples in these documents.
 - If you're still seeing an error, file an issue on [Stack Overflow](http://stackoverflow.com/) using the healthcare-ai tag. Please provide
   - Details on your environment (OS, database type, R vs Py)
   - Goals (ie, what are you trying to accomplish)

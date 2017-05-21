@@ -2,10 +2,10 @@
 
 ## What is `SupervisedModelTrainer`?
 
--   This class let's one create and compare custom models on diverse
+-   This class let's you create and compare machine learning models on diverse
     datasets.
--   One can do both classification (ie, predict Y/N) as well as
-    regression (ie, predict a numeric field).
+-   You can do both **classification** (for example, predict Y/N) as well as
+    **regression** (for example, predict a numeric field).
 -   To jump straight to an example notebook, see
     [here](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/Example1.ipynb)
 
@@ -13,14 +13,14 @@
 
 Maybe. It'll help if you follow these guidelines:
 
-> -   Don't use 0 or 1 for the independent variable when doing
->     classification. Use Y/N instead. The IIF function in T-SQL may
+> -   Don't use `0` or `1` for the dependent variable when doing
+>     classification. Use `Y`/`N` instead. The IIF function in T-SQL may
 >     help here.
 > -   Don't pull in test data in this step. In other words, we just pull
 >     in those rows where the target (ie, predicted column has a value
 >     already).
 
-Of course, feature engineering is always a good idea.
+Feature engineering is always a good idea. Check out our [blog](http://healthcare.ai/blog] for ideas.
 
 ## Step 1: Pull in the data
 
@@ -52,35 +52,28 @@ df = pd.read_csv(DiabetesClincialSampleData.csv,
 
 ## Step 2: Set your data-prep parameters
 
-The `SupervisedModelTrainer` class cleans and prepares the data before
-model creation
+The `SupervisedModelTrainer` helps you train models. It cleans and prepares the data before
+model creation. To set up a trainer you'll need these arguments:
 
 -   **Return**: an object.
 -   **Arguments**:
-    :   -   **modeltype**: a string. This will either be
-            'classification' or 'regression'.
-        -   **df**: a data frame. The data your model will be based on.
-        -   **predictedcol**: a string. Name of variable (or column)
-            that you want to predict.
-        -   **graincol**: a string, defaults to None. Name of possible
-            GrainID column in your dataset. If specified, this column
-            will be removed, as it won't help the algorithm.
-        -   **impute**: a boolean. Whether to impute by replacing NULLs
-            with column mean (for numeric columns) or column mode (for
-            categorical columns).
-        -   **debug**: a boolean, defaults to False. If TRUE, console
-            output when comparing models is verbose for easier
-            debugging.
+    - **modeltype**: a string. This will either be 'classification' or 'regression'.
+    - **dataframe**: a data frame. The data your model will be based on.
+    - **predictedcol**: a string. Name of variable (or column) that you want to predict.
+    - **graincol**: a string, defaults to None. Name of possible GrainID column in your dataset. If specified, this column will be removed, as it won't help the algorithm.
+    - **impute**: a boolean. Whether to impute by replacing NULLs with column mean (for numeric columns) or column mode (for categorical columns).
+    - **debug**: a boolean, defaults to False. If TRUE, console output when comparing models is verbose for easier debugging.
 
 Example code:
 
 ```python
-o = SupervisedModelTrainer(modeltype='classification',
-                           df=df,
-                           predictedcol='ThirtyDayReadmitFLG',
-                           graincol='PatientEncounterID', #OPTIONAL
-                           impute=True,
-                           debug=False)
+hcai_trainer = SupervisedModelTrainer(
+        dataframe=dataframe,
+        predicted_column='ThirtyDayReadmitFLG',
+        model_type='classification',
+        grain_column='PatientEncounterID',
+        impute=True,
+        verbose=False)
 ```
 
 ## Step 3: Create and compare models
@@ -88,46 +81,40 @@ o = SupervisedModelTrainer(modeltype='classification',
 Example code:
 
 ```python
-# Run the linear model
-o.linear(cores=1)
+# Run the logistic regression model
+trained_logistic_regression = hcai_trainer.logistic_regression()
+trained_logistic_regression.roc_curve_plot()
 
 # Run the random forest model
-o.random_forest(cores=1)
+trained_random_forest = hcai_trainer.random_forest()
+trained_random_forest.roc_curve_plot()
+
 ```
 
-## Go further using utility methods
+### Go further using utility methods
 
-The `plot_rffeature_importance` method plots the input columns in order
-of importance to the model.
+The `healthcareai.common.model_eval.tsm_classification_comparison_plots` method plots ROC curves or PR curves of one or more trained models to directly comparing models.
 
 -   **Return**: a plot.
 -   **Arguments**:
-    :   -   **save**: a boolean, defaults to False. If True, the plot is
-            saved to the location displayed in the console.
+    - **plot_type** (str): 'ROC' (default) or 'PR' 
+    - **trained_supervised_model** (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels
+    - **save** (bool): True to save the plot.
 
 Example code:
 
 ```python
-# Look at the feature importance rankings
-o.plot_rffeature_importance(save=False)
-```
+# Create a comparison ROC plot multiple models
+hcaieval.tsm_classification_comparison_plots(
+    trained_supervised_model=[trained_random_forest, trained_logistic_regression],
+    plot_type='ROC',
+    save=False)
 
-The `plot_roc` method plots the AU\_ROC chart, for easier model
-comparison.
-
--   **Return**: a plot.
--   **Arguments**:
-    :   -   **save**: a boolean, defaults to False. If True, the plot is
-            saved to the location displayed in the console.
-        -   **debug**: a boolean. If True, console output is verbose for
-            easier debugging.
-
-Example code:
-
-```python
-# Create ROC plot to compare the two models
-o.plot_roc(debug=False,
-           save=False)
+# Create a comparison PR plot multiple models
+hcaieval.tsm_classification_comparison_plots(
+    trained_supervised_model=[trained_random_forest, trained_logistic_regression],
+    plot_type='PR',
+    save=False)
 ```
 
 ## Full example code
