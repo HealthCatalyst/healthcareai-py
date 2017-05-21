@@ -51,6 +51,14 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)
 
+    def test_is_classification(self):
+        self.assertTrue(self.trained_lr.is_classification)
+        self.assertFalse(self.trained_lr.is_regression)
+
+    def test_is_regression(self):
+        self.assertTrue(self.trained_linear_model.is_regression)
+        self.assertFalse(self.trained_linear_model.is_classification)
+
     def test_predictions_is_dataframe(self):
         self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
 

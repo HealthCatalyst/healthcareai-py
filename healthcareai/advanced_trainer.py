@@ -98,20 +98,6 @@ class AdvancedSupervisedModelTrainer(object):
             self.X_test.shape,
             self.y_test.shape))
 
-    def save_output_to_csv(self, filename, output):
-        # TODO likely deprecate this and use pandas in examples? - ask CAFE
-        # TODO timeRan is borked
-        output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
-                                          output['gridSearch_BestScore'],
-                                          output['gridSearch_ScoreMetric'],) \
-                                         + x for x in list(output.items())], \
-                                        columns=['TimeStamp', 'ModelType',
-                                                 'ModelLabels', 'BestScore',
-                                                 'BestScoreMetric', 'Metric',
-                                                 'MetricValue']).set_index('TimeStamp')
-        # save files locally #
-        output_dataframe.to_csv(filename + '.txt', header=False)
-
     def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
         # TODO stub
         raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
@@ -159,6 +145,7 @@ class AdvancedSupervisedModelTrainer(object):
         return best_model
 
     def validate_score_metric_for_number_of_classes(self, metric):
+        # TODO test this
         """
         Check that a user's choice of scoring metric makes sense with the number of prediction classes
 
@@ -170,7 +157,7 @@ class AdvancedSupervisedModelTrainer(object):
         classes = count_unique_elements_in_column(self.dataframe, self.predicted_column)
         if classes is 2:
             pass
-        elif classes > 2 and metric is 'roc_auc':
+        elif classes > 2 and metric in ['pr_auc', 'roc_auc']:
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
@@ -261,7 +248,6 @@ class AdvancedSupervisedModelTrainer(object):
                       hyperparameter_grid=None,
                       randomized_search=True):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
-        # TODO rename to random_forest after the other is deprecated
         if self.is_classification:
             return self.random_forest_classifier(trees=trees,
                                                  scoring_metric=scoring_metric,
@@ -325,9 +311,8 @@ class AdvancedSupervisedModelTrainer(object):
         algorithm.fit(self.X_train, self.y_train)
 
         # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
-        # test set is saved inside the object, but it allows for generation of plots later.
-        # TODO Pickle the cutoff lists of thresholds/TPR/FPR/Sens/Spec so that ROC plots can be generated on the fly
-        # TODO see https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
+        # test set is saved inside the object as well as the calculated thresholds.
+        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
         # PEP 8
         test_set_predictions = None
         test_set_class_labels = None

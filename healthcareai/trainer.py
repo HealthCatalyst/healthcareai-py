@@ -126,7 +126,6 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-
     def get_advanced_features(self):
         return self._advanced_trainer
 
@@ -153,7 +152,7 @@ def print_training_results(model_name, t0, trained_model):
     """
     print_training_timer(model_name, t0)
 
-    hyperparameters = hcaieval.get_hyperparameters_from_meta_estimator(trained_model.model)
+    hyperparameters = trained_model.best_hyperparameters
     if hyperparameters is None:
         hyperparameters = 'N/A: No hyperparameter search was performed'
     print("""Best hyperparameters found are:

@@ -17,8 +17,10 @@ class TrainedSupervisedModel(object):
     This object contains:
         - trained estimator
         - trained linear estimator used for row level factor analysis
+        - column metadata including transformed feature columns, grain & predicted column
         - the fit data preparation pipeline used for transforming new data for prediction
         - calculated metrics
+        - test set actuals, predicted values/probabilities, predicted classes
     """
 
     def __init__(self,
@@ -55,18 +57,16 @@ class TrainedSupervisedModel(object):
 
     @property
     def is_classification(self):
-        # TODO test this
         """ easy check to consolidate magic strings in all the model type switches """
         return self.model_type == 'classification'
 
     @property
     def is_regression(self):
-        # TODO test this
         """ easy check to consolidate magic strings in all the model type switches """
         return self.model_type == 'regression'
 
     @property
-    def hyperparameters(self):
+    def best_hyperparameters(self):
         """ Best hyperparameters found if model is a meta estimator """
         return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
 

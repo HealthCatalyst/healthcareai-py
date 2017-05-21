@@ -153,9 +153,9 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     """
     # Input validation plus switching
     if plot_type == 'ROC':
-        plotter = roc_plot_from_predictions
+        plotter = roc_plot_from_thresholds
     elif plot_type == 'PR':
-        plotter = pr_plot_from_predictions
+        plotter = pr_plot_from_thresholds
     else:
         raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
 
@@ -186,7 +186,7 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     plotter(metrics_by_model, save=False, debug=False)
 
 
-def roc_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
+def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -200,11 +200,11 @@ def roc_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
     plt.plot([0, 1], [0, 1], 'k--')
 
     # TODO hack to convert to array if it is a single dictionary
-    if isinstance(y_predictions_by_model, dict):
-        y_predictions_by_model = [y_predictions_by_model]
+    if isinstance(roc_thresholds_by_model, dict):
+        roc_thresholds_by_model = [roc_thresholds_by_model]
 
     # Calculate and plot for each model
-    for i, model in enumerate(y_predictions_by_model):
+    for i, model in enumerate(roc_thresholds_by_model):
         # Extract model name and metrics from dictionary
         model_name, metrics = model.popitem()
         roc_auc = metrics['roc_auc']
@@ -232,7 +232,7 @@ def roc_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
     plt.show()
 
 
-def pr_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
+def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -246,11 +246,11 @@ def pr_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
     plt.plot([0, 1], [1, 0], 'k--')
 
     # TODO hack to convert to array if it is a single dictionary
-    if isinstance(y_predictions_by_model, dict):
-        y_predictions_by_model = [y_predictions_by_model]
+    if isinstance(pr_thresholds_by_model, dict):
+        pr_thresholds_by_model = [pr_thresholds_by_model]
 
     # Calculate and plot for each model
-    for i, model in enumerate(y_predictions_by_model):
+    for i, model in enumerate(pr_thresholds_by_model):
         # Extract model name and metrics from dictionary
         model_name, metrics = model.popitem()
         pr_auc = metrics['pr_auc']
@@ -267,6 +267,7 @@ def pr_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
         plt.plot(recall, precision, color=temp_color, label=label)
 
     plt.legend(loc="lower left")
+    # TODO: add cutoff associated with P/R
 
     if save:
         plt.savefig('PR.png')
