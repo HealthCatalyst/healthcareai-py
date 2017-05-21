@@ -50,13 +50,11 @@ class AdvancedSupervisedModelTrainer(object):
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
     @property
     def is_classification(self):
-        # TODO test this
         """ easy check to consolidate magic strings in all the model type switches """
         return self.model_type == 'classification'
 
     @property
     def is_regression(self):
-        # TODO test this
         """ easy check to consolidate magic strings in all the model type switches """
         return self.model_type == 'regression'
 
@@ -100,6 +98,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
         # TODO stub
+        self.validate_regression('Ensemble Regression')
         raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
 
     def ensemble_classification(self, scoring_metric='roc_auc', trained_model_by_name=None):
@@ -107,6 +106,7 @@ class AdvancedSupervisedModelTrainer(object):
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
         """
+        self.validate_classification('Ensemble Classification')
         self.validate_score_metric_for_number_of_classes(scoring_metric)
         score_by_name = {}
 
@@ -189,6 +189,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
         hyperparameter grid.
         """
+        self.validate_classification('Logistic Regression')
         if hyperparameter_grid is None:
             hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100], 'class_weight': [None, 'balanced']}
 
@@ -209,6 +210,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
         hyperparameter grid.
         """
+        self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
             hyperparameter_grid = {"fit_intercept": [True, False]}
             pass
@@ -228,6 +230,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
         hyperparameter grid.
         """
+        self.validate_classification('KNN')
         if hyperparameter_grid is None:
             hyperparameter_grid = {'n_neighbors': list(range(5, 26)), 'weights': ['uniform', 'distance']}
 
@@ -265,6 +268,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
         default hyperparameter grid.
         """
+        self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
@@ -290,6 +294,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
         default hyperparameter grid.
         """
+        self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
@@ -343,6 +348,15 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
+    def validate_regression(self, model_name=None):
+        if not self.is_regression:
+            raise HealthcareAIError('A {} model can only be trained with a regression trainer.'.format(model_name))
+
+    def validate_classification(self, model_name=None):
+        if not self.is_classification:
+            raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
+
     def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
+

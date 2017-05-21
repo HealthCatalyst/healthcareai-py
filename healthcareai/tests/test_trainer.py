@@ -41,8 +41,9 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         helpers.assertBetween(self, 0.5, 0.8, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
-    @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
-                     "Skipping this on Travis CI.")
+    # TODO why is this test skipped?
+    # @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
+    #                  "Skipping this on Travis CI.")
     def test_random_forest_classification(self):
         # Force plot to save to prevent blocking
         trained_random_forest = self.classification_trainer.random_forest_classification(save_plot=True)

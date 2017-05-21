@@ -2,7 +2,6 @@ import unittest
 import pandas as pd
 
 import healthcareai.tests.helpers as helpers
-from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.trainer import SupervisedModelTrainer
 
 
@@ -105,9 +104,6 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
     def test_prepare_and_subset_returns_dataframe(self):
         self.assertIsInstance(self.trained_linear_model.prepare_and_subset(self.prediction_df), pd.DataFrame)
-
-    def test_validate_classification_raises_error_on_regression(self):
-        self.assertRaises(HealthcareAIError, self.trained_linear_model.validate_classification)
 
     def test_pr_returns_dict(self):
         self.assertIsInstance(self.trained_lr.pr(), dict)

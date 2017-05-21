@@ -14,8 +14,49 @@ import healthcareai.pipelines.data_preparation as pipelines
 
 # Set some constants to save errors and typing
 CLASSIFICATION = 'classification'
-PREDICTED_COLUMN = 'ThirtyDayReadmitFLG'
-GRAIN_COLUMN_NAME = 'PatientID'
+REGRESSION = 'regression'
+CLASSIFICATION_PREDICTED_COLUMN = 'ThirtyDayReadmitFLG'
+REGRESION_PREDICTED_COLUMN = 'SystolicBPNBR'
+GRAIN_COLUMN_NAME = 'PatientEncounterID'
+
+
+class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        df = helpers.load_sample_dataframe()
+
+        # Drop columns that won't help machine learning
+        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        df.drop(columns_to_remove, axis=1, inplace=True)
+
+        np.random.seed(42)
+        clean_regression_df = pipelines.full_pipeline(REGRESSION, REGRESION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                                      impute=True).fit_transform(df)
+        clean_classification_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN,
+                                                          GRAIN_COLUMN_NAME,
+                                                          impute=True).fit_transform(df)
+        cls.regression_trainer = AdvancedSupervisedModelTrainer(clean_regression_df, REGRESSION,
+                                                                REGRESION_PREDICTED_COLUMN)
+        cls.classification_trainer = AdvancedSupervisedModelTrainer(clean_classification_df, CLASSIFICATION,
+                                                                    CLASSIFICATION_PREDICTED_COLUMN)
+
+    def test_validate_classification_raises_error_on_regression(self):
+        self.assertRaises(HealthcareAIError, self.classification_trainer.validate_regression)
+
+    def test_validate_regression_raises_error_on_classification(self):
+        self.assertRaises(HealthcareAIError, self.regression_trainer.validate_classification)
+
+    def test_regression_trainer_logistic_regression_raises_error(self):
+        self.assertRaises(HealthcareAIError, self.regression_trainer.logistic_regression)
+
+    def test_regression_trainer_random_forest_classification_raises_error(self):
+        self.assertRaises(HealthcareAIError, self.regression_trainer.random_forest_classifier, trees=200)
+
+    def test_regression_trainer_knn_raises_error(self):
+        self.assertRaises(HealthcareAIError, self.regression_trainer.knn)
+
+    def test_classification_trainer_linear_regression_raises_error(self):
+        self.assertRaises(HealthcareAIError, self.classification_trainer.linear_regression)
 
 
 class TestRandomForestClassification(unittest.TestCase):
@@ -25,9 +66,9 @@ class TestRandomForestClassification(unittest.TestCase):
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
         self.trainer.train_test_split()
 
     def test_random_forest_no_tuning(self):
@@ -47,9 +88,9 @@ class TestRandomForestClassification(unittest.TestCase):
                          usecols=cols)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
 
         trainer.train_test_split()
 
@@ -57,22 +98,24 @@ class TestRandomForestClassification(unittest.TestCase):
 
 
 class TestLogisticRegression(unittest.TestCase):
-    def test_logistic_regression_no_tuning(self):
+    def setUp(self):
         df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
 
         # Drop uninformative columns
         df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+        clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, PREDICTED_COLUMN)
+        self.classification_trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION,
+                                                                     CLASSIFICATION_PREDICTED_COLUMN)
 
-        self.trainer.train_test_split()
+        self.classification_trainer.train_test_split()
+        self.lr = self.classification_trainer.logistic_regression(randomized_search=False)
 
-        lr = self.trainer.logistic_regression(randomized_search=False)
-        self.assertIsInstance(lr, TrainedSupervisedModel)
-        assertBetween(self, 0.5, 0.8, lr.metrics['roc_auc'])
+    def test_logistic_regression_no_tuning(self):
+        self.assertIsInstance(self.lr, TrainedSupervisedModel)
+        assertBetween(self, 0.5, 0.8, self.lr.metrics['roc_auc'])
 
 
 class TestHelpers(unittest.TestCase):
