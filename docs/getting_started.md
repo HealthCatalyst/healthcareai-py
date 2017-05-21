@@ -91,7 +91,7 @@ Note that there are examples that write to other databases (MySQL, SQLite)
 
 ## For Issues
 
-- Double check that the code follsows the examples in these documents.
+- Double check that the code follows the examples in these documents.
 - If you're still seeing an error, file an issue on [Stack Overflow](http://stackoverflow.com/) using the healthcare-ai tag. Please provide
   - Details on your environment (OS, database type, R vs Py)
   - Goals (ie, what are you trying to accomplish)
