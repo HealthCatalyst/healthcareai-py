@@ -186,9 +186,12 @@ class AdvancedSupervisedModelTrainer(object):
         performance_metrics = None
 
         if self.model_type is 'classification':
-            performance_metrics = model_evaluation.calculate_classification_metrics(trained_sklearn_estimator,
-                                                                                    self.X_test,
-                                                                                    self.y_test)
+            performance_metrics = model_evaluation.calculate_binary_classification_metrics(
+                trained_sklearn_estimator,
+                self.X_test,
+                self.y_test,
+
+            )
         elif self.model_type is 'regression':
             performance_metrics = model_evaluation.calculate_regression_metrics(trained_sklearn_estimator, self.X_test, self.y_test)
 

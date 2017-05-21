@@ -115,7 +115,7 @@ class SupervisedModelTrainer(object):
             trained_model = self._advanced_trainer.ensemble_regression(scoring_metric=metric)
 
         print(
-            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric, trained_model.model_name))
+            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric, trained_model.algorithm_name))
 
         print_training_results(model_name, t0, trained_model)
 

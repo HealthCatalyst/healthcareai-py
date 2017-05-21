@@ -10,77 +10,78 @@ import sklearn.metrics as skmetrics
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
-def compute_roc(true_values, predictions):
+def compute_roc(y_test, probability_predictions):
     """
-    Compute TPRs, FPRs, best cutoff and AUC
-    
+    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds
+
     Args:
-        predictions (list) : predictions coming from an ML algorithm of length n.
-        true_values (list) : true label values corresponding to the predictions. Also length n.
+        y_test (list) : true label values corresponding to the predictions. Also length n.
+        probability_predictions (list) : predictions coming from an ML algorithm of length n.
 
     Returns:
         dict: 
 
     """
-    validate_predictions_and_labels_are_equal_length(predictions, true_values)
+    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
-    false_positive_rates, true_postitive_rates, thresholds = skmetrics.roc_curve(true_values, predictions)
-    area = skmetrics.roc_auc_score(true_values, predictions)
+    # Calculate ROC
+    false_positive_rates, true_positive_rates, roc_thresholds = skmetrics.roc_curve(y_test, probability_predictions)
+    roc_auc = skmetrics.roc_auc_score(y_test, probability_predictions)
 
-    # get ideal cutoffs for suggestions (upper left, or 0,1)
-    d = (false_positive_rates - 0) ** 2 + (true_postitive_rates - 1) ** 2
+    # get ROC ideal cutoffs (upper left, or 0,1)
+    roc_distances = (false_positive_rates - 0) ** 2 + (true_positive_rates - 1) ** 2
 
-    # TODO this might have the same bug the r package had
-    ind = np.where(d == np.min(d))[0]
-    best_tpr = true_postitive_rates[ind]
-    best_fpr = false_positive_rates[ind]
-    cutoff = thresholds[ind]
+    # To prevent the case where there are two points with the same minimum distance, return only the first
+    # np.where returns a tuple (we want the first element in the first array)
+    roc_index = np.where(roc_distances == np.min(roc_distances))[0][0]
+    best_tpr = true_positive_rates[roc_index]
+    best_fpr = false_positive_rates[roc_index]
+    ideal_roc_cutoff = roc_thresholds[roc_index]
 
-    return {'ROC_AUC': area,
-            'best_cutoff': cutoff[0],
-            'best_true_positive_rate': best_tpr[0],
-            'best_false_positive_rate': best_fpr[0],
-            'tpr': true_postitive_rates,
-            'fpr': false_positive_rates,
-            'thresholds': thresholds
-            }
+    return {'roc_auc': roc_auc,
+            'best_roc_cutoff': ideal_roc_cutoff,
+            'best_true_positive_rate': best_tpr,
+            'best_false_positive_rate': best_fpr,
+            'true_positive_rates': true_positive_rates,
+            'false_positive_rates': false_positive_rates,
+            'roc_thresholds': roc_thresholds}
 
 
-def compute_pr(predictions, true_values):
+def compute_pr(y_test, probability_predictions):
     """ 
-    Compute Precision-Recall, thresholds and AUC
+    Compute Precision-Recall, thresholds and PR AUC
 
     Args:
-        predictions (list) : predictions coming from an ML algorithm of length n.
-        true_values (list) : true label values corresponding to the predictions. Also length n.
+        y_test (list) : true label values corresponding to the predictions. Also length n.
+        probability_predictions (list) : predictions coming from an ML algorithm of length n.
 
     Returns:
         dict: 
 
     """
+    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
-    validate_predictions_and_labels_are_equal_length(predictions, true_values)
-
-    precision, recall, thresholds = skmetrics.precision_recall_curve(true_values, predictions)
-    area = skmetrics.average_precision_score(true_values, predictions)
+    # Calculate PR
+    precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
+    pr_auc = skmetrics.average_precision_score(y_test, probability_predictions)
 
     # get ideal cutoffs for suggestions (upper right or 1,1)
-    d = (precision - 1) ** 2 + (recall - 1) ** 2
+    pr_distances = (precisions - 1) ** 2 + (recalls - 1) ** 2
 
-    # TODO this might have the same bug the r package had
-    ind = np.where(d == np.min(d))[0]
-    best_precision = precision[ind]
-    best_recall = recall[ind]
-    ideal_cutoff = thresholds[ind]
+    # To prevent the case where there are two points with the same minimum distance, return only the first
+    # np.where returns a tuple (we want the first element in the first array)
+    pr_index = np.where(pr_distances == np.min(pr_distances))[0][0]
+    best_precision = precisions[pr_index]
+    best_recall = recalls[pr_index]
+    ideal_pr_cutoff = pr_thresholds[pr_index]
 
-    return {'PR_AUC': area,
-            'best_cutoff': ideal_cutoff[0],
-            'best_precision': best_precision[0],
-            'best_recall': best_recall[0],
-            'precisions': precision,
-            'recalls': recall,
-            'thresholds': thresholds
-            }
+    return {'pr_auc': pr_auc,
+            'best_pr_cutoff': ideal_pr_cutoff,
+            'best_precision': best_precision,
+            'best_recall': best_recall,
+            'precisions': precisions,
+            'recalls': recalls,
+            'pr_thresholds': pr_thresholds}
 
 
 def validate_predictions_and_labels_are_equal_length(predictions, true_values):
@@ -112,7 +113,7 @@ def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     return result
 
 
-def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test):
+def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     """
     Given a trained estimator, calculate metrics
 
@@ -127,23 +128,19 @@ def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     # Squeeze down y_test to 1D
     y_test = np.squeeze(y_test)
 
-    # Get binary classification predictions
-    binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
+    validate_predictions_and_labels_are_equal_length(x_test, y_test)
 
-    # Get probability classification predictions
+    # Get binary and probability classification predictions
+    binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
     probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
 
-    # Calculate some metrics
-    precision, recall, thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
-    pr_auc = skmetrics.auc(recall, precision)
-    roc_auc = skmetrics.roc_auc_score(y_test, probability_predictions)
+    # Calculate accuracy
     accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
+    roc = compute_roc(y_test, probability_predictions)
+    pr = compute_pr(y_test, probability_predictions)
 
-    return {
-        'roc_auc': roc_auc,
-        'accuracy': accuracy,
-        'pr_auc': pr_auc,
-    }
+    # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
+    return {'accuracy': accuracy, **roc, **pr}
 
 
 def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC'):
@@ -162,13 +159,12 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     else:
         raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
 
-    predictions_by_model = []
+    metrics_by_model = []
     # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
     # if isinstance(trained_supervised_model, TrainedSupervisedModel):
     if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
-        entry = build_classification_model_prediction_dictionary(trained_supervised_model)
-        predictions_by_model.append(entry)
-        test_set_actual = trained_supervised_model.test_set_actual
+        entry = {trained_supervised_model.algorithm_name: trained_supervised_model.metrics}
+        metrics_by_model.append(entry)
     elif isinstance(trained_supervised_model, list):
         for model in trained_supervised_model:
             # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
@@ -176,42 +172,21 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
             if type(model).__name__ != 'TrainedSupervisedModel':
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
 
-            entry = build_classification_model_prediction_dictionary(model)
-            predictions_by_model.append(entry)
+            entry = {model.algorithm_name: model.metrics}
+
+            metrics_by_model.append(entry)
 
             # TODO so, you could check for different GUIDs that could be saved in each TSM!
             # The assumption here is that each TSM was trained on the same train test split,
             # which happens when instantiating SupervisedModelTrainer
-            test_set_actual = model.test_set_actual
     else:
         raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
 
     # Plot with the selected plotter
-    plotter(test_set_actual, predictions_by_model, save=False, debug=False)
+    plotter(metrics_by_model, save=False, debug=False)
 
 
-def build_classification_model_prediction_dictionary(trained_supervised_model):
-    # TODO low priority, but test this
-    """
-    Given a single trained supervised model build a simple dictionary containing the model name and predictions from the
-    test set. Raises an error if 
-
-    Args:
-        trained_supervised_model (TrainedSupervisedModel): 
-
-    Returns:
-        dict: predictions by model name
-    """
-    if trained_supervised_model.is_regression:
-        raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
-
-    name = trained_supervised_model.model_name
-    predictions = np.squeeze(trained_supervised_model.test_set_predictions[:, 1])
-
-    return {name: predictions}
-
-
-def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+def roc_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -230,10 +205,11 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
 
     # Calculate and plot for each model
     for i, model in enumerate(y_predictions_by_model):
-        model_name, y_predictions = model.popitem()
-        # calculate metrics
-        fpr, tpr, _ = skmetrics.roc_curve(y_test, y_predictions)
-        roc_auc_linear = skmetrics.auc(fpr, tpr)
+        # Extract model name and metrics from dictionary
+        model_name, metrics = model.popitem()
+        roc_auc = metrics['roc_auc']
+        tpr = metrics['true_positive_rates']
+        fpr = metrics['false_positive_rates']
 
         if debug:
             print('{} model:'.format(model_name))
@@ -242,7 +218,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
         # TODO deal with colors ...
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(roc_auc_linear, 2))
+        label = '{} (AUC = {})'.format(model_name, round(roc_auc, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
 
     plt.legend(loc="lower right")
@@ -256,7 +232,7 @@ def roc_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=
     plt.show()
 
 
-def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=False):
+def pr_plot_from_predictions(y_predictions_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -275,10 +251,11 @@ def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=F
 
     # Calculate and plot for each model
     for i, model in enumerate(y_predictions_by_model):
-        model_name, y_predictions = model.popitem()
-        # calculate metrics
-        precision, recall, _thresholds = skmetrics.precision_recall_curve(y_test, y_predictions)
-        area = skmetrics.average_precision_score(y_test, y_predictions)
+        # Extract model name and metrics from dictionary
+        model_name, metrics = model.popitem()
+        pr_auc = metrics['pr_auc']
+        precision = metrics['precisions']
+        recall = metrics['recalls']
 
         if debug:
             print('{} model:'.format(model_name))
@@ -286,7 +263,7 @@ def pr_plot_from_predictions(y_test, y_predictions_by_model, save=False, debug=F
 
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(area, 2))
+        label = '{} (AUC = {})'.format(model_name, round(pr_auc, 2))
         plt.plot(recall, precision, color=temp_color, label=label)
 
     plt.legend(loc="lower left")
@@ -411,7 +388,7 @@ def get_estimator_from_meta_estimator(model):
         result = model.best_estimator_
     else:
         result = model
-        
+
     return result
 
 
@@ -433,6 +410,7 @@ def get_hyperparameters_from_meta_estimator(model):
         result = None
 
     return result
+
 
 if __name__ == '__main__':
     pass

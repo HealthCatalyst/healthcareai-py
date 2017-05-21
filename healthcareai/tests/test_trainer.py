@@ -38,7 +38,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.5, 0.7, result['roc_auc'])
+        helpers.assertBetween(self, 0.5, 0.8, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
@@ -49,7 +49,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.65, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.65, 0.9, result['roc_auc'])
         helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
@@ -91,7 +91,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):

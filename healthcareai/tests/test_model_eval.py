@@ -17,10 +17,10 @@ class TestROC(unittest.TestCase):
         df['b'] = b
 
         # ROC_AUC
-        out = hcai_eval.compute_roc(df['b'], df['a'])
-        self.assertAlmostEqual(round(out['ROC_AUC'], 4), 0.9433)
-        self.assertAlmostEqual(round(out['best_true_positive_rate'], 4), 0.9565)
-        self.assertAlmostEqual(round(out['best_false_positive_rate'], 4), 0.2338)
+        result = hcai_eval.compute_roc(df['b'], df['a'])
+        self.assertAlmostEqual(round(result['roc_auc'], 4), 0.9433)
+        self.assertAlmostEqual(round(result['best_true_positive_rate'], 4), 0.9565)
+        self.assertAlmostEqual(round(result['best_false_positive_rate'], 4), 0.2338)
 
 
 class TestPR(unittest.TestCase):
@@ -31,8 +31,8 @@ class TestPR(unittest.TestCase):
         df['b'] = b
 
         # PR_AUC
-        out = hcai_eval.compute_pr(df['a'], df['b'])
-        self.assertAlmostEqual(round(out['PR_AUC'], 4), 0.8622)
+        out = hcai_eval.compute_pr(df['b'], df['a'])
+        self.assertAlmostEqual(round(out['pr_auc'], 4), 0.8622)
         self.assertAlmostEqual(round(out['best_precision'], 4), 0.8000)
         self.assertAlmostEqual(round(out['best_recall'], 4), 0.6957)
 

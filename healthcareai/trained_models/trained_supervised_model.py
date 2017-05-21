@@ -46,7 +46,7 @@ class TrainedSupervisedModel(object):
         self._metric_by_name = metric_by_name
 
     @property
-    def model_name(self):
+    def algorithm_name(self):
         """ Model name extracted from the class type """
         model = model_evaluation.get_estimator_from_meta_estimator(self.model)
         name = type(model).__name__
@@ -74,6 +74,17 @@ class TrainedSupervisedModel(object):
     def model_type(self):
         """ Model type (regression or classification) """
         return self._model_type
+
+    @property
+    def binary_classification_scores(self):
+        # TODO low priority, but test this
+        """ Returns the probability scores of the first class for a binary classification model. """
+        if self.is_regression:
+            raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
+
+        predictions = np.squeeze(self.test_set_predictions[:, 1])
+
+        return predictions
 
     @property
     def metrics(self):
@@ -346,16 +357,14 @@ class TrainedSupervisedModel(object):
     def roc(self):
         """ Prints out ROC details and returns them with cutoffs. """
         self.validate_classification()
-        # Get probability of first class (the predictions are probabilities for each class)
-        predictions = np.squeeze(self.test_set_predictions[:, 1])
-        roc = model_evaluation.compute_roc(self.test_set_actual, predictions)
+        roc = model_evaluation.compute_roc(self.test_set_actual, self.binary_classification_scores)
 
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
-            roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+            roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
         print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-        for i in range(len(roc['thresholds'])):
-            print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
+        for i in range(len(roc['roc_thresholds'])):
+            print('%-7.2f %-6.2f %-6.2f' % (roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
 
         return roc
 
@@ -367,16 +376,16 @@ class TrainedSupervisedModel(object):
     def pr(self):
         """ Prints out PR details and returns them with cutoffs. """
         self.validate_classification()
-        pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
+        pr = model_evaluation.compute_pr(self.test_set_actual, self.binary_classification_scores)
         print(pr)
 
-        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['PR_AUC']))
+        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['pr_auc']))
         print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-              % (pr['best_cutoff'], pr['best_precision'], pr['best_recall']))
+              % (pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
 
         print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-        for i in range(len(pr['thresholds'])):
-            print('%5.2f %6.2f %10.2f' % (pr['thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+        for i in range(len(pr['pr_thresholds'])):
+            print('%5.2f %6.2f %10.2f' % (pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
 
         return pr
 
