@@ -354,17 +354,18 @@ class TrainedSupervisedModel(object):
         self.validate_classification()
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
 
-    def roc(self):
+    def roc(self, print_output=True):
         """ Prints out ROC details and returns them with cutoffs. """
         self.validate_classification()
-        roc = model_evaluation.compute_roc(self.test_set_actual, self.binary_classification_scores)
+        roc = self._metric_by_name
 
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
-            roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+        if print_output:
+            print("ROC: Ideal ROC cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
+                roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
-        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-        for i in range(len(roc['roc_thresholds'])):
-            print('%-7.2f %-6.2f %-6.2f' % (roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+            print('%-7s %-6s %-5s' % ('Threshold', 'TPR', 'FPR'))
+            for i in range(len(roc['roc_thresholds'])):
+                print('%-7.2f %-6.2f %-6.2f' % (roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
 
         return roc
 
@@ -373,19 +374,19 @@ class TrainedSupervisedModel(object):
         self.validate_classification()
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
 
-    def pr(self):
+    def pr(self, print_output=True):
         """ Prints out PR details and returns them with cutoffs. """
         self.validate_classification()
-        pr = model_evaluation.compute_pr(self.test_set_actual, self.binary_classification_scores)
-        print(pr)
+        pr = self._metric_by_name
 
-        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['pr_auc']))
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-              % (pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
+        if print_output:
+            print('PR: Area under Precision Recall curve (PR AUC): {}'.format(pr['pr_auc']))
+            print("Ideal PR cutoff is %0.2f, yielding precision of %0.2f and recall of %0.2f"
+                  % (pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
 
-        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-        for i in range(len(pr['pr_thresholds'])):
-            print('%5.2f %6.2f %10.2f' % (pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+            print('%-10s %-10s %-10s' % ('Threshhold', 'Precision', 'Recall'))
+            for i in range(len(pr['pr_thresholds'])):
+                print('%5.2f %6.2f %10.2f' % (pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
 
         return pr
 
