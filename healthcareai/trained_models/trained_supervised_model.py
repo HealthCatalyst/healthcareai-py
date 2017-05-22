@@ -369,7 +369,10 @@ class TrainedSupervisedModel(object):
             print('|  Threshhold  |  TPR   |  FPR   |')
             print('|--------------|--------|--------|')
             for i in range(len(roc['roc_thresholds'])):
-                print('|        {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+                marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
+                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(marker, roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+            print('|--------------------------------|')
+            print('|  *** Ideal cutoff              |')
             print('|--------------------------------|')
 
         return roc
@@ -395,7 +398,10 @@ class TrainedSupervisedModel(object):
             print('| Threshhold | Precision | Recall |')
             print('|------------|-----------|--------|')
             for i in range(len(pr['pr_thresholds'])):
-                print('|    {:03.2f}    |    {:03.2f}   |  {:03.2f}  |'.format(pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+                marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
+                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(marker, pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+            print('|---------------------------------|')
+            print('|  *** Ideal cutoff               |')
             print('|---------------------------------|')
 
         return pr
