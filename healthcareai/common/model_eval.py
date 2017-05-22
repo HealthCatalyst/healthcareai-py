@@ -210,6 +210,8 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         roc_auc = metrics['roc_auc']
         tpr = metrics['true_positive_rates']
         fpr = metrics['false_positive_rates']
+        best_true_positive_rate = metrics['best_true_positive_rate']
+        best_false_positive_rate = metrics['best_false_positive_rate']
 
         if debug:
             print('{} model:'.format(model_name))
@@ -220,6 +222,7 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         temp_color = colors[i]
         label = '{} (AUC = {})'.format(model_name, round(roc_auc, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
+        plt.plot([best_false_positive_rate], [best_true_positive_rate], marker='*', markersize=10, color=temp_color)
 
     plt.legend(loc="lower right")
     # TODO: add cutoff associated with FPR/TPR
@@ -256,6 +259,8 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
         pr_auc = metrics['pr_auc']
         precision = metrics['precisions']
         recall = metrics['recalls']
+        best_recall = metrics['best_recall']
+        best_precision = metrics['best_precision']
 
         if debug:
             print('{} model:'.format(model_name))
@@ -265,6 +270,7 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
         temp_color = colors[i]
         label = '{} (AUC = {})'.format(model_name, round(pr_auc, 2))
         plt.plot(recall, precision, color=temp_color, label=label)
+        plt.plot([best_recall], [best_precision], marker='*', markersize=10, color=temp_color)
 
     plt.legend(loc="lower left")
     # TODO: add cutoff associated with P/R

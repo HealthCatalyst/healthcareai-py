@@ -355,14 +355,34 @@ class TrainedSupervisedModel(object):
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
 
     def roc(self, print_output=True):
-        """ Prints out ROC details and returns them with cutoffs. """
+        """
+        Prints out ROC details and returns them with cutoffs.
+        
+        Note this is a simple subset of TrainedSupervisedModel.metrics()
+        Args:
+            print_output (bool): True (default) to print a table of output.
+
+        Returns:
+            dict: A subset of TrainedSupervisedModel.metrics() that are ROC specific
+        """
         self.validate_classification()
-        roc = self._metric_by_name
+        metrics = self._metric_by_name
+        roc = {
+            'roc_auc': metrics['roc_auc'],
+            'best_roc_cutoff': metrics['best_roc_cutoff'],
+            'best_true_positive_rate': metrics['best_true_positive_rate'],
+            'best_false_positive_rate': metrics['best_false_positive_rate'],
+            'roc_thresholds': metrics['roc_thresholds'],
+            'true_positive_rates': metrics['true_positive_rates'],
+            'false_positive_rates': metrics['false_positive_rates'],
+        }
+        # roc = self._metric_by_name
 
         if print_output:
             print("""\nReceiver Operating Characteristic (ROC):
+            Area under curve (ROC AUC): {:0.2f}
             Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}""".format(
-                roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+                roc['roc_auc'], roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
             print('|--------------------------------|')
             print('|               ROC              |')
@@ -383,9 +403,27 @@ class TrainedSupervisedModel(object):
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
 
     def pr(self, print_output=True):
-        """ Prints out PR details and returns them with cutoffs. """
+        """
+        Prints out PR details and returns them with cutoffs.
+
+        Note this is a simple subset of TrainedSupervisedModel.metrics()
+        Args:
+            print_output (bool): True (default) to print a table of output.
+
+        Returns:
+            dict: A subset of TrainedSupervisedModel.metrics() that are PR specific
+        """
         self.validate_classification()
-        pr = self._metric_by_name
+        metrics = self._metric_by_name
+        pr = {
+            'pr_auc': metrics['pr_auc'],
+            'best_pr_cutoff': metrics['best_pr_cutoff'],
+            'best_precision': metrics['best_precision'],
+            'best_recall': metrics['best_recall'],
+            'pr_thresholds': metrics['pr_thresholds'],
+            'precisions': metrics['precisions'],
+            'recalls': metrics['recalls'],
+        }
 
         if print_output:
             print("""\nPrecision-Recall:
