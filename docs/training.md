@@ -2,12 +2,10 @@
 
 ## What is `SupervisedModelTrainer`?
 
--   This class let's you create and compare machine learning models on diverse
+-   This class lets you train and compare machine learning models on diverse
     datasets.
 -   You can do both **classification** (for example, predict Y/N) as well as
     **regression** (for example, predict a numeric field).
--   To jump straight to an example notebook, see
-    [here](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/notebooks/Example1.ipynb)
 
 ## Am I ready for model creation?
 
