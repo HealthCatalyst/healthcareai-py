@@ -40,14 +40,20 @@ def main():
         impute=True,
         verbose=False)
 
-    # Train a KNN model
+    # Train and evaluate a KNN model
     trained_knn = hcai_trainer.knn()
+    trained_knn.roc()
+    trained_knn.roc_curve_plot()
 
-    # Train a logistic regression model
+    # Train and evaluate a logistic regression model
     trained_logistic_regression = hcai_trainer.logistic_regression()
+    trained_logistic_regression.roc()
+    trained_logistic_regression.roc_curve_plot()
 
     # Train a random forest model and save the feature importance plot
     trained_random_forest = hcai_trainer.random_forest(save_plot=True)
+    trained_random_forest.roc()
+    trained_random_forest.roc_curve_plot()
 
     # Train a suite of built in algorithms to see which one looks best
     trained_ensemble = hcai_trainer.ensemble()

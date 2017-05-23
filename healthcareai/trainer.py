@@ -1,7 +1,7 @@
 import time
 
-import healthcareai.pipelines.data_preparation as pipelines
 import healthcareai.common.model_eval as hcaieval
+import healthcareai.pipelines.data_preparation as pipelines
 from healthcareai.advanced_trainer import AdvancedSupervisedModelTrainer
 
 
@@ -19,20 +19,21 @@ class SupervisedModelTrainer(object):
         clean_dataframe = pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._dsm = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column, grain_column, verbose)
+        self._advanced_trainer = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column,
+                                                                grain_column, verbose)
 
         # Save the pipeline to the parent class
-        self._dsm.pipeline = pipeline
+        self._advanced_trainer.pipeline = pipeline
 
         # Split the data into train and test
-        self._dsm.train_test_split()
+        self._advanced_trainer.train_test_split()
 
     def random_forest(self, save_plot=False):
         """ Train a random forest model and print out the model performance metrics. """
         # TODO Convenience method. Probably not needed?
-        if self._dsm.model_type is 'classification':
+        if self._advanced_trainer.model_type is 'classification':
             return self.random_forest_classification(save_plot=save_plot)
-        elif self._dsm.model_type is 'regression':
+        elif self._advanced_trainer.model_type is 'regression':
             return self.random_forest_regression()
 
     def knn(self):
@@ -42,7 +43,8 @@ class SupervisedModelTrainer(object):
         t0 = time.time()
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
+        trained_model = self._advanced_trainer.knn(scoring_metric='roc_auc', hyperparameter_grid=None,
+                                                   randomized_search=True)
         print_training_results(model_name, t0, trained_model)
 
         return trained_model
@@ -54,8 +56,9 @@ class SupervisedModelTrainer(object):
         t0 = time.time()
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
-                                                          randomized_search=True)
+        trained_model = self._advanced_trainer.random_forest_regressor(trees=200,
+                                                                       scoring_metric='neg_mean_squared_error',
+                                                                       randomized_search=True)
         print_training_results(model_name, t0, trained_model)
 
         return trained_model
@@ -67,11 +70,12 @@ class SupervisedModelTrainer(object):
         t0 = time.time()
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.random_forest_classifier(trees=200, scoring_metric='roc_auc', randomized_search=True)
+        trained_model = self._advanced_trainer.random_forest_classifier(trees=200, scoring_metric='roc_auc',
+                                                                        randomized_search=True)
         print_training_results(model_name, t0, trained_model)
 
         # Save or show the feature importance graph
-        hcaieval.plot_rf_from_tsm(trained_model, self._dsm.X_train, save=save_plot)
+        hcaieval.plot_rf_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
 
         return trained_model
 
@@ -82,7 +86,7 @@ class SupervisedModelTrainer(object):
         t0 = time.time()
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.logistic_regression(randomized_search=False)
+        trained_model = self._advanced_trainer.logistic_regression(randomized_search=False)
         print_training_results(model_name, t0, trained_model)
 
         return trained_model
@@ -94,53 +98,36 @@ class SupervisedModelTrainer(object):
         t0 = time.time()
 
         # Train the model and display the model metrics
-        trained_model = self._dsm.linear_regression(randomized_search=False)
+        trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
         print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
     def ensemble(self):
         """ Train a ensemble model and print out the model performance metrics. """
-        model_name = 'ensemble {}'.format(self._dsm.model_type)
+        model_name = 'ensemble {}'.format(self._advanced_trainer.model_type)
         print('Training {}'.format(model_name))
         t0 = time.time()
 
         # Train the appropriate ensemble of models and display the model metrics
-        if self._dsm.model_type is 'classification':
+        if self._advanced_trainer.model_type is 'classification':
             metric = 'roc_auc'
-            trained_model = self._dsm.ensemble_classification(scoring_metric=metric)
-        elif self._dsm.model_type is 'regression':
+            trained_model = self._advanced_trainer.ensemble_classification(scoring_metric=metric)
+        elif self._advanced_trainer.model_type is 'regression':
             # TODO stub
             metric = 'neg_mean_squared_error'
-            trained_model = self._dsm.ensemble_regression(scoring_metric=metric)
+            trained_model = self._advanced_trainer.ensemble_regression(scoring_metric=metric)
 
         print(
-            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric, trained_model.model_name))
+            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric,
+                                                                                     trained_model.algorithm_name))
 
         print_training_results(model_name, t0, trained_model)
 
         return trained_model
 
-    def print_metrics(self, trained_model):
-        """
-        Given a trained model, calculate and print the appropriate performance metrics.
-
-        Args:
-            trained_model (BaseEstimator): A scikit-learn trained algorithm
-        """
-        print(self.metrics(trained_model))
-
-    def metrics(self, trained_model):
-        """
-        Given a trained model, get the appropriate performance metrics.
-
-        Args:
-            trained_model (BaseEstimator): A scikit-learn trained algorithm
-        """
-        return self._dsm.metrics(trained_model)
-
     def get_advanced_features(self):
-        return self._dsm
+        return self._advanced_trainer
 
 
 def print_training_timer(model_name, start_timestamp):
@@ -164,7 +151,25 @@ def print_training_results(model_name, t0, trained_model):
         trained_model (TrainedSupervisedModel): The trained supervised model
     """
     print_training_timer(model_name, t0)
-    print('Model metrics: {}'.format(trained_model.metrics))
 
-    hyperparameters = hcaieval.get_hyperparameters_from_meta_estimator(trained_model.model)
-    print('Best hyperparameters found are: {}'.format(hyperparameters))
+    hyperparameters = trained_model.best_hyperparameters
+    if hyperparameters is None:
+        hyperparameters = 'N/A: No hyperparameter search was performed'
+    print("""Best hyperparameters found are:
+        {}""".format(hyperparameters))
+
+    if trained_model.is_classification:
+        accuracy = trained_model.metrics['accuracy']
+        roc_auc = trained_model.metrics['roc_auc']
+        pr_auc = trained_model.metrics['pr_auc']
+
+        print("""{} metrics:
+            Accuracy: {}
+            ROC AUC: {}
+            PR AUC: {}""".format(model_name, accuracy, roc_auc, pr_auc))
+    elif trained_model.is_regression:
+        mean_squared_error = trained_model.metrics['mean_squared_error']
+        mean_absolute_error = trained_model.metrics['mean_absolute_error']
+        print("""{} metrics:
+            Mean Squared Error (MSE): {}
+            Mean Absolute Error (MAE): {}""".format(model_name, mean_squared_error, mean_absolute_error))

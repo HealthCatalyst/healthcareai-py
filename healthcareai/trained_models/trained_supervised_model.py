@@ -17,8 +17,10 @@ class TrainedSupervisedModel(object):
     This object contains:
         - trained estimator
         - trained linear estimator used for row level factor analysis
+        - column metadata including transformed feature columns, grain & predicted column
         - the fit data preparation pipeline used for transforming new data for prediction
         - calculated metrics
+        - test set actuals, predicted values/probabilities, predicted classes
     """
 
     def __init__(self,
@@ -46,7 +48,7 @@ class TrainedSupervisedModel(object):
         self._metric_by_name = metric_by_name
 
     @property
-    def model_name(self):
+    def algorithm_name(self):
         """ Model name extracted from the class type """
         model = model_evaluation.get_estimator_from_meta_estimator(self.model)
         name = type(model).__name__
@@ -54,7 +56,17 @@ class TrainedSupervisedModel(object):
         return name
 
     @property
-    def hyperparameters(self):
+    def is_classification(self):
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'classification'
+
+    @property
+    def is_regression(self):
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'regression'
+
+    @property
+    def best_hyperparameters(self):
         """ Best hyperparameters found if model is a meta estimator """
         return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
 
@@ -62,6 +74,17 @@ class TrainedSupervisedModel(object):
     def model_type(self):
         """ Model type (regression or classification) """
         return self._model_type
+
+    @property
+    def binary_classification_scores(self):
+        # TODO low priority, but test this
+        """ Returns the probability scores of the first class for a binary classification model. """
+        if self.is_regression:
+            raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
+
+        predictions = np.squeeze(self.test_set_predictions[:, 1])
+
+        return predictions
 
     @property
     def metrics(self):
@@ -95,10 +118,10 @@ class TrainedSupervisedModel(object):
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
         # make predictions returning probabity of a class or value of regression
-        if self.model_type == 'classification':
+        if self.is_classification:
             # Only save the prediction of one of the two classes
             y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
-        elif self.model_type == 'regression':
+        elif self.is_regression:
             y_predictions = self.model.predict(prepared_dataframe)
         else:
             raise HealthcareAIError('Model type appears to be neither regression or classification.')
@@ -277,9 +300,9 @@ class TrainedSupervisedModel(object):
 
         # Rename prediction column to default based on model type or given one
         if predicted_column_name is None:
-            if self.model_type == 'classification':
+            if self.is_classification:
                 predicted_column_name = 'PredictedProbNBR'
-            elif self.model_type == 'regression':
+            elif self.is_regression:
                 predicted_column_name = 'PredictedValueNBR'
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
 
@@ -309,16 +332,17 @@ class TrainedSupervisedModel(object):
         """
         # validate inputs
         if type(prediction_generator).__name__ != 'method':
-            raise HealthcareAIError('Use of this method requires a prediction generator from a trained supervised model')
+            raise HealthcareAIError(
+                'Use of this method requires a prediction generator from a trained supervised model')
 
         # Get predictions from given generator
         sam_df = prediction_generator(prediction_dataframe)
 
         # Rename prediction column to default based on model type or given one
         if predicted_column_name is None:
-            if self.model_type == 'classification':
+            if self.is_classification:
                 predicted_column_name = 'PredictedProbNBR'
-            elif self.model_type == 'regression':
+            elif self.is_regression:
                 predicted_column_name = 'PredictedValueNBR'
 
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
@@ -330,19 +354,46 @@ class TrainedSupervisedModel(object):
         self.validate_classification()
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
 
-    def roc(self):
-        """ Prints out ROC details and returns them with cutoffs. """
+    def roc(self, print_output=True):
+        """
+        Prints out ROC details and returns them with cutoffs.
+        
+        Note this is a simple subset of TrainedSupervisedModel.metrics()
+        Args:
+            print_output (bool): True (default) to print a table of output.
+
+        Returns:
+            dict: A subset of TrainedSupervisedModel.metrics() that are ROC specific
+        """
         self.validate_classification()
-        # Get probability of first class (the predictions are probabilities for each class)
-        predictions = np.squeeze(self.test_set_predictions[:, 1])
-        roc = model_evaluation.compute_roc(self.test_set_actual, predictions)
+        metrics = self._metric_by_name
+        roc = {
+            'roc_auc': metrics['roc_auc'],
+            'best_roc_cutoff': metrics['best_roc_cutoff'],
+            'best_true_positive_rate': metrics['best_true_positive_rate'],
+            'best_false_positive_rate': metrics['best_false_positive_rate'],
+            'roc_thresholds': metrics['roc_thresholds'],
+            'true_positive_rates': metrics['true_positive_rates'],
+            'false_positive_rates': metrics['false_positive_rates'],
+        }
+        # roc = self._metric_by_name
 
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (
-            roc['best_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+        if print_output:
+            print("""\nReceiver Operating Characteristic (ROC):
+            Area under curve (ROC AUC): {:0.2f}
+            Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}""".format(
+                roc['roc_auc'], roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
 
-        print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-        for i in range(len(roc['thresholds'])):
-            print('%-7.2f %-6.2f %-6.2f' % (roc['thresholds'][i], roc['tpr'][i], roc['fpr'][i]))
+            print('|--------------------------------|')
+            print('|               ROC              |')
+            print('|  Threshhold  |  TPR   |  FPR   |')
+            print('|--------------|--------|--------|')
+            for i in range(len(roc['roc_thresholds'])):
+                marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
+                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(marker, roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+            print('|--------------------------------|')
+            print('|  *** Ideal cutoff              |')
+            print('|--------------------------------|')
 
         return roc
 
@@ -351,19 +402,45 @@ class TrainedSupervisedModel(object):
         self.validate_classification()
         model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
 
-    def pr(self):
-        """ Prints out PR details and returns them with cutoffs. """
+    def pr(self, print_output=True):
+        """
+        Prints out PR details and returns them with cutoffs.
+
+        Note this is a simple subset of TrainedSupervisedModel.metrics()
+        Args:
+            print_output (bool): True (default) to print a table of output.
+
+        Returns:
+            dict: A subset of TrainedSupervisedModel.metrics() that are PR specific
+        """
         self.validate_classification()
-        pr = model_evaluation.compute_pr(self.test_set_class_labels, self.test_set_actual)
-        print(pr)
+        metrics = self._metric_by_name
+        pr = {
+            'pr_auc': metrics['pr_auc'],
+            'best_pr_cutoff': metrics['best_pr_cutoff'],
+            'best_precision': metrics['best_precision'],
+            'best_recall': metrics['best_recall'],
+            'pr_thresholds': metrics['pr_thresholds'],
+            'precisions': metrics['precisions'],
+            'recalls': metrics['recalls'],
+        }
 
-        print('Area under Precision Recall curve (AU_PR): {}'.format(pr['PR_AUC']))
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-              % (pr['best_cutoff'], pr['best_precision'], pr['best_recall']))
+        if print_output:
+            print("""\nPrecision-Recall:
+        Area under Precision Recall curve (PR AUC): {:0.2f}
+        Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}""".format(
+        pr['pr_auc'], pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
 
-        print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-        for i in range(len(pr['thresholds'])):
-            print('%5.2f %6.2f %10.2f' % (pr['thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+            print('|---------------------------------|')
+            print('|   Precision-Recall Thresholds   |')
+            print('| Threshhold | Precision | Recall |')
+            print('|------------|-----------|--------|')
+            for i in range(len(pr['pr_thresholds'])):
+                marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
+                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(marker, pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+            print('|---------------------------------|')
+            print('|  *** Ideal cutoff               |')
+            print('|---------------------------------|')
 
         return pr
 

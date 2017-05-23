@@ -48,6 +48,15 @@ class AdvancedSupervisedModelTrainer(object):
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
+    @property
+    def is_classification(self):
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'classification'
+
+    @property
+    def is_regression(self):
+        """ easy check to consolidate magic strings in all the model type switches """
+        return self.model_type == 'regression'
 
     def feature_scaling(self, columns_to_scale):
         # TODO convert to fit transform
@@ -87,22 +96,9 @@ class AdvancedSupervisedModelTrainer(object):
             self.X_test.shape,
             self.y_test.shape))
 
-    def save_output_to_csv(self, filename, output):
-        # TODO likely deprecate this and use pandas in examples? - ask CAFE
-        # TODO timeRan is borked
-        output_dataframe = pd.DataFrame([(timeRan, self.model_type, output['modelLabels'],
-                                          output['gridSearch_BestScore'],
-                                          output['gridSearch_ScoreMetric'],) \
-                                         + x for x in list(output.items())], \
-                                        columns=['TimeStamp', 'ModelType',
-                                                 'ModelLabels', 'BestScore',
-                                                 'BestScoreMetric', 'Metric',
-                                                 'MetricValue']).set_index('TimeStamp')
-        # save files locally #
-        output_dataframe.to_csv(filename + '.txt', header=False)
-
     def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
         # TODO stub
+        self.validate_regression('Ensemble Regression')
         raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
 
     def ensemble_classification(self, scoring_metric='roc_auc', trained_model_by_name=None):
@@ -110,6 +106,7 @@ class AdvancedSupervisedModelTrainer(object):
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
         """
+        self.validate_classification('Ensemble Classification')
         self.validate_score_metric_for_number_of_classes(scoring_metric)
         score_by_name = {}
 
@@ -148,6 +145,7 @@ class AdvancedSupervisedModelTrainer(object):
         return best_model
 
     def validate_score_metric_for_number_of_classes(self, metric):
+        # TODO test this
         """
         Check that a user's choice of scoring metric makes sense with the number of prediction classes
 
@@ -159,27 +157,30 @@ class AdvancedSupervisedModelTrainer(object):
         classes = count_unique_elements_in_column(self.dataframe, self.predicted_column)
         if classes is 2:
             pass
-        elif classes > 2 and metric is 'roc_auc':
+        elif classes > 2 and metric in ['pr_auc', 'roc_auc']:
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
 
-    def metrics(self, trained_model):
+    def metrics(self, trained_sklearn_estimator):
         """
-        Given a trained model, calculate the appropriate performance metrics.
+        Given a trained estimator, calculate the appropriate performance metrics.
         
         This is intended to be a thin wrapper around the toolbox metrics.
 
         Args:
-            trained_model (BaseEstimator): A scikit-learn trained algorithm
+            trained_sklearn_estimator (sklearn.base.BaseEstimator): A scikit-learn trained algorithm
         """
         performance_metrics = None
 
         if self.model_type is 'classification':
-            performance_metrics = model_evaluation.calculate_classification_metrics(trained_model,
-                                                                                    self.X_test,
-                                                                                    self.y_test)
+            performance_metrics = model_evaluation.calculate_binary_classification_metrics(
+                trained_sklearn_estimator,
+                self.X_test,
+                self.y_test,
+
+            )
         elif self.model_type is 'regression':
-            performance_metrics = model_evaluation.calculate_regression_metrics(trained_model, self.X_test, self.y_test)
+            performance_metrics = model_evaluation.calculate_regression_metrics(trained_sklearn_estimator, self.X_test, self.y_test)
 
         return performance_metrics
 
@@ -188,14 +189,16 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
         hyperparameter grid.
         """
+        self.validate_classification('Logistic Regression')
         if hyperparameter_grid is None:
-            hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100]}
+            hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100], 'class_weight': [None, 'balanced']}
 
         algorithm = prepare_randomized_search(
             LogisticRegression,
             scoring_metric,
             hyperparameter_grid,
-            randomized_search)
+            randomized_search,
+            class_weight='balanced')
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -207,6 +210,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
         hyperparameter grid.
         """
+        self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
             hyperparameter_grid = {"fit_intercept": [True, False]}
             pass
@@ -226,6 +230,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
         hyperparameter grid.
         """
+        self.validate_classification('KNN')
         if hyperparameter_grid is None:
             hyperparameter_grid = {'n_neighbors': list(range(5, 26)), 'weights': ['uniform', 'distance']}
 
@@ -246,13 +251,12 @@ class AdvancedSupervisedModelTrainer(object):
                       hyperparameter_grid=None,
                       randomized_search=True):
         """A convenience method that allows a user to simply call .random_forest() and get the right one."""
-        # TODO rename to random_forest after the other is deprecated
-        if self.model_type == 'classification':
+        if self.is_classification:
             return self.random_forest_classifier(trees=trees,
                                                  scoring_metric=scoring_metric,
                                                  hyperparameter_grid=hyperparameter_grid,
                                                  randomized_search=randomized_search)
-        elif self.model_type == 'regression':
+        elif self.is_regression:
             return self.random_forest_regressor(trees=trees,
                                                 scoring_metric=scoring_metric,
                                                 hyperparameter_grid=hyperparameter_grid,
@@ -264,6 +268,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
         default hyperparameter grid.
         """
+        self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
@@ -289,6 +294,7 @@ class AdvancedSupervisedModelTrainer(object):
         A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
         default hyperparameter grid.
         """
+        self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
             max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
                                                                                self.model_type)
@@ -310,18 +316,17 @@ class AdvancedSupervisedModelTrainer(object):
         algorithm.fit(self.X_train, self.y_train)
 
         # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
-        # test set is saved inside the object, but it allows for generation of plots later.
-        # TODO Pickle the cutoff lists of thresholds/TPR/FPR/Sens/Spec so that ROC plots can be generated on the fly
-        # TODO see https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
+        # test set is saved inside the object as well as the calculated thresholds.
+        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
         # PEP 8
-        test_set_predicted = None
+        test_set_predictions = None
         test_set_class_labels = None
-        if self.model_type == 'classification':
+        if self.is_classification:
             # Save both the probabilities and labels
-            test_set_predicted = algorithm.predict_proba(self.X_test)
+            test_set_predictions = algorithm.predict_proba(self.X_test)
             test_set_class_labels = algorithm.predict(self.X_test)
-        elif self.model_type == 'regression':
-            test_set_predicted = algorithm.predict(self.X_test)
+        elif self.is_regression:
+            test_set_predictions = algorithm.predict(self.X_test)
 
         if include_factor_model:
             factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
@@ -336,13 +341,22 @@ class AdvancedSupervisedModelTrainer(object):
             column_names=self.X_test.columns.values,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
-            test_set_predictions=test_set_predicted,
+            test_set_predictions=test_set_predictions,
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm))
 
         return trained_supervised_model
 
+    def validate_regression(self, model_name=None):
+        if not self.is_regression:
+            raise HealthcareAIError('A {} model can only be trained with a regression trainer.'.format(model_name))
+
+    def validate_classification(self, model_name=None):
+        if not self.is_classification:
+            raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
+
     def _console_log(self, message):
         if self.verbose:
             print('DSM: {}'.format(message))
+

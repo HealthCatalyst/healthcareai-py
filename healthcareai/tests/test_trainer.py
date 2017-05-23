@@ -38,9 +38,11 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.5, 0.7, result['roc_auc'])
+        helpers.assertBetween(self, 0.5, 0.8, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
+    # TODO see if there is a way to make this test work - it fails on travisCI because of this:
+    # TODO > _tkinter.TclError: no display name and no $DISPLAY environment variable
     @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
                      "Skipping this on Travis CI.")
     def test_random_forest_classification(self):
@@ -49,7 +51,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.65, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.65, 0.9, result['roc_auc'])
         helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
@@ -82,9 +84,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_lr.metrics
 
-        # TODO is this even a valid test at a 0.5 auc?
-        helpers.assertBetween(self, 0.5, 0.6, result['roc_auc'])
-        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_classification(self):
         trained_ensemble = self.classification_trainer.ensemble()
@@ -92,8 +93,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
-        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):
         self.assertRaises(HealthcareAIError, self.regression_trainer.ensemble)
