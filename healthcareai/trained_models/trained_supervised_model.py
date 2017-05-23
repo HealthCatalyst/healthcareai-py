@@ -379,10 +379,13 @@ class TrainedSupervisedModel(object):
         # roc = self._metric_by_name
 
         if print_output:
-            print("""\nReceiver Operating Characteristic (ROC):
-            Area under curve (ROC AUC): {:0.2f}
-            Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}""".format(
-                roc['roc_auc'], roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+            print(('\nReceiver Operating Characteristic (ROC):\n'
+                   '    Area under curve (ROC AUC): {:0.2f}\n'
+                   '    Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}').format(
+                roc['roc_auc'],
+                roc['best_roc_cutoff'],
+                roc['best_true_positive_rate'],
+                roc['best_false_positive_rate']))
 
             print('|--------------------------------|')
             print('|               ROC              |')
@@ -390,7 +393,11 @@ class TrainedSupervisedModel(object):
             print('|--------------|--------|--------|')
             for i in range(len(roc['roc_thresholds'])):
                 marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
-                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(marker, roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(
+                    marker,
+                    roc['roc_thresholds'][i],
+                    roc['true_positive_rates'][i],
+                    roc['false_positive_rates'][i]))
             print('|--------------------------------|')
             print('|  *** Ideal cutoff              |')
             print('|--------------------------------|')
@@ -426,10 +433,13 @@ class TrainedSupervisedModel(object):
         }
 
         if print_output:
-            print("""\nPrecision-Recall:
-        Area under Precision Recall curve (PR AUC): {:0.2f}
-        Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}""".format(
-        pr['pr_auc'], pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
+            print(('\nPrecision-Recall:\n'
+                   '    Area under Precision Recall curve (PR AUC): {:0.2f}\n'
+                   '    Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}').format(
+                pr['pr_auc'],
+                pr['best_pr_cutoff'],
+                pr['best_precision'],
+                pr['best_recall']))
 
             print('|---------------------------------|')
             print('|   Precision-Recall Thresholds   |')
@@ -437,7 +447,11 @@ class TrainedSupervisedModel(object):
             print('|------------|-----------|--------|')
             for i in range(len(pr['pr_thresholds'])):
                 marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
-                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(marker, pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(
+                    marker,
+                    pr['pr_thresholds'][i],
+                    pr['precisions'][i],
+                    pr['recalls'][i]))
             print('|---------------------------------|')
             print('|  *** Ideal cutoff               |')
             print('|---------------------------------|')

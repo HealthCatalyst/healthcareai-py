@@ -28,6 +28,11 @@ class SupervisedModelTrainer(object):
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
 
+    @property
+    def clean_dataframe(self):
+        """ Returns the dataframe """
+        return self._advanced_trainer.dataframe
+
     def random_forest(self, save_plot=False):
         """ Train a random forest model and print out the model performance metrics. """
         # TODO Convenience method. Probably not needed?
@@ -39,7 +44,7 @@ class SupervisedModelTrainer(object):
     def knn(self):
         """ Train a knn model and print out the model performance metrics. """
         model_name = 'KNN'
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
@@ -52,7 +57,7 @@ class SupervisedModelTrainer(object):
     def random_forest_regression(self):
         """ Train a random forest regression model and print out the model performance metrics. """
         model_name = 'Random Forest Regression'
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
@@ -66,7 +71,7 @@ class SupervisedModelTrainer(object):
     def random_forest_classification(self, save_plot=False):
         """ Train a random forest classification model, print out performance metrics and show a ROC plot. """
         model_name = 'Random Forest Classification'
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
@@ -82,7 +87,7 @@ class SupervisedModelTrainer(object):
     def logistic_regression(self):
         """ Train a logistic regression model and print out the model performance metrics. """
         model_name = 'Logistic Regression'
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
@@ -94,7 +99,7 @@ class SupervisedModelTrainer(object):
     def linear_regression(self):
         """ Train a linear regression model and print out the model performance metrics. """
         model_name = 'Linear Regression'
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the model and display the model metrics
@@ -106,7 +111,7 @@ class SupervisedModelTrainer(object):
     def ensemble(self):
         """ Train a ensemble model and print out the model performance metrics. """
         model_name = 'ensemble {}'.format(self._advanced_trainer.model_type)
-        print('Training {}'.format(model_name))
+        print('\nTraining {}'.format(model_name))
         t0 = time.time()
 
         # Train the appropriate ensemble of models and display the model metrics
@@ -139,7 +144,7 @@ def print_training_timer(model_name, start_timestamp):
     """
     stop_time = time.time()
     delta_time = round(stop_time - start_timestamp, 2)
-    print('Trained a {} model in {} seconds'.format(model_name, delta_time))
+    print('    Trained a {} model in {} seconds'.format(model_name, delta_time))
 
 
 def print_training_results(model_name, t0, trained_model):
@@ -155,21 +160,20 @@ def print_training_results(model_name, t0, trained_model):
     hyperparameters = trained_model.best_hyperparameters
     if hyperparameters is None:
         hyperparameters = 'N/A: No hyperparameter search was performed'
-    print("""Best hyperparameters found are:
-        {}""".format(hyperparameters))
+    print('Best hyperparameters found are:\n    {}'.format(hyperparameters))
 
     if trained_model.is_classification:
         accuracy = trained_model.metrics['accuracy']
         roc_auc = trained_model.metrics['roc_auc']
         pr_auc = trained_model.metrics['pr_auc']
-
-        print("""{} metrics:
-            Accuracy: {}
-            ROC AUC: {}
-            PR AUC: {}""".format(model_name, accuracy, roc_auc, pr_auc))
+        print('{} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
+            model_name,
+            accuracy, roc_auc,
+            pr_auc))
     elif trained_model.is_regression:
         mean_squared_error = trained_model.metrics['mean_squared_error']
         mean_absolute_error = trained_model.metrics['mean_absolute_error']
-        print("""{} metrics:
-            Mean Squared Error (MSE): {}
-            Mean Absolute Error (MAE): {}""".format(model_name, mean_squared_error, mean_absolute_error))
+        print('{} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
+            model_name,
+            mean_squared_error,
+            mean_absolute_error))
