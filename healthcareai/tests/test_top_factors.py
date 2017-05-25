@@ -3,7 +3,7 @@ import pandas as pd
 
 import healthcareai.tests.helpers as helpers
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 
 class TestTopFactors(unittest.TestCase):

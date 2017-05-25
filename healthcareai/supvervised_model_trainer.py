@@ -2,7 +2,7 @@ import time
 
 import healthcareai.common.model_eval as hcaieval
 import healthcareai.pipelines.data_preparation as pipelines
-from healthcareai.advanced_trainer import AdvancedSupervisedModelTrainer
+from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
 
 
 class SupervisedModelTrainer(object):

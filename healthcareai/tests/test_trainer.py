@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 import healthcareai.tests.helpers as helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 

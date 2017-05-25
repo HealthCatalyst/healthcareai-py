@@ -1,5 +1,5 @@
 import pandas as pd
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 
 def main():

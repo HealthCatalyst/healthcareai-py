@@ -14,7 +14,7 @@ import pandas as pd
 import sqlalchemy
 import sqlite3
 
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.model_eval as hcaieval
 import healthcareai.common.write_predictions_to_database as hcaidb
