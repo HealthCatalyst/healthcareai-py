@@ -13,6 +13,8 @@ class SupervisedModelTrainer(object):
         self.grain_column = grain_column,
 
         # Build the pipeline
+        # TODO This pipeline may drop nulls in prediction rows if impute=False
+        # TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276
         pipeline = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
 
         # Run the raw data through the data preparation pipeline
@@ -30,7 +32,7 @@ class SupervisedModelTrainer(object):
 
     @property
     def clean_dataframe(self):
-        """ Returns the dataframe """
+        """ Returns the dataframe after the preparation pipeline (imputation and such) """
         return self._advanced_trainer.dataframe
 
     def random_forest(self, save_plot=False):
@@ -110,6 +112,7 @@ class SupervisedModelTrainer(object):
 
     def ensemble(self):
         """ Train a ensemble model and print out the model performance metrics. """
+        # TODO consider making a scoring parameter (which will necessitate some more logic
         model_name = 'ensemble {}'.format(self._advanced_trainer.model_type)
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -163,17 +166,13 @@ def print_training_results(model_name, t0, trained_model):
     print('Best hyperparameters found are:\n    {}'.format(hyperparameters))
 
     if trained_model.is_classification:
-        accuracy = trained_model.metrics['accuracy']
-        roc_auc = trained_model.metrics['roc_auc']
-        pr_auc = trained_model.metrics['pr_auc']
         print('{} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
             model_name,
-            accuracy, roc_auc,
-            pr_auc))
+            trained_model.metrics['accuracy'],
+            trained_model.metrics['roc_auc'],
+            trained_model.metrics['pr_auc']))
     elif trained_model.is_regression:
-        mean_squared_error = trained_model.metrics['mean_squared_error']
-        mean_absolute_error = trained_model.metrics['mean_absolute_error']
         print('{} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
             model_name,
-            mean_squared_error,
-            mean_absolute_error))
+            trained_model.metrics['mean_squared_error'],
+            trained_model.metrics['mean_absolute_error']))
