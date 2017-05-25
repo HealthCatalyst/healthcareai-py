@@ -26,7 +26,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
         df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        columns_to_remove = ['PatientID']
         df.drop(columns_to_remove, axis=1, inplace=True)
 
         np.random.seed(42)
@@ -61,9 +61,9 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
 
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
         # Drop uninformative columns
-        df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
@@ -83,7 +83,7 @@ class TestRandomForestClassification(unittest.TestCase):
 
     def test_random_foarest_tuning_2_column_raises_error(self):
         cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'),
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'),
                          na_values=['None'],
                          usecols=cols)
 
@@ -99,10 +99,10 @@ class TestRandomForestClassification(unittest.TestCase):
 
 class TestLogisticRegression(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
 
         # Drop uninformative columns
-        df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
@@ -120,13 +120,13 @@ class TestLogisticRegression(unittest.TestCase):
 
 class TestHelpers(unittest.TestCase):
     def test_class_counter_on_binary(self):
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
         df.dropna(axis=0, how='any', inplace=True)
         result = count_unique_elements_in_column(df, 'ThirtyDayReadmitFLG')
         self.assertEqual(result, 2)
 
     def test_class_counter_on_many(self):
-        df = pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+        df = pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
         result = count_unique_elements_in_column(df, 'PatientEncounterID')
         self.assertEqual(result, 1000)
 

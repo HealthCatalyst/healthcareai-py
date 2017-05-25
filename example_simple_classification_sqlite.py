@@ -4,10 +4,10 @@ from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 def main():
     # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+    dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Look at the first few rows of your dataframe after the data preparation
     print('\n\n-------------------[ training data ]----------------------------------------------------\n')
@@ -27,10 +27,10 @@ def main():
     # trained_knn.roc_curve_plot()
 
     # TODO swap out fake data for real databaes sql
-    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    columns_to_remove = ['PatientID', 'InTestWindowFLG']
+    columns_to_remove = ['PatientID']
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     print('\n\n')

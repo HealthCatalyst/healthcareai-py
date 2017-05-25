@@ -12,7 +12,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         training_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        training_df.drop(['PatientID'], axis=1, inplace=True)
 
         regression_trainer = SupervisedModelTrainer(
             training_df,
@@ -36,7 +36,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.prediction_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        columns_to_remove = ['PatientID']
         cls.prediction_df.drop(columns_to_remove, axis=1, inplace=True)
 
         # Create various outputs

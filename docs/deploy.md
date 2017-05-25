@@ -12,9 +12,6 @@
 Only if you've already completed these steps:
 
 -   You've found a model work that works well on your data
--   You've created a column called InTestWindowFLG (or something
-    similar), where 'Y' denotes rows that need a prediction and 'N' for
-    rows that train the model.
 -   You've created the SQL table structure to receive predictions
 
 For classification predictions:
@@ -104,7 +101,6 @@ Example code:
 p = DeploySupervisedModel(model_type='regression',
                           dataframe=df,
                           grain_column='PatientEncounterID',
-                          window_column='InTestWindowFLG',
                           predicted_column='LDLNBR',
                           impute=True,
                           debug=False)
@@ -186,7 +182,6 @@ def main():
     p = DeploySupervisedModel(model_type='regression',
                               datafrme=df,
                               grain_column='PatientEncounterID',
-                              window_column='InTestWindowFLG',
                               predicted_column='LDLNBR',
                               impute=True,
                               debug=False)

@@ -15,10 +15,10 @@ def main():
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+    dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Step 1: Prepare the data using optional imputation. There are two options for this:
     ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification

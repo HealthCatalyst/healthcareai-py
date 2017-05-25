@@ -154,7 +154,7 @@ def main():
     print(df.dtypes)
 
     # Drop columns that won't help machine learning
-    df.drop(['PatientID','InTestWindowFLG'],axis=1,inplace=True)
+    df.drop(['PatientID'],axis=1,inplace=True)
 
     # Step 1: compare two models
     o = SupervisedModelTrainer(modeltype='classification',

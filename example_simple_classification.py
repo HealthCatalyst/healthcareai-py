@@ -22,7 +22,7 @@ import healthcareai.common.write_predictions_to_database as hcaidb
 
 def main():
     # Load data from a .csv file
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Load data from a MSSQL server
     server = 'localhost'
@@ -38,7 +38,7 @@ def main():
     dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+    dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Step 1: Setup healthcareai for training a model. This prepares your data for model building
     hcai_trainer = SupervisedModelTrainer(
@@ -109,10 +109,10 @@ def main():
     # trained_random_forest.save(saved_model_filename)
 
     # TODO swap out fake data for real databaes sql
-    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    columns_to_remove = ['PatientID', 'InTestWindowFLG']
+    columns_to_remove = ['PatientID']
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics

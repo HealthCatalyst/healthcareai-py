@@ -16,7 +16,7 @@ def main():
 
     # Load in data
     # CSV snippet for reading data into dataframe
-    df = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv',
+    df = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv',
                      na_values=['None'])
 
     # SQL snippet for reading data into dataframe

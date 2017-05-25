@@ -1,7 +1,15 @@
-"""This file is used to create and compare two models on a particular dataset.
-It provides examples of reading from both csv and SQL Server. Note that this
-example can be run as-is after installing healthcare.ai. After you have
-found that one of the models works well on your data, move to Example2
+"""Creates and compares regression models using sample clinical data.
+
+Please use this example to learn about healthcareai before moving on to the next example.
+After you have found that one of the models works well on your data, move to Example2
+
+If you have not installed healthcare.ai, refer to the instructions here:
+  http://healthcareai-py.readthedocs.io
+
+To run this example:
+  python3 example_simple_regression.py
+
+This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
 
@@ -12,12 +20,22 @@ import healthcareai.common.write_predictions_to_database as hcaidb
 
 def main():
     # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+
+    # Load data from a MSSQL server
+    server = 'localhost'
+    database = 'SAM'
+    table = 'DiabetesClincialSampleData'
+    schema = 'dbo'
+    query = """SELECT *
+                    FROM [SAM].[dbo].[DiabetesClincialSampleData]
+                    -- In this step, just grab rows that have a target
+                    WHERE ThirtyDayReadmitFLG is not null"""
+    engine = hcaidb.build_mssql_engine(server=server, database=database)
+    dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
-
-    # TODO what about the test window flag - can we deprecate it?
+    dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Look at the first few rows of your dataframe after the data preparation
     print(dataframe.head())
@@ -44,10 +62,10 @@ def main():
     trained_linear_model.save(saved_model_filename)
 
     # TODO swap out fake data for real databaes sql
-    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    columns_to_remove = ['PatientID', 'InTestWindowFLG']
+    columns_to_remove = ['PatientID']
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
