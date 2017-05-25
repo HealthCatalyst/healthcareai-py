@@ -143,13 +143,13 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     return {'accuracy': accuracy, **roc, **pr}
 
 
-def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC', save=False):
+def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
     """
     Given a single or list of trained supervised models, plot a ROC or PR curve for each one
     
     Args:
         plot_type (str): 'ROC' (default) or 'PR' 
-        trained_supervised_model (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
+        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
     """
     # Input validation plus switching
     if plot_type == 'ROC':
@@ -162,11 +162,11 @@ def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC
     metrics_by_model = []
     # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
     # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-    if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
-        entry = {trained_supervised_model.algorithm_name: trained_supervised_model.metrics}
+    if type(trained_supervised_models).__name__ == 'TrainedSupervisedModel':
+        entry = {trained_supervised_models.algorithm_name: trained_supervised_models.metrics}
         metrics_by_model.append(entry)
-    elif isinstance(trained_supervised_model, list):
-        for model in trained_supervised_model:
+    elif isinstance(trained_supervised_models, list):
+        for model in trained_supervised_models:
             # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
             # if isinstance(trained_supervised_model, TrainedSupervisedModel):
             if type(model).__name__ != 'TrainedSupervisedModel':

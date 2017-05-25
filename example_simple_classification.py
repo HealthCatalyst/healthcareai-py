@@ -1,6 +1,6 @@
 """Creates and compares classification models using sample clinical data.
 
-Please use this example to learn about the framework before moving on to the next example.
+Please use this example to learn about healthcareai before moving on to the next example.
 
 If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
@@ -21,15 +21,24 @@ import healthcareai.common.write_predictions_to_database as hcaidb
 
 
 def main():
-    # CSV snippet for reading data into dataframe
+    # Load data from a .csv file
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+
+    # Load data from a MSSQL server
+    server = 'localhost'
+    database = 'SAM'
+    table = 'DiabetesClincialSampleData'
+    schema = 'dbo'
+    query = """SELECT *
+                FROM [SAM].[dbo].[DiabetesClincialSampleData]
+                -- In this step, just grab rows that have a target
+                WHERE ThirtyDayReadmitFLG is not null"""
+
+    engine = hcaidb.build_mssql_engine(server=server, database=database)
+    dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
-
-    # Look at the first few rows of your dataframe after the data preparation
-    print('\n\n-------------------[ training data ]----------------------------------------------------\n')
-    print(dataframe.head())
 
     # Step 1: Setup healthcareai for training a model. This prepares your data for model building
     hcai_trainer = SupervisedModelTrainer(
@@ -40,23 +49,39 @@ def main():
         impute=True,
         verbose=False)
 
+    # Look at the first few rows of your dataframe after loading the data
+    print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
+    print(hcai_trainer.clean_dataframe.head())
+
     # Train and evaluate a KNN model
     trained_knn = hcai_trainer.knn()
     trained_knn.roc()
     trained_knn.roc_curve_plot()
+    trained_knn.pr()
+    trained_knn.pr_curve_plot()
 
     # Train and evaluate a logistic regression model
-    trained_logistic_regression = hcai_trainer.logistic_regression()
-    trained_logistic_regression.roc()
-    trained_logistic_regression.roc_curve_plot()
+    trained_rf = hcai_trainer.logistic_regression()
+    trained_rf.roc()
+    trained_rf.roc_curve_plot()
+    trained_rf.pr()
+    trained_rf.pr_curve_plot()
 
+    # Train and evaluate a random forest model
     # Train a random forest model and save the feature importance plot
-    trained_random_forest = hcai_trainer.random_forest(save_plot=True)
+    trained_random_forest = hcai_trainer.random_forest(save_plot=False)
     trained_random_forest.roc()
     trained_random_forest.roc_curve_plot()
+    trained_random_forest.pr()
+    trained_random_forest.pr_curve_plot()
 
-    # Train a suite of built in algorithms to see which one looks best
+    # Have healthcareai train a suite algorithms (KNN, Random Forest, Logistic Regression) and automatically choose the
+    # best one
     trained_ensemble = hcai_trainer.ensemble()
+    trained_ensemble.roc()
+    trained_ensemble.roc_curve_plot()
+    trained_ensemble.pr()
+    trained_ensemble.pr_curve_plot()
 
     # # Evaluate the model with various plots
     # Create a single ROC plot from the trained model
@@ -67,13 +92,15 @@ def main():
 
     # Create a comparison ROC plot multiple models
     hcaieval.tsm_classification_comparison_plots(
-        trained_supervised_model=[trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble],
-        plot_type='ROC')
+        trained_supervised_models=[trained_random_forest, trained_knn, trained_rf, trained_ensemble],
+        plot_type='ROC',
+        save=False)
 
     # Create a comparison PR plot multiple models
     hcaieval.tsm_classification_comparison_plots(
-        trained_supervised_model=[trained_random_forest, trained_knn, trained_logistic_regression, trained_ensemble],
-        plot_type='PR')
+        trained_supervised_models=[trained_random_forest, trained_knn, trained_rf, trained_ensemble],
+        plot_type='PR',
+        save=False)
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     saved_model_filename = 'random_forest_2017-05-01.pkl'
@@ -102,7 +129,7 @@ def main():
     # # Make predictions. Please note that there are four different formats you can choose from. All are shown
     #    here, though you only need one.
 
-    ## Make some predictions
+    # ## Get predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
     print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
     print(predictions[0:5])

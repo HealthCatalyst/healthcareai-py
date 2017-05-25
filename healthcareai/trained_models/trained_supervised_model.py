@@ -352,7 +352,7 @@ class TrainedSupervisedModel(object):
     def roc_curve_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
     def roc(self, print_output=True):
         """
@@ -407,7 +407,7 @@ class TrainedSupervisedModel(object):
     def pr_curve_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
+        model_evaluation.tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
         """
