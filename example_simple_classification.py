@@ -14,9 +14,9 @@ import pandas as pd
 import sqlalchemy
 import sqlite3
 
+import healthcareai.trained_models.trained_supervised_model
 from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.model_eval as hcaieval
 import healthcareai.common.write_predictions_to_database as hcaidb
 
 
@@ -91,22 +91,19 @@ def main():
     trained_random_forest.pr_curve_plot()
 
     # Create a comparison ROC plot multiple models
-    hcaieval.tsm_classification_comparison_plots(
+    healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots(
         trained_supervised_models=[trained_random_forest, trained_knn, trained_rf, trained_ensemble],
         plot_type='ROC',
         save=False)
 
     # Create a comparison PR plot multiple models
-    hcaieval.tsm_classification_comparison_plots(
+    healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots(
         trained_supervised_models=[trained_random_forest, trained_knn, trained_rf, trained_ensemble],
         plot_type='PR',
         save=False)
 
     # Once you are happy with the result of the trained model, it is time to save the model.
-    saved_model_filename = 'random_forest_2017-05-01.pkl'
-
-    # Save the trained model
-    # trained_random_forest.save(saved_model_filename)
+    trained_random_forest.save()
 
     # TODO swap out fake data for real databaes sql
     prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
@@ -116,15 +113,9 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model(saved_model_filename)
+    trained_model = io_utilities.load_saved_model()
     # TODO swap this out for testing
     # trained_model = trained_random_forest
-
-    print('\n\n')
-    print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(
-        type(trained_model),
-        type(trained_model.model),
-        trained_model.metrics))
 
     # # Make predictions. Please note that there are four different formats you can choose from. All are shown
     #    here, though you only need one.

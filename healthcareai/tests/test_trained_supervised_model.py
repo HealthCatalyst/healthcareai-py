@@ -2,6 +2,8 @@ import unittest
 import pandas as pd
 
 import healthcareai.tests.helpers as helpers
+import healthcareai.trained_models.trained_supervised_model as hcai_tsm
+from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 
@@ -110,6 +112,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
     def test_roc_returns_dict(self):
         self.assertIsInstance(self.trained_lr.roc(), dict)
+
+    def test_comparison_plotter_raises_error_on_bad_plot_type(self):
+        self.assertRaises(HealthcareAIError,
+                          hcai_tsm.tsm_classification_comparison_plots,
+                          self.trained_lr,
+                          plot_type='bad_plot_type')
+
+    def test_comparison_plotter_raises_error_on_single_non_tsm(self):
+        self.assertRaises(HealthcareAIError,
+                          hcai_tsm.tsm_classification_comparison_plots,
+                          'foo')
+
+    def test_comparison_plotter_raises_error_on_list_with_non_tsm(self):
+        bad_list = ['foo']
+        self.assertRaises(HealthcareAIError,
+                          hcai_tsm.tsm_classification_comparison_plots,
+                          bad_list)
 
 
 if __name__ == '__main__':

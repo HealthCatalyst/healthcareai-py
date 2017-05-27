@@ -64,7 +64,7 @@ def prepare_fit_model_for_factors(model_type, x_train, y_train):
 
     if algorithm is not None:
         algorithm.fit(x_train, y_train)
-        save_object_as_pickle('factorlogit.pkl', algorithm)
+        save_object_as_pickle(algorithm, 'factorlogit.pkl')
 
     return algorithm
 

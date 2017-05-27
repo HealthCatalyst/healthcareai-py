@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as model_evaluation
 import healthcareai.common.top_factors as factors
+import healthcareai.trained_models.trained_supervised_model
 from healthcareai.common import helpers
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.common.helpers import count_unique_elements_in_column
@@ -125,7 +126,7 @@ class AdvancedSupervisedModelTrainer(object):
 
         for name, model in trained_model_by_name.items():
             # Unroll estimator from trained supervised model
-            estimator = model_evaluation.get_estimator_from_trained_supervised_model(model)
+            estimator = healthcareai.trained_models.trained_supervised_model.get_estimator_from_trained_supervised_model(model)
 
             # Get the score objects for the estimator
             score = self.metrics(estimator)

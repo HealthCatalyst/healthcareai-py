@@ -37,11 +37,8 @@ def main():
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
 
-    # Look at the first few rows of your dataframe after the data preparation
-    print(dataframe.head())
-
     # Step 1: Setup healthcareai for training a regression model.
-    hcai = SupervisedModelTrainer(
+    hcai_trainer = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='SystolicBPNBR',
         model_type='regression',
@@ -49,17 +46,18 @@ def main():
         impute=True,
         verbose=False)
 
+    # Look at the first few rows of your dataframe after loading the data
+    print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
+    print(hcai_trainer.clean_dataframe.head())
+
     # Train a linear regression model
-    trained_linear_model = hcai.linear_regression()
+    trained_linear_model = hcai_trainer.linear_regression()
 
     # Train a random forest model
-    trained_random_forest = hcai.random_forest_regression()
+    trained_random_forest = hcai_trainer.random_forest_regression()
 
     # Once you are happy with the result of the trained model, it is time to save the model.
-    saved_model_filename = 'linear_regression_2017-04-18.pkl'
-
-    # Save the trained model
-    trained_linear_model.save(saved_model_filename)
+    trained_linear_model.save()
 
     # TODO swap out fake data for real databaes sql
     prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
@@ -69,14 +67,10 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model(saved_model_filename)
+    trained_model = io_utilities.load_saved_model()
 
     # TODO swap this out for testing
     trained_model = trained_linear_model
-    print('\n\n')
-    print('Trained Model Loaded\n   Type: {}\n   Model type: {}\n   Metrics: {}'.format(type(trained_model),
-                                                                                        type(trained_model.model),
-                                                                                        trained_model.metrics))
 
     # Make some predictions
     predictions = trained_model.make_predictions(prediction_dataframe)

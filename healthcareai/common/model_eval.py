@@ -1,11 +1,10 @@
 import os
-import sklearn
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-
+import sklearn
 import sklearn.metrics as skmetrics
+from matplotlib import pyplot as plt
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
@@ -143,49 +142,6 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     return {'accuracy': accuracy, **roc, **pr}
 
 
-def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
-    """
-    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
-    
-    Args:
-        plot_type (str): 'ROC' (default) or 'PR' 
-        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
-    """
-    # Input validation plus switching
-    if plot_type == 'ROC':
-        plotter = roc_plot_from_thresholds
-    elif plot_type == 'PR':
-        plotter = pr_plot_from_thresholds
-    else:
-        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
-
-    metrics_by_model = []
-    # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
-    # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-    if type(trained_supervised_models).__name__ == 'TrainedSupervisedModel':
-        entry = {trained_supervised_models.algorithm_name: trained_supervised_models.metrics}
-        metrics_by_model.append(entry)
-    elif isinstance(trained_supervised_models, list):
-        for model in trained_supervised_models:
-            # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
-            # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-            if type(model).__name__ != 'TrainedSupervisedModel':
-                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
-
-            entry = {model.algorithm_name: model.metrics}
-
-            metrics_by_model.append(entry)
-
-            # TODO so, you could check for different GUIDs that could be saved in each TSM!
-            # The assumption here is that each TSM was trained on the same train test split,
-            # which happens when instantiating SupervisedModelTrainer
-    else:
-        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
-
-    # Plot with the selected plotter
-    plotter(metrics_by_model, save=save, debug=False)
-
-
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
@@ -283,19 +239,6 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.show()
 
 
-def plot_rf_from_tsm(trained_supervised_model, x_train, save=False):
-    """
-    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph
-    Args:
-        trained_supervised_model (TrainedSupervisedModel): 
-        x_train (numpy.array): A 2D numpy array that was used for training 
-        save (bool): True to save the plot, false to display it in a blocking thread
-    """
-    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
-    column_names = trained_supervised_model.column_names
-    plot_random_forest_feature_importance(model, x_train, column_names, save=save)
-
-
 def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
     """
     Given a scikit learn random forest classifier, an x_train array, the feature names save or display a feature
@@ -350,33 +293,6 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         plt.close(figure)
     else:
         plt.show()
-
-
-def get_estimator_from_trained_supervised_model(trained_supervised_model):
-    """
-    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
-    Args:
-        trained_supervised_model (TrainedSupervisedModel): 
-
-    Returns:
-        sklearn.base.BaseEstimator: 
-
-    """
-    # Validate input is a TSM
-    if type(trained_supervised_model).__name__ != 'TrainedSupervisedModel':
-        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
-    """
-    1. check if it is a TSM
-        Y: proceed
-        N: raise error?
-    2. check if tsm.model is a meta estimator
-        Y: extract best_estimator_
-        N: return tsm.model
-    """
-    # Check if tsm.model is a meta estimator
-    result = get_estimator_from_meta_estimator(trained_supervised_model.model)
-
-    return result
 
 
 def get_estimator_from_meta_estimator(model):

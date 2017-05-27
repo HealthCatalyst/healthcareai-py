@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
+import time
 
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.model_eval as model_evaluation
@@ -91,17 +91,24 @@ class TrainedSupervisedModel(object):
         """ Return the metrics that were calculated when the model was trained. """
         return self._metric_by_name
 
-    def save(self, filename):
+    def save(self, filename=None, debug=True):
         """
         Save this object to a pickle file with the given file name
         
         Args:
-            filename (str): Name of the file
+            filename (str): Optional filename override. Defaults to `timestamp_<MODEL_TYPE>_<ALGORITHM_NAME>.pkl`. For
+                example: `2017-05-27T09-12-30_regression_LinearRegression.pkl`
+            debug (bool): Print debug output to console by default
         """
 
-        # TODO should this timestamp a model name automatically? (for example 2017-04-26_01.33.55_random_forest.pkl)
-        io_utilities.save_object_as_pickle(filename, self)
-        print('Model saved as {}'.format(filename))
+        if filename is None:
+            time_string = time.strftime("%Y-%m-%dT%H-%M-%S")
+            filename = '{}_{}_{}.pkl'.format(time_string, self.model_type, self.algorithm_name)
+
+        io_utilities.save_object_as_pickle(self, filename)
+
+        if debug:
+            print('Trained {} model saved as {}'.format(self.algorithm_name, filename))
 
     def make_predictions(self, dataframe):
         """
@@ -352,7 +359,7 @@ class TrainedSupervisedModel(object):
     def roc_curve_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
     def roc(self, print_output=True):
         """
@@ -407,7 +414,7 @@ class TrainedSupervisedModel(object):
     def pr_curve_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
         """
@@ -466,3 +473,83 @@ class TrainedSupervisedModel(object):
         # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
             raise HealthcareAIError('This function only runs on a binary classification model.')
+
+
+def get_estimator_from_trained_supervised_model(trained_supervised_model):
+    """
+    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+
+    """
+    # Validate input is a TSM
+    if not isinstance(trained_supervised_model, TrainedSupervisedModel):
+        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
+    """
+    1. check if it is a TSM
+        Y: proceed
+        N: raise error?
+    2. check if tsm.model is a meta estimator
+        Y: extract best_estimator_
+        N: return tsm.model
+    """
+    # Check if tsm.model is a meta estimator
+    result = model_evaluation.get_estimator_from_meta_estimator(trained_supervised_model.model)
+
+    return result
+
+
+def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
+    """
+    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
+    
+    Args:
+        plot_type (str): 'ROC' (default) or 'PR' 
+        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
+    """
+    # Input validation plus switching
+    if plot_type == 'ROC':
+        plotter = model_evaluation.roc_plot_from_thresholds
+    elif plot_type == 'PR':
+        plotter = model_evaluation.pr_plot_from_thresholds
+    else:
+        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
+
+    metrics_by_model = []
+
+    if isinstance(trained_supervised_models, TrainedSupervisedModel):
+        entry = {trained_supervised_models.algorithm_name: trained_supervised_models.metrics}
+        metrics_by_model.append(entry)
+    elif isinstance(trained_supervised_models, list):
+        for model in trained_supervised_models:
+            if not isinstance(model, TrainedSupervisedModel):
+                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'.format(model))
+
+            entry = {model.algorithm_name: model.metrics}
+
+            metrics_by_model.append(entry)
+
+            # TODO so, you could check for different GUIDs that could be saved in each TSM!
+            # The assumption here is that each TSM was trained on the same train test split,
+            # which happens when instantiating SupervisedModelTrainer
+    else:
+        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
+
+    # Plot with the selected plotter
+    plotter(metrics_by_model, save=save, debug=False)
+
+
+def plot_rf_from_tsm(trained_supervised_model, x_train, save=False):
+    """
+    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+        x_train (numpy.array): A 2D numpy array that was used for training 
+        save (bool): True to save the plot, false to display it in a blocking thread
+    """
+    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
+    column_names = trained_supervised_model.column_names
+    model_evaluation.plot_random_forest_feature_importance(model, x_train, column_names, save=save)

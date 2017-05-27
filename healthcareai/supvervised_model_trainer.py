@@ -2,6 +2,7 @@ import time
 
 import healthcareai.common.model_eval as hcaieval
 import healthcareai.pipelines.data_preparation as pipelines
+import healthcareai.trained_models.trained_supervised_model
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
 
 
@@ -82,7 +83,7 @@ class SupervisedModelTrainer(object):
         print_training_results(model_name, t0, trained_model)
 
         # Save or show the feature importance graph
-        hcaieval.plot_rf_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
+        healthcareai.trained_models.trained_supervised_model.plot_rf_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
 
         return trained_model
 
