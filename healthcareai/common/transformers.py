@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from imblearn.over_sampling import RandomOverSampler
 
 from sklearn.base import TransformerMixin
+from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 
 
@@ -48,8 +48,12 @@ class DataFrameImputer(TransformerMixin):
 
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
+    # TODO Note that this makes healthcareai only handle N/Y in pred column
     """
-    Convert predicted col to 0/1 (otherwise won't work with GridSearchCV)
+    Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV). Passes through data
+    for regression models unchanged. This is to simplify the data pipeline logic. (Though that may be a more appropriate
+    place for the logic...)
+    
     Note that this makes healthcareai only handle N/Y in pred column
     """
 
@@ -114,6 +118,15 @@ class DataFrameConvertColumnToNumeric(TransformerMixin):
 
 
 class DataFrameUnderSampling(TransformerMixin):
+    """
+    Performs undersampling on a dataframe.
+    
+    Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
+
+    Must be done AFTER imputation, since under/over sampling will not work with missing values (imblearn requires target
+     column to be converted to numerical values)
+    """
+
     def __init__(self, predicted_column, random_seed=0):
         self.random_seed = random_seed
         self.predicted_column = predicted_column
@@ -123,14 +136,9 @@ class DataFrameUnderSampling(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        # Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
-        # We do under/over sampling on the entire dataframe.
-
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
 
-        # Must be done AFTER imputation, since under/over sampling will not work with missing values.
-        # imblearn requires target column to be converted to numerical value
 
         # Extract predicted column
         y = np.squeeze(X[[self.predicted_column]])
@@ -156,6 +164,15 @@ class DataFrameUnderSampling(TransformerMixin):
 
 
 class DataFrameOverSampling(TransformerMixin):
+    """
+    Performs oversampling on a dataframe.
+
+    Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
+
+    Must be done AFTER imputation, since under/over sampling will not work with missing values (imblearn requires target
+     column to be converted to numerical values)
+    """
+
     def __init__(self, predicted_column, random_seed=0):
         self.random_seed = random_seed
         self.predicted_column = predicted_column
@@ -165,14 +182,8 @@ class DataFrameOverSampling(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        # Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
-        # We do under/over sampling on the entire dataframe.
-
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
-
-        # Must be done AFTER imputation, since under/over sampling will not work with missing values.
-        # imblearn requires target column to be converted to numerical value
 
         # Extract predicted column
         y = np.squeeze(X[[self.predicted_column]])
@@ -197,3 +208,5 @@ class DataFrameOverSampling(TransformerMixin):
         return result
 
 
+if __name__ == "__main__":
+    pass

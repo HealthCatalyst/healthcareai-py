@@ -1,33 +1,32 @@
-import json
 import sklearn
 import numpy as np
 import pandas as pd
 
-from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
-import healthcareai.common.model_eval as model_evaluation
-import healthcareai.common.top_factors as factors
-import healthcareai.trained_models.trained_supervised_model
-from healthcareai.common import helpers
-from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.helpers import count_unique_elements_in_column
+import healthcareai.common.model_eval as hcai_model_evaluation
+import healthcareai.common.top_factors as hcai_factors
+import healthcareai.trained_models.trained_supervised_model as hcai_tsm
+import healthcareai.common.helpers as hcai_helpers
+
 from healthcareai.common.randomized_search import prepare_randomized_search
-from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
+from healthcareai.common.healthcareai_error import HealthcareAIError
+
+SUPPORTED_MODEL_TYPES = ['classification', 'regression']
 
 
 class AdvancedSupervisedModelTrainer(object):
     """
-    This class helps create a model using several common classifiers (reporting AUC) and regressors
-    (reporting MAE/MSE).
+    This class helps create a model using several common classifiers and regressors, both of which report appropiate
+    metrics.
     """
 
     def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
         """
-        Creates an instance of AdvancedSupervisedModelTrainer
+        Creates an instance of AdvancedSupervisedModelTrainer.
         
         Args:
             dataframe (pandas.DataFrame): The training data
@@ -36,6 +35,10 @@ class AdvancedSupervisedModelTrainer(object):
             grain_column (str): The grain column
             verbose (bool): Verbose output
         """
+        # Validate model type is sane
+        if model_type not in SUPPORTED_MODEL_TYPES:
+            raise HealthcareAIError('A trainer must be one of these types: {}'.format(SUPPORTED_MODEL_TYPES))
+
         self.dataframe = dataframe
         self.model_type = model_type
         self.predicted_column = predicted_column
@@ -49,18 +52,29 @@ class AdvancedSupervisedModelTrainer(object):
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
+
     @property
     def is_classification(self):
-        """ easy check to consolidate magic strings in all the model type switches """
+        """
+        Returns True if trainer is set up for classification 
+        
+        Easy check to consolidate magic strings in all the model type switches.
+        """
         return self.model_type == 'classification'
 
     @property
     def is_regression(self):
-        """ easy check to consolidate magic strings in all the model type switches """
+        """
+        Returns True if trainer is set up for regression 
+        
+        Easy check to consolidate magic strings in all the model type switches.
+        """
         return self.model_type == 'regression'
 
     def feature_scaling(self, columns_to_scale):
-        # TODO convert to fit transform
+        # TODO convert to TransformerMixin
+        # TODO document
+        # TODO test
         # NB: Must happen AFTER self.X_train, self.X_test,
         #     self.y_train, self.y_test are defined.
         #     Must happen AFTER imputation is done so there
@@ -84,12 +98,19 @@ class AdvancedSupervisedModelTrainer(object):
         X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
-    def train_test_split(self):
+    def train_test_split(self, random_seed=None):
+        """
+        Splits the dataframe into train and test sets.
+        
+        Args:
+            random_seed (int): An optional random seed for the random number generator. It is best to leave at the None
+                deafault. Useful for unit tests when reproducibility is required.
+        """
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
-        self.X_train, self.X_test, self.y_train, self.y_test = model_selection.train_test_split(
-            X, y, test_size=.20, random_state=0)
+        self.X_train, self.X_test, self.y_train, self.y_test = sklearn.model_selection.train_test_split(
+            X, y, test_size=.20, random_state=random_seed)
 
         self._console_log('\nShape of X_train: {}\ny_train: {}\nX_test: {}\ny_test: {}'.format(
             self.X_train.shape,
@@ -106,6 +127,13 @@ class AdvancedSupervisedModelTrainer(object):
         """
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
+
+        Args:
+            scoring_metric (str): The metric used to rank the models. Defaults to 'roc_auc'
+            trained_model_by_name (dict): A dictionary of trained models to compare for a custom ensemble
+
+        Returns:
+            TrainedSupervisedModel: The best TrainedSupervisedModel found.
         """
         self.validate_classification('Ensemble Classification')
         self.validate_score_metric_for_number_of_classes(scoring_metric)
@@ -126,7 +154,7 @@ class AdvancedSupervisedModelTrainer(object):
 
         for name, model in trained_model_by_name.items():
             # Unroll estimator from trained supervised model
-            estimator = healthcareai.trained_models.trained_supervised_model.get_estimator_from_trained_supervised_model(model)
+            estimator = hcai_tsm.get_estimator_from_trained_supervised_model(model)
 
             # Get the score objects for the estimator
             score = self.metrics(estimator)
@@ -146,7 +174,6 @@ class AdvancedSupervisedModelTrainer(object):
         return best_model
 
     def validate_score_metric_for_number_of_classes(self, metric):
-        # TODO test this
         """
         Check that a user's choice of scoring metric makes sense with the number of prediction classes
 
@@ -154,10 +181,12 @@ class AdvancedSupervisedModelTrainer(object):
             metric (str): a string of the scoring metric
         """
 
+        # TODO test this for errors and multiclass
         # TODO make this more robust for other scoring metrics
-        classes = count_unique_elements_in_column(self.dataframe, self.predicted_column)
+        classes = hcai_helpers.count_unique_elements_in_column(self.dataframe, self.predicted_column)
         if classes is 2:
-            pass
+            # return True for testing
+            return True
         elif classes > 2 and metric in ['pr_auc', 'roc_auc']:
             raise (HealthcareAIError(
                 'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
@@ -174,14 +203,15 @@ class AdvancedSupervisedModelTrainer(object):
         performance_metrics = None
 
         if self.model_type is 'classification':
-            performance_metrics = model_evaluation.calculate_binary_classification_metrics(
+            performance_metrics = hcai_model_evaluation.calculate_binary_classification_metrics(
                 trained_sklearn_estimator,
                 self.X_test,
                 self.y_test,
 
             )
         elif self.model_type is 'regression':
-            performance_metrics = model_evaluation.calculate_regression_metrics(trained_sklearn_estimator, self.X_test, self.y_test)
+            performance_metrics = hcai_model_evaluation.calculate_regression_metrics(trained_sklearn_estimator,
+                                                                                     self.X_test, self.y_test)
 
         return performance_metrics
 
@@ -251,7 +281,7 @@ class AdvancedSupervisedModelTrainer(object):
                       scoring_metric='roc_auc',
                       hyperparameter_grid=None,
                       randomized_search=True):
-        """A convenience method that allows a user to simply call .random_forest() and get the right one."""
+        """ A convenience method that allows a user to simply call .random_forest() and get the right one. """
         if self.is_classification:
             return self.random_forest_classifier(trees=trees,
                                                  scoring_metric=scoring_metric,
@@ -271,8 +301,8 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
-            max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
-                                                                               self.model_type)
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                                    self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
         algorithm = prepare_randomized_search(
@@ -297,8 +327,8 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
-            max_features = helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
-                                                                               self.model_type)
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+                                                                                    self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
 
         algorithm = prepare_randomized_search(
@@ -313,7 +343,16 @@ class AdvancedSupervisedModelTrainer(object):
         return trained_supervised_model
 
     def _trainer(self, algorithm, include_factor_model=True):
-        # TODO should the factor model be either 1) optional or 2) separate?
+        """
+        Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
+
+        Args:
+            algorithm (sklearn.base.BaseEstimator): The scikit learn algorithm, ready to fit.
+            include_factor_model (bool): Trains a model for top factors. Defaults to True
+
+        Returns:
+            TrainedSupervisedModel: a TrainedSupervisedModel
+        """
         algorithm.fit(self.X_train, self.y_train)
 
         # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
@@ -330,11 +369,11 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_predictions = algorithm.predict(self.X_test)
 
         if include_factor_model:
-            factor_model = factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
+            factor_model = hcai_factors.prepare_fit_model_for_factors(self.model_type, self.X_train, self.y_train)
         else:
             factor_model = None
 
-        trained_supervised_model = TrainedSupervisedModel(
+        trained_supervised_model = hcai_tsm.TrainedSupervisedModel(
             model=algorithm,
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
@@ -361,3 +400,6 @@ class AdvancedSupervisedModelTrainer(object):
         if self.verbose:
             print('DSM: {}'.format(message))
 
+
+if __name__ == "__main__":
+    pass

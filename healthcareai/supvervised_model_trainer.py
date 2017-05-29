@@ -1,12 +1,16 @@
 import time
 
-import healthcareai.common.model_eval as hcaieval
-import healthcareai.pipelines.data_preparation as pipelines
-import healthcareai.trained_models.trained_supervised_model
+import healthcareai.pipelines.data_preparation as hcai_pipelines
+import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
 
 
 class SupervisedModelTrainer(object):
+    """
+    This class helps create a model using several common classifiers and regressors, both of which report appropiate
+    metrics.
+    """
+
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
         self.grain_column = grain_column,
         self.predicted_column = predicted_column,
@@ -16,7 +20,7 @@ class SupervisedModelTrainer(object):
         # Build the pipeline
         # TODO This pipeline may drop nulls in prediction rows if impute=False
         # TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276
-        pipeline = pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
+        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
 
         # Run the raw data through the data preparation pipeline
         clean_dataframe = pipeline.fit_transform(dataframe)
@@ -83,7 +87,7 @@ class SupervisedModelTrainer(object):
         print_training_results(model_name, t0, trained_model)
 
         # Save or show the feature importance graph
-        healthcareai.trained_models.trained_supervised_model.plot_rf_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
+        hcai_tsm.plot_rf_features_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
 
         return trained_model
 
@@ -135,7 +139,9 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-    def get_advanced_features(self):
+    @property
+    def advanced_features(self):
+        """ Returns the underlying AdvancedSupervisedModelTrainer instance. For advanced users only. """
         return self._advanced_trainer
 
 

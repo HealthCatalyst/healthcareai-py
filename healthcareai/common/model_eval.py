@@ -1,9 +1,10 @@
 import os
+import sklearn
 
 import numpy as np
 import pandas as pd
-import sklearn
 import sklearn.metrics as skmetrics
+
 from matplotlib import pyplot as plt
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -21,7 +22,7 @@ def compute_roc(y_test, probability_predictions):
         dict: 
 
     """
-    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
     # Calculate ROC
     false_positive_rates, true_positive_rates, roc_thresholds = skmetrics.roc_curve(y_test, probability_predictions)
@@ -58,7 +59,7 @@ def compute_pr(y_test, probability_predictions):
         dict: 
 
     """
-    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
     # Calculate PR
     precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
@@ -81,11 +82,6 @@ def compute_pr(y_test, probability_predictions):
             'precisions': precisions,
             'recalls': recalls,
             'pr_thresholds': pr_thresholds}
-
-
-def validate_predictions_and_labels_are_equal_length(predictions, true_values):
-    if len(predictions) != len(true_values):
-        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
 def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
@@ -127,7 +123,7 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     # Squeeze down y_test to 1D
     y_test = np.squeeze(y_test)
 
-    validate_predictions_and_labels_are_equal_length(x_test, y_test)
+    _validate_predictions_and_labels_are_equal_length(x_test, y_test)
 
     # Get binary and probability classification predictions
     binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
@@ -266,7 +262,7 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     indices = np.argsort(importances)[::-1]
     namelist = [feature_names[i] for i in indices]
 
-    # Turn off interactive mode
+    # Turn off matplotlib interactive mode
     plt.ioff()
 
     # Set up the plot
@@ -295,44 +291,11 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         plt.show()
 
 
-def get_estimator_from_meta_estimator(model):
-    """
-    Given an instance of a trained sklearn estimator, return the main estimator, regardless of random search
-    Args:
-        model (sklearn.base.BaseEstimator): 
-
-    Returns:
-        sklearn.base.BaseEstimator: 
-    """
-    if not issubclass(type(model), sklearn.base.BaseEstimator):
-        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
-
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
-        result = model.best_estimator_
+def _validate_predictions_and_labels_are_equal_length(predictions, true_values):
+    if len(predictions) == len(true_values):
+        return True
     else:
-        result = model
-
-    return result
-
-
-def get_hyperparameters_from_meta_estimator(model):
-    """
-    Given an instance of a trained sklearn estimator, return the best hyperparameters if it is a meta estimator
-    Args:
-        model (sklearn.base.BaseEstimator): 
-
-    Returns:
-        dict: The best hyperparameters 
-    """
-    if not issubclass(type(model), sklearn.base.BaseEstimator):
-        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
-
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
-        result = model.best_params_
-    else:
-        result = None
-
-    return result
+        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
 if __name__ == '__main__':

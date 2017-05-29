@@ -19,7 +19,7 @@ import healthcareai.common.write_predictions_to_database as hcaidb
 
 
 def main():
-    # CSV snippet for reading data into dataframe
+    # Load data from a .csv file
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Load data from a MSSQL server
@@ -37,8 +37,8 @@ def main():
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
 
-    # Step 1: Setup healthcareai for training a regression model.
-    hcai_trainer = SupervisedModelTrainer(
+    # Step 1: Setup healthcareai for training a regression model. This prepares your data for model building
+    regression_trainer = SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='SystolicBPNBR',
         model_type='regression',
@@ -48,13 +48,13 @@ def main():
 
     # Look at the first few rows of your dataframe after loading the data
     print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
-    print(hcai_trainer.clean_dataframe.head())
+    print(regression_trainer.clean_dataframe.head())
 
-    # Train a linear regression model
-    trained_linear_model = hcai_trainer.linear_regression()
+    # Train and evaluate linear regression model
+    trained_linear_model = regression_trainer.linear_regression()
 
-    # Train a random forest model
-    trained_random_forest = hcai_trainer.random_forest_regression()
+    # Train and evaluate random forest model
+    trained_random_forest = regression_trainer.random_forest_regression()
 
     # Once you are happy with the result of the trained model, it is time to save the model.
     trained_linear_model.save()
@@ -67,7 +67,7 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model()
+    trained_model = io_utilities.load_saved_model('saved_model_name.pkl')
 
     # TODO swap this out for testing
     trained_model = trained_linear_model
@@ -101,6 +101,8 @@ def main():
     print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
     print(catalyst_dataframe.head())
     print(catalyst_dataframe.dtypes)
+
+    # Save your predictions. You can save predictions to a csv or database. Examples are shown below
 
     # Save results to csv
     # predictions.to_csv('foo.csv')

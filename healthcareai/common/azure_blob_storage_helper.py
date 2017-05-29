@@ -1,4 +1,5 @@
 import pickle
+
 from azure.storage.blob import BlockBlobService
 from azure.common import AzureMissingResourceHttpError
 
@@ -73,7 +74,7 @@ class AzureBlobStorageHelper:
         try:
             return self._connection.create_container(container_name)
         except AzureMissingResourceHttpError as ae:
-            raise(AzureBlobStorageHelperError('The specified container does not exist.'))
+            raise (AzureBlobStorageHelperError('The specified container does not exist.'))
 
 
 class AzureBlobStorageHelperError(Exception):
@@ -82,3 +83,7 @@ class AzureBlobStorageHelperError(Exception):
 
     def __str__(self):
         return repr(self.message)
+
+
+if __name__ == "__main__":
+    pass

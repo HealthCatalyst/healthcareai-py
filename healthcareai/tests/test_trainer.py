@@ -60,11 +60,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        expected_mse = 638
-        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
-
-        expected_mae = 20
-        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+        helpers.assertBetween(self, 500, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
         trained_rf_regressor = self.regression_trainer.random_forest_regression()
@@ -123,7 +120,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         trained_linear_model = self.regression_trainer.linear_regression()
 
         # Try the ROC plot
-        self.assertRaises(HealthcareAIError, trained_linear_model.roc_curve_plot)
+        self.assertRaises(HealthcareAIError, trained_linear_model.roc_plot)
 
 
 @contextmanager

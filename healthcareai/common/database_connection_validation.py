@@ -1,8 +1,4 @@
-import sys
-
 import datetime
-
-import healthcareai.common.write_predictions_to_database as hcaidb
 
 try:
     import pyodbc
@@ -11,12 +7,13 @@ try:
 except ImportError:
     pyodbc_is_loaded = False
 
+import healthcareai.common.write_predictions_to_database as hcai_db
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
     # Verify that pyodbc is loaded
-    hcaidb.validate_pyodbc_is_loaded()
+    hcai_db.validate_pyodbc_is_loaded()
 
     # TODO make this database agnostic
     # TODO If this becomes db agnostic, we will have to use something with transactions that can be rolled back
@@ -63,3 +60,7 @@ def validate_destination_table_connection(server, destination_table, grain_colum
             raise HealthcareAIError(error_message)
 
     return result
+
+
+if __name__ == "__main__":
+    pass

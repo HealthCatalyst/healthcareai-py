@@ -1,46 +1,47 @@
 from sklearn.base import TransformerMixin
 from pandas.core.frame import DataFrame
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
-def validate_dataframe_input(input):
-    """Simple validation that raises an error if an input is not a pandas dataframe. Silent if it is. """
-    if is_dataframe(input) is False:
+def validate_dataframe_input(possible_dataframe):
+    """ Simple validation that raises an error if an input is not a pandas dataframe. Silent if it is. """
+    if is_dataframe(possible_dataframe) is False:
         raise HealthcareAIError(
-            'This transformer requires a pandas dataframe and you passed in a {}'.format(type(input)))
+            'This transformer requires a pandas dataframe and you passed in a {}'.format(type(possible_dataframe)))
 
 
-def is_dataframe(thing):
-    """Simple helper that returns True if an input is a pandas dataframe """
-    return issubclass(DataFrame, type(thing))
+def is_dataframe(possible_dataframe):
+    """ Simple helper that returns True if an input is a pandas dataframe """
+    return issubclass(DataFrame, type(possible_dataframe))
 
 
 class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
-    """Given a pandas dataframe, remove columns with suffix 'DTS'"""
+    """ Given a pandas dataframe, remove columns with suffix 'DTS' """
 
     def __init__(self):
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, x, y=None):
         return self
 
-    def transform(self, X, y=None):
-        validate_dataframe_input(X)
+    def transform(self, x, y=None):
+        validate_dataframe_input(x)
 
         # Build a list that contains column names that do not end in 'DTS'
-        filtered_column_names = [column for column in X.columns if not column.endswith('DTS')]
+        filtered_column_names = [column for column in x.columns if not column.endswith('DTS')]
 
         # return the filtered dataframe
-        return X[filtered_column_names]
+        return x[filtered_column_names]
 
 
 class DataframeColumnRemover(TransformerMixin):
-    """Given a pandas dataframe, remove the given column or columns in list form"""
+    """ Given a pandas dataframe, remove the given column or columns in list form """
 
     def __init__(self, columns_to_remove):
         self.columns_to_remove = columns_to_remove
 
-    def fit(self, X, y=None):
+    def fit(self, x, y=None):
         return self
 
     def transform(self, X, y=None):
@@ -54,7 +55,8 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    """Given a pandas dataframe, remove rows that contain null values in any column except the excluded"""
+    """ Given a pandas dataframe, remove rows that contain null values in any column except the excluded """
+
     def __init__(self, excluded_columns=None):
         # TODO validate excluded column is a list
         """
@@ -63,13 +65,17 @@ class DataframeNullValueFilter(TransformerMixin):
         """
         self.excluded_columns = excluded_columns or []
 
-    def fit(self, X, y=None):
+    def fit(self, x, y=None):
         return self
 
-    def transform(self, X, y=None):
-        validate_dataframe_input(X)
+    def transform(self, x, y=None):
+        validate_dataframe_input(x)
 
-        subset = [c for c in X.columns if c not in self.excluded_columns]
-        X.dropna(axis=0, how='any', inplace=True, subset=subset)
+        subset = [c for c in x.columns if c not in self.excluded_columns]
+        x.dropna(axis=0, how='any', inplace=True, subset=subset)
 
-        return X
+        return x
+
+
+if __name__ == "__main__":
+    pass

@@ -91,6 +91,7 @@ trained_random_forest.roc_curve_plot()
 
 ### Go further using utility methods
 
+# TODO this needs updating
 The `healthcareai.common.model_eval.tsm_classification_comparison_plots` method plots ROC curves or PR curves of one or more trained models to directly comparing models.
 
 -   **Return**: a plot.
@@ -125,9 +126,6 @@ import pandas as pd
 import time
 
 def main():
-
-    t0 = time.time()
-
     # CSV snippet for reading data into dataframe
     df = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv',
                     na_values=['None'])

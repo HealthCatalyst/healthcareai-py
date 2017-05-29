@@ -1,22 +1,27 @@
-from healthcareai.common.healthcareai_error import HealthcareAIError
 import time
 import datetime
 import pandas as pd
 
+from healthcareai.common.healthcareai_error import HealthcareAIError
+
 
 def table_archiver(server, database, source_table, destination_table, timestamp_column_name='ArchivedDTS'):
+    # Basic input validation
     """
     Takes a table and archives a complete copy of it with the addition of a timestamp of when the archive occurred to a
     given destination table on the same database.
 
     This should build a new table if the table doesn't exist.
 
-    :param server: server name
-    :param database: database name
-    :param source_table: source table name
-    :param destination_table: destination table name
-    :param timestamp_column_name: new timestamp column name
-    :rtype: str: basic stats about how many records were archived
+    Args:
+        server (str): Server name 
+        database (str): Database name 
+        source_table (str): Source table name 
+        destination_table (str): Destination table name 
+        timestamp_column_name (str): New timestamp column name 
+
+    Returns:
+        (str): A string with details on records archived.
     
     Example usage:
 
@@ -25,7 +30,6 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
     table_archiver('localhost', 'SAM_123', 'RiskScores', 'RiskScoreArchive', 'ArchiveDTS')
     ```
     """
-    # Basic input validation
     if type(server) is not str:
         raise HealthcareAIError('Please specify a server address')
     if type(database) is not str:
@@ -56,3 +60,7 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
                                                                             delta_time)
 
     return result
+
+
+if __name__ == "__main__":
+    pass

@@ -3,14 +3,21 @@ import sqlalchemy
 import pandas as pd
 import urllib
 
-import sqlite3
-
 try:
+    # Note we don't want to force pyodbc as a requirement
     import pyodbc
 
     pyodbc_is_loaded = True
 except ImportError:
     pyodbc_is_loaded = False
+
+try:
+    # Note we don't want to force sqlite3 as a requirement
+    import sqlite3
+
+    sqlite3_is_loaded = True
+except ImportError:
+    sqlite3_is_loaded = False
 
 from healthcareai.common.filters import is_dataframe
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -28,6 +35,7 @@ def build_mysql_connection_string(server, database, userid, password):
 
 
 def build_sqlite_engine(file_path):
+    """ Build an sqlite engine. """
     validate_sqlite3_is_loaded()
     engine = sqlite3.connect(file_path)
     return engine
@@ -42,6 +50,7 @@ def build_sqlite_in_memory_connection_string():
 def build_mssql_engine(server, database):
     """
     Given a server and database name, build a Trusted Connection MSSQL database engine. NOTE: Requires `pyodbc`
+    
     Args:
         server (str): Server name 
         database (str): Database name
@@ -49,7 +58,6 @@ def build_mssql_engine(server, database):
     Returns:
         sqlalchemy.engine.base.Engine: an sqlalchemy connection engine
     """
-    # Verify that pyodbc is loaded
     validate_pyodbc_is_loaded()
 
     connection_string = build_mssql_connection_string(server, database)
@@ -60,18 +68,18 @@ def build_mssql_engine(server, database):
 
 
 def does_table_exist(engine, table, schema=None):
-    """ Checks if a table exists on a given database engine with an optional schema """
+    """ Checks if a table exists on a given database engine with an optional schema. """
     return engine.has_table(table, schema=schema)
 
 
 def validate_pyodbc_is_loaded():
-    """ Simple check that alerts user if they are do not have pyodbc installed, which is not a requirement """
+    """ Simple check that alerts user if they are do not have pyodbc installed, which is not a requirement. """
     if 'pyodbc' not in sys.modules:
         raise HealthcareAIError('Using this function requires installation of pyodbc.')
 
 
 def validate_sqlite3_is_loaded():
-    """ Simple check that alerts user if they are do not have pyodbc installed, which is not a requirement """
+    """ Simple check that alerts user if they are do not have sqlite installed, which is not a requirement. """
     if 'sqlite3' not in sys.modules:
         raise HealthcareAIError('Using this function requires installation of sqlite3.')
 
@@ -87,7 +95,12 @@ def write_to_db_agnostic(engine, table, dataframe, schema=None):
     """
     # Validate inputs
     is_engine = isinstance(engine, sqlalchemy.engine.base.Engine)
-    is_sqlite_connection = isinstance(engine, sqlite3.Connection)
+
+    if sqlite3_is_loaded:
+        is_sqlite_connection = isinstance(engine, sqlite3.Connection)
+    else:
+        is_sqlite_connection = False
+
     if not is_engine and not is_sqlite_connection:
         raise HealthcareAIError('sqlalchemy engine or sqlite connection required, a {} was given'.format(type(engine)))
     if not is_dataframe(dataframe):
@@ -95,7 +108,7 @@ def write_to_db_agnostic(engine, table, dataframe, schema=None):
     if not isinstance(table, str):
         raise HealthcareAIError('Table name required, a {} was given'.format(type(table)))
 
-    # Verify that tables exist for sqlalchemy/sqlite databases
+    # Verify that tables exist for databases
     if is_engine and not does_table_exist(engine, table, schema):
         raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
     elif is_sqlite_connection:
@@ -136,3 +149,7 @@ def verify_sqlite_table_exists(connection, table):
 
     if table not in table_names:
         raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
+
+
+if __name__ == "__main__":
+    pass

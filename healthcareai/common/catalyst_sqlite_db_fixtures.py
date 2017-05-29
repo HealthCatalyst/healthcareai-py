@@ -7,6 +7,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def drop_table(db_name, table_name):
+    """ Given a sqlite db filename, drops a given table if it exists. """
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
@@ -15,6 +16,7 @@ def drop_table(db_name, table_name):
 
 
 def is_table_empty(db_name, table_name):
+    """ Checks if a table on a given sqlite db file is empty. """
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
@@ -26,6 +28,7 @@ def is_table_empty(db_name, table_name):
 
 
 def setup_deploy_tables(db_name):
+    """ Delete and recreate Health Catalyst specific destination tables. WARNING: DATA LOSS WILL OCCUR. """
     # Setup db connection
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
@@ -69,3 +72,7 @@ def setup_deploy_tables(db_name):
         return True
     else:
         raise HealthcareAIError('There was a problem setting up test tables')
+
+
+if __name__ == "__main__":
+    pass

@@ -38,3 +38,7 @@ def prepare_randomized_search(
         algorithm = estimator(**non_randomized_estimator_kwargs)
 
     return algorithm
+
+
+if __name__ == "__main__":
+    pass

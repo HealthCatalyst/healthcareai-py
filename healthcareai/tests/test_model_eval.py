@@ -49,5 +49,17 @@ class TestPlotRandomForestFeatureImportance(unittest.TestCase):
             save=False)
 
 
+class TestValidation(unittest.TestCase):
+    def test_same_length_predictions_and_labels(self):
+        self.assertTrue(hcai_eval._validate_predictions_and_labels_are_equal_length([0, 1, 2], [1, 2, 3]))
+
+    def test_different_length_predictions_and_labels_raises_error(self):
+        self.assertRaises(
+            HealthcareAIError,
+            hcai_eval._validate_predictions_and_labels_are_equal_length,
+            [0, 1, 2],
+            [0, 1, 2, 3, 4])
+
+
 if __name__ == '__main__':
     unittest.main()

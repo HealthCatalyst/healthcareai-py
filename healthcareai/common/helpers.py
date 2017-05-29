@@ -1,4 +1,5 @@
 import math
+import sklearn
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
@@ -41,3 +42,47 @@ def calculate_random_forest_mtry_hyperparameter(number_of_columns, model_type):
     grid_mtry = [start - 1, start, start + 1]
 
     return grid_mtry
+
+
+def extract_estimator_from_meta_estimator(model):
+    """
+    Given an instance of a trained sklearn estimator, return the main estimator, regardless of random search
+    Args:
+        model (sklearn.base.BaseEstimator): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+    """
+    if not issubclass(type(model), sklearn.base.BaseEstimator):
+        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
+
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+        result = model.best_estimator_
+    else:
+        result = model
+
+    return result
+
+
+def get_hyperparameters_from_meta_estimator(model):
+    """
+    Given an instance of a trained sklearn estimator, return the best hyperparameters if it is a meta estimator
+    Args:
+        model (sklearn.base.BaseEstimator): 
+
+    Returns:
+        dict: The best hyperparameters 
+    """
+    if not issubclass(type(model), sklearn.base.BaseEstimator):
+        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
+
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+        result = model.best_params_
+    else:
+        result = None
+
+    return result
+
+
+if __name__ == '__main__':
+    pass

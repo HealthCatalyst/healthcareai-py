@@ -1,5 +1,6 @@
 import json
 import pickle
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -79,3 +80,7 @@ def _validate_filename_is_string(filename):
     """ Validates the a parameter is a string and returns a helpful error message if it is not. """
     if not isinstance(filename, str):
         raise HealthcareAIError('Filename must be a string. You passed in a {}'.format(filename))
+
+
+if __name__ == "__main__":
+    pass
