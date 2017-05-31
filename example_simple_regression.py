@@ -68,6 +68,12 @@ def main():
     # Load the saved model and print out the metrics
     trained_model = io_utilities.load_saved_model('saved_model_name.pkl')
 
+    # Any saved models can be inspected for properties such as metrics, columns, etc. (More examples are in the docs)
+    print(trained_model.metrics)
+    # print(trained_model.column_names)
+    # print(trained_model.grain_column)
+    # print(trained_model.prediction_column)
+
     # TODO swap this out for testing
     trained_model = trained_linear_model
 
