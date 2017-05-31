@@ -9,6 +9,9 @@ from matplotlib import pyplot as plt
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
+DIAGONAL_LINE_COLOR = '#bbbbbb'
+DIAGONAL_LINE_STYLE = 'dotted'
+
 
 def compute_roc(y_test, probability_predictions):
     """
@@ -144,12 +147,12 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
     plt.figure()
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic')
+    plt.xlabel('False Positive Rate (FPR)')
+    plt.ylabel('True Positive Rate (TRP)')
+    plt.title('Receiver Operating Characteristic (ROC)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot([0, 1], [0, 1], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
     # TODO hack to convert to array if it is a single dictionary
     if isinstance(roc_thresholds_by_model, dict):
@@ -172,7 +175,7 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         # TODO deal with colors ...
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(roc_auc, 2))
+        label = '{} (ROC AUC = {})'.format(model_name, round(roc_auc, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
         plt.plot([best_false_positive_rate], [best_true_positive_rate], marker='*', markersize=10, color=temp_color)
 
@@ -195,10 +198,10 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.figure()
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall Curves')
+    plt.title('Precision Recall (PR)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.plot([0, 1], [1, 0], 'k--')
+    plt.plot([0, 1], [1, 0], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
     # TODO hack to convert to array if it is a single dictionary
     if isinstance(pr_thresholds_by_model, dict):
@@ -220,7 +223,7 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
 
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(pr_auc, 2))
+        label = '{} (PR AUC = {})'.format(model_name, round(pr_auc, 2))
         plt.plot(recall, precision, color=temp_color, label=label)
         plt.plot([best_recall], [best_precision], marker='*', markersize=10, color=temp_color)
 
@@ -267,13 +270,14 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
 
     # Set up the plot
     figure = plt.figure()
-    plt.title("Feature importances")
+    plt.title("Feature Importance")
+    plt.ylabel('Relative Feature Importance')
 
     # Plot each feature
     x_train_shape = x_train.shape[1]
     x_train_range = range(x_train_shape)
 
-    plt.bar(x_train_range, importances[indices], color="r", yerr=standard_deviations[indices], align="center")
+    plt.bar(x_train_range, importances[indices], color="g", yerr=standard_deviations[indices], align="center")
     plt.xticks(x_train_range, namelist, rotation=90)
     plt.xlim([-1, x_train_shape])
     plt.gca().set_ylim(bottom=0)
@@ -283,7 +287,7 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     if save:
         plt.savefig('FeatureImportances.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
-        print('\nFeature importances saved in: {}'.format(source_path))
+        print('\nFeature importance plot saved in: {}'.format(source_path))
 
         # Close the figure so it does not get displayed
         plt.close(figure)
