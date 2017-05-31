@@ -6,7 +6,7 @@ If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
 
 To run this example:
-  python3 example_simple_classification.py
+  python3 example_classification_1.py
 
 This code uses the DiabetesClinicalSampleData.csv source file.
 """

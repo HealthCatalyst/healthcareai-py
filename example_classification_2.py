@@ -1,4 +1,4 @@
-"""Load a saved regression model, make predictions of various types and save them to a csv or database.
+"""Creates and compares classification models using sample clinical data.
 
 Please use this example to learn about healthcareai before moving on to the next example.
 
@@ -6,12 +6,16 @@ If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
 
 To run this example:
-  python3 example_regression_2.py
+  python3 example_simple_classification.py
 
 This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
+import sqlalchemy
+import sqlite3
 
+import healthcareai.trained_models.trained_supervised_model as tsm_plots
+from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 import healthcareai.common.file_io_utilities as io_utilities
 import healthcareai.common.write_predictions_to_database as hcaidb
 
@@ -35,54 +39,71 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model('2017-05-31T15-55-55_regression_LinearRegression.pkl')
+    trained_model = io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
 
-    # Any saved models can be inspected for properties such as metrics, columns, etc. (More examples are in the docs)
-    print(trained_model.metrics)
+    # Any saved model can be inspected for properties such as plots, metrics, columns, etc. (More examples in the docs)
+    trained_model.roc_plot()
+    print(trained_model.roc())
     # print(trained_model.column_names)
     # print(trained_model.grain_column)
     # print(trained_model.prediction_column)
 
-    # Making predictions from a saved model.
-    # Please note that you will likely only need one of these prediction output types. Feel free to delete the others.
+    # # Make predictions. Please note that there are four different formats you can choose from. All are shown
+    #    here, though you only need one.
 
-    # Make some predictions
-    print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
+    # ## Get predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
+    print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
     print(predictions[0:5])
 
-    # Get the important factors
+    # ## Get the important factors
+    factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
-    factors = trained_model.make_factors(prediction_dataframe, number_top_features=4)
     print(factors.head())
 
-    # Get predictions + factors
+    # ## Get predictions with factors
+    predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe,
+                                                                                number_top_features=3)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
-    predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe)
     print(predictions_with_factors_df.head())
 
-    # Get original dataframe + predictions + factors
-    print('\n\n-------------------[ Original + predictions + factors ]--------------------------\n')
+    # ## Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
-        prediction_dataframe)
+        prediction_dataframe, number_top_features=3)
+    print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
     print(original_plus_predictions_and_factors.head())
 
     # Save your predictions. You can save predictions to a csv or database. Examples are shown below.
     # Please note that you will likely only need one of these output types. Feel free to delete the others.
 
     # Save results to csv
-    predictions.to_csv('ClinicalPredictions.csv')
+    predictions_with_factors_df.to_csv('ClinicalPredictions.csv')
 
-    # Save predictions to MSSQL db
+    # ## MSSQL using Trusted Connections
     # server = 'localhost'
-    # database = 'ClinicalData'
-    # table = 'ClinicalPredictions'
+    # database = 'my_database'
+    # table = 'predictions_output'
     # schema = 'dbo'
     # engine = hcaidb.build_mssql_engine(server, database)
-    #
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
-    # Health Catalyst EDW specific instructions. Uncomment to use.
+    # ## MySQL using standard authentication
+    # server = 'localhost'
+    # database = 'my_database'
+    # userid = 'fake_user'
+    # password = 'fake_password'
+    # table = 'prediction_output'
+    # mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+    # mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
+    # predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
+
+    # ## SQLite
+    # path_to_database_file = 'database.db'
+    # table = 'prediction_output'
+    # connection = sqlite3.connect(path_to_database_file)
+    # predictions_with_factors_df.to_sql(table, connection)
+
+    # ## Health Catalyst EDW specific instructions. Uncomment to use.
     # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors
     # catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     # print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
