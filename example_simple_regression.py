@@ -1,7 +1,6 @@
 """Creates and compares regression models using sample clinical data.
 
 Please use this example to learn about healthcareai before moving on to the next example.
-After you have found that one of the models works well on your data, move to Example2
 
 If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
@@ -30,7 +29,7 @@ def main():
     query = """SELECT *
                     FROM [SAM].[dbo].[DiabetesClincialSampleData]
                     -- In this step, just grab rows that have a target
-                    WHERE ThirtyDayReadmitFLG is not null"""
+                    WHERE SystolicBPNBR is not null"""
     engine = hcaidb.build_mssql_engine(server=server, database=database)
     dataframe = pd.read_sql(query, engine)
 
@@ -81,26 +80,22 @@ def main():
     factors = trained_model.make_factors(prediction_dataframe, number_top_features=4)
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
     print(factors.head())
-    print(factors.dtypes)
 
     # Get predictions with factors
     predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
     print(predictions_with_factors_df.head())
-    print(predictions_with_factors_df.dtypes)
 
     # Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
         prediction_dataframe)
     print('\n\n-------------------[ Original + predictions + factors ]--------------------------\n')
     print(original_plus_predictions_and_factors.head())
-    print(original_plus_predictions_and_factors.dtypes)
 
     # Get original dataframe with predictions and factors
     catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
     print(catalyst_dataframe.head())
-    print(catalyst_dataframe.dtypes)
 
     # Save your predictions. You can save predictions to a csv or database. Examples are shown below
 

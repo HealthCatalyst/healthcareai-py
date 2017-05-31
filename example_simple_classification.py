@@ -129,21 +129,18 @@ def main():
     factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
     print(factors.head())
-    print(factors.dtypes)
 
     # ## Get predictions with factors
     predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe,
                                                                                 number_top_features=3)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
     print(predictions_with_factors_df.head())
-    print(predictions_with_factors_df.dtypes)
 
     # ## Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
         prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
     print(original_plus_predictions_and_factors.head())
-    print(original_plus_predictions_and_factors.dtypes)
 
     # Save your predictions. You can save predictions to a csv or database. Examples are shown below
 
@@ -184,7 +181,6 @@ def main():
     catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
     print(catalyst_dataframe.head())
-    print(catalyst_dataframe.dtypes)
     catalyst_dataframe.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     server = 'localhost'
