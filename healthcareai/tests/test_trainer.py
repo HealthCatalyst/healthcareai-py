@@ -81,7 +81,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_lr.metrics
 
-        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_classification(self):
