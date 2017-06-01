@@ -12,7 +12,7 @@ This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
 
-import healthcareai.common.file_io_utilities as io_utilities
+import healthcareai.common.file_io_utilities as hcai_io_utilities
 import healthcareai.common.database_connections as hcai_db
 
 
@@ -34,8 +34,9 @@ def main():
     columns_to_remove = ['PatientID']
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
-    # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model('2017-05-31T15-55-55_regression_LinearRegression.pkl')
+    # Load the saved model using the correct file name (they look like
+    #     '2017-05-31T15-55-55_regression_LinearRegression.pkl')
+    trained_model = hcai_io_utilities.load_saved_model('your_filename_here.pkl')
 
     # Any saved models can be inspected for properties such as metrics, columns, etc. (More examples are in the docs)
     print(trained_model.metrics)
