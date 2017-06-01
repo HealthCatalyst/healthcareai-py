@@ -12,6 +12,18 @@ class SupervisedModelTrainer(object):
     """
 
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
+        """
+        Set up a SupervisedModelTrainer
+        
+        Args:
+            dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
+            predicted_column (str): The name of the prediction column 
+            model_type (str): the trainer type - 'classification' or 'regression'
+            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows
+                that contain any null values.
+            grain_column (str): The name of the grain column
+            verbose (bool): Set to true for verbose output. Defaults to False.
+        """
         self.grain_column = grain_column,
         self.predicted_column = predicted_column,
         self.grain_column = grain_column,

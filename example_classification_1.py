@@ -82,18 +82,20 @@ def main():
     # trained_random_forest.roc()
     # trained_random_forest.pr()
 
-    # Create a ROC and PR plot that compares all the models you just trained.
-    models_to_compare = [trained_random_forest, trained_knn, trained_lr]
+    # Create a list of all the models you just trained that you want to compare
+    models_to_compare = [trained_knn, trained_lr, trained_random_forest]
 
+    # Create a ROC plot that compares them.
     tsm_plots.tsm_classification_comparison_plots(
         trained_supervised_models=models_to_compare,
         plot_type='ROC',
         save=False)
+
+    # Create a PR plot that compares them.
     tsm_plots.tsm_classification_comparison_plots(
         trained_supervised_models=models_to_compare,
         plot_type='PR',
         save=False)
-    exit()
 
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
     trained_random_forest.save()
