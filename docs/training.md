@@ -33,7 +33,7 @@ cnxn = pyodbc.connect("""SERVER=localhost;
 
  df = pd.read_sql(
      sql="""SELECT *
-            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
+            FROM [SAM].[dbo].[HCAIDiabetesClinical]""",
      con=cnxn)
 
 
@@ -139,7 +139,7 @@ def main():
 
     df = pd.read_sql(
         sql="""SELECT *
-            FROM [SAM].[dbo].[HCPyDiabetesClinical]
+            FROM [SAM].[dbo].[HCAIDiabetesClinical]
             -- In this step, just grab rows that have a target
             WHERE ThirtyDayReadmitFLG is not null""",
         con=cnxn)

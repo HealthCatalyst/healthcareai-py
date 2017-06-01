@@ -34,12 +34,12 @@ def setup_deploy_tables(db_name):
     cursor = db.cursor()
 
     # Drop tables
-    drop_table(db_name, 'PredictionClassificationBASE')
-    drop_table(db_name, 'PredictionRegressionBASE')
+    drop_table(db_name, 'HCAIPredictionClassificationBASE')
+    drop_table(db_name, 'HCAIPredictionRegressionBASE')
 
     # Set up tables
     classification_table_setup = """
-       CREATE TABLE IF NOT EXISTS PredictionClassificationBASE (
+       CREATE TABLE IF NOT EXISTS HCAIPredictionClassificationBASE (
             BindingID [int] ,
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -52,7 +52,7 @@ def setup_deploy_tables(db_name):
     cursor.execute(classification_table_setup)
 
     regression_table_setup = """
-        CREATE TABLE IF NOT EXISTS PredictionRegressionBASE (
+        CREATE TABLE IF NOT EXISTS HCAIPredictionRegressionBASE (
             BindingID [int],
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -65,8 +65,8 @@ def setup_deploy_tables(db_name):
     cursor.execute(regression_table_setup)
 
     # Verify both are empty
-    a = is_table_empty(db_name, 'PredictionClassificationBASE')
-    b = is_table_empty(db_name, 'PredictionRegressionBASE')
+    a = is_table_empty(db_name, 'HCAIPredictionClassificationBASE')
+    b = is_table_empty(db_name, 'HCAIPredictionRegressionBASE')
 
     if a and b:
         return True

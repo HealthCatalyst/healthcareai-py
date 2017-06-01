@@ -84,7 +84,7 @@ If on Windows, [install both](http://stackoverflow.com/a/11278818/5636012_SQL) S
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 
         ```sql
-        CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+        CREATE TABLE [SAM].[dbo].[HCAIPredictionClassificationBASE] (
         [BindingID] [int] ,
         [BindingNM] [varchar] (255),
         [LastLoadDTS] [datetime2] (7),
@@ -94,7 +94,7 @@ Note that these will go in the SAM database, if using the Health Catalyst analyt
         [Factor2TXT] [varchar] (255),
         [Factor3TXT] [varchar] (255))
         
-        CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+        CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
         [BindingID] [int],
         [BindingNM] [varchar] (255),
         [LastLoadDTS] [datetime2] (7),

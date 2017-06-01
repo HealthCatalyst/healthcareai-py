@@ -109,7 +109,7 @@ def main():
     # print(catalyst_dataframe.head())
     # server = 'localhost'
     # database = 'SAM'
-    # table = 'HCPyDeployClassificationBASE'
+    # table = 'HCAIPredictionClassificationBASE'
     # schema = 'dbo'
     # trained_model.predict_to_catalyst_sam(prediction_dataframe, server, database, table, schema)
 

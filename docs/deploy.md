@@ -17,7 +17,7 @@ Only if you've already completed these steps:
 For classification predictions:
 
 ```sql
-CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+CREATE TABLE [SAM].[dbo].[HCAIPredictionClassificationBASE] (
   [BindingID] [int] , 
   [BindingNM] [varchar] (255), 
   [LastLoadDTS] [datetime2] (7), 
@@ -31,7 +31,7 @@ CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
 For regression predictions:
 
 ```sql
-CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
   [BindingID] [int], 
   [BindingNM] [varchar] (255), 
   [LastLoadDTS] [datetime2] (7), 
@@ -56,7 +56,7 @@ cnxn = pyodbc.connect("""SERVER=localhost;
  df = pd.read_sql(
      sql="""SELECT
             *
-            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
+            FROM [SAM].[dbo].[HCAIDiabetesClinical]""",
      con=cnxn)
 
 
@@ -134,7 +134,7 @@ Example code:
 p.deploy(method='rf',
          cores=2,
          server='localhost',
-         dest_db_schema_table='[SAM].[dbo].[HCPyDeployRegressionBASE]',
+         dest_db_schema_table='[SAM].[dbo].[HCAIPredictionRegressionBASE]',
          use_saved_model=False,
          trees=200,
          debug=False)
@@ -166,7 +166,7 @@ def main():
     #
     # df = pd.read_sql(
     #     sql="""SELECT *
-    #            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
+    #            FROM [SAM].[dbo].[HCAIDiabetesClinical]""",
     #     con=cnxn)
     #
     # # Set None string to be None type
@@ -189,7 +189,7 @@ def main():
     p.deploy(method='rf',
              cores=2,
              server='localhost',
-             dest_db_schema_table='[SAM].[dbo].[HCPyDeployRegressionBASE]',
+             dest_db_schema_table='[SAM].[dbo].[HCAIPredictionRegressionBASE]',
              use_saved_model=False,
              trees=200,
              debug=False)

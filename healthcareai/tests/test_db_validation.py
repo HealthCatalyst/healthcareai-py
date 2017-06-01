@@ -16,7 +16,7 @@ class TestValidateDestinationTableConnection(unittest.TestCase):
                      "Skipping this on Travis CI.")
     def test_should_succeed(self):
         is_table_connection_valid = validate_destination_table_connection('localhost',
-                                                                          '[SAM].[dbo].[HCPyDeployRegressionBASE]',
+                                                                          '[SAM].[dbo].[HCAIPredictionRegressionBASE]',
                                                                           'PatientEncounterID',
                                                                           '[PredictedValueNBR]')
         self.assertTrue(is_table_connection_valid)

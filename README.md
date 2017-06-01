@@ -77,7 +77,7 @@ tag) so we can help others along this process.
 - Modify the queries and parameters to match your data
 - If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
   ```sql
-  CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+  CREATE TABLE [SAM].[dbo].[HCAIClassificationBASE] (
 	 [BindingID] [int] ,
 	 [BindingNM] [varchar] (255),
 	 [LastLoadDTS] [datetime2] (7),
@@ -87,7 +87,7 @@ tag) so we can help others along this process.
 	 [Factor2TXT] [varchar] (255),
 	 [Factor3TXT] [varchar] (255))
 
-  CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+  CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
 	 [BindingID] [int],
 	 [BindingNM] [varchar] (255),
 	 [LastLoadDTS] [datetime2] (7),
@@ -97,7 +97,6 @@ tag) so we can help others along this process.
 	 [Factor2TXT] [varchar] (255),
 	 [Factor3TXT] [varchar] (255))
   ```
-Note that we're currently working on easy connections to other types of databases.
 
 ## For Issues
 
