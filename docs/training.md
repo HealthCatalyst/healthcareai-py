@@ -145,6 +145,20 @@ tsm_plots.tsm_classification_comparison_plots(
     save=False)
 ```
 
+## Step 5: Save a Model
+
+After you have trained a model you are happy with, you can save that model for later use.
+
+On any instance of a `TrainedSupervisedModel` (that the trainer returns), use the `.save()` method to save the model.
+
+Models will be saved with a timestamp and algorithm name so it is easy to find which one you want.
+
+```python
+# Save the model
+trained_random_forest.save()
+```
+
+
 ## Full example code
 
 Note: you can run this out-of-the-box from the healthcareai-py folder:

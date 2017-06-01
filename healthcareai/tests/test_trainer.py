@@ -51,7 +51,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.65, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.65, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
@@ -81,7 +81,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_lr.metrics
 
-        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_classification(self):
@@ -90,7 +90,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):

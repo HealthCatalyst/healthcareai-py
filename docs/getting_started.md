@@ -12,7 +12,7 @@
 
 ### Windows
 
-- If you haven't, install 64-bit Python 3.5 via [the Anaconda distribution](https://www.continuum.io/downloads)
+- If you haven't, install 64-bit Python 3.6 via [the Anaconda distribution](https://www.continuum.io/downloads)
 - Open the terminal (i.e., CMD or PowerShell, if using Windows)
 - **Optional** If you intend to work with MSSQL databases, run `conda install pyodbc`
 - Upgrade to latest scipy
