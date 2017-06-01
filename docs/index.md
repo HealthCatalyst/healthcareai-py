@@ -1,9 +1,4 @@
-# Welcome to the healthcare.ai!
-
-The purpose of this python package is to streamline healthcare machine
-learning. It does this by including functionality specific to
-healthcare, as well as simplifying the workflow of creating and
-deploying models.
+# Welcome to healthcare.ai!
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 

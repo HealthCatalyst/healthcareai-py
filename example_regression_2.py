@@ -13,7 +13,7 @@ This code uses the DiabetesClinicalSampleData.csv source file.
 import pandas as pd
 
 import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.write_predictions_to_database as hcaidb
+import healthcareai.common.database_connections as hcai_db
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
     #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
     #             WHERE SystolicBPNBR is null"""
     #
-    # engine = hcaidb.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # prediction_dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
@@ -70,24 +70,23 @@ def main():
     # Save your predictions. You can save predictions to a csv or database. Examples are shown below.
     # Please note that you will likely only need one of these output types. Feel free to delete the others.
 
-    # Save results to csv
+    # ## Save results to csv
     predictions.to_csv('ClinicalPredictions.csv')
 
-    # Save predictions to MSSQL db
+    # ## Save predictions to MSSQL db
     # server = 'localhost'
     # database = 'ClinicalData'
     # table = 'ClinicalPredictions'
     # schema = 'dbo'
-    # engine = hcaidb.build_mssql_engine(server, database)
-    #
+    # engine = hcai_db.build_mssql_engine(server, database)
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     # ## SQLite
     # path_to_database_file = 'database.db'
     # table = 'prediction_output'
-    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_knn.make_factors)
+    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_model.make_factors)
 
-    # Health Catalyst EDW specific instructions. Uncomment to use.
+    # ## Health Catalyst EDW specific instructions. Uncomment to use.
     # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors
     # catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
     # print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')

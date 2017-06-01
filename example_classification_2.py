@@ -12,12 +12,9 @@ This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
 import sqlalchemy
-import sqlite3
 
-import healthcareai.trained_models.trained_supervised_model as tsm_plots
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
-import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.write_predictions_to_database as hcaidb
+import healthcareai.common.file_io_utilities as hcai_io_utilities
+import healthcareai.common.database_connections as hcai_db
 
 
 def main():
@@ -31,7 +28,7 @@ def main():
     #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
     #             WHERE SystolicBPNBR is null"""
     #
-    # engine = hcaidb.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # prediction_dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
@@ -39,7 +36,7 @@ def main():
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
     # Load the saved model and print out the metrics
-    trained_model = io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
+    trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
 
     # Any saved model can be inspected for properties such as plots, metrics, columns, etc. (More examples in the docs)
     trained_model.roc_plot()
@@ -84,7 +81,7 @@ def main():
     # database = 'my_database'
     # table = 'predictions_output'
     # schema = 'dbo'
-    # engine = hcaidb.build_mssql_engine(server, database)
+    # engine = hcai_db.build_mssql_engine(server, database)
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     # ## MySQL using standard authentication
@@ -100,7 +97,7 @@ def main():
     # ## SQLite
     # path_to_database_file = 'database.db'
     # table = 'prediction_output'
-    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_knn.make_factors)
+    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_model.make_factors)
 
     # ## Health Catalyst EDW specific instructions. Uncomment to use.
     # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors

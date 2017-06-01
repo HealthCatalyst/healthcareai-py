@@ -4,12 +4,13 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
+import healthcareai.common.database_writers
 import healthcareai.common.file_io_utilities as hcai_io
 import healthcareai.common.helpers as hcai_helpers
 import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors
-import healthcareai.common.write_predictions_to_database as hcai_db
-import healthcareai.common.database_connection_validation as hcai_dbval
+import healthcareai.common.database_connections as hcai_db
+import healthcareai.common.database_validators as hcai_dbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -328,7 +329,7 @@ class TrainedSupervisedModel(object):
 
         try:
             engine = hcai_db.build_mssql_engine(server, database)
-            hcai_db.write_to_db_agnostic(engine, table, sam_df, schema=schema)
+            healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df, schema=schema)
         except HealthcareAIError as hcaie:
             # Run validation and alert user
             hcai_dbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
@@ -368,7 +369,7 @@ class TrainedSupervisedModel(object):
 
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
         engine = hcai_db.build_sqlite_engine(database)
-        hcai_db.write_to_db_agnostic(engine, table, sam_df)
+        healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
     def roc_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """

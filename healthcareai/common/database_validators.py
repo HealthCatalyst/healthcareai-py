@@ -1,5 +1,7 @@
 import datetime
 
+import healthcareai.common.database_library_validators
+
 try:
     import pyodbc
 
@@ -7,13 +9,12 @@ try:
 except ImportError:
     pyodbc_is_loaded = False
 
-import healthcareai.common.write_predictions_to_database as hcai_db
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
     # Verify that pyodbc is loaded
-    hcai_db.validate_pyodbc_is_loaded()
+    healthcareai.common.database_library_validators.validate_pyodbc_is_loaded()
 
     # TODO make this database agnostic
     # TODO If this becomes db agnostic, we will have to use something with transactions that can be rolled back
@@ -60,6 +61,28 @@ def validate_destination_table_connection(server, destination_table, grain_colum
             raise HealthcareAIError(error_message)
 
     return result
+
+
+def does_table_exist(engine, table, schema=None):
+    """ Checks if a table exists on a given database engine with an optional schema. """
+    return engine.has_table(table, schema=schema)
+
+
+def verify_sqlite_table_exists(connection, table):
+    """
+    Verifies that a table exsits on a sqlite engine. Raises error if it does not exist.
+    
+    Args:
+        connection (sqlite.Connection): sqlite connection
+        table (str): table name
+    """
+    cursor = connection.execute('select name from sqlite_master where type="table"')
+    raw = cursor.fetchall()
+    # unwrap tuples
+    table_names = [x[0] for x in raw]
+
+    if table not in table_names:
+        raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
 
 
 if __name__ == "__main__":

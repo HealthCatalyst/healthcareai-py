@@ -13,13 +13,14 @@ This code uses the DiabetesClinicalSampleData.csv source file.
 import pandas as pd
 
 from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
+import healthcareai.common.database_connections as hcai_db
 
 
 def main():
-    # Load data from a sample .csv file
+    # ## Load data from a sample .csv file
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
-    # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # ## Load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
     # database = 'SAM'
     # query = """SELECT *
@@ -27,7 +28,7 @@ def main():
     #             -- In this step, just grab rows that have a target
     #             WHERE ThirtyDayReadmitFLG is not null"""
     #
-    # engine = hcaidb.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning

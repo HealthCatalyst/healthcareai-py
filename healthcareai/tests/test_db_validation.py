@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from healthcareai.common.database_connection_validation import validate_destination_table_connection
+from healthcareai.common.database_validators import validate_destination_table_connection
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
