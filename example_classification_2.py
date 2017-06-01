@@ -52,7 +52,7 @@ def main():
     # ## Get predictions
     predictions = trained_model.make_predictions(prediction_dataframe)
     print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
-    print(predictions[0:5])
+    print(predictions.head())
 
     # ## Get the important factors
     factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
@@ -91,7 +91,7 @@ def main():
     # userid = 'fake_user'
     # password = 'fake_password'
     # table = 'prediction_output'
-    # mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+    # mysql_connection_string = 'Server={};Database={};Uid={};Pwd={};'.format(server, database, userid, password)
     # mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
     # predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
 

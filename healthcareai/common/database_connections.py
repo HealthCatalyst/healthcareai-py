@@ -20,7 +20,7 @@ except ImportError:
     sqlite3_is_loaded = False
 
 
-def build_mssql_connection_string(server, database):
+def build_mssql_trusted_connection_string(server, database):
     """ Given a server and database name, build a Trusted Connection MSSQL connection string """
     return 'DRIVER={SQL Server Native Client 11.0};Server=' + server + ';Database=' + database + ';Trusted_Connection=yes;'
 
@@ -44,7 +44,7 @@ def build_sqlite_in_memory_connection_string():
     # return 'Data Source=:memory:;Version=3;New=True;'
 
 
-def build_mssql_engine(server, database):
+def build_mssql_engine_using_trusted_connections(server, database):
     """
     Given a server and database name, build a Trusted Connection MSSQL database engine. NOTE: Requires `pyodbc`
     
@@ -57,7 +57,7 @@ def build_mssql_engine(server, database):
     """
     hcai_db_library.validate_pyodbc_is_loaded()
 
-    connection_string = build_mssql_connection_string(server, database)
+    connection_string = build_mssql_trusted_connection_string(server, database)
     params = urllib.parse.quote_plus(connection_string)
     engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
 

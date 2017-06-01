@@ -194,14 +194,14 @@ class TrainedSupervisedModel(object):
 
     def make_factors(self, dataframe, number_top_features=3):
         """
-        Given a prediction dataframe, build and return a list of the top k feautures in dataframe format
+        Given a prediction dataframe, build and return a list of the top k features in dataframe format
         
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
             number_top_features (int): Number of top features per row
 
         Returns:
-            pandas.core.frame.DataFrame:  
+            pandas.core.frame.DataFrame:  A dataframe containing the grain id and factors
         """
 
         # Run the raw dataframe through the preparation process
@@ -328,7 +328,7 @@ class TrainedSupervisedModel(object):
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
 
         try:
-            engine = hcai_db.build_mssql_engine(server, database)
+            engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
             healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df, schema=schema)
         except HealthcareAIError as hcaie:
             # Run validation and alert user

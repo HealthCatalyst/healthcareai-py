@@ -50,7 +50,7 @@ def main():
     # Make some predictions
     print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
     predictions = trained_model.make_predictions(prediction_dataframe)
-    print(predictions[0:5])
+    print(predictions.head())
 
     # Get the important factors
     print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
@@ -81,6 +81,17 @@ def main():
     # schema = 'dbo'
     # engine = hcai_db.build_mssql_engine(server, database)
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
+
+    # ## MySQL using standard authentication
+    # server = 'localhost'
+    # database = 'my_database'
+    # userid = 'fake_user'
+    # password = 'fake_password'
+    # table = 'prediction_output'
+    # mysql_connection_string = 'Server={};Database={};Uid={};Pwd={};'.format(server, database, userid, password)
+    # mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
+    # predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
+
 
     # ## SQLite
     # path_to_database_file = 'database.db'
