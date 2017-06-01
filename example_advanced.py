@@ -1,8 +1,4 @@
-"""This file is used to create and compare two models on a particular dataset.
-It provides examples of reading from both csv and SQL Server. Note that this
-example can be run as-is after installing healthcare.ai. After you have
-found that one of the models works well on your data, move to Example2
-"""
+"""This file showcases some ways an advanced user can leverage the tools in healthcare.ai """
 import time
 import pandas as pd
 from healthcareai import AdvancedSupervisedModelTrainer

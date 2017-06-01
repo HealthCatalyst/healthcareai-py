@@ -6,7 +6,7 @@ If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
 
 To run this example:
-  python3 example_simple_classification.py
+  python3 example_classification_2.py
 
 This code uses the DiabetesClinicalSampleData.csv source file.
 """
@@ -100,8 +100,7 @@ def main():
     # ## SQLite
     # path_to_database_file = 'database.db'
     # table = 'prediction_output'
-    # connection = sqlite3.connect(path_to_database_file)
-    # predictions_with_factors_df.to_sql(table, connection)
+    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_knn.make_factors)
 
     # ## Health Catalyst EDW specific instructions. Uncomment to use.
     # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors

@@ -82,6 +82,11 @@ def main():
     #
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
+    # ## SQLite
+    # path_to_database_file = 'database.db'
+    # table = 'prediction_output'
+    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_knn.make_factors)
+
     # Health Catalyst EDW specific instructions. Uncomment to use.
     # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors
     # catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
