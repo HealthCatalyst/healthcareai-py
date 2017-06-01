@@ -82,20 +82,20 @@ class AdvancedSupervisedModelTrainer(object):
         #     Must happen AFTER under/over sampling is done
         #     so that we scale the under/over sampled dataset.
         # TODO: How to warn the user if they call this method at the wrong time?
-        X_train_scaled_subset = self.X_train[columns_to_scale]
-        X_test_scaled_subset = self.X_test[columns_to_scale]
+        x_train_scaled_subset = self.X_train[columns_to_scale]
+        x_test_scaled_subset = self.X_test[columns_to_scale]
         scaler = StandardScaler()
 
-        scaler.fit(X_train_scaled_subset)
+        scaler.fit(x_train_scaled_subset)
 
-        X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_train_scaled_subset))
-        X_train_scaled_subset_dataframe.index = X_train_scaled_subset.index
-        X_train_scaled_subset_dataframe.columns = X_train_scaled_subset.columns
+        X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_train_scaled_subset))
+        X_train_scaled_subset_dataframe.index = x_train_scaled_subset.index
+        X_train_scaled_subset_dataframe.columns = x_train_scaled_subset.columns
         self.X_train[columns_to_scale] = X_train_scaled_subset_dataframe
 
-        X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(X_test_scaled_subset))
-        X_test_scaled_subset_dataframe.index = X_test_scaled_subset.index
-        X_test_scaled_subset_dataframe.columns = X_test_scaled_subset.columns
+        X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_test_scaled_subset))
+        X_test_scaled_subset_dataframe.index = x_test_scaled_subset.index
+        X_test_scaled_subset_dataframe.columns = x_test_scaled_subset.columns
         self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
     def train_test_split(self, random_seed=None):
@@ -188,8 +188,8 @@ class AdvancedSupervisedModelTrainer(object):
             # return True for testing
             return True
         elif classes > 2 and metric in ['pr_auc', 'roc_auc']:
-            raise (HealthcareAIError(
-                'AUC (aka roc_auc) cannot be used for more than two classes. Please choose another metric such as \'accuracy\''))
+            raise (HealthcareAIError('AUC (aka roc_auc) cannot be used for more than two classes. Please choose another'
+                                     ' metric such as \'accuracy\''))
 
     def metrics(self, trained_sklearn_estimator):
         """

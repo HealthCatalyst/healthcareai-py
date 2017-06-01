@@ -59,7 +59,7 @@ def build_mssql_engine_using_trusted_connections(server, database):
 
     connection_string = build_mssql_trusted_connection_string(server, database)
     params = urllib.parse.quote_plus(connection_string)
-    engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+    engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 
     return engine
 

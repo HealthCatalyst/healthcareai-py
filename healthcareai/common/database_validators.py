@@ -13,6 +13,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_destination_table_connection(server, destination_table, grain_column, predicted_column_name):
+    """ MSSQL specific connection validator that inserts a row and rolls back the transaction. """
     # Verify that pyodbc is loaded
     healthcareai.common.database_library_validators.validate_pyodbc_is_loaded()
 
