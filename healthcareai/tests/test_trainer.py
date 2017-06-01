@@ -69,11 +69,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
-        expected_mse = 630
-        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-2)
-
-        expected_mae = 18
-        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+        helpers.assertBetween(self, 600, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
 
     def test_logistic_regression(self):
         trained_lr = self.classification_trainer.logistic_regression()
