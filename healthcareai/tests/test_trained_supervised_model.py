@@ -2,7 +2,9 @@ import unittest
 import pandas as pd
 
 import healthcareai.tests.helpers as helpers
-from healthcareai.trainer import SupervisedModelTrainer
+import healthcareai.trained_models.trained_supervised_model
+from healthcareai.common.healthcareai_error import HealthcareAIError
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
 
 class TestTrainedSupervisedModel(unittest.TestCase):
@@ -12,7 +14,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         training_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        training_df.drop(['PatientID'], axis=1, inplace=True)
 
         regression_trainer = SupervisedModelTrainer(
             training_df,
@@ -36,7 +38,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.prediction_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        columns_to_remove = ['PatientID']
         cls.prediction_df.drop(columns_to_remove, axis=1, inplace=True)
 
         # Create various outputs
@@ -45,7 +47,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.predictions_with_3_factors = cls.trained_linear_model.make_predictions_with_k_factors(
             cls.prediction_df,
             number_top_features=3)
-        cls.original_with_predictions_3_factors = cls.trained_linear_model.make_original_with_predictions_and_features(
+        cls.original_with_predictions_3_factors = cls.trained_linear_model.make_original_with_predictions_and_factors(
             cls.prediction_df,
             number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)
@@ -110,6 +112,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
     def test_roc_returns_dict(self):
         self.assertIsInstance(self.trained_lr.roc(), dict)
+
+    def test_comparison_plotter_raises_error_on_bad_plot_type(self):
+        self.assertRaises(HealthcareAIError,
+                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
+                          self.trained_lr,
+                          plot_type='bad_plot_type')
+
+    def test_comparison_plotter_raises_error_on_single_non_tsm(self):
+        self.assertRaises(HealthcareAIError,
+                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
+                          'foo')
+
+    def test_comparison_plotter_raises_error_on_list_with_non_tsm(self):
+        bad_list = ['foo']
+        self.assertRaises(HealthcareAIError,
+                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
+                          bad_list)
 
 
 if __name__ == '__main__':

@@ -1,12 +1,16 @@
-import pandas as pd
-import numpy as np
+import time
 from datetime import datetime
 
-import healthcareai.common.file_io_utilities as io_utilities
-import healthcareai.common.model_eval as model_evaluation
-import healthcareai.common.top_factors as factors
-import healthcareai.common.write_predictions_to_database as hcaidb
-import healthcareai.common.database_connection_validation as hcaidbval
+import numpy as np
+import pandas as pd
+
+import healthcareai.common.database_writers
+import healthcareai.common.file_io_utilities as hcai_io
+import healthcareai.common.helpers as hcai_helpers
+import healthcareai.common.model_eval as hcai_model_evaluation
+import healthcareai.common.top_factors as hcai_factors
+import healthcareai.common.database_connections as hcai_db
+import healthcareai.common.database_validators as hcai_dbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -50,25 +54,33 @@ class TrainedSupervisedModel(object):
     @property
     def algorithm_name(self):
         """ Model name extracted from the class type """
-        model = model_evaluation.get_estimator_from_meta_estimator(self.model)
+        model = hcai_helpers.extract_estimator_from_meta_estimator(self.model)
         name = type(model).__name__
 
         return name
 
     @property
     def is_classification(self):
-        """ easy check to consolidate magic strings in all the model type switches """
+        """
+        Returns True if trainer is set up for classification 
+
+        Easy check to consolidate magic strings in all the model type switches.
+        """
         return self.model_type == 'classification'
 
     @property
     def is_regression(self):
-        """ easy check to consolidate magic strings in all the model type switches """
+        """
+        Returns True if trainer is set up for regression 
+
+        Easy check to consolidate magic strings in all the model type switches.
+        """
         return self.model_type == 'regression'
 
     @property
     def best_hyperparameters(self):
         """ Best hyperparameters found if model is a meta estimator """
-        return model_evaluation.get_hyperparameters_from_meta_estimator(self.model)
+        return hcai_helpers.get_hyperparameters_from_meta_estimator(self.model)
 
     @property
     def model_type(self):
@@ -91,17 +103,24 @@ class TrainedSupervisedModel(object):
         """ Return the metrics that were calculated when the model was trained. """
         return self._metric_by_name
 
-    def save(self, filename):
+    def save(self, filename=None, debug=True):
         """
         Save this object to a pickle file with the given file name
         
         Args:
-            filename (str): Name of the file
+            filename (str): Optional filename override. Defaults to `timestamp_<MODEL_TYPE>_<ALGORITHM_NAME>.pkl`. For
+                example: `2017-05-27T09-12-30_regression_LinearRegression.pkl`
+            debug (bool): Print debug output to console by default
         """
 
-        # TODO should this timestamp a model name automatically? (for example 2017-04-26_01.33.55_random_forest.pkl)
-        io_utilities.save_object_as_pickle(filename, self)
-        print('Model saved as {}'.format(filename))
+        if filename is None:
+            time_string = time.strftime("%Y-%m-%dT%H-%M-%S")
+            filename = '{}_{}_{}.pkl'.format(time_string, self.model_type, self.algorithm_name)
+
+        hcai_io.save_object_as_pickle(self, filename)
+
+        if debug:
+            print('Trained {} model saved as {}'.format(self.algorithm_name, filename))
 
     def make_predictions(self, dataframe):
         """
@@ -175,14 +194,14 @@ class TrainedSupervisedModel(object):
 
     def make_factors(self, dataframe, number_top_features=3):
         """
-        Given a prediction dataframe, build and return a list of the top k feautures in dataframe format
+        Given a prediction dataframe, build and return a list of the top k features in dataframe format
         
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
             number_top_features (int): Number of top features per row
 
         Returns:
-            pandas.core.frame.DataFrame:  
+            pandas.core.frame.DataFrame:  A dataframe containing the grain id and factors
         """
 
         # Run the raw dataframe through the preparation process
@@ -195,7 +214,7 @@ class TrainedSupervisedModel(object):
         reason_col_names = ['Factor{}TXT'.format(i) for i in range(1, number_top_features + 1)]
 
         # Get a 2 dimensional list of all the factors
-        top_features = factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
+        top_features = hcai_factors.top_k_features(prepared_dataframe, self.feature_model, k=number_top_features)
 
         # Verify that the number of factors matches the number of rows in the original dataframe.
         if len(top_features) != len(dataframe):
@@ -223,7 +242,7 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame:  
         """
 
-        # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.
+        # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice. Consider
         # Get the factors and predictions
         results = self.make_factors(dataframe, number_top_features=number_top_features)
         predictions = self.make_predictions(dataframe)
@@ -237,7 +256,7 @@ class TrainedSupervisedModel(object):
 
         return results
 
-    def make_original_with_predictions_and_features(self, dataframe, number_top_features=3):
+    def make_original_with_predictions_and_factors(self, dataframe, number_top_features=3):
         """
         Given a prediction dataframe, build and return a dataframe with the all the original columns, the predictions, 
         and the top k feautures.
@@ -286,13 +305,15 @@ class TrainedSupervisedModel(object):
     def predict_to_catalyst_sam(self, dataframe, server, database, table, schema=None, predicted_column_name=None):
         """
         Given a dataframe you want predictions on, make predictions and save them to a catalyst-specific EDW table.
+        
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
             server (str): the target server name
             database (str): the database name
             table (str): the destination table name
             schema (str): the optional schema
-            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or
+                PredictedValueNBR)
         """
 
         # Make predictions in specific format
@@ -307,11 +328,11 @@ class TrainedSupervisedModel(object):
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
 
         try:
-            engine = hcaidb.build_mssql_engine(server, database)
-            hcaidb.write_to_db_agnostic(engine, table, sam_df, schema=schema)
+            engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
+            healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df, schema=schema)
         except HealthcareAIError as hcaie:
             # Run validation and alert user
-            hcaidbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
+            hcai_dbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
             raise HealthcareAIError(hcaie.message)
 
     def predict_to_sqlite(self,
@@ -328,7 +349,8 @@ class TrainedSupervisedModel(object):
             database (str): database file name
             table (str): table name
             prediction_generator (method): one of the trained supervised model prediction methods
-            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or PredictedValueNBR)
+            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or
+                PredictedValueNBR)
         """
         # validate inputs
         if type(prediction_generator).__name__ != 'method':
@@ -346,13 +368,13 @@ class TrainedSupervisedModel(object):
                 predicted_column_name = 'PredictedValueNBR'
 
         sam_df.rename(columns={'Prediction': predicted_column_name}, inplace=True)
-        engine = hcaidb.build_sqlite_engine(database)
-        hcaidb.write_to_db_agnostic(engine, table, sam_df)
+        engine = hcai_db.build_sqlite_engine(database)
+        healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
-    def roc_curve_plot(self):
+    def roc_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='ROC')
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
     def roc(self, print_output=True):
         """
@@ -379,28 +401,35 @@ class TrainedSupervisedModel(object):
         # roc = self._metric_by_name
 
         if print_output:
-            print("""\nReceiver Operating Characteristic (ROC):
-            Area under curve (ROC AUC): {:0.2f}
-            Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}""".format(
-                roc['roc_auc'], roc['best_roc_cutoff'], roc['best_true_positive_rate'], roc['best_false_positive_rate']))
+            print(('\nReceiver Operating Characteristic (ROC):\n'
+                   '    Area under curve (ROC AUC): {:0.2f}\n'
+                   '    Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}').format(
+                roc['roc_auc'],
+                roc['best_roc_cutoff'],
+                roc['best_true_positive_rate'],
+                roc['best_false_positive_rate']))
 
             print('|--------------------------------|')
             print('|               ROC              |')
             print('|  Threshhold  |  TPR   |  FPR   |')
             print('|--------------|--------|--------|')
-            for i in range(len(roc['roc_thresholds'])):
+            for i, _ in enumerate(roc['roc_thresholds']):
                 marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
-                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(marker, roc['roc_thresholds'][i], roc['true_positive_rates'][i], roc['false_positive_rates'][i]))
+                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(
+                    marker,
+                    roc['roc_thresholds'][i],
+                    roc['true_positive_rates'][i],
+                    roc['false_positive_rates'][i]))
             print('|--------------------------------|')
             print('|  *** Ideal cutoff              |')
             print('|--------------------------------|')
 
         return roc
 
-    def pr_curve_plot(self):
+    def pr_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
-        model_evaluation.tsm_classification_comparison_plots(trained_supervised_model=self, plot_type='PR')
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
         """
@@ -426,18 +455,25 @@ class TrainedSupervisedModel(object):
         }
 
         if print_output:
-            print("""\nPrecision-Recall:
-        Area under Precision Recall curve (PR AUC): {:0.2f}
-        Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}""".format(
-        pr['pr_auc'], pr['best_pr_cutoff'], pr['best_precision'], pr['best_recall']))
+            print(('\nPrecision-Recall:\n'
+                   '    Area under Precision Recall curve (PR AUC): {:0.2f}\n'
+                   '    Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}').format(
+                pr['pr_auc'],
+                pr['best_pr_cutoff'],
+                pr['best_precision'],
+                pr['best_recall']))
 
             print('|---------------------------------|')
             print('|   Precision-Recall Thresholds   |')
             print('| Threshhold | Precision | Recall |')
             print('|------------|-----------|--------|')
-            for i in range(len(pr['pr_thresholds'])):
+            for i, _ in enumerate(pr['pr_thresholds']):
                 marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
-                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(marker, pr['pr_thresholds'][i], pr['precisions'][i], pr['recalls'][i]))
+                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(
+                    marker,
+                    pr['pr_thresholds'][i],
+                    pr['precisions'][i],
+                    pr['recalls'][i]))
             print('|---------------------------------|')
             print('|  *** Ideal cutoff               |')
             print('|---------------------------------|')
@@ -452,3 +488,90 @@ class TrainedSupervisedModel(object):
         # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
             raise HealthcareAIError('This function only runs on a binary classification model.')
+
+
+def get_estimator_from_trained_supervised_model(trained_supervised_model):
+    """
+    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+
+    Returns:
+        sklearn.base.BaseEstimator: 
+
+    """
+    # Validate input is a TSM
+    if not isinstance(trained_supervised_model, TrainedSupervisedModel):
+        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
+    """
+    1. check if it is a TSM
+        Y: proceed
+        N: raise error?
+    2. check if tsm.model is a meta estimator
+        Y: extract best_estimator_
+        N: return tsm.model
+    """
+    # Check if tsm.model is a meta estimator
+    result = hcai_helpers.extract_estimator_from_meta_estimator(trained_supervised_model.model)
+
+    return result
+
+
+def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
+    """
+    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
+    
+    Args:
+        plot_type (str): 'ROC' (default) or 'PR' 
+        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
+        save (bool): Save the plot to a file
+    """
+    # Input validation plus switching
+    if plot_type == 'ROC':
+        plotter = hcai_model_evaluation.roc_plot_from_thresholds
+    elif plot_type == 'PR':
+        plotter = hcai_model_evaluation.pr_plot_from_thresholds
+    else:
+        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
+
+    metrics_by_model = []
+
+    if isinstance(trained_supervised_models, TrainedSupervisedModel):
+        entry = {trained_supervised_models.algorithm_name: trained_supervised_models.metrics}
+        metrics_by_model.append(entry)
+    elif isinstance(trained_supervised_models, list):
+        for model in trained_supervised_models:
+            if not isinstance(model, TrainedSupervisedModel):
+                raise HealthcareAIError(
+                    'One of the objects in the list is not a TrainedSupervisedModel ({})'.format(model))
+
+            entry = {model.algorithm_name: model.metrics}
+
+            metrics_by_model.append(entry)
+
+            # TODO so, you could check for different GUIDs that could be saved in each TSM!
+            # The assumption here is that each TSM was trained on the same train test split,
+            # which happens when instantiating SupervisedModelTrainer
+    else:
+        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
+
+    # Plot with the selected plotter
+    plotter(metrics_by_model, save=save, debug=False)
+
+
+def plot_rf_features_from_tsm(trained_supervised_model, x_train, save=False):
+    """
+    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph.
+    
+    Args:
+        trained_supervised_model (TrainedSupervisedModel): 
+        x_train (numpy.array): A 2D numpy array that was used for training 
+        save (bool): True to save the plot, false to display it in a blocking thread
+    """
+    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
+    column_names = trained_supervised_model.column_names
+    hcai_model_evaluation.plot_random_forest_feature_importance(model, x_train, column_names, save=save)
+
+
+if __name__ == "__main__":
+    pass

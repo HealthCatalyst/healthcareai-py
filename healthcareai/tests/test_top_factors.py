@@ -3,7 +3,7 @@ import pandas as pd
 
 import healthcareai.tests.helpers as helpers
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
 
 class TestTopFactors(unittest.TestCase):
@@ -19,7 +19,7 @@ class TestTopFactors(unittest.TestCase):
             impute=True,
             grain_column='id')
 
-        # Train the linear regression model
+        # Train the logistic regression model
         cls.trained_lr = hcai.logistic_regression()
 
         # Load a new df for predicting

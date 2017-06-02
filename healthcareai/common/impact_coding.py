@@ -3,6 +3,7 @@ from sklearn import model_selection
 
 
 def impact_coding_on_a_single_column(dataframe, predicted_column, impact_column):
+    """ First pass impact coding. """
     train, test = model_selection.train_test_split(dataframe, test_size=0.8, random_state=0)
     x_bar = train[predicted_column].mean()
     impact = pd.DataFrame(
@@ -17,5 +18,10 @@ def impact_coding_on_a_single_column(dataframe, predicted_column, impact_column)
 
 
 def impact_coding_on_many_columns(dataframe, predicted_column, columns_to_impact_code):
+    """ First pass impact coding. """
     for column_name in columns_to_impact_code:
         impact_coding_on_a_single_column(dataframe, predicted_column, column_name)
+
+
+if __name__ == "__main__":
+    pass

@@ -3,11 +3,14 @@ import sklearn
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-
 import sklearn.metrics as skmetrics
 
+from matplotlib import pyplot as plt
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
+
+DIAGONAL_LINE_COLOR = '#bbbbbb'
+DIAGONAL_LINE_STYLE = 'dotted'
 
 
 def compute_roc(y_test, probability_predictions):
@@ -22,7 +25,7 @@ def compute_roc(y_test, probability_predictions):
         dict: 
 
     """
-    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
     # Calculate ROC
     false_positive_rates, true_positive_rates, roc_thresholds = skmetrics.roc_curve(y_test, probability_predictions)
@@ -59,7 +62,7 @@ def compute_pr(y_test, probability_predictions):
         dict: 
 
     """
-    validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
     # Calculate PR
     precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
@@ -82,11 +85,6 @@ def compute_pr(y_test, probability_predictions):
             'precisions': precisions,
             'recalls': recalls,
             'pr_thresholds': pr_thresholds}
-
-
-def validate_predictions_and_labels_are_equal_length(predictions, true_values):
-    if len(predictions) != len(true_values):
-        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
 def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
@@ -128,7 +126,7 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     # Squeeze down y_test to 1D
     y_test = np.squeeze(y_test)
 
-    validate_predictions_and_labels_are_equal_length(x_test, y_test)
+    _validate_predictions_and_labels_are_equal_length(x_test, y_test)
 
     # Get binary and probability classification predictions
     binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
@@ -143,61 +141,18 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     return {'accuracy': accuracy, **roc, **pr}
 
 
-def tsm_classification_comparison_plots(trained_supervised_model, plot_type='ROC', save=False):
-    """
-    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
-    
-    Args:
-        plot_type (str): 'ROC' (default) or 'PR' 
-        trained_supervised_model (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
-    """
-    # Input validation plus switching
-    if plot_type == 'ROC':
-        plotter = roc_plot_from_thresholds
-    elif plot_type == 'PR':
-        plotter = pr_plot_from_thresholds
-    else:
-        raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
-
-    metrics_by_model = []
-    # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
-    # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-    if type(trained_supervised_model).__name__ == 'TrainedSupervisedModel':
-        entry = {trained_supervised_model.algorithm_name: trained_supervised_model.metrics}
-        metrics_by_model.append(entry)
-    elif isinstance(trained_supervised_model, list):
-        for model in trained_supervised_model:
-            # TODO doing this properly leads to a circular dependency so dirty hack string matching was needed
-            # if isinstance(trained_supervised_model, TrainedSupervisedModel):
-            if type(model).__name__ != 'TrainedSupervisedModel':
-                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel')
-
-            entry = {model.algorithm_name: model.metrics}
-
-            metrics_by_model.append(entry)
-
-            # TODO so, you could check for different GUIDs that could be saved in each TSM!
-            # The assumption here is that each TSM was trained on the same train test split,
-            # which happens when instantiating SupervisedModelTrainer
-    else:
-        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
-
-    # Plot with the selected plotter
-    plotter(metrics_by_model, save=save, debug=False)
-
-
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
     plt.figure()
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic')
+    plt.xlabel('False Positive Rate (FPR)')
+    plt.ylabel('True Positive Rate (TRP)')
+    plt.title('Receiver Operating Characteristic (ROC)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot([0, 1], [0, 1], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
     # TODO hack to convert to array if it is a single dictionary
     if isinstance(roc_thresholds_by_model, dict):
@@ -220,7 +175,7 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         # TODO deal with colors ...
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(roc_auc, 2))
+        label = '{} (ROC AUC = {})'.format(model_name, round(roc_auc, 2))
         plt.plot(fpr, tpr, color=temp_color, label=label)
         plt.plot([best_false_positive_rate], [best_true_positive_rate], marker='*', markersize=10, color=temp_color)
 
@@ -243,10 +198,10 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.figure()
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall Curves')
+    plt.title('Precision Recall (PR)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.plot([0, 1], [1, 0], 'k--')
+    plt.plot([0, 1], [1, 0], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
     # TODO hack to convert to array if it is a single dictionary
     if isinstance(pr_thresholds_by_model, dict):
@@ -268,7 +223,7 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
 
         # plot the line
         temp_color = colors[i]
-        label = '{} (AUC = {})'.format(model_name, round(pr_auc, 2))
+        label = '{} (PR AUC = {})'.format(model_name, round(pr_auc, 2))
         plt.plot(recall, precision, color=temp_color, label=label)
         plt.plot([best_recall], [best_precision], marker='*', markersize=10, color=temp_color)
 
@@ -281,19 +236,6 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
         print('\nPR plot saved in: {}'.format(source_path))
 
     plt.show()
-
-
-def plot_rf_from_tsm(trained_supervised_model, x_train, save=False):
-    """
-    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph
-    Args:
-        trained_supervised_model (TrainedSupervisedModel): 
-        x_train (numpy.array): A 2D numpy array that was used for training 
-        save (bool): True to save the plot, false to display it in a blocking thread
-    """
-    model = get_estimator_from_trained_supervised_model(trained_supervised_model)
-    column_names = trained_supervised_model.column_names
-    plot_random_forest_feature_importance(model, x_train, column_names, save=save)
 
 
 def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
@@ -323,18 +265,19 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     indices = np.argsort(importances)[::-1]
     namelist = [feature_names[i] for i in indices]
 
-    # Turn off interactive mode
+    # Turn off matplotlib interactive mode
     plt.ioff()
 
     # Set up the plot
     figure = plt.figure()
-    plt.title("Feature importances")
+    plt.title("Feature Importance")
+    plt.ylabel('Relative Feature Importance')
 
     # Plot each feature
     x_train_shape = x_train.shape[1]
     x_train_range = range(x_train_shape)
 
-    plt.bar(x_train_range, importances[indices], color="r", yerr=standard_deviations[indices], align="center")
+    plt.bar(x_train_range, importances[indices], color="g", yerr=standard_deviations[indices], align="center")
     plt.xticks(x_train_range, namelist, rotation=90)
     plt.xlim([-1, x_train_shape])
     plt.gca().set_ylim(bottom=0)
@@ -344,7 +287,7 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
     if save:
         plt.savefig('FeatureImportances.png')
         source_path = os.path.dirname(os.path.abspath(__file__))
-        print('\nFeature importances saved in: {}'.format(source_path))
+        print('\nFeature importance plot saved in: {}'.format(source_path))
 
         # Close the figure so it does not get displayed
         plt.close(figure)
@@ -352,71 +295,11 @@ def plot_random_forest_feature_importance(trained_rf_classifier, x_train, featur
         plt.show()
 
 
-def get_estimator_from_trained_supervised_model(trained_supervised_model):
-    """
-    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
-    Args:
-        trained_supervised_model (TrainedSupervisedModel): 
-
-    Returns:
-        sklearn.base.BaseEstimator: 
-
-    """
-    # Validate input is a TSM
-    if type(trained_supervised_model).__name__ != 'TrainedSupervisedModel':
-        raise HealthcareAIError('This requires an instance of a TrainedSupervisedModel')
-    """
-    1. check if it is a TSM
-        Y: proceed
-        N: raise error?
-    2. check if tsm.model is a meta estimator
-        Y: extract best_estimator_
-        N: return tsm.model
-    """
-    # Check if tsm.model is a meta estimator
-    result = get_estimator_from_meta_estimator(trained_supervised_model.model)
-
-    return result
-
-
-def get_estimator_from_meta_estimator(model):
-    """
-    Given an instance of a trained sklearn estimator, return the main estimator, regardless of random search
-    Args:
-        model (sklearn.base.BaseEstimator): 
-
-    Returns:
-        sklearn.base.BaseEstimator: 
-    """
-    if not issubclass(type(model), sklearn.base.BaseEstimator):
-        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
-
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
-        result = model.best_estimator_
+def _validate_predictions_and_labels_are_equal_length(predictions, true_values):
+    if len(predictions) == len(true_values):
+        return True
     else:
-        result = model
-
-    return result
-
-
-def get_hyperparameters_from_meta_estimator(model):
-    """
-    Given an instance of a trained sklearn estimator, return the best hyperparameters if it is a meta estimator
-    Args:
-        model (sklearn.base.BaseEstimator): 
-
-    Returns:
-        dict: The best hyperparameters 
-    """
-    if not issubclass(type(model), sklearn.base.BaseEstimator):
-        raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
-
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
-        result = model.best_params_
-    else:
-        result = None
-
-    return result
+        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
 
 
 if __name__ == '__main__':

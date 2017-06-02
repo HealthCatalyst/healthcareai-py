@@ -24,7 +24,7 @@ def fixture(file):
 
 
 def load_sample_dataframe():
-    return pd.read_csv(fixture('DiabetesClincialSampleData.csv'), na_values=['None'])
+    return pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
 
 
 def load_factors_dataframe():

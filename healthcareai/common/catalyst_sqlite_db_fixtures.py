@@ -7,6 +7,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def drop_table(db_name, table_name):
+    """ Given a sqlite db filename, drops a given table if it exists. """
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
@@ -15,6 +16,7 @@ def drop_table(db_name, table_name):
 
 
 def is_table_empty(db_name, table_name):
+    """ Checks if a table on a given sqlite db file is empty. """
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
@@ -26,17 +28,18 @@ def is_table_empty(db_name, table_name):
 
 
 def setup_deploy_tables(db_name):
+    """ Delete and recreate Health Catalyst specific destination tables. WARNING: DATA LOSS WILL OCCUR. """
     # Setup db connection
     db = sqlite3.connect(db_name)
     cursor = db.cursor()
 
     # Drop tables
-    drop_table(db_name, 'PredictionClassificationBASE')
-    drop_table(db_name, 'PredictionRegressionBASE')
+    drop_table(db_name, 'HCAIPredictionClassificationBASE')
+    drop_table(db_name, 'HCAIPredictionRegressionBASE')
 
     # Set up tables
     classification_table_setup = """
-       CREATE TABLE IF NOT EXISTS PredictionClassificationBASE (
+       CREATE TABLE IF NOT EXISTS HCAIPredictionClassificationBASE (
             BindingID [int] ,
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -49,7 +52,7 @@ def setup_deploy_tables(db_name):
     cursor.execute(classification_table_setup)
 
     regression_table_setup = """
-        CREATE TABLE IF NOT EXISTS PredictionRegressionBASE (
+        CREATE TABLE IF NOT EXISTS HCAIPredictionRegressionBASE (
             BindingID [int],
             BindingNM [varchar] (255),
             LastLoadDTS [datetime2] (7),
@@ -62,10 +65,14 @@ def setup_deploy_tables(db_name):
     cursor.execute(regression_table_setup)
 
     # Verify both are empty
-    a = is_table_empty(db_name, 'PredictionClassificationBASE')
-    b = is_table_empty(db_name, 'PredictionRegressionBASE')
+    a = is_table_empty(db_name, 'HCAIPredictionClassificationBASE')
+    b = is_table_empty(db_name, 'HCAIPredictionRegressionBASE')
 
     if a and b:
         return True
     else:
         raise HealthcareAIError('There was a problem setting up test tables')
+
+
+if __name__ == "__main__":
+    pass

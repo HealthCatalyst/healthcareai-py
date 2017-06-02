@@ -1,7 +1,14 @@
-"""This file is used to create and compare two models on a particular dataset.
-It provides examples of reading from both csv and SQL Server. Note that this
-example can be run as-is after installing healthcare.ai. After you have
-found that one of the models works well on your data, move to Example2
+"""This file showcases some ways an advanced user can leverage the tools in healthcare.ai
+
+Please use this example to learn about ways advanced users can utilize healthcareai
+
+If you have not installed healthcare.ai, refer to the instructions here:
+  http://healthcareai-py.readthedocs.io
+
+To run this example:
+  python3 example_advanced.py
+
+This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import time
 import pandas as pd
@@ -15,10 +22,10 @@ def main():
     t0 = time.time()
 
     # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+    dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Step 1: Prepare the data using optional imputation. There are two options for this:
     ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification

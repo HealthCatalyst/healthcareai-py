@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.tests.helpers as helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
@@ -16,7 +16,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        columns_to_remove = ['PatientID', 'InTestWindowFLG']
+        columns_to_remove = ['PatientID']
         df.drop(columns_to_remove, axis=1, inplace=True)
 
         cls.classification_trainer = SupervisedModelTrainer(dataframe=df,
@@ -51,7 +51,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.65, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.65, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.8, 0.95, result['accuracy'])
 
     def test_linear_regression(self):
@@ -60,11 +60,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        expected_mse = 638
-        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-1)
-
-        expected_mae = 20
-        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+        helpers.assertBetween(self, 500, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
         trained_rf_regressor = self.regression_trainer.random_forest_regression()
@@ -72,11 +69,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
-        expected_mse = 630
-        self.assertAlmostEqual(expected_mse, result['mean_squared_error'], places=-2)
-
-        expected_mae = 18
-        self.assertAlmostEqual(expected_mae, result['mean_absolute_error'], places=-1)
+        helpers.assertBetween(self, 400, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
 
     def test_logistic_regression(self):
         trained_lr = self.classification_trainer.logistic_regression()
@@ -84,7 +78,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_lr.metrics
 
-        helpers.assertBetween(self, 0.6, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_classification(self):
@@ -93,7 +87,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.6, 0.9, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
 
     def test_ensemble_regression(self):
@@ -104,7 +98,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         training_df = helpers.load_sample_dataframe()
 
         # Drop columns that won't help machine learning
-        training_df.drop(['PatientID', 'InTestWindowFLG'], axis=1, inplace=True)
+        training_df.drop(['PatientID'], axis=1, inplace=True)
 
         # Train the linear regression model
         trained_linear_model = self.regression_trainer.linear_regression()
@@ -123,7 +117,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         trained_linear_model = self.regression_trainer.linear_regression()
 
         # Try the ROC plot
-        self.assertRaises(HealthcareAIError, trained_linear_model.roc_curve_plot)
+        self.assertRaises(HealthcareAIError, trained_linear_model.roc_plot)
 
 
 @contextmanager

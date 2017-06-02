@@ -1,26 +1,28 @@
-# Deploying and saving a model
+# Making Predictions and Deploying Models
 
-## What is `DeploySupervisedModel`?
+## What do you mean by deploying models?
 
--   This class lets one save a model (for recurrent use) and push
-    predictions to a database
--   One can do both classification (ie, predict Y/N) as well as
-    regression (ie, predict a numeric field).
+While there are lots of interesting academic uses of machine learning, the healthcare.ai team believes that in order to improve outcomes, we must bring ML predictions to front line clinicians and the rest of the healthcare team on a timely basis.
+
+To do this you need a robust way to move your ML models into a production setting. These tools make this process easier.
+
+### Database Notes
+
+Most of our current users operate on MSSQL servers. We have therefore spent the most time so far making that pipeline robust.
+
+HealthcareAI can work with other databases such as MySQL and SQLite. You can see examples of their use in [databases](databases.md).
 
 ## Am I ready for model deployment?
 
 Only if you've already completed these steps:
 
--   You've found a model work that works well on your data
--   You've created a column called InTestWindowFLG (or something
-    similar), where 'Y' denotes rows that need a prediction and 'N' for
-    rows that train the model.
--   You've created the SQL table structure to receive predictions
+- You've created a model that performs well on your data
+- You've created the SQL table structure to receive predictions
 
-For classification predictions:
+### For classification predictions:
 
 ```sql
-CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+CREATE TABLE [SAM].[dbo].[HCAIPredictionClassificationBASE] (
   [BindingID] [int] , 
   [BindingNM] [varchar] (255), 
   [LastLoadDTS] [datetime2] (7), 
@@ -31,10 +33,10 @@ CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
   [Factor3TXT] [varchar] (255))
 ```
 
-For regression predictions:
+### For regression predictions:
 
 ```sql
-CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
   [BindingID] [int], 
   [BindingNM] [varchar] (255), 
   [LastLoadDTS] [datetime2] (7), 
@@ -45,162 +47,209 @@ CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
   [Factor3TXT] [varchar] (255))
 ```
 
-## Step 1: Pull in the data
+## Step 1: Load the saved model
 
-For SQL:
+- Find the filename of your saved model.
+
+### Example Code
 
 ```python
-import pyodbc
-cnxn = pyodbc.connect("""SERVER=localhost;
-                        DRIVER={SQL Server Native Client 11.0};
-                        Trusted_Connection=yes;
-                        autocommit=True""")
-
- df = pd.read_sql(
-     sql="""SELECT
-            *
-            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
-     con=cnxn)
-
-
- # Handle missing data (if needed)
- df.replace(['None'],[None],inplace=True)
+# Load the saved model
+trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
 ```
 
-For CSV:
+
+## Step 2: Load in some new data to make predictions on
+
+### CSV
 
 ```python
-df = pd.read_csv(DiabetesClincialSampleData.csv,
-                 na_values=['None'])
+# Load data from a sample .csv file
+prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 ```
 
-## Step 2: Set your data-prep parameters
-
-The `DeploySupervisedModel` cleans and prepares the data prior to model
-creation.
-
--   **Return**: an object.
--   **Arguments**:
-    :   -   **model_type**: a string. This will either be
-            'classification' or 'regression'.
-        -   **dataframe**: a data frame. The data your model will be based on.
-        -   **grain_column**: a string, defaults to None. Name of possible
-            GrainID column in your dataset. If specified, this column
-            will be removed, as it won't help the algorithm.
-        -   **window_column**: a string. Which column in the dataset denotes
-            which rows are test ('Y') or training ('N').
-        -   **predicted_column**: a string. Name of variable (or column)
-            that you want to predict.
-        -   **impute**: a boolean. Whether to impute by replacing NULLs
-            with column mean (for numeric columns) or column mode (for
-            categorical columns).
-        -   **debug**: a boolean, defaults to False. If TRUE, console
-            output when comparing models is verbose for easier
-            debugging.
-
-Example code:
+### MSSQL
 
 ```python
-p = DeploySupervisedModel(model_type='regression',
-                          dataframe=df,
-                          grain_column='PatientEncounterID',
-                          window_column='InTestWindowFLG',
-                          predicted_column='LDLNBR',
-                          impute=True,
-                          debug=False)
+# Load data from a MSSQL server
+server = 'localhost'
+database = 'SAM'
+query = """SELECT *
+            FROM [SAM].[dbo].[DiabetesClincialSampleData]
+            WHERE SystolicBPNBR is null"""
+engine = hcai_db.build_mssql_engine(server=server, database=database)
+prediction_dataframe = pd.read_sql(query, engine)
 ```
 
-## Step 3: Create and save the model
+## Step 3: Make some predictions
 
-The `deploy` creates the model and method makes predictions that are
-pushed to a database.
+Please note that healthcare.ai can provide lots of different outputs formats for predictions. To find out more, please read the [predictions](prediction_types.md) docs. If you are working on a Health Catalyst EDW, please see the [Health Catalyst EDW Predictions](catalyst_edw_predictions.md) doc.
 
--   **Return**: an object.
--   **Arguments**:
-    :   -   **method**: a string. If you choose random forest, use 'rf'.
-            If you choose to deploy the linear model, use 'linear'.
-        -   **cores**: an integer. Denotes how many of your processors
-            to use.
-        -   **server**: a string. Which server are you pushing
-            predictions to?
-        -   **dest\_db\_schema\_table**: a string. Which
-            database.schema.table are you pushing predictions to?
-        -   **trees**: an integer, defaults to 200. Use only if working
-            with random forest. This denotes number of trees in the
-            forest.
-        -   **debug**: a boolean, defaults to False. If TRUE, console
-            output when comparing models is verbose for easier
-            debugging.
-
-Example code:
+### Example Code
 
 ```python
-p.deploy(method='rf',
-         cores=2,
-         server='localhost',
-         dest_db_schema_table='[SAM].[dbo].[HCPyDeployRegressionBASE]',
-         use_saved_model=False,
-         trees=200,
-         debug=False)
+# Get predictions with factors
+predictions_with_factors_df = trained_model.make_predictions_with_k_factors(
+    prediction_dataframe,
+    number_top_features=3)
+
+print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
+print(predictions_with_factors_df.head())
+```
+
+## Step 4: Save the new predictions to a database
+
+HealthcareAI can work with other databases such as MySQL and SQLite. You can see examples of their use in [databases](databases.md). This also shows how to export to a **.csv** file.
+
+### MSSQL Option 1
+
+```python
+## Health Catalyst EDW specific instructions. Uncomment to use.
+# This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors
+server = 'localhost'
+database = 'SAM'
+table = 'HCAIPredictionClassificationBASE'
+schema = 'dbo'
+
+trained_model.predict_to_catalyst_sam(prediction_dataframe, server, database, table, schema)
+```
+
+### MSSQL Option 2
+
+```python
+## MSSQL using Trusted Connections
+server = 'localhost'
+database = 'my_database'
+table = 'predictions_output'
+schema = 'dbo'
+engine = hcai_db.build_mssql_engine(server, database)
+
+predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
+```
+
+### MySQL
+
+```python
+## MySQL using standard authentication
+server = 'localhost'
+database = 'my_database'
+userid = 'fake_user'
+password = 'fake_password'
+table = 'prediction_output'
+
+mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
+
+predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
 ```
 
 ## Full example code
 
 ```python
-from healthcareai import DeploySupervisedModel
 import pandas as pd
-import time
+import sqlalchemy
+
+import healthcareai.common.file_io_utilities as hcai_io_utilities
+import healthcareai.common.database_connections as hcai_db
 
 
 def main():
+    # Load data from a sample .csv file
+    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
-    t0 = time.time()
-
-    # Load in data
-    # CSV snippet for reading data into dataframe
-    df = pd.read_csv('healthcareai/tests/fixtures/DiabetesClincialSampleData.csv',
-                    na_values=['None'])
-
-    # SQL snippet for reading data into dataframe
-    # import pyodbc
-    # cnxn = pyodbc.connect("""SERVER=localhost;
-    #                          DRIVER={SQL Server Native Client 11.0};
-    #                          Trusted_Connection=yes;
-    #                          autocommit=True""")
+    # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # server = 'localhost'
+    # database = 'SAM'
+    # query = """SELECT *
+    #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
+    #             WHERE SystolicBPNBR is null"""
     #
-    # df = pd.read_sql(
-    #     sql="""SELECT *
-    #            FROM [SAM].[dbo].[HCPyDiabetesClinical]""",
-    #     con=cnxn)
-    #
-    # # Set None string to be None type
-    # df.replace(['None'],[None],inplace=True)
-
-    # Look at data that's been pulled in
-    print(df.head())
-    print(df.dtypes)
+    # engine = hcai_db.build_mssql_engine(server=server, database=database)
+    # prediction_dataframe = pd.read_sql(query, engine)
 
     # Drop columns that won't help machine learning
-    df.drop('PatientID', axis=1, inplace=True)
+    columns_to_remove = ['PatientID']
+    prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
-    p = DeploySupervisedModel(model_type='regression',
-                              datafrme=df,
-                              grain_column='PatientEncounterID',
-                              window_column='InTestWindowFLG',
-                              predicted_column='LDLNBR',
-                              impute=True,
-                              debug=False)
+    # Load the saved model and print out the metrics
+    trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
 
-    p.deploy(method='rf',
-             cores=2,
-             server='localhost',
-             dest_db_schema_table='[SAM].[dbo].[HCPyDeployRegressionBASE]',
-             use_saved_model=False,
-             trees=200,
-             debug=False)
+    # Any saved model can be inspected for properties such as plots, metrics, columns, etc. (More examples in the docs)
+    trained_model.roc_plot()
+    print(trained_model.roc())
+    # print(trained_model.column_names)
+    # print(trained_model.grain_column)
+    # print(trained_model.prediction_column)
 
-    print('\nTime:\n', time.time() - t0)
+    # # Make predictions. Please note that there are four different formats you can choose from. All are shown
+    #    here, though you only need one.
 
-    if __name__ == "__main__":
-        main()
-``````
+    # ## Get predictions
+    predictions = trained_model.make_predictions(prediction_dataframe)
+    print('\n\n-------------------[ Predictions ]----------------------------------------------------\n')
+    print(predictions.head())
+
+    # ## Get the important factors
+    factors = trained_model.make_factors(prediction_dataframe, number_top_features=3)
+    print('\n\n-------------------[ Factors ]----------------------------------------------------\n')
+    print(factors.head())
+
+    # ## Get predictions with factors
+    predictions_with_factors_df = trained_model.make_predictions_with_k_factors(
+      prediction_dataframe,
+      number_top_features=3)
+    print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
+    print(predictions_with_factors_df.head())
+
+    # ## Get original dataframe with predictions and factors
+    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_factors(
+        prediction_dataframe,
+        number_top_features=3)
+    print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
+    print(original_plus_predictions_and_factors.head())
+
+    # Save your predictions. You can save predictions to a csv or database. Examples are shown below.
+    # Please note that you will likely only need one of these output types. Feel free to delete the others.
+
+    # Save results to csv
+    predictions_with_factors_df.to_csv('ClinicalPredictions.csv')
+
+    # ## MSSQL using Trusted Connections
+    # server = 'localhost'
+    # database = 'my_database'
+    # table = 'predictions_output'
+    # schema = 'dbo'
+    # engine = hcai_db.build_mssql_engine(server, database)
+    # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
+
+    # ## MySQL using standard authentication
+    # server = 'localhost'
+    # database = 'my_database'
+    # userid = 'fake_user'
+    # password = 'fake_password'
+    # table = 'prediction_output'
+    # mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+    # mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
+    # predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
+
+    # ## SQLite
+    # path_to_database_file = 'database.db'
+    # table = 'prediction_output'
+    # trained_model.predict_to_sqlite(prediction_dataframe, path_to_database_file, table, trained_model.make_factors)
+
+    # ## Health Catalyst EDW specific instructions. Uncomment to use.
+    # This output is a Health Catalyst EDW specific dataframe that includes grain column, the prediction and factors
+    # catalyst_dataframe = trained_model.create_catalyst_dataframe(prediction_dataframe)
+    # print('\n\n-------------------[ Catalyst SAM ]----------------------------------------------------\n')
+    # print(catalyst_dataframe.head())
+    # server = 'localhost'
+    # database = 'SAM'
+    # table = 'HCAIPredictionClassificationBASE'
+    # schema = 'dbo'
+    # trained_model.predict_to_catalyst_sam(prediction_dataframe, server, database, table, schema)
+
+
+if __name__ == "__main__":
+    main()
+
+```

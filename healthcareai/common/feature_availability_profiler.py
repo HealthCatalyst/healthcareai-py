@@ -1,8 +1,8 @@
 import pandas as pd
-import time
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import timedelta
 import matplotlib.pyplot as plt
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -111,4 +111,9 @@ def count_nulls_in_date_range(df, start, end, admit_col_name):
     mask = (df[admit_col_name] > start) & (df[admit_col_name] <= end)
     df = df.loc[mask]
     num_data = 100 - np.round(100 * df.isnull().sum() / df.shape[0])
-    return (num_data)
+
+    return num_data
+
+
+if __name__ == "__main__":
+    pass

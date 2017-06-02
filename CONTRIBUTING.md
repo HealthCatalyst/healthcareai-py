@@ -46,11 +46,11 @@ There are a number of ways to install python 3.5 on macOS. Here are a few differ
 
 ## Set up healthcare-ai
 
-Install directly from [our repo](https://github.com/HealthCatalystSLC/healthcareai-py)
+Install directly from [our repo](https://github.com/HealthCatalyst/healthcareai-py)
 
-- run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+- run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 - Fork this repo (look for the link in the top right corner of the current page)
-- At the top of the [repo homepage](https://github.com/HealthCatalystSLC/healthcareai-py) click the green 'Clone or download' button and copy the https link
+- At the top of the [repo homepage](https://github.com/HealthCatalyst/healthcareai-py) click the green 'Clone or download' button and copy the https link
 - In your terminal run `git clone <PASTE THE LINK HERE>`
 - `cd` healthcareai-py directory
 
@@ -79,12 +79,12 @@ If on Windows, [install both](http://stackoverflow.com/a/11278818/5636012_SQL) S
 
 ### Create some tables in your database
 
-- Create tables ([on localhost](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/docs/localhost_config.md)) within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
+- Create tables ([on localhost](https://github.com/HealthCatalyst/healthcareai-py/blob/master/docs/localhost_config.md)) within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 
         ```sql
-        CREATE TABLE [SAM].[dbo].[HCPyDeployClassificationBASE] (
+        CREATE TABLE [SAM].[dbo].[HCAIPredictionClassificationBASE] (
         [BindingID] [int] ,
         [BindingNM] [varchar] (255),
         [LastLoadDTS] [datetime2] (7),
@@ -94,7 +94,7 @@ Note that these will go in the SAM database, if using the Health Catalyst analyt
         [Factor2TXT] [varchar] (255),
         [Factor3TXT] [varchar] (255))
         
-        CREATE TABLE [SAM].[dbo].[HCPyDeployRegressionBASE] (
+        CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
         [BindingID] [int],
         [BindingNM] [varchar] (255),
         [LastLoadDTS] [datetime2] (7),

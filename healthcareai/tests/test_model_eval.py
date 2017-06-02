@@ -1,9 +1,8 @@
 import unittest
-import sklearn
 
 import numpy as np
 import pandas as pd
-from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
+import sklearn
 
 import healthcareai.common.model_eval as hcai_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -50,13 +49,16 @@ class TestPlotRandomForestFeatureImportance(unittest.TestCase):
             save=False)
 
 
-class TestTSMClassificationComparisonPlots(unittest.TestCase):
-    def test_raises_error_on_non_tsm(self):
-        self.assertRaises(HealthcareAIError, hcai_eval.tsm_classification_comparison_plots, 'foo')
+class TestValidation(unittest.TestCase):
+    def test_same_length_predictions_and_labels(self):
+        self.assertTrue(hcai_eval._validate_predictions_and_labels_are_equal_length([0, 1, 2], [1, 2, 3]))
 
-    def test_raises_error_on_list_with_non_tsm(self):
-        bad_list = ['foo']
-        self.assertRaises(HealthcareAIError, hcai_eval.tsm_classification_comparison_plots, bad_list)
+    def test_different_length_predictions_and_labels_raises_error(self):
+        self.assertRaises(
+            HealthcareAIError,
+            hcai_eval._validate_predictions_and_labels_are_equal_length,
+            [0, 1, 2],
+            [0, 1, 2, 3, 4])
 
 
 if __name__ == '__main__':
