@@ -34,8 +34,9 @@ def main():
     columns_to_remove = ['PatientID']
     prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
 
-    # Load the saved model using the correct file name (they look like
-    #     '2017-05-31T15-55-55_regression_LinearRegression.pkl')
+    # Load the saved model using your filename.
+    # File names are timestamped and look like '2017-05-31T12-36-21_regression_LinearRegression.pkl')
+    # Note the file you saved in example_regression_1.py and set that here.
     trained_model = hcai_io_utilities.load_saved_model('your_filename_here.pkl')
 
     # Any saved models can be inspected for properties such as metrics, columns, etc. (More examples are in the docs)

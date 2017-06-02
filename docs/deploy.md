@@ -16,7 +16,7 @@ HealthcareAI can work with other databases such as MySQL and SQLite. You can see
 
 Only if you've already completed these steps:
 
-- You've created a model work that performs well on your data
+- You've created a model that performs well on your data
 - You've created the SQL table structure to receive predictions
 
 ### For classification predictions:

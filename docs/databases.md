@@ -55,7 +55,7 @@ predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', inde
 
 #### Custom MySQL Connection Strings
 
-Please note that you can provide any kind of connection string here - [connectionstrings.com](https://www.connectionstrings.com/mysql/) is an excellent resource.
+Please note that you can provide any kind of connection strings here - [connectionstrings.com](https://www.connectionstrings.com/mysql/) is an excellent resource.
 
 ```python
 # Build your custom connection string here
@@ -83,7 +83,7 @@ Until we have more people in the community ask for support for PostgresSQL and O
 
 ### Notes
 
-- Please note that you can provide many kinds of connection string here ([connectionstrings.com](https://www.connectionstrings.com/mysql/) is an excellent resource).
+- Please note that you can provide many kinds of connection strings here ([connectionstrings.com](https://www.connectionstrings.com/mysql/) is an excellent resource).
 - You may need to install dependencies or drivers depending on which database you are working with.
 
 ### Example Code

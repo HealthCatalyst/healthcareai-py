@@ -98,6 +98,8 @@ def main():
         save=False)
 
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
+    # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
+    # Note the file you saved and that will be used in example_classification_2.py
     trained_random_forest.save()
 
 

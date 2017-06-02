@@ -15,7 +15,7 @@ To build a model, please follow these guidelines for setting up your training da
 
 - Don't use `0` or `1` for the dependent variable when doing binary classification. Use `Y`/`N` instead. The `IIF` function in T-SQL is an easy way to convert your target variables.
 - Don't pull in test data in this step. In other words, we just pull in those rows where the target (predicted column) has a value already.
-- Feature engineering is always a good idea. Check out our [blog](http://healthcare.ai/blog) for ideas.
+- Feature engineering is always a good idea. There are a few notes in the [hints](hints.md) document. Check out our [blog](http://healthcare.ai/blog) for ideas.
 
 ## Step 1: Load training data
 

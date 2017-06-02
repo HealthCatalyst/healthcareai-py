@@ -55,7 +55,9 @@ def main():
     # Train and evaluate random forest model
     trained_random_forest = regression_trainer.random_forest_regression()
 
-    # Once you are happy with the result of the trained model, it is time to save the model.
+    # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
+    # File names are timestamped and look like '2017-05-31T12-36-21_regression_LinearRegression.pkl')
+    # Note the file you saved and that will be used in example_regression_2.py
     trained_linear_model.save()
 
 
