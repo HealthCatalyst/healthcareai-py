@@ -21,7 +21,7 @@ to databases.
 ## Who Started This Project?
 
 This project began in the data science group at Health Catalyst, a Salt
-Lake City-based company based focused on improving healthcare outcomes.
+Lake City-based company focused on improving healthcare outcomes.
 
 ## Why Was It Open-sourced?
 
