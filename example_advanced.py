@@ -1,4 +1,15 @@
-"""This file showcases some ways an advanced user can leverage the tools in healthcare.ai """
+"""This file showcases some ways an advanced user can leverage the tools in healthcare.ai
+
+Please use this example to learn about ways advanced users can utilize healthcareai
+
+If you have not installed healthcare.ai, refer to the instructions here:
+  http://healthcareai-py.readthedocs.io
+
+To run this example:
+  python3 example_advanced.py
+
+This code uses the DiabetesClinicalSampleData.csv source file.
+"""
 import time
 import pandas as pd
 from healthcareai import AdvancedSupervisedModelTrainer

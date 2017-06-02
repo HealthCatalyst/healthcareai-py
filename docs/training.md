@@ -44,7 +44,7 @@ dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.
 
 ## Step 2: Set up a Trainer
 
-The `SupervisedModelTrainer` class helps you train models. It cleans and prepares the data before model creation. To set up a trainer you'll need these arguments:
+The `SupervisedModelTrainer` class helps you train models. It cleans and prepares the data before model creation. It also assignes parameters specific to the type of model you eventually want (regression or classification). To set up a trainer you'll need these arguments:
 
 - **dataframe** *(pandas.core.frame.DataFrame)*: The training data in a pandas dataframe
 - **predicted_column** *(str)*: The name of the prediction column 
