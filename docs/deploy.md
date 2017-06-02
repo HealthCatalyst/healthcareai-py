@@ -83,7 +83,7 @@ prediction_dataframe = pd.read_sql(query, engine)
 
 ## Step 3: Make some predictions
 
-Please note that healthcare.ai can provide lots of different outputs formats for predictions. To find out more, please read the [predictions](predictions.md) docs. If you are working on a Health Catalyst EDW, please see the [Health Catalyst EDW Predictions](catalyst_edw_predictions.md) doc.
+Please note that healthcare.ai can provide lots of different outputs formats for predictions. To find out more, please read the [predictions](prediction_types.md) docs. If you are working on a Health Catalyst EDW, please see the [Health Catalyst EDW Predictions](catalyst_edw_predictions.md) doc.
 
 ### Example Code
 
