@@ -72,6 +72,8 @@ If you like using virtual environments (not required):
 
 ### SQL Server
 
+**Note that there are only a few true integration tests that use MSSQL server as a destination.** If you are not interested in running these few tests, feel free to skip this section.
+
 If on Windows, [install both](http://stackoverflow.com/a/11278818/5636012_SQL) Server Express and SSMS Express
 - Navigate to the [downloads page](https://www.microsoft.com/en-us/download/details.aspx?id=29062)
 - Look for and download **ENU\x64\SQLEXPRWT_x64_ENU.exe**
@@ -79,7 +81,7 @@ If on Windows, [install both](http://stackoverflow.com/a/11278818/5636012_SQL) S
 
 ### Create some tables in your database
 
-- Create tables ([on localhost](https://github.com/HealthCatalyst/healthcareai-py/blob/master/docs/localhost_config.md)) within a SAM database to receive predictive output using the code below (use SSMS if on Windows):
+- Create tables on localhost
 
 Note that these will go in the SAM database, if using the Health Catalyst analytics environment
 
@@ -104,6 +106,29 @@ Note that these will go in the SAM database, if using the Health Catalyst analyt
         [Factor2TXT] [varchar] (255),
         [Factor3TXT] [varchar] (255))
         ```
+
+#### Configuration of localhost alias for MSSQL
+
+You will need to have an alias called "localhost" that points to your SQL database.
+
+1. Open SQL Server Configuration Manager
+   - On the left pane, expand SQL Native Client 11.0 Configuration and right click Aliases. Select New Alias.
+   - In the pop up dialog box, enter the following and then press OK:
+     - Alias Name: localhost
+     - Port No: 1433
+     - Protocol: TCP/IP
+     - Server: YOUR_COMPUTER_NAME (this should be something like HC2080, if you can connect to HC2080 in SSMS)
+2. On the left pane, expand SQL Server Network Configuration and click on Protocols for SQLEXPRESS.
+   - Right click on TCP/IP and click Properties. In the dialog box, enter the following and then press OK:
+     - Under the Protocol tab, verify that Enabled is set to Yes.
+     - Under the IP Addresses tab, scroll all the way to the bottom.
+     - Under IPALL, TCP Dynamic Ports should be blank
+     - Under IPALL, TCP Port should be set to 1433
+3. Working in Configuration Manager,
+   - Expand SQL Server Services
+   - Right-click on your SQL Server instance
+   - Restart SQL Server
+4. Open SSMS and verify that you can connect to the server `localhost`.
 
 ### Verify that unit tests pass
 

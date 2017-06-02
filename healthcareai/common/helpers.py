@@ -56,7 +56,7 @@ def extract_estimator_from_meta_estimator(model):
     if not issubclass(type(model), sklearn.base.BaseEstimator):
         raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
 
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+    if issubclass(type(model), sklearn.base.MetaEstimatorMixin) and hasattr(model, 'best_estimator_'):
         result = model.best_estimator_
     else:
         result = model
