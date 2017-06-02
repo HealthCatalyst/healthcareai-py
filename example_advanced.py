@@ -10,17 +10,17 @@ To run this example:
 
 This code uses the DiabetesClinicalSampleData.csv source file.
 """
-import time
 import pandas as pd
+from sklearn.pipeline import Pipeline
+
 from healthcareai import AdvancedSupervisedModelTrainer
-from healthcareai.common import filters
-from healthcareai.common.filters import DataframeDateTimeColumnSuffixFilter
-import healthcareai.pipelines.data_preparation as pipelines
+import healthcareai.common.filters as hcai_filters
+import healthcareai.common.transformers as hcai_transformers
+import healthcareai.trained_models.trained_supervised_model as hcai_tsm
+import healthcareai.pipelines.data_preparation as hcai_pipelines
 
 
 def main():
-    t0 = time.time()
-
     # CSV snippet for reading data into dataframe
     dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
 
@@ -28,91 +28,111 @@ def main():
     dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Step 1: Prepare the data using optional imputation. There are two options for this:
-    ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
-    dataframe = pipelines.full_pipeline('classification', 'ThirtyDayReadmitFLG', 'PatientEncounterID', impute=True).fit_transform(dataframe)
 
-    ## Option 2: Do this stuff yourself using healthcare ai methods or your own.
-    # TODO rewrite this portion once the API settles
-    # Note if you prefer to handle the data prep yourself you may chain together these calls (or other you prefer)
-    # TODO convert the rest of ths example to the pipeline way
-    # Drop some columns
-    # hcai.remove_grain_column()
-    # hcai.dataframe = DataframeDateTimeColumnSuffixFilter().fit_transform(hcai.dataframe)
+    # ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
+    clean_training_dataframe = hcai_pipelines.full_pipeline(
+        'classification',
+        'ThirtyDayReadmitFLG',
+        'PatientEncounterID',
+        impute=True).fit_transform(dataframe)
 
-    # Perform one of two basic imputation methods
-    # TODO change to a data pipeline
-    # hcai.imputation()
-    # or simply drop columns with any nulls
-    # hcai.drop_rows_with_any_nulls()
+    # ## Option 2: Build your own pipeline using healthcare.ai methods, your own, or a combination of either.
+    # - Please note this is intentionally spartan, so we don't hinder your creativity. :)
+    # - Also note that many of the healthcare.ai transformers intentionally return dataframes, compared to scikit that
+    #   return numpy arrays
+    # custom_pipeline = Pipeline([
+    #     ('remove_grain_column', hcai_filters.DataframeColumnRemover(columns_to_remove=['PatientEncounterID', 'PatientID'])),
+    #     ('imputation', hcai_transformers.DataFrameImputer(impute=True)),
+    #     ('convert_target_to_binary', hcai_transformers.DataFrameConvertTargetToBinary('classification', 'ThirtyDayReadmitFLG')),
+    #     # ('prediction_to_numeric', hcai_transformers.DataFrameConvertColumnToNumeric('ThirtyDayReadmitFLG')),
+    #     # ('create_dummy_variables', hcai_transformers.DataFrameCreateDummyVariables(excluded_columns=['ThirtyDayReadmitFLG'])),
+    # ])
+    #
+    # clean_training_dataframe = custom_pipeline.fit_transform(dataframe)
 
-    # Convert, encode and create test/train sets
-    # TODO change to a data pipeline
-    # hcai.convert_encode_predicted_col_to_binary_numeric()
-    # hcai.encode_categorical_data_as_dummy_variables()
-    # hcai.train_test_split()
-
-
-    # Step 2: Instantiate the main class with your data
-    hcai = AdvancedSupervisedModelTrainer(
-        dataframe=dataframe,
+    # Step 2: Instantiate an Advanced Trainer class with your clean and prepared training data
+    classification_trainer = AdvancedSupervisedModelTrainer(
+        dataframe=clean_training_dataframe,
         model_type='classification',
         predicted_column='ThirtyDayReadmitFLG',
         grain_column='PatientEncounterID',
         verbose=False)
 
-    hcai.train_test_split()
+    # Step 3: split the data into train and test
+    classification_trainer.train_test_split()
 
-    # Step 3: Train some models
+    # Step 4: Train some models
 
-    # Run the linear model with a randomized search over custom hyperparameters
+    # ## Train a KNN classifier with a randomized search over custom hyperparameters
     knn_hyperparameters = {
         'algorithm': ['ball_tree', 'kd_tree'],
-        'max_depth': [None, 5, 10, 30],
-        'leaf_size': [10, 30, 100],
-        'n_neighbors': [1, 4, 6, 20, 30, 50, 100, 200, 500, 1000],
+        'n_neighbors': [1, 4, 6, 8, 10, 15, 20, 30, 50, 100, 200],
         'weights': ['uniform', 'distance']}
-    hcai.knn(
+
+    trained_knn = classification_trainer.knn(
         scoring_metric='accuracy',
         hyperparameter_grid=knn_hyperparameters,
-        randomized_search=True)
+        randomized_search=True,
+        # Set this relative to the size of your hyperparameter space. Higher will train more models and be slower
+        # Lower will be faster and possibly less performant
+        number_iteration_samples=10
+    )
 
-    # Run the random forest model with a randomized search over custom hyperparameters
+    # ## Train a random forest classifier with a randomized search over custom hyperparameters
     # TODO these are bogus hyperparams for random forest
     random_forest_hyperparameters = {
-        'n_estimators': [10, 50, 200],
-        'max_features': [1, 5, 10, 20, 50, 100, 1000, 10000],
+        'n_estimators': [50, 100, 200, 300],
+        'max_features': [1, 2, 3, 4],
         'max_leaf_nodes': [None, 30, 400]}
 
-    hcai.random_forest_classifier(
-        trees=500,
+    trained_random_forest = classification_trainer.random_forest_classifier(
         scoring_metric='accuracy',
         hyperparameter_grid=random_forest_hyperparameters,
-        randomized_search=True)
+        randomized_search=True,
+        # Set this relative to the size of your hyperparameter space. Higher will train more models and be slower
+        # Lower will be faster and possibly less performant
+        number_iteration_samples=10
+    )
 
-    # Look at the RF feature importance rankings
-    hcai.plot_rffeature_importance(save=False)
+    # Show the random forest feature importance graph
+    hcai_tsm.plot_rf_features_from_tsm(trained_random_forest, classification_trainer.x_train, save=False)
 
-    # Create ROC plot to compare the two models
-    hcai.plot_roc(debug=False,
-                  save=False)
-
-    print('\nTime:\n', time.time() - t0)
-
-    # Default ensemble
-    hcai.ensemble_classification(scoring_metric='accuracy')
-
-    # Custom Ensemble
+    # ## Train a custom ensemble of models
+    # The ensemble methods take a dictionary of TrainedSupervisedModels by a name of your choice
     custom_ensemble = {
-        'KNN': hcai.knn(
+        'KNN': classification_trainer.knn(
             hyperparameter_grid=knn_hyperparameters,
-            randomized_search=True,
-            scoring_metric='recall').best_estimator_,
-        'Logistic Regression': hcai.logistic_regression(),
-        'Random Forest Classifier': hcai.random_forest_classifier(
-            randomized_search=True,
-            scoring_metric='recall').best_estimator_}
+            randomized_search=False,
+            scoring_metric='roc_auc'),
+        'Logistic Regression': classification_trainer.logistic_regression(),
+        'Random Forest Classifier': classification_trainer.random_forest_classifier(
+            randomized_search=False,
+            scoring_metric='roc_auc')}
 
-    hcai.ensemble_classification(scoring_metric='recall', model_by_name=custom_ensemble)
+    trained_ensemble = classification_trainer.ensemble_classification(
+        scoring_metric='roc_auc',
+        trained_model_by_name=custom_ensemble)
+
+    # Step 5: Evaluate and compare the models
+
+    # Create a list of all the models you just trained that you want to compare
+    models_to_compare = [trained_knn, trained_random_forest, trained_ensemble]
+
+    # Create a ROC plot that compares all the them.
+    hcai_tsm.tsm_classification_comparison_plots(
+        trained_supervised_models=models_to_compare,
+        plot_type='ROC',
+        save=False)
+
+    # Create a PR plot that compares all the them.
+    hcai_tsm.tsm_classification_comparison_plots(
+        trained_supervised_models=models_to_compare,
+        plot_type='PR',
+        save=False)
+
+    # Inspect the raw ROC or PR cutoffs
+    print(trained_random_forest.roc(print_output=False))
+    print(trained_random_forest.pr(print_output=False))
 
 
 if __name__ == "__main__":
