@@ -18,5 +18,6 @@ pages:
     - Woking With Healthcare.ai in a Health Catalyst EDW: catalyst_edw_instructions.md
     - Hints and Tips: hints.md
     - FAQ: FAQ.md
+    - Architecture Overview For Developers: architecture_overview_for_developers.md
 
 google_analytics: ['UA-85609357-1', 'auto']
