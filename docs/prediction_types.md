@@ -1,4 +1,4 @@
-# Making Predictions
+# Choosing a Prediction Output Type
 
 Healthcareai provides a few options when you want to get predictions from a trained model. Specifically these predictions come from an instance of TrainedSupervisedModel.
 
