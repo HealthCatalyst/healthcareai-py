@@ -202,7 +202,7 @@ def main():
     print(predictions_with_factors_df.head())
 
     # ## Get original dataframe with predictions and factors
-    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
+    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_factors(
         prediction_dataframe,
         number_top_features=3)
     print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')

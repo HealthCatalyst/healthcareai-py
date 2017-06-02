@@ -6,7 +6,6 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def table_archiver(server, database, source_table, destination_table, timestamp_column_name='ArchivedDTS'):
-    # Basic input validation
     """
     Takes a table and archives a complete copy of it with the addition of a timestamp of when the archive occurred to a
     given destination table on the same database.
@@ -30,6 +29,7 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
     table_archiver('localhost', 'SAM_123', 'RiskScores', 'RiskScoreArchive', 'ArchiveDTS')
     ```
     """
+    # Basic input validation
     if type(server) is not str:
         raise HealthcareAIError('Please specify a server address')
     if type(database) is not str:
@@ -55,9 +55,13 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
 
     end_time = time.time()
     delta_time = end_time - start_time
-    result = 'Archived {} records from {}/{}/{} to {} in {} seconds'.format(number_records_to_add, server, database,
-                                                                            source_table, destination_table,
-                                                                            delta_time)
+    result = 'Archived {0} records from {1}/{2}/{3} to {4} in {5} seconds'.format(
+        number_records_to_add,
+        server,
+        database,
+        source_table,
+        destination_table,
+        delta_time)
 
     return result
 

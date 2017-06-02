@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.tests.helpers as helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 
@@ -69,7 +69,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
-        helpers.assertBetween(self, 600, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 400, 700, result['mean_squared_error'])
         helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
 
     def test_logistic_regression(self):

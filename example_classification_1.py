@@ -14,7 +14,7 @@ import pandas as pd
 
 import healthcareai.trained_models.trained_supervised_model as tsm_plots
 import healthcareai.common.database_connections as hcai_db
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
 
 def main():

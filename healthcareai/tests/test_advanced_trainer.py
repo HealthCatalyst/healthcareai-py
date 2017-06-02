@@ -93,12 +93,12 @@ class TestRandomForestClassification(unittest.TestCase):
         self.trainer.train_test_split(random_seed=0)
 
     def test_random_forest_no_tuning(self):
-        rf = self.trainer.random_forest(trees=200, randomized_search=False)
+        rf = self.trainer.random_forest_classifier(trees=200, randomized_search=False)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.8, 0.97, rf.metrics['roc_auc'])
 
     def test_random_forest_tuning(self):
-        rf = self.trainer.random_forest(trees=200, randomized_search=True)
+        rf = self.trainer.random_forest_classifier(randomized_search=True)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.7, 0.97, rf.metrics['roc_auc'])
 

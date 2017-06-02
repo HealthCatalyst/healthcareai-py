@@ -256,7 +256,7 @@ class TrainedSupervisedModel(object):
 
         return results
 
-    def make_original_with_predictions_and_features(self, dataframe, number_top_features=3):
+    def make_original_with_predictions_and_factors(self, dataframe, number_top_features=3):
         """
         Given a prediction dataframe, build and return a dataframe with the all the original columns, the predictions, 
         and the top k feautures.
@@ -413,7 +413,7 @@ class TrainedSupervisedModel(object):
             print('|               ROC              |')
             print('|  Threshhold  |  TPR   |  FPR   |')
             print('|--------------|--------|--------|')
-            for i in range(len(roc['roc_thresholds'])):
+            for i, _ in enumerate(roc['roc_thresholds']):
                 marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
                 print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(
                     marker,
@@ -467,7 +467,7 @@ class TrainedSupervisedModel(object):
             print('|   Precision-Recall Thresholds   |')
             print('| Threshhold | Precision | Recall |')
             print('|------------|-----------|--------|')
-            for i in range(len(pr['pr_thresholds'])):
+            for i, _ in enumerate(pr['pr_thresholds']):
                 marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
                 print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(
                     marker,

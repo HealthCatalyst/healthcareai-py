@@ -22,7 +22,7 @@
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
      1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
      2. Install the latest release with pip run `pip install healthcareai`
-     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 #### Why Anaconda?
 
@@ -41,14 +41,14 @@ You may need to install the following dependencies:
 - Once you have the dependencies satisfied install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
      1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
      2. Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
-     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 ### macOS
 
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
      1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
      2. Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
-     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 ### Linux and macOS (via docker)
 

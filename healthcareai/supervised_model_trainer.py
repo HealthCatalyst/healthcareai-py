@@ -99,7 +99,7 @@ class SupervisedModelTrainer(object):
         print_training_results(model_name, t0, trained_model)
 
         # Save or show the feature importance graph
-        hcai_tsm.plot_rf_features_from_tsm(trained_model, self._advanced_trainer.X_train, save=save_plot)
+        hcai_tsm.plot_rf_features_from_tsm(trained_model, self._advanced_trainer.x_train, save=save_plot)
 
         return trained_model
 

@@ -1,6 +1,6 @@
 site_name: healthcare.ai
 site_url: http://healthcare.ai
-repo_url: https://github.com/HealthCatalystSLC/healthcareai-py
+repo_url: https://github.com/HealthCatalyst/healthcareai-py
 
 theme: readthedocs
 docs_dir: docs

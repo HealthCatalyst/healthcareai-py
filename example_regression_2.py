@@ -64,7 +64,7 @@ def main():
 
     # Get original dataframe + predictions + factors
     print('\n\n-------------------[ Original + predictions + factors ]--------------------------\n')
-    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
+    original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_factors(
         prediction_dataframe)
     print(original_plus_predictions_and_factors.head())
 

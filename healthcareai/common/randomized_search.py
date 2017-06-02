@@ -1,12 +1,12 @@
 from sklearn.model_selection import RandomizedSearchCV
 
 
-def prepare_randomized_search(
-        estimator,
-        scoring_metric,
-        hyperparameter_grid,
-        randomized_search,
-        **non_randomized_estimator_kwargs):
+def prepare_randomized_search(estimator,
+                              scoring_metric,
+                              hyperparameter_grid,
+                              randomized_search,
+                              number_iteration_samples=10,
+                              **non_randomized_estimator_kwargs):
     """
     Given an estimator and various params, initialize an algorithm with optional randomized search.
 
@@ -18,6 +18,9 @@ def prepare_randomized_search(
             through.
         randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
             simple algorithm).
+        number_iteration_samples (int): If performing randomized search, this is the number of samples that are run in 
+            the hyperparameter space. Higher numbers will be slower, but end up with better results, since it is more
+            likely that the true optimal hyperparameter is found.
         **non_randomized_estimator_kwargs: Keyword arguments that you can pass directly to the algorithm. Only used when
             radomized_search is False
 
@@ -29,8 +32,7 @@ def prepare_randomized_search(
         algorithm = RandomizedSearchCV(estimator=estimator(),
                                        scoring=scoring_metric,
                                        param_distributions=hyperparameter_grid,
-                                       n_iter=2,
-                                       cv=5,
+                                       n_iter=number_iteration_samples,
                                        verbose=0,
                                        n_jobs=1)
 

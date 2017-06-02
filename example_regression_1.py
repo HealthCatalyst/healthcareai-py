@@ -12,7 +12,7 @@ This code uses the DiabetesClinicalSampleData.csv source file.
 """
 import pandas as pd
 
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.common.database_connections as hcai_db
 
 

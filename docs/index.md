@@ -7,7 +7,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 
 ## Where's the source code?
 
-Find our code at our [Github Repo ![Our Github repo](img/GitHub-Mark-120px-plus.png)](https://github.com/HealthCatalystSLC/healthcareai-py)
+Find our code at our [Github Repo ![Our Github repo](img/GitHub-Mark-120px-plus.png)](https://github.com/HealthCatalyst/healthcareai-py)
 
 ## Do I want this package or the [R package](http://healthcare.ai/r)?
 

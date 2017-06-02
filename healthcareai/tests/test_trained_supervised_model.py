@@ -4,7 +4,7 @@ import pandas as pd
 import healthcareai.tests.helpers as helpers
 import healthcareai.trained_models.trained_supervised_model
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
+from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
 
 class TestTrainedSupervisedModel(unittest.TestCase):
@@ -47,7 +47,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.predictions_with_3_factors = cls.trained_linear_model.make_predictions_with_k_factors(
             cls.prediction_df,
             number_top_features=3)
-        cls.original_with_predictions_3_factors = cls.trained_linear_model.make_original_with_predictions_and_features(
+        cls.original_with_predictions_3_factors = cls.trained_linear_model.make_original_with_predictions_and_factors(
             cls.prediction_df,
             number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)

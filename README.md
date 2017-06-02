@@ -28,7 +28,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
     2. Install the latest release with pip run `pip install healthcareai`
-    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalystSLC/healthcareai-py/zipball/master`
+    3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 #### Why Anaconda?
 
@@ -105,17 +105,17 @@ tag) so we can help others along this process.
     * Details on your environment (OS, database type, R vs Py)
     * Goals (ie, what are you trying to accomplish)
     * Crystal clear steps for reproducing the error
-- You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalystSLC/healthcareai-py/issues/new)
+- You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalyst/healthcareai-py/issues/new)
 
 ## Contributing
 
 You want to help? Woohoo! We welcome that and are willing to help newbies get started.
 
-Please see [our contribution guidelines](https://github.com/HealthCatalystSLC/healthcareai-py/blob/master/CONTRIBUTING.md) for instructions on setting up your development environment
+Please see [our contribution guidelines](https://github.com/HealthCatalyst/healthcareai-py/blob/master/CONTRIBUTING.md) for instructions on setting up your development environment
 
 ### Workflow
 
-1. [Identify an issue that](https://github.com/HealthCatalystSLC/healthcareai-r/issues) suits your skill level
+1. [Identify an issue that](https://github.com/HealthCatalyst/healthcareai-r/issues) suits your skill level
     * Only look for issues in the Backlog category
     * If you're new to open source, please look for issues with the `bug low`, `help wanted`, or `docs` tags
     * Please reach out with questions on details and where to start

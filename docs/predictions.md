@@ -38,11 +38,11 @@ print(predictions_with_factors_df.head())
 
 ## Original Dataframe + Predictions + Factors
 
-By passing the `.make_original_with_predictions_and_features(prediction_dataframe)` method a raw prediction dataframe you'll get back a dataframe containing all the original data, the predicted values, and top factors.
+By passing the `.make_original_with_predictions_and_factors(prediction_dataframe)` method a raw prediction dataframe you'll get back a dataframe containing all the original data, the predicted values, and top factors.
 
 ```python
 # Get original dataframe + predictions + factors
-original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_features(
+original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_factors(
     prediction_dataframe)
 print(original_plus_predictions_and_factors.head())
 ```
