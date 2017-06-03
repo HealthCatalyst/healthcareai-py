@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>healthcareai.advanced_supvervised_model_trainer &mdash; healthcare.ai 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="healthcare.ai 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> healthcare.ai
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">healthcare.ai</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>healthcareai.advanced_supvervised_model_trainer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for healthcareai.advanced_supvervised_model_trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.ensemble</span> <span class="k">import</span> <span class="n">RandomForestClassifier</span><span class="p">,</span> <span class="n">RandomForestRegressor</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LinearRegression</span><span class="p">,</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="k">import</span> <span class="n">KNeighborsClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="k">import</span> <span class="n">StandardScaler</span>
+
+<span class="kn">import</span> <span class="nn">healthcareai.common.model_eval</span> <span class="k">as</span> <span class="nn">hcai_model_evaluation</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.top_factors</span> <span class="k">as</span> <span class="nn">hcai_factors</span>
+<span class="kn">import</span> <span class="nn">healthcareai.trained_models.trained_supervised_model</span> <span class="k">as</span> <span class="nn">hcai_tsm</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.helpers</span> <span class="k">as</span> <span class="nn">hcai_helpers</span>
+
+<span class="kn">from</span> <span class="nn">healthcareai.common.randomized_search</span> <span class="k">import</span> <span class="n">prepare_randomized_search</span>
+<span class="kn">from</span> <span class="nn">healthcareai.common.healthcareai_error</span> <span class="k">import</span> <span class="n">HealthcareAIError</span>
+
+<span class="n">SUPPORTED_MODEL_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span> <span class="s1">&#39;regression&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer">[docs]</a><span class="k">class</span> <span class="nc">AdvancedSupervisedModelTrainer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class helps create a model using several common classifiers and regressors, both of which report appropiate</span>
+<span class="sd">    metrics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.__init__"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">predicted_column</span><span class="p">,</span> <span class="n">grain_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an instance of AdvancedSupervisedModelTrainer.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.DataFrame): The training data</span>
+<span class="sd">            model_type (str): &#39;classification&#39; or &#39;regression&#39;</span>
+<span class="sd">            predicted_column (str): The name of the predicted/target/label column</span>
+<span class="sd">            grain_column (str): The grain column</span>
+<span class="sd">            verbose (bool): Verbose output</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate model type is sane</span>
+        <span class="k">if</span> <span class="n">model_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_MODEL_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;A trainer must be one of these types: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">SUPPORTED_MODEL_TYPES</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span> <span class="o">=</span> <span class="n">dataframe</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span> <span class="o">=</span> <span class="n">predicted_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span> <span class="o">=</span> <span class="n">grain_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_console_log</span><span class="p">(</span>
+            <span class="s1">&#39;Shape and top 5 rows of original dataframe:</span><span class="se">\n</span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">head</span><span class="p">()))</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if trainer is set up for classification </span>
+<span class="sd">        </span>
+<span class="sd">        Easy check to consolidate magic strings in all the model type switches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if trainer is set up for regression </span>
+<span class="sd">        </span>
+<span class="sd">        Easy check to consolidate magic strings in all the model type switches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;regression&#39;</span>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.feature_scaling"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.feature_scaling">[docs]</a>    <span class="k">def</span> <span class="nf">feature_scaling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns_to_scale</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; First pass a a feature scaler. &quot;&quot;&quot;</span>
+        <span class="c1"># TODO convert to TransformerMixin</span>
+        <span class="c1"># TODO document</span>
+        <span class="c1"># TODO test</span>
+        <span class="c1"># NB: Must happen AFTER self.X_train, self.X_test,</span>
+        <span class="c1">#     self.y_train, self.y_test are defined.</span>
+        <span class="c1">#     Must happen AFTER imputation is done so there</span>
+        <span class="c1">#     are no missing values.</span>
+        <span class="c1">#     Must happen AFTER under/over sampling is done</span>
+        <span class="c1">#     so that we scale the under/over sampled dataset.</span>
+        <span class="c1"># TODO: How to warn the user if they call this method at the wrong time?</span>
+        <span class="n">x_train_scaled_subset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">[</span><span class="n">columns_to_scale</span><span class="p">]</span>
+        <span class="n">x_test_scaled_subset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">[</span><span class="n">columns_to_scale</span><span class="p">]</span>
+        <span class="n">scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
+
+        <span class="n">scaler</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train_scaled_subset</span><span class="p">)</span>
+
+        <span class="n">X_train_scaled_subset_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_train_scaled_subset</span><span class="p">))</span>
+        <span class="n">X_train_scaled_subset_dataframe</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">x_train_scaled_subset</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">X_train_scaled_subset_dataframe</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">x_train_scaled_subset</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">[</span><span class="n">columns_to_scale</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_train_scaled_subset_dataframe</span>
+
+        <span class="n">X_test_scaled_subset_dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x_test_scaled_subset</span><span class="p">))</span>
+        <span class="n">X_test_scaled_subset_dataframe</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">x_test_scaled_subset</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">X_test_scaled_subset_dataframe</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">x_test_scaled_subset</span><span class="o">.</span><span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">[</span><span class="n">columns_to_scale</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_test_scaled_subset_dataframe</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.train_test_split"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.train_test_split">[docs]</a>    <span class="k">def</span> <span class="nf">train_test_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">random_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits the dataframe into train and test sets.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            random_seed (int): An optional random seed for the random number generator. It is best to leave at the None</span>
+<span class="sd">                deafault. Useful for unit tests when reproducibility is required.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span><span class="p">]])</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span> <span class="o">=</span> <span class="n">sklearn</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">train_test_split</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=.</span><span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">random_seed</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_console_log</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Shape of X_train: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">y_train: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">X_test: </span><span class="si">{}</span><span class="se">\n</span><span class="s1">y_test: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.ensemble_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.ensemble_regression">[docs]</a>    <span class="k">def</span> <span class="nf">ensemble_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span> <span class="n">model_by_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># TODO stub</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_regression</span><span class="p">(</span><span class="s1">&#39;Ensemble Regression&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;We apologize. An ensemble linear regression has not yet been implemented.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.ensemble_classification"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.ensemble_classification">[docs]</a>    <span class="k">def</span> <span class="nf">ensemble_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span> <span class="n">trained_model_by_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for</span>
+<span class="sd">        your data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scoring_metric (str): The metric used to rank the models. Defaults to &#39;roc_auc&#39;</span>
+<span class="sd">            trained_model_by_name (dict): A dictionary of trained models to compare for a custom ensemble</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: The best TrainedSupervisedModel found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">(</span><span class="s1">&#39;Ensemble Classification&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_score_metric_for_number_of_classes</span><span class="p">(</span><span class="n">scoring_metric</span><span class="p">)</span>
+        <span class="n">score_by_name</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Here is the default list of algorithms to try for the ensemble</span>
+        <span class="c1"># Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary</span>
+        <span class="k">if</span> <span class="n">trained_model_by_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># TODO because these now all return TSMs it will be additionally slow by all the factor models.</span>
+            <span class="c1"># TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?</span>
+            <span class="n">trained_model_by_name</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;KNN&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">knn</span><span class="p">(</span><span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">scoring_metric</span><span class="o">=</span><span class="n">scoring_metric</span><span class="p">),</span>
+                <span class="s1">&#39;Logistic Regression&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="s1">&#39;Random Forest Classifier&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_forest_classifier</span><span class="p">(</span>
+                    <span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                    <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">scoring_metric</span><span class="o">=</span><span class="n">scoring_metric</span><span class="p">)}</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">trained_model_by_name</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Unroll estimator from trained supervised model</span>
+            <span class="n">estimator</span> <span class="o">=</span> <span class="n">hcai_tsm</span><span class="o">.</span><span class="n">get_estimator_from_trained_supervised_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+            <span class="c1"># Get the score objects for the estimator</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">(</span><span class="n">estimator</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_console_log</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> algorithm: score = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span>
+
+            <span class="c1"># TODO this may need to ferret out each classification score separately</span>
+            <span class="n">score_by_name</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span><span class="p">[</span><span class="n">scoring_metric</span><span class="p">]</span>
+
+        <span class="n">sorted_names_and_scores</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">score_by_name</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">best_algorithm_name</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">sorted_names_and_scores</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">best_model</span> <span class="o">=</span> <span class="n">trained_model_by_name</span><span class="p">[</span><span class="n">best_algorithm_name</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_console_log</span><span class="p">(</span><span class="s1">&#39;Based on the scoring metric </span><span class="si">{}</span><span class="s1">, the best algorithm found is: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">scoring_metric</span><span class="p">,</span>
+                                                                                                   <span class="n">best_algorithm_name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_console_log</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">best_algorithm_name</span><span class="p">,</span> <span class="n">scoring_metric</span><span class="p">,</span> <span class="n">best_score</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">best_model</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.validate_score_metric_for_number_of_classes"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.validate_score_metric_for_number_of_classes">[docs]</a>    <span class="k">def</span> <span class="nf">validate_score_metric_for_number_of_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check that a user&#39;s choice of scoring metric makes sense with the number of prediction classes</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric (str): a string of the scoring metric</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO test this for errors and multiclass</span>
+        <span class="c1"># TODO make this more robust for other scoring metrics</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">count_unique_elements_in_column</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataframe</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">classes</span> <span class="ow">is</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># return True for testing</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">classes</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pr_auc&#39;</span><span class="p">,</span> <span class="s1">&#39;roc_auc&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="p">(</span><span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;AUC (aka roc_auc) cannot be used for more than two classes. Please choose another&#39;</span>
+                                     <span class="s1">&#39; metric such as </span><span class="se">\&#39;</span><span class="s1">accuracy</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.metrics"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.metrics">[docs]</a>    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trained_sklearn_estimator</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a trained estimator, calculate the appropriate performance metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        This is intended to be a thin wrapper around the toolbox metrics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            trained_sklearn_estimator (sklearn.base.BaseEstimator): A scikit-learn trained algorithm</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">performance_metrics</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">hcai_model_evaluation</span><span class="o">.</span><span class="n">calculate_binary_classification_metrics</span><span class="p">(</span>
+                <span class="n">trained_sklearn_estimator</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span><span class="p">,</span>
+
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;regression&#39;</span><span class="p">:</span>
+            <span class="n">performance_metrics</span> <span class="o">=</span> <span class="n">hcai_model_evaluation</span><span class="o">.</span><span class="n">calculate_regression_metrics</span><span class="p">(</span><span class="n">trained_sklearn_estimator</span><span class="p">,</span>
+                                                                                     <span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_test</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">performance_metrics</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.logistic_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.logistic_regression">[docs]</a>    <span class="k">def</span> <span class="nf">logistic_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span>
+                            <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A light wrapper for Sklearn&#39;s logistic regression that performs randomized search over an overideable default </span>
+<span class="sd">        hyperparameter grid.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for regression</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">(</span><span class="s1">&#39;Logistic Regression&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyperparameter_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hyperparameter_grid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="s1">&#39;class_weight&#39;</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;balanced&#39;</span><span class="p">]}</span>
+            <span class="n">number_iteration_samples</span> <span class="o">=</span> <span class="mi">10</span>
+
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">prepare_randomized_search</span><span class="p">(</span><span class="n">LogisticRegression</span><span class="p">,</span>
+                                              <span class="n">scoring_metric</span><span class="p">,</span>
+                                              <span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                              <span class="n">randomized_search</span><span class="p">,</span>
+                                              <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">)</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainer</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.linear_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.linear_regression">[docs]</a>    <span class="k">def</span> <span class="nf">linear_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span>
+                          <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                          <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A light wrapper for Sklearn&#39;s linear regression that performs randomized search over an overridable default</span>
+<span class="sd">        hyperparameter grid.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for regression</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_regression</span><span class="p">(</span><span class="s1">&#39;Linear Regression&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyperparameter_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hyperparameter_grid</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;fit_intercept&quot;</span><span class="p">:</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]}</span>
+            <span class="n">number_iteration_samples</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">prepare_randomized_search</span><span class="p">(</span><span class="n">LinearRegression</span><span class="p">,</span>
+                                              <span class="n">scoring_metric</span><span class="p">,</span>
+                                              <span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                              <span class="n">randomized_search</span><span class="p">,</span>
+                                              <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">)</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainer</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.knn"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.knn">[docs]</a>    <span class="k">def</span> <span class="nf">knn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span>
+            <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A light wrapper for Sklearn&#39;s knn classifier that performs randomized search over an overridable default</span>
+<span class="sd">        hyperparameter grid.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for classification</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">(</span><span class="s1">&#39;KNN&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyperparameter_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">neighbors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">26</span><span class="p">))</span>
+            <span class="n">hyperparameter_grid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;n_neighbors&#39;</span><span class="p">:</span> <span class="n">neighbors</span><span class="p">,</span> <span class="s1">&#39;weights&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;uniform&#39;</span><span class="p">,</span> <span class="s1">&#39;distance&#39;</span><span class="p">]}</span>
+            <span class="n">number_iteration_samples</span> <span class="o">=</span> <span class="mi">10</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;KNN Grid: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hyperparameter_grid</span><span class="p">))</span>
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">prepare_randomized_search</span><span class="p">(</span><span class="n">KNeighborsClassifier</span><span class="p">,</span>
+                                              <span class="n">scoring_metric</span><span class="p">,</span>
+                                              <span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                              <span class="n">randomized_search</span><span class="p">,</span>
+                                              <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">)</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainer</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.random_forest"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.random_forest">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                      <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span>
+                      <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A convenience method that allows a user to simply call .random_forest() and get the right one.</span>
+<span class="sd">                </span>
+<span class="sd">        Args:</span>
+<span class="sd">            trees (int): number of trees to use if not performing a randomized grid search</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for classification</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_forest_classifier</span><span class="p">(</span><span class="n">trees</span><span class="o">=</span><span class="n">trees</span><span class="p">,</span>
+                                                 <span class="n">scoring_metric</span><span class="o">=</span><span class="n">scoring_metric</span><span class="p">,</span>
+                                                 <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                                 <span class="n">randomized_search</span><span class="o">=</span><span class="n">randomized_search</span><span class="p">,</span>
+                                                 <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_forest_regressor</span><span class="p">(</span><span class="n">trees</span><span class="o">=</span><span class="n">trees</span><span class="p">,</span>
+                                                <span class="n">scoring_metric</span><span class="o">=</span><span class="n">scoring_metric</span><span class="p">,</span>
+                                                <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                                <span class="n">randomized_search</span><span class="o">=</span><span class="n">randomized_search</span><span class="p">,</span>
+                                                <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.random_forest_classifier"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.random_forest_classifier">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest_classifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                 <span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                 <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span>
+                                 <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                 <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A light wrapper for Sklearn&#39;s random forest classifier that performs randomized search over an overridable</span>
+<span class="sd">        default hyperparameter grid.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            trees (int): number of trees to use if not performing a randomized grid search</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for classification</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">(</span><span class="s1">&#39;Random Forest Classifier&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyperparameter_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_features</span> <span class="o">=</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">calculate_random_forest_mtry_hyperparameter</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+                                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">)</span>
+            <span class="n">hyperparameter_grid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;n_estimators&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">],</span> <span class="s1">&#39;max_features&#39;</span><span class="p">:</span> <span class="n">max_features</span><span class="p">}</span>
+            <span class="n">number_iteration_samples</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">prepare_randomized_search</span><span class="p">(</span><span class="n">RandomForestClassifier</span><span class="p">,</span>
+                                              <span class="n">scoring_metric</span><span class="p">,</span>
+                                              <span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                              <span class="n">randomized_search</span><span class="p">,</span>
+                                              <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">,</span>
+                                              <span class="n">n_estimators</span><span class="o">=</span><span class="n">trees</span><span class="p">)</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainer</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.random_forest_regressor"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.random_forest_regressor">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest_regressor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                <span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span>
+                                <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                <span class="n">number_iteration_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A light wrapper for Sklearn&#39;s random forest regressor that performs randomized search over an overridable</span>
+<span class="sd">        default hyperparameter grid.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            trees (int): number of trees to use if not performing a randomized grid search</span>
+<span class="sd">            scoring_metric (str): Any sklearn scoring metric appropriate for regression</span>
+<span class="sd">            hyperparameter_grid (dict): hyperparameters by name</span>
+<span class="sd">            randomized_search (bool): True for randomized search (default)</span>
+<span class="sd">            number_iteration_samples (int): Number of models to train during the randomized search for exploring the</span>
+<span class="sd">                hyperparameter space. More may lead to a better model, but will take longer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_regression</span><span class="p">(</span><span class="s1">&#39;Random Forest Regressor&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyperparameter_grid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_features</span> <span class="o">=</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">calculate_random_forest_mtry_hyperparameter</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span>
+                                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">)</span>
+            <span class="n">hyperparameter_grid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;n_estimators&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">200</span><span class="p">],</span> <span class="s1">&#39;max_features&#39;</span><span class="p">:</span> <span class="n">max_features</span><span class="p">}</span>
+            <span class="n">number_iteration_samples</span> <span class="o">=</span> <span class="mi">5</span>
+
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">prepare_randomized_search</span><span class="p">(</span><span class="n">RandomForestRegressor</span><span class="p">,</span>
+                                              <span class="n">scoring_metric</span><span class="p">,</span>
+                                              <span class="n">hyperparameter_grid</span><span class="p">,</span>
+                                              <span class="n">randomized_search</span><span class="p">,</span>
+                                              <span class="n">number_iteration_samples</span><span class="o">=</span><span class="n">number_iteration_samples</span><span class="p">,</span>
+                                              <span class="n">n_estimators</span><span class="o">=</span><span class="n">trees</span><span class="p">)</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trainer</span><span class="p">(</span><span class="n">algorithm</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span></div>
+
+    <span class="k">def</span> <span class="nf">_trainer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">,</span> <span class="n">include_factor_model</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            algorithm (sklearn.base.BaseEstimator): The scikit learn algorithm, ready to fit.</span>
+<span class="sd">            include_factor_model (bool): Trains a model for top factors. Defaults to True</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: a TrainedSupervisedModel</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">algorithm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
+
+        <span class="c1"># Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the</span>
+        <span class="c1"># test set is saved inside the object as well as the calculated thresholds.</span>
+        <span class="c1"># See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons</span>
+        <span class="c1"># PEP 8</span>
+        <span class="n">test_set_predictions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">test_set_class_labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+            <span class="c1"># Save both the probabilities and labels</span>
+            <span class="n">test_set_predictions</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">)</span>
+            <span class="n">test_set_class_labels</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+            <span class="n">test_set_predictions</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">include_factor_model</span><span class="p">:</span>
+            <span class="n">factor_model</span> <span class="o">=</span> <span class="n">hcai_factors</span><span class="o">.</span><span class="n">prepare_fit_model_for_factors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_train</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">factor_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">trained_supervised_model</span> <span class="o">=</span> <span class="n">hcai_tsm</span><span class="o">.</span><span class="n">TrainedSupervisedModel</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">algorithm</span><span class="p">,</span>
+            <span class="n">feature_model</span><span class="o">=</span><span class="n">factor_model</span><span class="p">,</span>
+            <span class="n">fit_pipeline</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span>
+            <span class="n">column_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">X_test</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+            <span class="n">grain_column</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span><span class="p">,</span>
+            <span class="n">prediction_column</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span><span class="p">,</span>
+            <span class="n">test_set_predictions</span><span class="o">=</span><span class="n">test_set_predictions</span><span class="p">,</span>
+            <span class="n">test_set_class_labels</span><span class="o">=</span><span class="n">test_set_class_labels</span><span class="p">,</span>
+            <span class="n">test_set_actual</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">y_test</span><span class="p">,</span>
+            <span class="n">metric_by_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">(</span><span class="n">algorithm</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">trained_supervised_model</span>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.validate_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.validate_regression">[docs]</a>    <span class="k">def</span> <span class="nf">validate_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises error if not a regression trainer.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            model_name (str): Nice string for error messages</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;A </span><span class="si">{}</span><span class="s1"> model can only be trained with a regression trainer.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AdvancedSupervisedModelTrainer.validate_classification"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.advanced_supvervised_model_trainer.AdvancedSupervisedModelTrainer.validate_classification">[docs]</a>    <span class="k">def</span> <span class="nf">validate_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raises error if not a classification trainer.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            model_name (str): Nice string for error messages</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;A </span><span class="si">{}</span><span class="s1"> model can only be trained with a classification trainer.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_console_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;DSM: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">message</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright .
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -142,6 +142,14 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
 
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
+    """
+    From a given dictionary of thresholds by model, create a ROC curve for each model
+
+    Args:
+        pr_thresholds_by_model (dict): A dictionary of ROC thresholds by model name.
+        save (bool): False to display the image (default) or True to save it (but not display it)
+        debug (bool): verbost output.
+    """
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -193,6 +201,14 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
 def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
+    """
+    From a given dictionary of thresholds by model, create a PR curve for each model
+    
+    Args:
+        pr_thresholds_by_model (dict): A dictionary of PR thresholds by model name.
+        save (bool): False to display the image (default) or True to save it (but not display it)
+        debug (bool): verbost output.
+    """
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     # Initialize plot
     plt.figure()

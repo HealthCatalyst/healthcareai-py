@@ -53,15 +53,27 @@ class SupervisedModelTrainer(object):
         return self._advanced_trainer.dataframe
 
     def random_forest(self, save_plot=False):
-        """ Train a random forest model and print out the model performance metrics. """
         # TODO Convenience method. Probably not needed?
+        """ Train a random forest model and print out the model performance metrics.
+
+        Args:
+            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
+                display.
+
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         if self._advanced_trainer.model_type is 'classification':
             return self.random_forest_classification(save_plot=save_plot)
         elif self._advanced_trainer.model_type is 'regression':
             return self.random_forest_regression()
 
     def knn(self):
-        """ Train a knn model and print out the model performance metrics. """
+        """ Train a knn model and print out the model performance metrics.
+        
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         model_name = 'KNN'
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -74,7 +86,11 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_regression(self):
-        """ Train a random forest regression model and print out the model performance metrics. """
+        """ Train a random forest regression model and print out the model performance metrics.
+
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         model_name = 'Random Forest Regression'
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -88,7 +104,16 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_classification(self, save_plot=False):
-        """ Train a random forest classification model, print out performance metrics and show a ROC plot. """
+        """ Train a random forest classification model, print out performance metrics and show a feature importance plot.
+        
+        Args:
+            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
+                display.
+
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
+
         model_name = 'Random Forest Classification'
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -104,7 +129,11 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def logistic_regression(self):
-        """ Train a logistic regression model and print out the model performance metrics. """
+        """ Train a logistic regression model and print out the model performance metrics.
+        
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         model_name = 'Logistic Regression'
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -116,7 +145,11 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def linear_regression(self):
-        """ Train a linear regression model and print out the model performance metrics. """
+        """ Train a linear regression model and print out the model performance metrics.
+        
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         model_name = 'Linear Regression'
         print('\nTraining {}'.format(model_name))
         t0 = time.time()
@@ -128,7 +161,11 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def ensemble(self):
-        """ Train a ensemble model and print out the model performance metrics. """
+        """ Train a ensemble model and print out the model performance metrics.
+        
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
         # TODO consider making a scoring parameter (which will necessitate some more logic
         model_name = 'ensemble {}'.format(self._advanced_trainer.model_type)
         print('\nTraining {}'.format(model_name))
@@ -172,6 +209,7 @@ def print_training_timer(model_name, start_timestamp):
 def print_training_results(model_name, t0, trained_model):
     """
     Print metrics, stats and hyperparameters of a training.
+    
     Args:
         model_name (str): Name of the model 
         t0 (float): Training start time

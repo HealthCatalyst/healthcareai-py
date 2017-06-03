@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>healthcareai.tests.test_trainer &mdash; healthcare.ai 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="healthcare.ai 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> healthcare.ai
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">healthcare.ai</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>healthcareai.tests.test_trainer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for healthcareai.tests.test_trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+
+<span class="kn">from</span> <span class="nn">healthcareai.common.healthcareai_error</span> <span class="k">import</span> <span class="n">HealthcareAIError</span>
+<span class="kn">from</span> <span class="nn">healthcareai.supervised_model_trainer</span> <span class="k">import</span> <span class="n">SupervisedModelTrainer</span>
+<span class="kn">import</span> <span class="nn">healthcareai.tests.helpers</span> <span class="k">as</span> <span class="nn">helpers</span>
+<span class="kn">from</span> <span class="nn">healthcareai.trained_models.trained_supervised_model</span> <span class="k">import</span> <span class="n">TrainedSupervisedModel</span>
+
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer">[docs]</a><span class="k">class</span> <span class="nc">TestSupervisedModelTrainer</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TestSupervisedModelTrainer.setUpClass"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.setUpClass">[docs]</a>    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">load_sample_dataframe</span><span class="p">()</span>
+
+        <span class="c1"># Drop columns that won&#39;t help machine learning</span>
+        <span class="n">columns_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PatientID&#39;</span><span class="p">]</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns_to_remove</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">classification_trainer</span> <span class="o">=</span> <span class="n">SupervisedModelTrainer</span><span class="p">(</span><span class="n">dataframe</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                                                            <span class="n">predicted_column</span><span class="o">=</span><span class="s1">&#39;ThirtyDayReadmitFLG&#39;</span><span class="p">,</span>
+                                                            <span class="n">model_type</span><span class="o">=</span><span class="s1">&#39;classification&#39;</span><span class="p">,</span>
+                                                            <span class="n">impute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                            <span class="n">grain_column</span><span class="o">=</span><span class="s1">&#39;PatientEncounterID&#39;</span><span class="p">,</span>
+                                                            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">regression_trainer</span> <span class="o">=</span> <span class="n">SupervisedModelTrainer</span><span class="p">(</span><span class="n">df</span><span class="p">,</span>
+                                                        <span class="s1">&#39;SystolicBPNBR&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;regression&#39;</span><span class="p">,</span>
+                                                        <span class="n">grain_column</span><span class="o">=</span><span class="s1">&#39;PatientEncounterID&#39;</span><span class="p">,</span>
+                                                        <span class="n">impute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_knn"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_knn">[docs]</a>    <span class="k">def</span> <span class="nf">test_knn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">trained_knn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification_trainer</span><span class="o">.</span><span class="n">knn</span><span class="p">()</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_knn</span><span class="o">.</span><span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_knn</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.79</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span></div>
+
+    <span class="c1"># TODO see if there is a way to make this test work - it fails on travisCI because of this:</span>
+    <span class="c1"># TODO &gt; _tkinter.TclError: no display name and no $DISPLAY environment variable</span>
+    <span class="nd">@unittest</span><span class="o">.</span><span class="n">skipIf</span><span class="p">(</span><span class="s2">&quot;SKIP_MSSQL_TESTS&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;SKIP_MSSQL_TESTS&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+                     <span class="s2">&quot;Skipping this on Travis CI.&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_random_forest_classification"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_random_forest_classification">[docs]</a>    <span class="k">def</span> <span class="nf">test_random_forest_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Force plot to save to prevent blocking</span>
+        <span class="n">trained_random_forest</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification_trainer</span><span class="o">.</span><span class="n">random_forest_classification</span><span class="p">(</span><span class="n">save_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_random_forest</span><span class="o">.</span><span class="n">metrics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_random_forest</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_linear_regression"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_linear_regression">[docs]</a>    <span class="k">def</span> <span class="nf">test_linear_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">trained_linear_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_trainer</span><span class="o">.</span><span class="n">linear_regression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_linear_model</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_linear_model</span><span class="o">.</span><span class="n">metrics</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">700</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_random_forest_regression"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_random_forest_regression">[docs]</a>    <span class="k">def</span> <span class="nf">test_random_forest_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">trained_rf_regressor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_trainer</span><span class="o">.</span><span class="n">random_forest_regression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_rf_regressor</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_rf_regressor</span><span class="o">.</span><span class="n">metrics</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">700</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_logistic_regression"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_logistic_regression">[docs]</a>    <span class="k">def</span> <span class="nf">test_logistic_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">trained_lr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification_trainer</span><span class="o">.</span><span class="n">logistic_regression</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_lr</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_lr</span><span class="o">.</span><span class="n">metrics</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_ensemble_classification"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_ensemble_classification">[docs]</a>    <span class="k">def</span> <span class="nf">test_ensemble_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">trained_ensemble</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification_trainer</span><span class="o">.</span><span class="n">ensemble</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">trained_ensemble</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">trained_ensemble</span><span class="o">.</span><span class="n">metrics</span>
+
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">])</span>
+        <span class="n">helpers</span><span class="o">.</span><span class="n">assertBetween</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.95</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_ensemble_regression"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_ensemble_regression">[docs]</a>    <span class="k">def</span> <span class="nf">test_ensemble_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">HealthcareAIError</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_trainer</span><span class="o">.</span><span class="n">ensemble</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_linear_regression_raises_error_on_missing_columns"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_linear_regression_raises_error_on_missing_columns">[docs]</a>    <span class="k">def</span> <span class="nf">test_linear_regression_raises_error_on_missing_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO how is this working since the model does not use the training df???</span>
+        <span class="n">training_df</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">load_sample_dataframe</span><span class="p">()</span>
+
+        <span class="c1"># Drop columns that won&#39;t help machine learning</span>
+        <span class="n">training_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;PatientID&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Train the linear regression model</span>
+        <span class="n">trained_linear_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_trainer</span><span class="o">.</span><span class="n">linear_regression</span><span class="p">()</span>
+
+        <span class="c1"># Load a new df for predicting</span>
+        <span class="n">prediction_df</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">load_sample_dataframe</span><span class="p">()</span>
+
+        <span class="c1"># Drop columns that model expects</span>
+        <span class="n">prediction_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;GenderFLG&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Make some predictions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">HealthcareAIError</span><span class="p">,</span> <span class="n">trained_linear_model</span><span class="o">.</span><span class="n">make_predictions</span><span class="p">,</span> <span class="n">prediction_df</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSupervisedModelTrainer.test_linear_regression_raises_error_on_roc_plot"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.TestSupervisedModelTrainer.test_linear_regression_raises_error_on_roc_plot">[docs]</a>    <span class="k">def</span> <span class="nf">test_linear_regression_raises_error_on_roc_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Train the linear regression model</span>
+        <span class="n">trained_linear_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regression_trainer</span><span class="o">.</span><span class="n">linear_regression</span><span class="p">()</span>
+
+        <span class="c1"># Try the ROC plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">HealthcareAIError</span><span class="p">,</span> <span class="n">trained_linear_model</span><span class="o">.</span><span class="n">roc_plot</span><span class="p">)</span></div></div>
+
+
+<span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="captured_output"><a class="viewcode-back" href="../../../healthcareai.tests.html#healthcareai.tests.test_trainer.captured_output">[docs]</a><span class="k">def</span> <span class="nf">captured_output</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A quick and dirty context manager that captures STDOUT and STDERR to enable testing of functions that print() things</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_out</span><span class="p">,</span> <span class="n">new_err</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(),</span> <span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">old_out</span><span class="p">,</span> <span class="n">old_err</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">new_out</span><span class="p">,</span> <span class="n">new_err</span>
+        <span class="k">yield</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="n">old_out</span><span class="p">,</span> <span class="n">old_err</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright .
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
