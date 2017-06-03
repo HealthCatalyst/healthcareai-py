@@ -40,4 +40,4 @@ Advanced users may want to use different data preparation pipelines, so they sho
 
 ### 3. Experts
 
-There is a small segment of our users that want to leverate some of the helper methods, data pipeline chunks and other utilities without directly using either of the `Trainer` classes.
+There is a small segment of our users that want to leverage some of the helper methods, data pipeline chunks and other utilities without directly using either of the `Trainer` classes.
