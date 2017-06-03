@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>healthcareai.common.database_writers &mdash; healthcare.ai 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="healthcare.ai 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> healthcare.ai
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">healthcare.ai</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>healthcareai.common.database_writers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for healthcareai.common.database_writers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sqlalchemy</span>
+
+<span class="kn">import</span> <span class="nn">healthcareai.common.database_validators</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Note we don&#39;t want to force sqlite3 as a requirement</span>
+    <span class="kn">import</span> <span class="nn">sqlite3</span>
+
+    <span class="n">sqlite3_is_loaded</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">sqlite3_is_loaded</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="kn">from</span> <span class="nn">healthcareai.common.filters</span> <span class="k">import</span> <span class="n">is_dataframe</span>
+<span class="kn">from</span> <span class="nn">healthcareai.common.healthcareai_error</span> <span class="k">import</span> <span class="n">HealthcareAIError</span>
+
+
+<div class="viewcode-block" id="write_to_db_agnostic"><a class="viewcode-back" href="../../../healthcareai.common.html#healthcareai.common.database_writers.write_to_db_agnostic">[docs]</a><span class="k">def</span> <span class="nf">write_to_db_agnostic</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an sqlalchemy engine or sqlite connection, writes a dataframe to a table</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        engine (sqlalchemy.engine.base.Engine, sqlite3.Connection): the database engine or connection object</span>
+<span class="sd">        table (str): destination table</span>
+<span class="sd">        dataframe (pandas.DataFrame): the data to write</span>
+<span class="sd">        schema (str): the optional database schema</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Validate inputs</span>
+    <span class="n">is_engine</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">sqlalchemy</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">Engine</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sqlite3_is_loaded</span><span class="p">:</span>
+        <span class="n">is_sqlite_connection</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Connection</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_sqlite_connection</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_engine</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_sqlite_connection</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;sqlalchemy engine or sqlite connection required, a </span><span class="si">{}</span><span class="s1"> was given&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">engine</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_dataframe</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Dataframe required, a </span><span class="si">{}</span><span class="s1"> was given&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Table name required, a </span><span class="si">{}</span><span class="s1"> was given&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">table</span><span class="p">)))</span>
+
+    <span class="c1"># Verify that tables exist for databases</span>
+    <span class="k">if</span> <span class="n">is_engine</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">healthcareai</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">database_validators</span><span class="o">.</span><span class="n">does_table_exist</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Destination table (</span><span class="si">{}</span><span class="s1">) does not exist. Please create it.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">is_sqlite_connection</span><span class="p">:</span>
+        <span class="n">healthcareai</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">database_validators</span><span class="o">.</span><span class="n">verify_sqlite_table_exists</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Count before</span>
+        <span class="n">before_count</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s1">&#39;select count(*) from </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">engine</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Insert into database</span>
+        <span class="n">dataframe</span><span class="o">.</span><span class="n">to_sql</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">if_exists</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Count after</span>
+        <span class="n">after_count</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql</span><span class="p">(</span><span class="s1">&#39;select count(*) from </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">engine</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">after_count</span> <span class="o">-</span> <span class="n">before_count</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Successfully inserted </span><span class="si">{}</span><span class="s1"> rows. Dataframe contained </span><span class="si">{}</span><span class="s1"> rows&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)))</span>
+
+    <span class="c1"># TODO catch other errors here:</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">sqlalchemy</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">SQLAlchemyError</span><span class="p">,</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Failed to insert values into </span><span class="si">{}</span><span class="s2">.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">        Please verify that the table [</span><span class="si">{}</span><span class="s2">] exists.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">        Was your test insert successful earlier?</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">        If so, what has changed with your database/table/entity since then?&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">table</span><span class="p">))</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright .
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

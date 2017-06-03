@@ -1,0 +1,455 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>healthcareai.supervised_model_trainer &mdash; healthcare.ai 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="healthcare.ai 1.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> healthcare.ai
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">healthcare.ai</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>healthcareai.supervised_model_trainer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for healthcareai.supervised_model_trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">healthcareai.pipelines.data_preparation</span> <span class="k">as</span> <span class="nn">hcai_pipelines</span>
+<span class="kn">import</span> <span class="nn">healthcareai.trained_models.trained_supervised_model</span> <span class="k">as</span> <span class="nn">hcai_tsm</span>
+<span class="kn">from</span> <span class="nn">healthcareai.advanced_supvervised_model_trainer</span> <span class="k">import</span> <span class="n">AdvancedSupervisedModelTrainer</span>
+
+
+<div class="viewcode-block" id="SupervisedModelTrainer"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer">[docs]</a><span class="k">class</span> <span class="nc">SupervisedModelTrainer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class helps create a model using several common classifiers and regressors, both of which report appropiate</span>
+<span class="sd">    metrics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.__init__"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">predicted_column</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">impute</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">grain_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set up a SupervisedModelTrainer</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe</span>
+<span class="sd">            predicted_column (str): The name of the prediction column </span>
+<span class="sd">            model_type (str): the trainer type - &#39;classification&#39; or &#39;regression&#39;</span>
+<span class="sd">            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows</span>
+<span class="sd">                that contain any null values.</span>
+<span class="sd">            grain_column (str): The name of the grain column</span>
+<span class="sd">            verbose (bool): Set to true for verbose output. Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span> <span class="o">=</span> <span class="n">grain_column</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_column</span> <span class="o">=</span> <span class="n">predicted_column</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span> <span class="o">=</span> <span class="n">grain_column</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span> <span class="o">=</span> <span class="n">grain_column</span><span class="p">,</span>
+
+        <span class="c1"># Build the pipeline</span>
+        <span class="c1"># TODO This pipeline may drop nulls in prediction rows if impute=False</span>
+        <span class="c1"># TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">hcai_pipelines</span><span class="o">.</span><span class="n">full_pipeline</span><span class="p">(</span><span class="n">model_type</span><span class="p">,</span> <span class="n">predicted_column</span><span class="p">,</span> <span class="n">grain_column</span><span class="p">,</span> <span class="n">impute</span><span class="o">=</span><span class="n">impute</span><span class="p">)</span>
+
+        <span class="c1"># Run the raw data through the data preparation pipeline</span>
+        <span class="n">clean_dataframe</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="c1"># Instantiate the advanced class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span> <span class="o">=</span> <span class="n">AdvancedSupervisedModelTrainer</span><span class="p">(</span><span class="n">clean_dataframe</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">predicted_column</span><span class="p">,</span>
+                                                                <span class="n">grain_column</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+
+        <span class="c1"># Save the pipeline to the parent class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">pipeline</span>
+
+        <span class="c1"># Split the data into train and test</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">train_test_split</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">clean_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the dataframe after the preparation pipeline (imputation and such) &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">dataframe</span>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.random_forest"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.random_forest">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># TODO Convenience method. Probably not needed?</span>
+        <span class="sd">&quot;&quot;&quot; Train a random forest model and print out the model performance metrics.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to</span>
+<span class="sd">                display.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_forest_classification</span><span class="p">(</span><span class="n">save_plot</span><span class="o">=</span><span class="n">save_plot</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;regression&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_forest_regression</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.knn"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.knn">[docs]</a>    <span class="k">def</span> <span class="nf">knn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a knn model and print out the model performance metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;KNN&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the model and display the model metrics</span>
+        <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">knn</span><span class="p">(</span><span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span> <span class="n">hyperparameter_grid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                   <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.random_forest_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.random_forest_regression">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a random forest regression model and print out the model performance metrics.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;Random Forest Regression&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the model and display the model metrics</span>
+        <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">random_forest_regressor</span><span class="p">(</span><span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                                                                       <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;neg_mean_squared_error&#39;</span><span class="p">,</span>
+                                                                       <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.random_forest_classification"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.random_forest_classification">[docs]</a>    <span class="k">def</span> <span class="nf">random_forest_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a random forest classification model, print out performance metrics and show a feature importance plot.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to</span>
+<span class="sd">                display.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;Random Forest Classification&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the model and display the model metrics</span>
+        <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">random_forest_classifier</span><span class="p">(</span><span class="n">trees</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">scoring_metric</span><span class="o">=</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">,</span>
+                                                                        <span class="n">randomized_search</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="c1"># Save or show the feature importance graph</span>
+        <span class="n">hcai_tsm</span><span class="o">.</span><span class="n">plot_rf_features_from_tsm</span><span class="p">(</span><span class="n">trained_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">x_train</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save_plot</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.logistic_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.logistic_regression">[docs]</a>    <span class="k">def</span> <span class="nf">logistic_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a logistic regression model and print out the model performance metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;Logistic Regression&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the model and display the model metrics</span>
+        <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">logistic_regression</span><span class="p">(</span><span class="n">randomized_search</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.linear_regression"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.linear_regression">[docs]</a>    <span class="k">def</span> <span class="nf">linear_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a linear regression model and print out the model performance metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;Linear Regression&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the model and display the model metrics</span>
+        <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">linear_regression</span><span class="p">(</span><span class="n">randomized_search</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+<div class="viewcode-block" id="SupervisedModelTrainer.ensemble"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.SupervisedModelTrainer.ensemble">[docs]</a>    <span class="k">def</span> <span class="nf">ensemble</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Train a ensemble model and print out the model performance metrics.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            TrainedSupervisedModel: A trained supervised model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO consider making a scoring parameter (which will necessitate some more logic</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="s1">&#39;ensemble </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">model_type</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Training </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">))</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Train the appropriate ensemble of models and display the model metrics</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;roc_auc&#39;</span>
+            <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">ensemble_classification</span><span class="p">(</span><span class="n">scoring_metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">model_type</span> <span class="ow">is</span> <span class="s1">&#39;regression&#39;</span><span class="p">:</span>
+            <span class="c1"># TODO stub</span>
+            <span class="n">metric</span> <span class="o">=</span> <span class="s1">&#39;neg_mean_squared_error&#39;</span>
+            <span class="n">trained_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span><span class="o">.</span><span class="n">ensemble_regression</span><span class="p">(</span><span class="n">scoring_metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s1">&#39;Based on the scoring metric </span><span class="si">{}</span><span class="s1">, the best algorithm found is: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span>
+                                                                                     <span class="n">trained_model</span><span class="o">.</span><span class="n">algorithm_name</span><span class="p">))</span>
+
+        <span class="n">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trained_model</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">advanced_features</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the underlying AdvancedSupervisedModelTrainer instance. For advanced users only. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_advanced_trainer</span></div>
+
+
+<div class="viewcode-block" id="print_training_timer"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.print_training_timer">[docs]</a><span class="k">def</span> <span class="nf">print_training_timer</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Given an original timestamp, prints the amount of time that has passed. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start_timestamp (float): Start time </span>
+<span class="sd">        model_name (str): model name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stop_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">delta_time</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">stop_time</span> <span class="o">-</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    Trained a </span><span class="si">{}</span><span class="s1"> model in </span><span class="si">{}</span><span class="s1"> seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">delta_time</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="print_training_results"><a class="viewcode-back" href="../../healthcareai.html#healthcareai.supervised_model_trainer.print_training_results">[docs]</a><span class="k">def</span> <span class="nf">print_training_results</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">,</span> <span class="n">trained_model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print metrics, stats and hyperparameters of a training.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        model_name (str): Name of the model </span>
+<span class="sd">        t0 (float): Training start time</span>
+<span class="sd">        trained_model (TrainedSupervisedModel): The trained supervised model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">print_training_timer</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">t0</span><span class="p">)</span>
+
+    <span class="n">hyperparameters</span> <span class="o">=</span> <span class="n">trained_model</span><span class="o">.</span><span class="n">best_hyperparameters</span>
+    <span class="k">if</span> <span class="n">hyperparameters</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">hyperparameters</span> <span class="o">=</span> <span class="s1">&#39;N/A: No hyperparameter search was performed&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Best hyperparameters found are:</span><span class="se">\n</span><span class="s1">    </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hyperparameters</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">trained_model</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> performance metrics:</span><span class="se">\n</span><span class="s1">    Accuracy: </span><span class="si">{:03.2f}</span><span class="se">\n</span><span class="s1">    ROC AUC: </span><span class="si">{:03.2f}</span><span class="se">\n</span><span class="s1">    PR AUC: </span><span class="si">{:03.2f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="p">,</span>
+            <span class="n">trained_model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">],</span>
+            <span class="n">trained_model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">],</span>
+            <span class="n">trained_model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;pr_auc&#39;</span><span class="p">]))</span>
+    <span class="k">elif</span> <span class="n">trained_model</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> performance metrics:</span><span class="se">\n</span><span class="s1">    Mean Squared Error (MSE): </span><span class="si">{}</span><span class="se">\n</span><span class="s1">    Mean Absolute Error (MAE): </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">model_name</span><span class="p">,</span>
+            <span class="n">trained_model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">],</span>
+            <span class="n">trained_model</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">]))</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright .
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

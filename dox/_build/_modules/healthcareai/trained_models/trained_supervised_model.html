@@ -1,0 +1,815 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>healthcareai.trained_models.trained_supervised_model &mdash; healthcare.ai 1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="healthcare.ai 1.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> healthcare.ai
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">healthcare.ai</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>healthcareai.trained_models.trained_supervised_model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for healthcareai.trained_models.trained_supervised_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">healthcareai.common.database_writers</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.file_io_utilities</span> <span class="k">as</span> <span class="nn">hcai_io</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.helpers</span> <span class="k">as</span> <span class="nn">hcai_helpers</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.model_eval</span> <span class="k">as</span> <span class="nn">hcai_model_evaluation</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.top_factors</span> <span class="k">as</span> <span class="nn">hcai_factors</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.database_connections</span> <span class="k">as</span> <span class="nn">hcai_db</span>
+<span class="kn">import</span> <span class="nn">healthcareai.common.database_validators</span> <span class="k">as</span> <span class="nn">hcai_dbval</span>
+<span class="kn">from</span> <span class="nn">healthcareai.common.healthcareai_error</span> <span class="k">import</span> <span class="n">HealthcareAIError</span>
+
+
+<div class="viewcode-block" id="TrainedSupervisedModel"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel">[docs]</a><span class="k">class</span> <span class="nc">TrainedSupervisedModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The meta-object that is created when training supervised models. </span>
+<span class="sd">    </span>
+<span class="sd">    This object contains</span>
+<span class="sd">    </span>
+<span class="sd">        - trained estimator</span>
+<span class="sd">        - trained linear estimator used for row level factor analysis</span>
+<span class="sd">        - column metadata including transformed feature columns, grain &amp; predicted column</span>
+<span class="sd">        - the fit data preparation pipeline used for transforming new data for prediction</span>
+<span class="sd">        - calculated metrics</span>
+<span class="sd">        - test set actuals, predicted values/probabilities, predicted classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.__init__"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">model</span><span class="p">,</span>
+                 <span class="n">feature_model</span><span class="p">,</span>
+                 <span class="n">fit_pipeline</span><span class="p">,</span>
+                 <span class="n">model_type</span><span class="p">,</span>
+                 <span class="n">column_names</span><span class="p">,</span>
+                 <span class="n">grain_column</span><span class="p">,</span>
+                 <span class="n">prediction_column</span><span class="p">,</span>
+                 <span class="n">test_set_predictions</span><span class="p">,</span>
+                 <span class="n">test_set_class_labels</span><span class="p">,</span>
+                 <span class="n">test_set_actual</span><span class="p">,</span>
+                 <span class="n">metric_by_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an instance of a TrainedSupervisedModel</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            model (sklearn.base.BaseEstimator): The fit scikit learn algorithm for prediction</span>
+<span class="sd">            feature_model (sklearn.base.BaseEstimator): The fit scikit learn algorithm for feature importance </span>
+<span class="sd">            fit_pipeline (sklearn.pipeline.Pipeline): A fit pipeline for use on cleaning new raw data </span>
+<span class="sd">            model_type (str): &#39;classification&#39; or &#39;regression&#39;</span>
+<span class="sd">            column_names (list): List of column names used as features</span>
+<span class="sd">            grain_column (str): Grain column (not used as a feature).</span>
+<span class="sd">            prediction_column (str): The name of the prediction column</span>
+<span class="sd">            test_set_predictions (list): y_prediction number (either probability of class or value)</span>
+<span class="sd">            test_set_class_labels (list): y_prediction class label if classification</span>
+<span class="sd">            test_set_actual (list): y_test</span>
+<span class="sd">            metric_by_name (dict): Metrics by name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_model</span> <span class="o">=</span> <span class="n">feature_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_pipeline</span> <span class="o">=</span> <span class="n">fit_pipeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column_names</span> <span class="o">=</span> <span class="n">column_names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span> <span class="o">=</span> <span class="n">grain_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_column</span> <span class="o">=</span> <span class="n">prediction_column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_predictions</span> <span class="o">=</span> <span class="n">test_set_predictions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_class_labels</span> <span class="o">=</span> <span class="n">test_set_class_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_set_actual</span> <span class="o">=</span> <span class="n">test_set_actual</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric_by_name</span> <span class="o">=</span> <span class="n">metric_by_name</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">algorithm_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Model name extracted from the class type &quot;&quot;&quot;</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">extract_estimator_from_meta_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="k">return</span> <span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if trainer is set up for classification </span>
+
+<span class="sd">        Easy check to consolidate magic strings in all the model type switches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;classification&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_regression</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if trainer is set up for regression </span>
+
+<span class="sd">        Easy check to consolidate magic strings in all the model type switches.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s1">&#39;regression&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">best_hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Best hyperparameters found if model is a meta estimator &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">get_hyperparameters_from_meta_estimator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Model type: &#39;regression&#39; or &#39;classification&#39; &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">binary_classification_scores</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO low priority, but test this</span>
+        <span class="sd">&quot;&quot;&quot; Returns the probability scores of the first class for a binary classification model. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;ROC/PR plots are not used to evaluate regression models.&#39;</span><span class="p">)</span>
+
+        <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">test_set_predictions</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">predictions</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the metrics that were calculated when the model was trained. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_by_name</span>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.save"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save this object to a pickle file with the given file name</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            filename (str): Optional filename override. Defaults to `timestamp_&lt;MODEL_TYPE&gt;_&lt;ALGORITHM_NAME&gt;.pkl`. For</span>
+<span class="sd">                example: `2017-05-27T09-12-30_regression_LinearRegression.pkl`</span>
+<span class="sd">            debug (bool): Print debug output to console by default</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">time_string</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H-%M-%S&quot;</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">.pkl&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm_name</span><span class="p">)</span>
+
+        <span class="n">hcai_io</span><span class="o">.</span><span class="n">save_object_as_pickle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Trained </span><span class="si">{}</span><span class="s1"> model saved as </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">algorithm_name</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.make_predictions"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.make_predictions">[docs]</a>    <span class="k">def</span> <span class="nf">make_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a new dataframe, apply data transformations and return a dataframe of predictions </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame: A dataframe containing the grain id and predicted values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Run the raw dataframe through the preparation process</span>
+        <span class="n">prepared_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_and_subset</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="c1"># make predictions returning probabity of a class or value of regression</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+            <span class="c1"># Only save the prediction of one of the two classes</span>
+            <span class="n">y_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">prepared_dataframe</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+            <span class="n">y_predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">prepared_dataframe</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Model type appears to be neither regression or classification.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create a new dataframe with the grain column from the original dataframe</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span><span class="p">]]</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;Prediction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_predictions</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.prepare_and_subset"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.prepare_and_subset">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_and_subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns that were</span>
+<span class="sd">        in the original model.</span>
+<span class="sd">        </span>
+<span class="sd">        This prevents any unexpected changes to incoming columns from interfering with the predictions.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the columns the model expects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Raise an error here if any of the columns the model expects are not in the prediction dataframe</span>
+
+            <span class="c1"># Run the saved data preparation pipeline</span>
+            <span class="c1"># TODO dummies will not run if a prediction dataframe only has: 1 row or all the same value in a categorical</span>
+            <span class="c1"># TODO column</span>
+            <span class="n">prepared_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+            <span class="c1"># Subset the dataframe to only columns that were saved from the original model training</span>
+            <span class="n">prepared_dataframe</span> <span class="o">=</span> <span class="n">prepared_dataframe</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ke</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;One or more of the columns that the saved trained model needs is not in the dataframe.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">            Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">            which will be ignored, but you must pass in all the required fields.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">            </span>
+<span class="s2">            Required fields: </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">            </span>
+<span class="s2">            Given fields: </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">            </span>
+<span class="s2">            Likely missing field(s): </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">),</span> <span class="n">ke</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">prepared_dataframe</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.make_factors"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.make_factors">[docs]</a>    <span class="k">def</span> <span class="nf">make_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a prediction dataframe, build and return a list of the top k features in dataframe format</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+<span class="sd">            number_top_features (int): Number of top features per row</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame:  A dataframe containing the grain id and factors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Run the raw dataframe through the preparation process</span>
+        <span class="n">prepared_dataframe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_and_subset</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="c1"># Create a new dataframe with the grain column from the original dataframe</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[[</span><span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span><span class="p">]]</span>
+
+        <span class="c1"># Create a list of column names</span>
+        <span class="n">reason_col_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Factor</span><span class="si">{}</span><span class="s1">TXT&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">number_top_features</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+        <span class="c1"># Get a 2 dimensional list of all the factors</span>
+        <span class="n">top_features</span> <span class="o">=</span> <span class="n">hcai_factors</span><span class="o">.</span><span class="n">top_k_features</span><span class="p">(</span><span class="n">prepared_dataframe</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_model</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">number_top_features</span><span class="p">)</span>
+
+        <span class="c1"># Verify that the number of factors matches the number of rows in the original dataframe.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">top_features</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Warning! The number of predictions does not match the number of rows.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Create a dataframe from the column names and top features</span>
+        <span class="n">reasons_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">top_features</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">reason_col_names</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># Join the top features and results dataframes</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">results</span><span class="p">,</span> <span class="n">reasons_df</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">join_axes</span><span class="o">=</span><span class="p">[</span><span class="n">dataframe</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+        <span class="c1"># results.set_index(keys=self.grain_column, inplace=True)</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.make_predictions_with_k_factors"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.make_predictions_with_k_factors">[docs]</a>    <span class="k">def</span> <span class="nf">make_predictions_with_k_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a prediction dataframe, build and return a dataframe with the grain column, the predictions and the top k</span>
+<span class="sd">        feautures.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+<span class="sd">            number_top_features (int): Number of top features per row</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame: Predictions with factors and grain column</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice. Consider</span>
+        <span class="c1"># Get the factors and predictions</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_factors</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="n">number_top_features</span><span class="p">)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_predictions</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="c1"># Verify that the number of predictions matches the number of rows in the original dataframe.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataframe</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Warning! The number of predictions does not match the number of rows.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Add predictions column to dataframe</span>
+        <span class="n">results</span><span class="p">[</span><span class="s1">&#39;Prediction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="s1">&#39;Prediction&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.make_original_with_predictions_and_factors"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.make_original_with_predictions_and_factors">[docs]</a>    <span class="k">def</span> <span class="nf">make_original_with_predictions_and_factors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a prediction dataframe, build and return a dataframe with the all the original columns, the predictions, </span>
+<span class="sd">        and the top k feautures.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+<span class="sd">            number_top_features (int): Number of top features per row</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame:  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.</span>
+        <span class="c1"># Get the factors and predictions</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_predictions_with_k_factors</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="n">number_top_features</span><span class="p">)</span>
+
+        <span class="c1"># replace the original prediction column</span>
+        <span class="n">original_dataframe</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">prediction_column</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Join the two dataframes together</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">original_dataframe</span><span class="p">,</span> <span class="n">results</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.create_catalyst_dataframe"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.create_catalyst_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">create_catalyst_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a prediction dataframe, build and return a dataframe with the health catalyst specific column names, the</span>
+<span class="sd">        predictions, and the top 3 feautures.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas.core.frame.DataFrame:  </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get predictions and on the top 3 features (catalyst SAMs expect 3 factors)</span>
+        <span class="n">factors_and_predictions_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_predictions_with_k_factors</span><span class="p">(</span><span class="n">dataframe</span><span class="p">,</span> <span class="n">number_top_features</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+        <span class="c1"># Add all the catalyst-specific columns to back into the SAM</span>
+        <span class="n">factors_and_predictions_df</span><span class="p">[</span><span class="s1">&#39;BindingID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">factors_and_predictions_df</span><span class="p">[</span><span class="s1">&#39;BindingNM&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Python&#39;</span>
+        <span class="n">factors_and_predictions_df</span><span class="p">[</span><span class="s1">&#39;LastLoadDTS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">factors_and_predictions_df</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.predict_to_catalyst_sam"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.predict_to_catalyst_sam">[docs]</a>    <span class="k">def</span> <span class="nf">predict_to_catalyst_sam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">predicted_column_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a dataframe you want predictions on, make predictions and save them to a catalyst-specific EDW table.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+<span class="sd">            server (str): the target server name</span>
+<span class="sd">            database (str): the database name</span>
+<span class="sd">            table (str): the destination table name</span>
+<span class="sd">            schema (str): the optional schema</span>
+<span class="sd">            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or</span>
+<span class="sd">                PredictedValueNBR)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make predictions in specific format</span>
+        <span class="n">sam_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_catalyst_dataframe</span><span class="p">(</span><span class="n">dataframe</span><span class="p">)</span>
+
+        <span class="c1"># Rename prediction column to default based on model type or given one</span>
+        <span class="k">if</span> <span class="n">predicted_column_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+                <span class="n">predicted_column_name</span> <span class="o">=</span> <span class="s1">&#39;PredictedProbNBR&#39;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+                <span class="n">predicted_column_name</span> <span class="o">=</span> <span class="s1">&#39;PredictedValueNBR&#39;</span>
+        <span class="n">sam_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Prediction&#39;</span><span class="p">:</span> <span class="n">predicted_column_name</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">hcai_db</span><span class="o">.</span><span class="n">build_mssql_engine_using_trusted_connections</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">database</span><span class="p">)</span>
+            <span class="n">healthcareai</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">database_writers</span><span class="o">.</span><span class="n">write_to_db_agnostic</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">sam_df</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">HealthcareAIError</span> <span class="k">as</span> <span class="n">hcaie</span><span class="p">:</span>
+            <span class="c1"># Run validation and alert user</span>
+            <span class="n">hcai_dbval</span><span class="o">.</span><span class="n">validate_destination_table_connection</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">grain_column</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_column</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="n">hcaie</span><span class="o">.</span><span class="n">message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.predict_to_sqlite"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.predict_to_sqlite">[docs]</a>    <span class="k">def</span> <span class="nf">predict_to_sqlite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">prediction_dataframe</span><span class="p">,</span>
+                          <span class="n">database</span><span class="p">,</span>
+                          <span class="n">table</span><span class="p">,</span>
+                          <span class="n">prediction_generator</span><span class="p">,</span>
+                          <span class="n">predicted_column_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a dataframe you want predictions on, make predictions and save them to an sqlite table</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            prediction_dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe</span>
+<span class="sd">            database (str): database file name</span>
+<span class="sd">            table (str): table name</span>
+<span class="sd">            prediction_generator (method): one of the trained supervised model prediction methods</span>
+<span class="sd">            predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or</span>
+<span class="sd">                PredictedValueNBR)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># validate inputs</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">prediction_generator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">!=</span> <span class="s1">&#39;method&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span>
+                <span class="s1">&#39;Use of this method requires a prediction generator from a trained supervised model&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get predictions from given generator</span>
+        <span class="n">sam_df</span> <span class="o">=</span> <span class="n">prediction_generator</span><span class="p">(</span><span class="n">prediction_dataframe</span><span class="p">)</span>
+
+        <span class="c1"># Rename prediction column to default based on model type or given one</span>
+        <span class="k">if</span> <span class="n">predicted_column_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_classification</span><span class="p">:</span>
+                <span class="n">predicted_column_name</span> <span class="o">=</span> <span class="s1">&#39;PredictedProbNBR&#39;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_regression</span><span class="p">:</span>
+                <span class="n">predicted_column_name</span> <span class="o">=</span> <span class="s1">&#39;PredictedValueNBR&#39;</span>
+
+        <span class="n">sam_df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Prediction&#39;</span><span class="p">:</span> <span class="n">predicted_column_name</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="n">hcai_db</span><span class="o">.</span><span class="n">build_sqlite_engine</span><span class="p">(</span><span class="n">database</span><span class="p">)</span>
+        <span class="n">healthcareai</span><span class="o">.</span><span class="n">common</span><span class="o">.</span><span class="n">database_writers</span><span class="o">.</span><span class="n">write_to_db_agnostic</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">sam_df</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.roc_plot"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.roc_plot">[docs]</a>    <span class="k">def</span> <span class="nf">roc_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a plot of the ROC curve of the holdout set from model training. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">()</span>
+        <span class="n">tsm_classification_comparison_plots</span><span class="p">(</span><span class="n">trained_supervised_models</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;ROC&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.roc"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.roc">[docs]</a>    <span class="k">def</span> <span class="nf">roc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints out ROC details and returns them with cutoffs.</span>
+<span class="sd">        </span>
+<span class="sd">        Note this is a simple subset of TrainedSupervisedModel.metrics()</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            print_output (bool): True (default) to print a table of output.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A subset of TrainedSupervisedModel.metrics() that are ROC specific</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">()</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_by_name</span>
+        <span class="n">roc</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;roc_auc&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_roc_cutoff&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_roc_cutoff&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_true_positive_rate&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_true_positive_rate&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_false_positive_rate&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_false_positive_rate&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;roc_thresholds&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;roc_thresholds&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;true_positive_rates&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;true_positive_rates&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;false_positive_rates&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;false_positive_rates&#39;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="c1"># roc = self._metric_by_name</span>
+
+        <span class="k">if</span> <span class="n">print_output</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Receiver Operating Characteristic (ROC):</span><span class="se">\n</span><span class="s1">&#39;</span>
+                   <span class="s1">&#39;    Area under curve (ROC AUC): </span><span class="si">{:0.2f}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                   <span class="s1">&#39;    Ideal ROC cutoff is </span><span class="si">{:0.2f}</span><span class="s1">, yielding TPR of </span><span class="si">{:0.2f}</span><span class="s1"> and FPR of </span><span class="si">{:0.2f}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;roc_auc&#39;</span><span class="p">],</span>
+                <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;best_roc_cutoff&#39;</span><span class="p">],</span>
+                <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;best_true_positive_rate&#39;</span><span class="p">],</span>
+                <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;best_false_positive_rate&#39;</span><span class="p">]))</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|--------------------------------|&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|               ROC              |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|  Threshhold  |  TPR   |  FPR   |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|--------------|--------|--------|&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">roc</span><span class="p">[</span><span class="s1">&#39;roc_thresholds&#39;</span><span class="p">]):</span>
+                <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;***&#39;</span> <span class="k">if</span> <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;roc_thresholds&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;best_roc_cutoff&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;   &#39;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|  </span><span class="si">{}</span><span class="s1">   </span><span class="si">{:03.2f}</span><span class="s1">  |  </span><span class="si">{:03.2f}</span><span class="s1">  |  </span><span class="si">{:03.2f}</span><span class="s1">  |&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">marker</span><span class="p">,</span>
+                    <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;roc_thresholds&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;true_positive_rates&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">roc</span><span class="p">[</span><span class="s1">&#39;false_positive_rates&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|--------------------------------|&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|  *** Ideal cutoff              |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|--------------------------------|&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">roc</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.pr_plot"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.pr_plot">[docs]</a>    <span class="k">def</span> <span class="nf">pr_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a plot of the PR curve of the holdout set from model training. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">()</span>
+        <span class="n">tsm_classification_comparison_plots</span><span class="p">(</span><span class="n">trained_supervised_models</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;PR&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.pr"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.pr">[docs]</a>    <span class="k">def</span> <span class="nf">pr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prints out PR details and returns them with cutoffs.</span>
+
+<span class="sd">        Note this is a simple subset of TrainedSupervisedModel.metrics()</span>
+<span class="sd">        Args:</span>
+<span class="sd">            print_output (bool): True (default) to print a table of output.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A subset of TrainedSupervisedModel.metrics() that are PR specific</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_classification</span><span class="p">()</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_by_name</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;pr_auc&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;pr_auc&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_pr_cutoff&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_pr_cutoff&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_precision&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_precision&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;best_recall&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;best_recall&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;pr_thresholds&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;pr_thresholds&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;precisions&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;precisions&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;recalls&#39;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;recalls&#39;</span><span class="p">],</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">print_output</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Precision-Recall:</span><span class="se">\n</span><span class="s1">&#39;</span>
+                   <span class="s1">&#39;    Area under Precision Recall curve (PR AUC): </span><span class="si">{:0.2f}</span><span class="se">\n</span><span class="s1">&#39;</span>
+                   <span class="s1">&#39;    Ideal PR cutoff is </span><span class="si">{:0.2f}</span><span class="s1">, yielding precision of </span><span class="si">{:04.3f}</span><span class="s1"> and recall of </span><span class="si">{:04.3f}</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;pr_auc&#39;</span><span class="p">],</span>
+                <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;best_pr_cutoff&#39;</span><span class="p">],</span>
+                <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;best_precision&#39;</span><span class="p">],</span>
+                <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;best_recall&#39;</span><span class="p">]))</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|---------------------------------|&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|   Precision-Recall Thresholds   |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;| Threshhold | Precision | Recall |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|------------|-----------|--------|&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="s1">&#39;pr_thresholds&#39;</span><span class="p">]):</span>
+                <span class="n">marker</span> <span class="o">=</span> <span class="s1">&#39;***&#39;</span> <span class="k">if</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;pr_thresholds&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;best_pr_cutoff&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;   &#39;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;| </span><span class="si">{}</span><span class="s1"> </span><span class="si">{:03.2f}</span><span class="s1">   |    </span><span class="si">{:03.2f}</span><span class="s1">   |  </span><span class="si">{:03.2f}</span><span class="s1">  |&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">marker</span><span class="p">,</span>
+                    <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;pr_thresholds&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;precisions&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span>
+                    <span class="n">pr</span><span class="p">[</span><span class="s1">&#39;recalls&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|---------------------------------|&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|  *** Ideal cutoff               |&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;|---------------------------------|&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pr</span></div>
+
+<div class="viewcode-block" id="TrainedSupervisedModel.validate_classification"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.TrainedSupervisedModel.validate_classification">[docs]</a>    <span class="k">def</span> <span class="nf">validate_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks that a model is classification and raises an error if it is not. Run this on any method that only makes</span>
+<span class="sd">        sense for classification.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO add binary check and rename to validate_binary_classification</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">!=</span> <span class="s1">&#39;classification&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;This function only runs on a binary classification model.&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="get_estimator_from_trained_supervised_model"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.get_estimator_from_trained_supervised_model">[docs]</a><span class="k">def</span> <span class="nf">get_estimator_from_trained_supervised_model</span><span class="p">(</span><span class="n">trained_supervised_model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        trained_supervised_model (TrainedSupervisedModel):</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        sklearn.base.BaseEstimator: The scikit learn estimator</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Validate input is a TSM</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trained_supervised_model</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;This requires an instance of a TrainedSupervisedModel&#39;</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    1. check if it is a TSM</span>
+<span class="sd">        Y: proceed</span>
+<span class="sd">        N: raise error?</span>
+<span class="sd">    2. check if tsm.model is a meta estimator</span>
+<span class="sd">        Y: extract best_estimator_</span>
+<span class="sd">        N: return tsm.model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check if tsm.model is a meta estimator</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">hcai_helpers</span><span class="o">.</span><span class="n">extract_estimator_from_meta_estimator</span><span class="p">(</span><span class="n">trained_supervised_model</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="tsm_classification_comparison_plots"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots">[docs]</a><span class="k">def</span> <span class="nf">tsm_classification_comparison_plots</span><span class="p">(</span><span class="n">trained_supervised_models</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s1">&#39;ROC&#39;</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a single or list of trained supervised models, plot a ROC or PR curve for each one</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        plot_type (str): &#39;ROC&#39; (default) or &#39;PR&#39; </span>
+<span class="sd">        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels </span>
+<span class="sd">        save (bool): Save the plot to a file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Input validation plus switching</span>
+    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;ROC&#39;</span><span class="p">:</span>
+        <span class="n">plotter</span> <span class="o">=</span> <span class="n">hcai_model_evaluation</span><span class="o">.</span><span class="n">roc_plot_from_thresholds</span>
+    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s1">&#39;PR&#39;</span><span class="p">:</span>
+        <span class="n">plotter</span> <span class="o">=</span> <span class="n">hcai_model_evaluation</span><span class="o">.</span><span class="n">pr_plot_from_thresholds</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;Please choose either plot_type=</span><span class="se">\&#39;</span><span class="s1">ROC</span><span class="se">\&#39;</span><span class="s1"> or plot_type=</span><span class="se">\&#39;</span><span class="s1">PR</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">metrics_by_model</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trained_supervised_models</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">):</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="n">trained_supervised_models</span><span class="o">.</span><span class="n">algorithm_name</span><span class="p">:</span> <span class="n">trained_supervised_models</span><span class="o">.</span><span class="n">metrics</span><span class="p">}</span>
+        <span class="n">metrics_by_model</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trained_supervised_models</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">trained_supervised_models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">TrainedSupervisedModel</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span>
+                    <span class="s1">&#39;One of the objects in the list is not a TrainedSupervisedModel (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
+
+            <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span><span class="n">model</span><span class="o">.</span><span class="n">algorithm_name</span><span class="p">:</span> <span class="n">model</span><span class="o">.</span><span class="n">metrics</span><span class="p">}</span>
+
+            <span class="n">metrics_by_model</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+            <span class="c1"># TODO so, you could check for different GUIDs that could be saved in each TSM!</span>
+            <span class="c1"># The assumption here is that each TSM was trained on the same train test split,</span>
+            <span class="c1"># which happens when instantiating SupervisedModelTrainer</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HealthcareAIError</span><span class="p">(</span><span class="s1">&#39;This requires either a single TrainedSupervisedModel or a list of them&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Plot with the selected plotter</span>
+    <span class="n">plotter</span><span class="p">(</span><span class="n">metrics_by_model</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_rf_features_from_tsm"><a class="viewcode-back" href="../../../healthcareai.trained_models.html#healthcareai.trained_models.trained_supervised_model.plot_rf_features_from_tsm">[docs]</a><span class="k">def</span> <span class="nf">plot_rf_features_from_tsm</span><span class="p">(</span><span class="n">trained_supervised_model</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        trained_supervised_model (TrainedSupervisedModel): </span>
+<span class="sd">        x_train (numpy.array): A 2D numpy array that was used for training </span>
+<span class="sd">        save (bool): True to save the plot, false to display it in a blocking thread</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">get_estimator_from_trained_supervised_model</span><span class="p">(</span><span class="n">trained_supervised_model</span><span class="p">)</span>
+    <span class="n">column_names</span> <span class="o">=</span> <span class="n">trained_supervised_model</span><span class="o">.</span><span class="n">column_names</span>
+    <span class="n">hcai_model_evaluation</span><span class="o">.</span><span class="n">plot_random_forest_feature_importance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">column_names</span><span class="p">,</span> <span class="n">save</span><span class="o">=</span><span class="n">save</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright .
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
