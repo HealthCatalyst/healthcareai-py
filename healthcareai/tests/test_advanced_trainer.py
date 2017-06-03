@@ -118,7 +118,7 @@ class TestRandomForestClassification(unittest.TestCase):
 
         trainer.train_test_split()
 
-        self.assertRaises(HealthcareAIError, trainer.random_forest, trees=200, randomized_search=True)
+        self.assertRaises(HealthcareAIError, trainer.random_forest_classifier, trees=200, randomized_search=True)
 
 
 class TestLogisticRegression(unittest.TestCase):

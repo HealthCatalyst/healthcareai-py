@@ -320,39 +320,6 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
-    def random_forest(self,
-                      trees=200,
-                      scoring_metric='roc_auc',
-                      hyperparameter_grid=None,
-                      randomized_search=True,
-                      number_iteration_samples=10):
-        """
-        A convenience method that allows a user to simply call .random_forest() and get the right one.
-                
-        Args:
-            trees (int): number of trees to use if not performing a randomized grid search
-            scoring_metric (str): Any sklearn scoring metric appropriate for classification
-            hyperparameter_grid (dict): hyperparameters by name
-            randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
-
-        Returns:
-            TrainedSupervisedModel: 
-        """
-        if self.is_classification:
-            return self.random_forest_classifier(trees=trees,
-                                                 scoring_metric=scoring_metric,
-                                                 hyperparameter_grid=hyperparameter_grid,
-                                                 randomized_search=randomized_search,
-                                                 number_iteration_samples=number_iteration_samples)
-        elif self.is_regression:
-            return self.random_forest_regressor(trees=trees,
-                                                scoring_metric=scoring_metric,
-                                                hyperparameter_grid=hyperparameter_grid,
-                                                randomized_search=randomized_search,
-                                                number_iteration_samples=number_iteration_samples)
-
     def random_forest_classifier(self,
                                  trees=200,
                                  scoring_metric='roc_auc',
