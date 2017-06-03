@@ -224,6 +224,16 @@ class AdvancedSupervisedModelTrainer(object):
         """
         A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
         hyperparameter grid.
+
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
         """
         self.validate_classification('Logistic Regression')
         if hyperparameter_grid is None:
@@ -248,6 +258,16 @@ class AdvancedSupervisedModelTrainer(object):
         """
         A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
         hyperparameter grid.
+        
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
         """
         self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
@@ -272,6 +292,16 @@ class AdvancedSupervisedModelTrainer(object):
         """
         A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
         hyperparameter grid.
+        
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for classification
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
         """
         self.validate_classification('KNN')
         if hyperparameter_grid is None:
@@ -294,18 +324,34 @@ class AdvancedSupervisedModelTrainer(object):
                       trees=200,
                       scoring_metric='roc_auc',
                       hyperparameter_grid=None,
-                      randomized_search=True):
-        """ A convenience method that allows a user to simply call .random_forest() and get the right one. """
+                      randomized_search=True,
+                      number_iteration_samples=10):
+        """
+        A convenience method that allows a user to simply call .random_forest() and get the right one.
+                
+        Args:
+            trees (int): number of trees to use if not performing a randomized grid search
+            scoring_metric (str): Any sklearn scoring metric appropriate for classification
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
+        """
         if self.is_classification:
             return self.random_forest_classifier(trees=trees,
                                                  scoring_metric=scoring_metric,
                                                  hyperparameter_grid=hyperparameter_grid,
-                                                 randomized_search=randomized_search)
+                                                 randomized_search=randomized_search,
+                                                 number_iteration_samples=number_iteration_samples)
         elif self.is_regression:
             return self.random_forest_regressor(trees=trees,
                                                 scoring_metric=scoring_metric,
                                                 hyperparameter_grid=hyperparameter_grid,
-                                                randomized_search=randomized_search)
+                                                randomized_search=randomized_search,
+                                                number_iteration_samples=number_iteration_samples)
 
     def random_forest_classifier(self,
                                  trees=200,
@@ -316,6 +362,17 @@ class AdvancedSupervisedModelTrainer(object):
         """
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
         default hyperparameter grid.
+        
+        Args:
+            trees (int): number of trees to use if not performing a randomized grid search
+            scoring_metric (str): Any sklearn scoring metric appropriate for classification
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
@@ -344,6 +401,17 @@ class AdvancedSupervisedModelTrainer(object):
         """
         A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
         default hyperparameter grid.
+        
+        Args:
+            trees (int): number of trees to use if not performing a randomized grid search
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel: 
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
@@ -410,10 +478,22 @@ class AdvancedSupervisedModelTrainer(object):
         return trained_supervised_model
 
     def validate_regression(self, model_name=None):
+        """
+        Raises error if not a regression trainer.
+        
+        Args:
+            model_name (str): Nice string for error messages
+        """
         if not self.is_regression:
             raise HealthcareAIError('A {} model can only be trained with a regression trainer.'.format(model_name))
 
     def validate_classification(self, model_name=None):
+        """
+        Raises error if not a classification trainer.
+
+        Args:
+            model_name (str): Nice string for error messages
+        """
         if not self.is_classification:
             raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
 
