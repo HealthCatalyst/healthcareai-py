@@ -10,7 +10,7 @@
 
 The aim of **healthcareai** is to streamline machine learning in healthcare. The package has two main goals:
 
--  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to SQL Server.
+-  Allow one to easily create models based on tabular data, and deploy a best model that pushes predictions to a database such as MSSQL, MySQL, SQLite or csv flat file.
 -  Provide tools related to data cleaning, manipulation, and imputation.
 
 ## Installation
