@@ -1,12 +1,12 @@
 from sklearn.model_selection import RandomizedSearchCV
 
 
-def prepare_randomized_search(estimator,
-                              scoring_metric,
-                              hyperparameter_grid,
-                              randomized_search,
-                              number_iteration_samples=10,
-                              **non_randomized_estimator_kwargs):
+def get_algorithm(estimator,
+                  scoring_metric,
+                  hyperparameter_grid,
+                  randomized_search,
+                  number_iteration_samples=10,
+                  **non_randomized_estimator_kwargs):
     """
     Given an estimator and various params, initialize an algorithm with optional randomized search.
 

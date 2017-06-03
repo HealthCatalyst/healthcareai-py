@@ -12,7 +12,7 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
 
-from healthcareai.common.randomized_search import prepare_randomized_search
+from healthcareai.common.randomized_search import get_algorithm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
@@ -240,11 +240,11 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100], 'class_weight': [None, 'balanced']}
             number_iteration_samples = 10
 
-        algorithm = prepare_randomized_search(LogisticRegression,
-                                              scoring_metric,
-                                              hyperparameter_grid,
-                                              randomized_search,
-                                              number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(LogisticRegression,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -274,11 +274,11 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {"fit_intercept": [True, False]}
             number_iteration_samples = 2
 
-        algorithm = prepare_randomized_search(LinearRegression,
-                                              scoring_metric,
-                                              hyperparameter_grid,
-                                              randomized_search,
-                                              number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(LinearRegression,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -310,11 +310,11 @@ class AdvancedSupervisedModelTrainer(object):
             number_iteration_samples = 10
 
             print('KNN Grid: {}'.format(hyperparameter_grid))
-        algorithm = prepare_randomized_search(KNeighborsClassifier,
-                                              scoring_metric,
-                                              hyperparameter_grid,
-                                              randomized_search,
-                                              number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(KNeighborsClassifier,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -381,12 +381,12 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
             number_iteration_samples = 5
 
-        algorithm = prepare_randomized_search(RandomForestClassifier,
-                                              scoring_metric,
-                                              hyperparameter_grid,
-                                              randomized_search,
-                                              number_iteration_samples=number_iteration_samples,
-                                              n_estimators=trees)
+        algorithm = get_algorithm(RandomForestClassifier,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples,
+                                  n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
@@ -420,12 +420,12 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
             number_iteration_samples = 5
 
-        algorithm = prepare_randomized_search(RandomForestRegressor,
-                                              scoring_metric,
-                                              hyperparameter_grid,
-                                              randomized_search,
-                                              number_iteration_samples=number_iteration_samples,
-                                              n_estimators=trees)
+        algorithm = get_algorithm(RandomForestRegressor,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples,
+                                  n_estimators=trees)
 
         trained_supervised_model = self._trainer(algorithm)
 
