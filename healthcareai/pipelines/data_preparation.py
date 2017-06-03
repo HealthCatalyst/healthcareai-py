@@ -24,7 +24,7 @@ def full_pipeline(model_type, predicted_column, grain_column, impute=True):
         ('null_row_filter', hcai_filters.DataframeNullValueFilter(excluded_columns=None)),
         ('convert_target_to_binary', hcai_transformers.DataFrameConvertTargetToBinary(model_type, predicted_column)),
         ('prediction_to_numeric', hcai_transformers.DataFrameConvertColumnToNumeric(predicted_column)),
-        ('create_dummy_variables', hcai_transformers.DataFrameCreateDummyVariables([predicted_column])),
+        ('create_dummy_variables', hcai_transformers.DataFrameCreateDummyVariables(excluded_columns=[predicted_column])),
     ])
     return pipeline
 

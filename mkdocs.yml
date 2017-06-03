@@ -7,13 +7,17 @@ docs_dir: docs
 
 pages:
     - Introduction: index.md
-    - Getting started: getting_started.md
+    - Getting Started: getting_started.md
     - Profiling Your Data: profiling_your_data.md
-    - FAQ: FAQ.md
-    - Hints and tips: hints.md
-    - Training and comparing models.md: training.md
-    - Saving and deploying a model: deploy.md
-    - Compiling python files to an executable: compile.md
+    - Training, Comparing and Saving Models: training.md
+    - Making Predictions and Deploying Models: deploy.md
+    - Choosing a Prediction Output Type: prediction_types.md
+    - Working With Other Databases: databases.md
+    - Compiling Python Files To An Executable: compile.md
     - Utilities: utilities.md
+    - Woking With Healthcare.ai in a Health Catalyst EDW: catalyst_edw_instructions.md
+    - Hints and Tips: hints.md
+    - FAQ: FAQ.md
+    - Architecture Overview For Developers: architecture_overview_for_developers.md
 
 google_analytics: ['UA-85609357-1', 'auto']

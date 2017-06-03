@@ -1,6 +1,6 @@
-# Getting started with healthcare.ai
+# Getting Started With Healthcare.ai
 
-## What can you do with these tools?
+## What Can You Do With These Tools?
 
 - Fill in missing data via imputation
 - Train and compare models based on your data
@@ -67,38 +67,17 @@ To verify that *healthcareai* installed correctly:
 
 If you did get an error, or run into other installation issues, please [let us know](http://healthcare.ai/contact.html) or better yet post on [Stack Overflow](http://stackoverflow.com/questions/tagged/healthcare-ai) (with the healthcare-ai tag) so we can help others along this process.
 
-## Getting started
+## Getting Started
 
-- Read through the docs on this site
-- Starting with 
-- Modify the queries and parameters to match your data
-- If you plan on deploying a model to a MSSQL server (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
+1. Read through the docs on this site.
+2. Start with either `example_regression_1.py` or `example_classification_1.py`
+3. Modify the queries and parameters to match your data.
+4. Decide on what kind of prediction output you want.
+5. Set up your database tables to match the output schema. See the [prediction types](prediction_types.md) document for details.
+    - If you are working in a Health Catalyst EDW ecosystem (primarily MSSQL), please see the [Catalyst EDW Instructions](catalyst_edw_instructions) for SAM setup.
+    - Please see the [databases docs](databases.md) for details about writing to different databases (MSSQL, MySQL, SQLite, CSV)
 
-```sql
-CREATE TABLE [SAM].[dbo].[HCAIPredictionClassificationBASE] (
- [BindingID] [int] ,
- [BindingNM] [varchar] (255),
- [LastLoadDTS] [datetime2] (7),
- [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
- [PredictedProbNBR] [decimal] (38, 2),
- [Factor1TXT] [varchar] (255),
- [Factor2TXT] [varchar] (255),
- [Factor3TXT] [varchar] (255))
-
-CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
- [BindingID] [int],
- [BindingNM] [varchar] (255),
- [LastLoadDTS] [datetime2] (7),
- [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
- [PredictedValueNBR] [decimal] (38, 2),
- [Factor1TXT] [varchar] (255),
- [Factor2TXT] [varchar] (255),
- [Factor3TXT] [varchar] (255))
-```
-
-- Note that there are examples that write to other databases (MySQL, SQLite)
-
-## For Issues
+## Where to Get Help
 
 - Double check that the code follows the examples in these documents.
 - If you're still seeing an error, file an issue on [Stack Overflow](http://stackoverflow.com/) using the healthcare-ai tag. Please provide

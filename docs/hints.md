@@ -1,4 +1,4 @@
-# Hints and tips
+# Hints and Tips
 
 ## Gathering the data
 
