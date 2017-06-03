@@ -246,7 +246,7 @@ class AdvancedSupervisedModelTrainer(object):
                                   randomized_search,
                                   number_iteration_samples=number_iteration_samples)
 
-        trained_supervised_model = self._trainer(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -280,7 +280,7 @@ class AdvancedSupervisedModelTrainer(object):
                                   randomized_search,
                                   number_iteration_samples=number_iteration_samples)
 
-        trained_supervised_model = self._trainer(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -316,7 +316,7 @@ class AdvancedSupervisedModelTrainer(object):
                                   randomized_search,
                                   number_iteration_samples=number_iteration_samples)
 
-        trained_supervised_model = self._trainer(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -388,7 +388,7 @@ class AdvancedSupervisedModelTrainer(object):
                                   number_iteration_samples=number_iteration_samples,
                                   n_estimators=trees)
 
-        trained_supervised_model = self._trainer(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -427,11 +427,11 @@ class AdvancedSupervisedModelTrainer(object):
                                   number_iteration_samples=number_iteration_samples,
                                   n_estimators=trees)
 
-        trained_supervised_model = self._trainer(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
-    def _trainer(self, algorithm, include_factor_model=True):
+    def _create_trained_supervised_model(self, algorithm, include_factor_model=True):
         """
         Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
 
@@ -499,7 +499,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def _console_log(self, message):
         if self.verbose:
-            print('DSM: {}'.format(message))
+            print('AdvancedSupervisedModelTrainer :: {}'.format(message))
 
 
 if __name__ == "__main__":
