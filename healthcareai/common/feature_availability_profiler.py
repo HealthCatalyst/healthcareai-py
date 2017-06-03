@@ -106,7 +106,3 @@ def count_nulls_in_date_range(df, start, end, admit_col_name):
     num_data = 100 - np.round(100 * df.isnull().sum() / df.shape[0])
 
     return num_data
-
-
-if __name__ == "__main__":
-    pass

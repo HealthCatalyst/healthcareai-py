@@ -64,7 +64,3 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
         delta_time)
 
     return result
-
-
-if __name__ == "__main__":
-    pass

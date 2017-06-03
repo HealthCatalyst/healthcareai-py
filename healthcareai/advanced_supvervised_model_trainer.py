@@ -500,7 +500,3 @@ class AdvancedSupervisedModelTrainer(object):
     def _console_log(self, message):
         if self.verbose:
             print('AdvancedSupervisedModelTrainer :: {}'.format(message))
-
-
-if __name__ == "__main__":
-    pass

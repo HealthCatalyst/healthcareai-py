@@ -74,7 +74,3 @@ def prepare_fit_model_for_factors(model_type, x_train, y_train):
         algorithm.fit(x_train, y_train)
 
     return algorithm
-
-
-if __name__ == "__main__":
-    pass

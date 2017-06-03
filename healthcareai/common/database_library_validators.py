@@ -13,7 +13,3 @@ def validate_sqlite3_is_loaded():
     """ Simple check that alerts user if they are do not have sqlite installed, which is not a requirement. """
     if 'sqlite3' not in sys.modules:
         raise HealthcareAIError('Using this function requires installation of sqlite3.')
-
-
-if __name__ == "__main__":
-    pass

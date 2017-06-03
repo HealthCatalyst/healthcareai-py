@@ -83,7 +83,3 @@ class AzureBlobStorageHelperError(Exception):
 
     def __str__(self):
         return repr(self.message)
-
-
-if __name__ == "__main__":
-    pass

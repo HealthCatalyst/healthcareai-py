@@ -206,7 +206,3 @@ class DataFrameOverSampling(TransformerMixin):
         result[self.predicted_column] = y_over_sampled
 
         return result
-
-
-if __name__ == "__main__":
-    pass

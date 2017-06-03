@@ -21,7 +21,3 @@ def impact_coding_on_many_columns(dataframe, predicted_column, columns_to_impact
     """ First pass impact coding. """
     for column_name in columns_to_impact_code:
         impact_coding_on_a_single_column(dataframe, predicted_column, column_name)
-
-
-if __name__ == "__main__":
-    pass

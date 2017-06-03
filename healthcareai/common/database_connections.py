@@ -62,7 +62,3 @@ def build_mssql_engine_using_trusted_connections(server, database):
     engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect={}".format(params))
 
     return engine
-
-
-if __name__ == "__main__":
-    pass

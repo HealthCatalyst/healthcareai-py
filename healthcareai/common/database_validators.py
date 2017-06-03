@@ -84,7 +84,3 @@ def verify_sqlite_table_exists(connection, table):
 
     if table not in table_names:
         raise HealthcareAIError('Destination table ({}) does not exist. Please create it.'.format(table))
-
-
-if __name__ == "__main__":
-    pass

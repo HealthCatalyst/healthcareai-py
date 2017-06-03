@@ -75,7 +75,3 @@ class DataframeNullValueFilter(TransformerMixin):
         x.dropna(axis=0, how='any', inplace=True, subset=subset)
 
         return x
-
-
-if __name__ == "__main__":
-    pass

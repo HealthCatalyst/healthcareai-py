@@ -40,7 +40,3 @@ def get_algorithm(estimator,
         algorithm = estimator(**non_randomized_estimator_kwargs)
 
     return algorithm
-
-
-if __name__ == "__main__":
-    pass

@@ -64,7 +64,3 @@ def write_to_db_agnostic(engine, table, dataframe, schema=None):
         Please verify that the table [{}] exists.\n
         Was your test insert successful earlier?\n
         If so, what has changed with your database/table/entity since then?""".format(table, table))
-
-
-if __name__ == "__main__":
-    pass

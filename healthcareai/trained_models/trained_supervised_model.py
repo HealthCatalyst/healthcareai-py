@@ -589,7 +589,3 @@ def plot_rf_features_from_tsm(trained_supervised_model, x_train, save=False):
     model = get_estimator_from_trained_supervised_model(trained_supervised_model)
     column_names = trained_supervised_model.column_names
     hcai_model_evaluation.plot_random_forest_feature_importance(model, x_train, column_names, save=save)
-
-
-if __name__ == "__main__":
-    pass

@@ -72,7 +72,3 @@ def setup_deploy_tables(db_name):
         return True
     else:
         raise HealthcareAIError('There was a problem setting up test tables')
-
-
-if __name__ == "__main__":
-    pass
