@@ -218,7 +218,7 @@ Ideally, this project will have a user guide, (currently in the form of the docs
 1. Install sphinx
 2. install 
 
-From the `dox/_build` directory, run`sphinx-apidoc.exe -f -o ../ ../../healthcareai && sphinx-build.exe -b html ../ ./ && python -m http.server 8888 --bind 127.0.0.1`
+From the `dox/_build` (you may need to create it if it doesn't exist) directory, run`sphinx-apidoc.exe -f -o ../ ../../healthcareai && sphinx-build.exe -b html ../ ./ && python -m http.server 8888 --bind 127.0.0.1`
 
 ### Sphinx resources
 
