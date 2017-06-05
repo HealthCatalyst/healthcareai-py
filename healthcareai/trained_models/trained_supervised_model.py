@@ -541,10 +541,10 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
     
     Args:
         plot_type (str): 'ROC' (default) or 'PR' 
-        trained_supervised_models (list | TrainedSupervisedModel): a single or list of TrainedSupervisedModels 
+        trained_supervised_models (TrainedSupervisedModel): a single or iterable containing TrainedSupervisedModels 
         save (bool): Save the plot to a file
     """
-    # Input validation plus switching
+    # Input validation and dispatch
     if plot_type == 'ROC':
         plotter = hcai_model_evaluation.roc_plot_from_thresholds
     elif plot_type == 'PR':
@@ -552,26 +552,23 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
     else:
         raise HealthcareAIError('Please choose either plot_type=\'ROC\' or plot_type=\'PR\'')
 
-    metrics_by_model = []
+    metrics_by_model = {}
 
-    if isinstance(trained_supervised_models, TrainedSupervisedModel):
-        entry = {trained_supervised_models.algorithm_name: trained_supervised_models.metrics}
-        metrics_by_model.append(entry)
-    elif isinstance(trained_supervised_models, list):
+    try:
         for model in trained_supervised_models:
             if not isinstance(model, TrainedSupervisedModel):
-                raise HealthcareAIError(
-                    'One of the objects in the list is not a TrainedSupervisedModel ({})'.format(model))
+                raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'
+                                        .format(model))
+            metrics_by_model[model.algorithm_name] = model.metrics
+    except TypeError:
+        # input is not iterable (assume single TSM)
+        if not isinstance(trained_supervised_models, TrainedSupervisedModel):
+            raise HealthcareAIError('Input is not a TrainedSupervisedModel ({})'.format(trained_supervised_models))
+        metrics_by_model[trained_supervised_models.algorithm_name] = trained_supervised_models.metrics
 
-            entry = {model.algorithm_name: model.metrics}
-
-            metrics_by_model.append(entry)
-
-            # TODO so, you could check for different GUIDs that could be saved in each TSM!
-            # The assumption here is that each TSM was trained on the same train test split,
-            # which happens when instantiating SupervisedModelTrainer
-    else:
-        raise HealthcareAIError('This requires either a single TrainedSupervisedModel or a list of them')
+        # TODO so, you could check for different GUIDs that could be saved in each TSM!
+        # The assumption here is that each TSM was trained on the same train test split,
+        # which happens when instantiating SupervisedModelTrainer
 
     # Plot with the selected plotter
     plotter(metrics_by_model, save=save, debug=False)
