@@ -44,6 +44,9 @@ class SupervisedModelTrainer(object):
         # Save the pipeline to the parent class
         self._advanced_trainer.pipeline = pipeline
 
+        # Save the original dataframe columns to the parent class
+        self._advanced_trainer.pre_dummified_columns = dataframe.columns.values
+
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
 

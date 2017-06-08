@@ -39,7 +39,8 @@ class TrainedSupervisedModel(object):
                  test_set_predictions,
                  test_set_class_labels,
                  test_set_actual,
-                 metric_by_name):
+                 metric_by_name,
+                 pre_dummified_columns=None):
         """
         Create an instance of a TrainedSupervisedModel
         
@@ -55,6 +56,7 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
+            pre_dummified_columns (list): List of column names used as features before dummification
         """
         self.model = model
         self.feature_model = feature_model
@@ -67,6 +69,7 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
+        self.pre_dummified_columns = pre_dummified_columns
 
     @property
     def algorithm_name(self):
@@ -186,14 +189,28 @@ class TrainedSupervisedModel(object):
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
 
-            # Run the saved data preparation pipeline
-            # TODO dummies will not run if a prediction dataframe only has: 1 row or all the same value in a categorical
-            # TODO column
-            prepared_dataframe = self.fit_pipeline.transform(dataframe)
+            # Add response column if not included in prediction data
+            if self.prediction_column not in dataframe.columns.values:
+                dataframe[self.prediction_column] = np.NaN
+
+            if self.pre_dummified_columns is not None:
+                # Subset the dataframe to only columns that were saved from the original model training
+                subsetted_data = dataframe[self.pre_dummified_columns]
+                # Run the saved data preparation pipeline
+                prepared_dataframe = self.fit_pipeline.transform(subsetted_data)
+                # Reindex to include dummy variable columns for categories missing in the new data
+                prepared_dataframe = prepared_dataframe.reindex(columns=self.column_names, fill_value=0)
+            else:
+                # Run the saved data preparation pipeline
+                prepared_dataframe = self.fit_pipeline.transform(dataframe)
+
+                # Subset the dataframe to only columns that were saved from the original model training
+                prepared_dataframe = prepared_dataframe[self.column_names]
 
             # Subset the dataframe to only columns that were saved from the original model training
             prepared_dataframe = prepared_dataframe[self.column_names]
         except KeyError as ke:
+            # TODO Case for pre_dummified_columns != None
             error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
             which will be ignored, but you must pass in all the required fields.\n
