@@ -202,7 +202,7 @@ class TrainedSupervisedModel(object):
                 df2[column] = df2[column].astype('category', categories=col_categories)
                 # Check whether the prediction data contains categories not present in the training set and print
                 # a message warning that these new values will be dropped and imputed
-                new_values = set([v for v in dataframe[column].unique() if not(v in col_categories or pd.isnull(v))])
+                new_values = {v for v in dataframe[column].unique() if not(v in col_categories or pd.isnull(v))}
                 if len(new_values) > 0:
                     category_message = 'Column {} contains levels not seen in the training set. These levels have been '
                     category_message += 'removed and will be imputed or the corresponding rows dropped.\nNew levels: {}'
