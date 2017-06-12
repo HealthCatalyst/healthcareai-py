@@ -40,7 +40,8 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
-                 pre_dummified_columns=None):
+                 pre_dummified_columns=None,
+                 categorical_column_info = None):
         """
         Create an instance of a TrainedSupervisedModel
         
@@ -70,6 +71,7 @@ class TrainedSupervisedModel(object):
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
         self.pre_dummified_columns = pre_dummified_columns
+        self.categorical_column_info = categorical_column_info
 
     @property
     def algorithm_name(self):
@@ -186,28 +188,31 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the columns the model expects.
         """
 
+        # Add response column if not included in prediction data
+        if self.prediction_column not in dataframe.columns.values:
+            dataframe[self.prediction_column] = np.NaN
+
+        df2 = dataframe.copy()
+
+        # Change the dtype of the categorical columns in the prediction dataframe to 'category' with levels determined
+        # by the training data
+        if self.categorical_column_info is not None:
+            for column in self.categorical_column_info:
+                col_categories = self.categorical_column_info[column].index
+                df2[column] = df2[column].astype('category', categories=col_categories)
+                # Check whether the prediction data contains categories not present in the training set and print
+                # a message warning that these new values will be dropped and imputed
+                new_values = set([v for v in dataframe[column].unique() if not(v in col_categories or pd.isnull(v))])
+                if len(new_values) > 0:
+                    category_message = 'Column {} contains levels not seen in the training set. These levels have been '
+                    category_message += 'removed and will be imputed or the corresponding rows dropped.\nNew levels: {}'
+                    print(category_message.format(column, new_values))
+
+        # Run the saved data preparation pipeline
+        prepared_dataframe = self.fit_pipeline.transform(df2)
+
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
-
-            # Add response column if not included in prediction data
-            if self.prediction_column not in dataframe.columns.values:
-                dataframe[self.prediction_column] = np.NaN
-
-            if self.pre_dummified_columns is not None:
-                # Subset the dataframe to only columns that were saved from the original model training
-                subsetted_data = dataframe[self.pre_dummified_columns]
-                # Run the saved data preparation pipeline
-                prepared_dataframe = self.fit_pipeline.transform(subsetted_data)
-                # Reindex to include dummy variable columns for categories missing in the new data
-                prepared_dataframe = prepared_dataframe.reindex(columns=self.column_names, fill_value=0)
-            else:
-                # Run the saved data preparation pipeline
-                prepared_dataframe = self.fit_pipeline.transform(dataframe)
-
-                # Subset the dataframe to only columns that were saved from the original model training
-                prepared_dataframe = prepared_dataframe[self.column_names]
-
-            # Subset the dataframe to only columns that were saved from the original model training
             prepared_dataframe = prepared_dataframe[self.column_names]
         except KeyError as ke:
             # TODO Case for pre_dummified_columns != None

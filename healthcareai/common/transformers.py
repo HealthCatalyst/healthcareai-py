@@ -10,7 +10,7 @@ class DataFrameImputer(TransformerMixin):
     """
     Impute missing values in a dataframe.
 
-    Columns of dtype object (assumed categorical) are imputed with the mode (most frequent value in column).
+    Columns of dtype object or category (assumed categorical) are imputed with the mode (most frequent value in column).
 
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
@@ -29,7 +29,10 @@ class DataFrameImputer(TransformerMixin):
         self.object_columns = X.select_dtypes(include=['object']).columns.values
 
         self.fill = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O') else X[c].mean() for c in X], index=X.columns)
+                               if X[c].dtype == np.dtype('O')
+                               or pd.core.common.is_categorical_dtype(X[c])
+                               else X[c].mean() for c in X], index=X.columns)
+
 
         # return self for scikit compatibility
         return self
@@ -42,7 +45,8 @@ class DataFrameImputer(TransformerMixin):
         result = X.fillna(self.fill)
 
         for i in self.object_columns:
-            result[i] = result[i].astype(object)
+            if result[i].dtype not in ['object', 'category']:
+                result[i] = result[i].astype('object')
 
         return result
 

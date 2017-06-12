@@ -44,11 +44,28 @@ class SupervisedModelTrainer(object):
         # Save the pipeline to the parent class
         self._advanced_trainer.pipeline = pipeline
 
+        # Split the data into train and test
+        self._advanced_trainer.train_test_split()
+
         # Save the original dataframe columns to the parent class
         self._advanced_trainer.pre_dummified_columns = dataframe.columns.values
 
-        # Split the data into train and test
-        self._advanced_trainer.train_test_split()
+        # Identify the categorical columns
+        categorical_columns = dataframe.select_dtypes(include=[object, 'category']).columns.copy()
+        for column in categorical_columns:
+            if column in [predicted_column, grain_column]:
+                categorical_columns = categorical_columns.drop(column)
+
+        # Get the distribution of values for each categorical column
+        categorical_column_info = {}
+        for column in categorical_columns:
+            value_distribution = dataframe[column].value_counts(sort=False)
+            # Sort by the index to ensure the correct dummy is dropped in get_dummies(drop_first=True)
+            value_distribution.sort_index(inplace=True)
+            value_distribution *= 1 / value_distribution.values.sum()
+            categorical_column_info[column] = value_distribution
+
+        self._advanced_trainer.categorical_column_info = categorical_column_info
 
     @property
     def clean_dataframe(self):

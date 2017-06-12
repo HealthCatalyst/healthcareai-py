@@ -50,6 +50,7 @@ class AdvancedSupervisedModelTrainer(object):
         self.y_test = None
         self.pipeline = None
         self.pre_dummified_columns = None
+        self.categorical_column_info = None
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
@@ -442,7 +443,8 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
-            pre_dummified_columns = self.pre_dummified_columns)
+            pre_dummified_columns = self.pre_dummified_columns,
+            categorical_column_info = self.categorical_column_info)
 
         return trained_supervised_model
 
