@@ -508,6 +508,58 @@ class TrainedSupervisedModel(object):
         if self.model_type != 'classification':
             raise HealthcareAIError('This function only runs on a binary classification model.')
 
+    def print_training_results(self):
+        """
+        Print metrics, stats and hyperparameters of a trained supervised model including the model name, training time,
+        hyperparameters, and performance metrics.
+        """
+        print('{} Training Results:'.format(self.model_name))
+        print('- Training time:')
+        print('    Trained the {} model in {} seconds'.format(self.model_name,
+                                                            self._train_time))
+
+        hyperparameters = self.best_hyperparameters
+        if hyperparameters is None:
+            hyperparameters = 'N/A: No hyperparameter search was performed'
+        print('- Best hyperparameters found were:\n    {}'.format(hyperparameters))
+
+        if self._model_type == 'classification':
+            print('- {} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
+                self.model_name,
+                self.metrics['accuracy'],
+                self.metrics['roc_auc'],
+                self.metrics['pr_auc']))
+        elif self._model_type == 'regression':
+            print('- {} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
+                self.model_name,
+                self.metrics['mean_squared_error'],
+                self.metrics['mean_absolute_error']))
+
+    def get_training_results(self):
+        """
+        Returns metrics, stats and hyperparameters of a trained supervised model including the model name, training time,
+        hyperparameters, and performance metrics.
+
+        Returns:
+            dict: dictionary containing model name, training time, hyperparameters, and performance metrics
+        """
+        hyperparameters = self.best_hyperparameters
+        if hyperparameters is None:
+            hyperparameters = 'N/A: No hyperparameter search was performed'
+
+        performance_metrics = {}
+        if self._model_type == 'classification':
+            performance_metrics['accuracy'] = self.metrics['accuracy']
+            performance_metrics['roc_auc'] = self.metrics['roc_auc']
+            performance_metrics['pr_auc'] = self.metrics['pr_auc']
+        elif self._model_type == 'regression':
+            performance_metrics['mse'] = self.metrics['mean_squared_error']
+            performance_metrics['mae'] = self.metrics['mean_absolute_error']
+        return {'model_name': self.model_name,
+                'train_time_seconds':self._train_time,
+                'hyperparameters':hyperparameters,
+                'performance_metrics':performance_metrics}
+
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
     """
