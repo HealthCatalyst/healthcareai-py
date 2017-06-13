@@ -67,6 +67,8 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
+        self.model_name = None
+        self._train_time = None
 
     @property
     def algorithm_name(self):
