@@ -553,8 +553,8 @@ class TrainedSupervisedModel(object):
             performance_metrics['roc_auc'] = self.metrics['roc_auc']
             performance_metrics['pr_auc'] = self.metrics['pr_auc']
         elif self._model_type == 'regression':
-            performance_metrics['mse'] = self.metrics['mean_squared_error']
-            performance_metrics['mae'] = self.metrics['mean_absolute_error']
+            performance_metrics['mean_squared_error'] = self.metrics['mean_squared_error']
+            performance_metrics['mean_absolute_error'] = self.metrics['mean_absolute_error']
         return {'model_name': self.model_name,
                 'train_time_seconds':self._train_time,
                 'hyperparameters':hyperparameters,
