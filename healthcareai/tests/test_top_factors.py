@@ -84,12 +84,10 @@ class TestTopFactors(unittest.TestCase):
 
     def test_factors_are_correct_on_new_predictions(self):
         new_data = pd.DataFrame({'id': [1001, 1002, 1003],
-                                 'positive_corr': [3, 0.3, -2],
                                  'categorical': ['Common', 'Rare', 'Medium'],
-                                 'negative_corr': [2, -1.5, 0],
                                  'useless_pred_1': [0, 0.01, -0.01],
                                  'useless_pred_2': ['Y', 'N', 'Y'],
-                                 'response': ['Y', 'Y', 'N']})
+                                 'response': ['N', 'Y', 'Y']})
 
         expected = pd.DataFrame({'id': [1001, 1002, 1003],
                                  'Factor1TXT': ['positive_corr', 'categorical.Rare', 'positive_corr'],
