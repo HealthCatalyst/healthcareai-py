@@ -8,7 +8,7 @@ If you have not installed healthcare.ai, refer to the instructions here:
 To run this example:
   python3 example_advanced.py
 
-This code uses the DiabetesClinicalSampleData.csv source file.
+This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -16,13 +16,14 @@ from sklearn.pipeline import Pipeline
 from healthcareai import AdvancedSupervisedModelTrainer
 import healthcareai.common.filters as hcai_filters
 import healthcareai.common.transformers as hcai_transformers
+import healthcareai.datasets as hcai_datasets
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 
 
 def main():
-    # CSV snippet for reading data into dataframe
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+    # Load the diabetes sample data
+    dataframe = hcai_datasets.load_diabetes()
 
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
