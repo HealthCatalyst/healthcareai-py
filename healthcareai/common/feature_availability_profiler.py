@@ -1,8 +1,8 @@
 import pandas as pd
-import time
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import timedelta
 import matplotlib.pyplot as plt
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -16,25 +16,18 @@ def feature_availability_profiler(
     This function counts the number of populated data values over time for a
     given dataframe.
 
-    Parameters
-    ----------
-    data_frame (dataframe) : dataframe of features to count populated data in. This
-      table must have a 2 date columns: one for patient admission date, one for
-      today's date (or when the table was last loaded). Minimum 3 columns.
-    admit_col_name (str) : name of column containing patient admission date
-    last_load_col_name (str) : name of column containing today's date or when the
-      table was last loaded.
-    plotFlag (bol) : True will return a plot of the data availability.
-    list_flag (bol) : True will return a matrix of populated fields vs. time.
+    Args:
+        data_frame (pandas.core.dataframe.DataFrame): dataframe of features to count populated data in. This
+            table must have a 2 date columns: one for patient admission date, one for
+            today's date (or when the table was last loaded). Minimum 3 columns.
+        admit_col_name (str): name of column containing patient admission date
+        last_load_col_name (str): name of column containing today's date or when the
+            table was last loaded.
+        plotFlag (bool): True will return a plot of the data availability.
+        list_flag (bool): True will return a matrix of populated fields vs. time.
 
-    Returns
-    -------
-    num_data (df) : a DF of populated fields vs. time.
-    :param data_frame: Your dataframe
-    :param admit_col_name: The name of the column containing the admit dates
-    :param last_load_col_name: The name of the column containing the last load date
-    :param plot_flag: Shows or hides plot
-    :param list_flag: Shows or hides listS
+    Returns:
+        (pandas.core.dataframe.DataFrame): a dataframe of populated fields vs. time.
     """
 
     df = data_frame
@@ -111,4 +104,5 @@ def count_nulls_in_date_range(df, start, end, admit_col_name):
     mask = (df[admit_col_name] > start) & (df[admit_col_name] <= end)
     df = df.loc[mask]
     num_data = 100 - np.round(100 * df.isnull().sum() / df.shape[0])
-    return (num_data)
+
+    return num_data

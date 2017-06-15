@@ -1,368 +1,310 @@
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import roc_auc_score, roc_curve, auc
-from sklearn.metrics import average_precision_score, precision_recall_curve
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.externals import joblib
-import math
+import os
+import sklearn
+import itertools
+
 import numpy as np
 import pandas as pd
-import sys
-import matplotlib.pyplot as plt
+import sklearn.metrics as skmetrics
 
-def clfreport(modeltype,
-              debug,
-              devcheck,
-              algo,
-              X_train,
-              y_train,
-              X_test,
-              y_test=None,
-              param=None,
-              cores=4,
-              tune=False,
-              use_saved_model=False,
-              col_list=None):
+from matplotlib import pyplot as plt
+
+from healthcareai.common.healthcareai_error import HealthcareAIError
+
+DIAGONAL_LINE_COLOR = '#bbbbbb'
+DIAGONAL_LINE_STYLE = 'dotted'
+
+
+def compute_roc(y_test, probability_predictions):
     """
+    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds
 
-    Parameters
-    ----------
-    modeltype
-    debug
-    devcheck
-    algo
-    X_train
-    y_train
-    X_test
-    y_test
-    param
-    cores
-    tune
-    use_saved_model
-    col_list
+    Args:
+        y_test (list) : true label values corresponding to the predictions. Also length n.
+        probability_predictions (list) : predictions coming from an ML algorithm of length n.
 
-    Returns
-    -------
+    Returns:
+        dict: 
 
     """
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
-    # Initialize conditional vars that depend on ifelse to avoid PC warnng
-    y_pred_class = None
-    y_pred = None
+    # Calculate ROC
+    false_positive_rates, true_positive_rates, roc_thresholds = skmetrics.roc_curve(y_test, probability_predictions)
+    roc_auc = skmetrics.roc_auc_score(y_test, probability_predictions)
 
-    if devcheck == 'yesdev':
+    # get ROC ideal cutoffs (upper left, or 0,1)
+    roc_distances = (false_positive_rates - 0) ** 2 + (true_positive_rates - 1) ** 2
 
-        if tune:
-            clf = GridSearchCV(algo,
-                               param,
-                               cv=5,
-                               scoring='roc_auc',
-                               n_jobs=cores)
-        else:
-            clf = algo
+    # To prevent the case where there are two points with the same minimum distance, return only the first
+    # np.where returns a tuple (we want the first element in the first array)
+    roc_index = np.where(roc_distances == np.min(roc_distances))[0][0]
+    best_tpr = true_positive_rates[roc_index]
+    best_fpr = false_positive_rates[roc_index]
+    ideal_roc_cutoff = roc_thresholds[roc_index]
+
+    return {'roc_auc': roc_auc,
+            'best_roc_cutoff': ideal_roc_cutoff,
+            'best_true_positive_rate': best_tpr,
+            'best_false_positive_rate': best_fpr,
+            'true_positive_rates': true_positive_rates,
+            'false_positive_rates': false_positive_rates,
+            'roc_thresholds': roc_thresholds}
+
+
+def compute_pr(y_test, probability_predictions):
+    """ 
+    Compute Precision-Recall, thresholds and PR AUC
+
+    Args:
+        y_test (list) : true label values corresponding to the predictions. Also length n.
+        probability_predictions (list) : predictions coming from an ML algorithm of length n.
+
+    Returns:
+        dict: 
+
+    """
+    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+
+    # Calculate PR
+    precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
+    pr_auc = skmetrics.average_precision_score(y_test, probability_predictions)
+
+    # get ideal cutoffs for suggestions (upper right or 1,1)
+    pr_distances = (precisions - 1) ** 2 + (recalls - 1) ** 2
+
+    # To prevent the case where there are two points with the same minimum distance, return only the first
+    # np.where returns a tuple (we want the first element in the first array)
+    pr_index = np.where(pr_distances == np.min(pr_distances))[0][0]
+    best_precision = precisions[pr_index]
+    best_recall = recalls[pr_index]
+    ideal_pr_cutoff = pr_thresholds[pr_index]
+
+    return {'pr_auc': pr_auc,
+            'best_pr_cutoff': ideal_pr_cutoff,
+            'best_precision': best_precision,
+            'best_recall': best_recall,
+            'precisions': precisions,
+            'recalls': recalls,
+            'pr_thresholds': pr_thresholds}
+
+
+def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
+    """
+    Given a trained estimator, calculate metrics
+
+    Args:
+        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+        x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
+
+    Returns:
+        dict: A dictionary of metrics objects
+    """
+    # Get predictions
+    predictions = trained_sklearn_estimator.predict(x_test)
+
+    # Calculate individual metrics
+    mean_squared_error = skmetrics.mean_squared_error(y_test, predictions)
+    mean_absolute_error = skmetrics.mean_absolute_error(y_test, predictions)
+
+    result = {'mean_squared_error': mean_squared_error, 'mean_absolute_error': mean_absolute_error}
+
+    return result
+
+
+def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y_test):
+    """
+    Given a trained estimator, calculate metrics
+
+    Args:
+        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
+        y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+
+    Returns:
+        dict: A dictionary of metrics objects
+    """
+    # Squeeze down y_test to 1D
+    y_test = np.squeeze(y_test)
+
+    _validate_predictions_and_labels_are_equal_length(x_test, y_test)
+
+    # Get binary and probability classification predictions
+    binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
+    probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
+
+    # Calculate accuracy
+    accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
+    roc = compute_roc(y_test, probability_predictions)
+    pr = compute_pr(y_test, probability_predictions)
+
+    # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
+    return {'accuracy': accuracy, **roc, **pr}
+
+
+def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
+    """
+    From a given dictionary of thresholds by model, create a ROC curve for each model
+
+    Args:
+        roc_thresholds_by_model (dict): A dictionary of ROC thresholds by model name.
+        save (bool): False to display the image (default) or True to save it (but not display it)
+        debug (bool): verbost output.
+    """
+    # TODO consolidate this and PR plotter into 1 function
+    # TODO make the colors randomly generated from rgb values
+    # Cycle through the colors list
+    color_iterator = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
+    # Initialize plot
+    plt.figure()
+    plt.xlabel('False Positive Rate (FPR)')
+    plt.ylabel('True Positive Rate (TRP)')
+    plt.title('Receiver Operating Characteristic (ROC)')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [0, 1], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
+
+    # Calculate and plot for each model
+    for color, (model_name, metrics) in zip(color_iterator, roc_thresholds_by_model.items()):
+        # Extract model name and metrics from dictionary
+        roc_auc = metrics['roc_auc']
+        tpr = metrics['true_positive_rates']
+        fpr = metrics['false_positive_rates']
+        best_true_positive_rate = metrics['best_true_positive_rate']
+        best_false_positive_rate = metrics['best_false_positive_rate']
 
         if debug:
-            print('\nclf object right before fitting main model:')
-            print(clf)
+            print('{} model:'.format(model_name))
+            print(pd.DataFrame({'FPR': fpr, 'TPR': tpr}))
 
-        if modeltype == 'classification':
-            y_pred = np.squeeze(clf.fit(X_train, y_train).predict_proba(
-                X_test)[:, 1])
-            #y_pred_class = clf.fit(X_train, y_train).predict(X_test)
-        elif modeltype == 'regression':
-            y_pred = clf.fit(X_train, y_train).predict(X_test)
+        # plot the line
+        label = '{} (ROC AUC = {})'.format(model_name, round(roc_auc, 2))
+        plt.plot(fpr, tpr, color=color, label=label)
+        plt.plot([best_false_positive_rate], [best_true_positive_rate], marker='*', markersize=10, color=color)
 
-        print('\n', algo)
-        print("Best hyper-parameters found after tuning:")
+    plt.legend(loc="lower right")
 
-        if hasattr(clf, 'best_params_') and tune:
-            print(clf.best_params_)
-        else:
-            print("No hyper-parameter tuning was done.")
+    if save:
+        plt.savefig('ROC.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nROC plot saved in: {}'.format(source_path))
 
-        if modeltype == 'classification':
-            print('\nMetrics:')
-            roc_auc = roc_auc_score(y_test, y_pred)
-            print('AU_ROC Score:', roc_auc)
+    plt.show()
 
-            precision, recall, thresholds = precision_recall_curve(y_test, y_pred)
-            pr_auc = auc(recall, precision)
-            print('\nAU_PR Score:', pr_auc)
 
-        elif modeltype == 'regression':
-            print('##########################################################')
-            print('Model accuracy:')
-            print('\nRMSE error:', math.sqrt(mean_squared_error(y_test,
-                                                                y_pred)))
-            print('\nMean absolute error:', mean_absolute_error(y_test,
-                                                                y_pred), '\n')
-            print('##########################################################')
-
-        # TODO: refactor this logic to be simpler
-        # Return without printing variable importance for linear case
-        if (not hasattr(clf, 'feature_importances_')) and (not
-            hasattr(clf, 'best_estimator_')):
-
-            return y_pred, roc_auc
-
-        # Print variable importance if rf and not tuning
-        elif hasattr(clf, 'feature_importances_'):
-            write_feature_importances(clf.feature_importances_,
-                                          col_list)
-
-            return y_pred, roc_auc, clf
-
-        # Print variable importance if rf and tuning
-        elif hasattr(clf.best_estimator_, 'feature_importances_'):
-            write_feature_importances(
-                clf.best_estimator_.feature_importances_,
-                col_list)
-
-            return y_pred, roc_auc, clf
-
-    elif devcheck == 'notdev':
-
-        clf = algo
-
-        if use_saved_model is True:
-
-            clf = joblib.load('probability.pkl')
-
-        else:
-
-            if debug:
-                print('\nclf object right before fitting main model:')
-
-            clf.fit(X_train, y_train)
-
-            joblib.dump(clf, 'probability.pkl', compress=1)
-
-        if modeltype == 'classification':
-            y_pred = np.squeeze(clf.predict_proba(X_test)[:, 1])
-        elif modeltype == 'regression':
-            y_pred = clf.predict(X_test)
-
-    return y_pred
-
-def findtopthreefactors(debug,
-                        X_train,
-                        y_train,
-                        X_test,
-                        modeltype,
-                        use_saved_model):
-
-    # Initialize conditional vars that depend on ifelse to avoid PC warnng
-    clf = None
-
-    if modeltype == 'classification':
-        clf = LogisticRegression()
-
-    elif modeltype == 'regression':
-        clf = LinearRegression()
-
-    if use_saved_model is True:
-
-        clf = joblib.load('factorlogit.pkl')
-
-    elif use_saved_model is False:
-
-        if modeltype == 'classification':
-
-            if debug:
-                print('\nclf object right before fitting factor ranking model')
-                print(clf)
-
-            clf.fit(X_train, y_train).predict_proba(X_test)
-
-        elif modeltype == 'regression':
-
-            if debug:
-                print('\nclf object right before fitting factor ranking model')
-                print(clf)
-
-            clf.fit(X_train, y_train).predict(X_test)
-
-        joblib.dump(clf, 'factorlogit.pkl', compress=1)
-
-    if debug:
-        print('\nCoeffs right before multiplic. to determine top 3 factors')
-        print(clf.coef_)
-        print('\nX_test right before this multiplication')
-        print(X_test.loc[:3, :])
-
-    # Populate X_test array of ordered col importance;
-    # Start by multiplying X_test vals by coeffs
-    res = X_test.values * clf.coef_
-
-    if debug:
-        print('\nResult of coef * Xtest row by row multiplication')
-        for i in range(0, 3):
-            print(res[i, :])
-
-    col_list = X_test.columns.values
-
-    first_fact = []
-    second_fact = []
-    third_fact = []
-
-    if debug:
-        print('\nSorting column importance rankings for each row in X_test...')
-
-    # TODO: switch 2-d lists to numpy array
-    # (although would always convert back to list for ceODBC
-    for i in range(0, len(res[:, 1])):
-        list_of_indexrankings = np.array((-res[i]).argsort().ravel())
-        first_fact.append(col_list[list_of_indexrankings[0]])
-        second_fact.append(col_list[list_of_indexrankings[1]])
-        third_fact.append(col_list[list_of_indexrankings[2]])
-
-    if debug:
-        print('\nTop three factors for top five rows:')  # pretty-print w/ df
-        print(pd.DataFrame({'first': first_fact[:3],
-                            'second': second_fact[:3],
-                            'third': third_fact[:3]}))
-
-    return first_fact, second_fact, third_fact
-
-def write_feature_importances(importance_attr, col_list):
+def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     """
-    This function prints an ordered list of rf-related feature importance.
-
-    Parameters
-    ----------
-    importance_attr (attribute) : This is the feature importance attribute
-    from a scikit-learn method that represents feature importances
-    col_list (list) : Vector holding list of column names
-
-    Returns
-    -------
-    Nothing. Simply prints feature importance list to console.
+    From a given dictionary of thresholds by model, create a PR curve for each model
+    
+    Args:
+        pr_thresholds_by_model (dict): A dictionary of PR thresholds by model name.
+        save (bool): False to display the image (default) or True to save it (but not display it)
+        debug (bool): verbost output.
     """
-    indices = np.argsort(importance_attr)[::-1]
-    print('\nVariable importance:')
-    for f in range(0, len(col_list)):
-        print("%d. %s (%f)" % (f + 1, col_list[indices[f]],
-                               importance_attr[indices[f]]))
+    # TODO consolidate this and PR plotter into 1 function
+    # TODO make the colors randomly generated from rgb values
+    # Cycle through the colors list
+    color_iterator = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
+    # Initialize plot
+    plt.figure()
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision Recall (PR)')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.plot([0, 1], [1, 0], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
-def calculate_rfmtry(number_of_columns, type):
-    if number_of_columns < 3:
-        message = "You need more than two columns to tune hyperparameters."
-        raise ValueError(message)
+    # Calculate and plot for each model
+    for color, (model_name, metrics) in zip(color_iterator, pr_thresholds_by_model.items()):
+        # Extract model name and metrics from dictionary
+        pr_auc = metrics['pr_auc']
+        precision = metrics['precisions']
+        recall = metrics['recalls']
+        best_recall = metrics['best_recall']
+        best_precision = metrics['best_precision']
 
-    if type == 'classification':
-        # Default to grid of 1,2,3 for start of less than 2
-        start_temp = math.floor(math.sqrt(number_of_columns))
-        start = start_temp if start_temp >= 2 else 2
-        grid_mtry = [start-1,start,start+1]
+        if debug:
+            print('{} model:'.format(model_name))
+            print(pd.DataFrame({'Recall': recall, 'Precision': precision}))
 
-    if type == 'regression':
-        # Default to grid of 1,2,3 for start of less than 2
-        start_temp = math.floor(number_of_columns/3)
-        start = start_temp if start_temp >= 2 else 2
-        grid_mtry = [start-1,start,start+1]
+        # plot the line
+        label = '{} (PR AUC = {})'.format(model_name, round(pr_auc, 2))
+        plt.plot(recall, precision, color=color, label=label)
+        plt.plot([best_recall], [best_precision], marker='*', markersize=10, color=color)
 
-    return grid_mtry
+    plt.legend(loc="lower left")
+
+    if save:
+        plt.savefig('PR.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nPR plot saved in: {}'.format(source_path))
+
+    plt.show()
 
 
-def GenerateAUC(predictions, labels, aucType='SS', plotFlg=False, allCutoffsFlg=False):
+def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
     """
-    This function creates an ROC or PR curve and calculates the area under it.
-
-    Parameters
-    ----------
-    predictions (list) : predictions coming from an ML algorithm of length n.
-    labels (list) : true label values corresponding to the predictions. Also length n.
-    aucType (str) : either 'SS' for ROC curve or 'PR' for precision recall curve. Defaults to 'SS'
-    plotFlg (bol) : True will return plots. Defaults to False.
-    allCutoffsFlg (bol) : True will return plots. Defaults to False.
-
-    Returns
-    -------
-    AUC (float) : either AU_ROC or AU_PR
+    Given a scikit learn random forest classifier, an x_train array, the feature names save or display a feature
+    importance plot.
+    
+    Args:
+        trained_rf_classifier (sklearn.ensemble.RandomForestClassifier): 
+        x_train (numpy.array): A 2D numpy array that was used for training 
+        feature_names (list): Column names in the x_train set
+        save (bool): True to save the plot, false to display it in a blocking thread
     """
-    # Error check for uneven length predictions and labels
-    if len(predictions) != len(labels):
-        raise Exception('Data vectors are not equal length!')
+    # Unwrap estimator if it is a sklearn randomized search estimator
+    # best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
+    best_rf = trained_rf_classifier
+    # Validate estimator is a random forest classifier and raise error if it is not
+    if not isinstance(best_rf, sklearn.ensemble.RandomForestClassifier):
+        print(type(trained_rf_classifier))
+        raise HealthcareAIError('Feature plotting only works with a scikit learn RandomForestClassifier.')
 
-    # make AUC type upper case.
-    aucType = aucType.upper()
+    # Arrange columns in order of importance
+    # TODO this portion could probably be extracted and tested, since the plot is difficult to test
+    importances = best_rf.feature_importances_
+    feature_importances = [tree.feature_importances_ for tree in best_rf.estimators_]
+    standard_deviations = np.std(feature_importances, axis=0)
+    indices = np.argsort(importances)[::-1]
+    namelist = [feature_names[i] for i in indices]
 
-    # check to see if AUC is SS or PR. If not, default to SS
-    if aucType != 'SS' and aucType != 'PR':
-        print('Drawing ROC curve with Sensitivity/Specificity')
-        aucType = 'SS'
+    # Turn off matplotlib interactive mode
+    plt.ioff()
 
-    # Compute ROC curve and ROC area
-    if aucType == 'SS':
-        fpr, tpr, thresh = roc_curve(labels, predictions)
-        area = auc(fpr, tpr)
-        print('Area under ROC curve (AUC): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (fpr - 0)**2 + (tpr - 1)**2
-        ind = np.where(d == np.min(d))
-        bestTpr = tpr[ind]
-        bestFpr = fpr[ind]
-        cutoff = thresh[ind]
-        print("Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f" % (cutoff, bestTpr, bestFpr))
-        if allCutoffsFlg is True:
-            print('%-7s %-6s %-5s' % ('Thresh', 'TPR', 'FPR'))
-            for i in range(len(thresh)):
-                print('%-7.2f %-6.2f %-6.2f' % (thresh[i], tpr[i], fpr[i]))
+    # Set up the plot
+    figure = plt.figure()
+    plt.title("Feature Importance")
+    plt.ylabel('Relative Feature Importance')
 
-        # plot ROC curve
-        if plotFlg is True:
-            plt.figure()
-            plt.plot(fpr, tpr, color='darkorange',
-                     lw=2, label='ROC curve (area = %0.2f)' % area)
-            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-            plt.xlim([0.0, 1.0])
-            plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
-            plt.title('Receiver operating characteristic curve')
-            plt.legend(loc="lower right")
-            plt.show()
-        return ({'AU_ROC': area,
-                 'BestCutoff': cutoff[0],
-                 'BestTpr': bestTpr[0],
-                 'BestFpr': bestFpr[0]})
-    # Compute PR curve and PR area
-    else: # must be PR
-        # Compute Precision-Recall and plot curve
-        precision, recall, thresh = precision_recall_curve(labels, predictions)
-        area = average_precision_score(labels, predictions)
-        print('Area under PR curve (AU_PR): %0.2f' % area)
-        # get ideal cutoffs for suggestions
-        d = (precision - 1) ** 2 + (recall - 1) ** 2
-        ind = np.where(d == np.min(d))
-        bestPre = precision[ind]
-        bestRec = recall[ind]
-        cutoff = thresh[ind]
-        print( "Ideal cutoff is %0.2f, yielding TPR of %0.2f and FPR of %0.2f"
-               % (cutoff, bestPre, bestRec))
-        if allCutoffsFlg is True:
-            print('%-7s %-10s %-10s' % ('Thresh', 'Precision', 'Recall'))
-            for i in range(len(thresh)):
-                print('%5.2f %6.2f %10.2f' %(thresh[i],precision[i], recall[i]))
+    # Plot each feature
+    x_train_shape = x_train.shape[1]
+    x_train_range = range(x_train_shape)
 
-        # plot PR curve
-        if plotFlg is True:
-            # Plot Precision-Recall curve
-            plt.figure()
-            plt.plot(recall, precision, lw=2, color='darkred',
-                     label='Precision-Recall curve' % area)
-            plt.xlabel('Recall')
-            plt.ylabel('Precision')
-            plt.ylim([0.0, 1.05])
-            plt.xlim([0.0, 1.0])
-            plt.title('Precision-Recall AUC={0:0.2f}'.format(
-                area))
-            plt.legend(loc="lower right")
-            plt.show()
-        return({'AU_PR':area,
-                'BestCutoff':cutoff[0],
-                'BestPrecision':bestPre[0],
-                'BestRecall':bestRec[0]})
+    plt.bar(x_train_range, importances[indices], color="g", yerr=standard_deviations[indices], align="center")
+    plt.xticks(x_train_range, namelist, rotation=90)
+    plt.xlim([-1, x_train_shape])
+    plt.gca().set_ylim(bottom=0)
+    plt.tight_layout()
 
-if __name__ == "__main__":
+    # Save or display the plot
+    if save:
+        plt.savefig('FeatureImportances.png')
+        source_path = os.path.dirname(os.path.abspath(__file__))
+        print('\nFeature importance plot saved in: {}'.format(source_path))
+
+        # Close the figure so it does not get displayed
+        plt.close(figure)
+    else:
+        plt.show()
+
+
+def _validate_predictions_and_labels_are_equal_length(predictions, true_values):
+    if len(predictions) == len(true_values):
+        return True
+    else:
+        raise HealthcareAIError('The number of predictions is not equal to the number of true_values.')
+
+
+if __name__ == '__main__':
     pass

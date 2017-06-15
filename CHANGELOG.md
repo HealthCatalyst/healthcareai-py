@@ -54,5 +54,5 @@ This release encompasses basic healthcare ML functionality:
     - Nose unit testing
     - Docker
 
-[Unreleased]: https://github.com/HealthCatalystSLC/healthcareai-py/compare/v0.1.7...HEAD
-[0.1.7]: https://github.com/HealthCatalystSLC/healthcareai-py/releases/tag/v0.1.7-beta
+[Unreleased]: https://github.com/HealthCatalyst/healthcareai-py/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/HealthCatalyst/healthcareai-py/releases/tag/v0.1.7-beta

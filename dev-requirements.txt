@@ -4,6 +4,7 @@ colorama==0.3.7
 cycler==0.10.0
 docutils==0.12
 imagesize==0.7.1
+imbalanced-learn==0.2.1
 Jinja2==2.8
 MarkupSafe==0.23
 matplotlib>=1.5.3
@@ -15,9 +16,10 @@ pyodbc==3.0.10
 pyparsing>=2.1.4
 python-dateutil==2.5.3
 pytz==2016.7
-scipy==0.18.1
 scikit-learn==0.18
+scipy==0.18.1
 six==1.10.0
 snowballstemmer==1.2.1
 Sphinx==1.4.8
 sphinx_rtd_theme==0.1.9
+sqlalchemy>=1.1.5

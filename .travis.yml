@@ -1,0 +1,23 @@
+language: python
+notifications:
+  email: false
+  slack:
+    on_success: always
+    on_failure: always
+    secure: uALfagliZIM3fZo5haevxmzAqLGYb2jmGpJHbRydz0bcm7TTk15viWcXwe8GrdxRZv2d8FW/kcUtZdoffcUlDHd/2BCfllcchxk3Jg3gVVaoNjJC9h9hWc90zkMIRy5blcNHhAOmyUG2KF4W0/icgK7zzyZN3iE9cGaxmuy6XNRi9p7ZriZRv5jFGSPgpWKaryOMdxZHJmWpLDCJ4O3LIN4JSj86C2zvW2QL3Lr74WXveRLXhGU5Gg+1TNc+b0aL5mU6dunuqEdM3qFhHglDajL1elopJBcONxi3q+ojVcvBUY6ML7MAljuIqE3kxAZTo33ZxPkjlXm5yUXRc9MJYMsAApYECE/aEQBNL3GPlOEoX24HGtz7R+OrWCqm8Bn+7KVjSkFzSkTeEBH4BIf3HfRiJnC9wXuIDt04a7CkhtVQtBQ0AY/fYMgcEiMs5F2XyCqh5/O2eDPLXp3HBWSdS1NpTZjLsGa0HxCe1ySABL+AIFNOXzTMLriRQFXO1OAbI3ViyvIzYg/RKAH6cKNe3fqTTVuWRiyCNhpDg3pDKefNP0LUfjzhaW7IBHUC57RJFzr9Xtib/pl9qAtZExt002Eb5ewj2hqu2I2bfr6zfVcx9O6L7L20DRPiPywt8Njoy2FDQgvYROuiT0F/nk28U6U8xx5zEw6ofTzEUvqRKPE=
+python:
+- '3.5'
+- 3.5-dev
+# TODO fix these python builds on linux
+#- '3.6'
+#- 3.6-dev
+#- 3.7-dev
+before_install:
+- sudo apt-get install python-tk
+- sudo apt-get install unixodbc-dev
+- sudo pip install pyodbc
+- pip install cython
+install:
+- pip install -r dev-requirements.txt
+- pip install .
+script: python setup.py nosetests
