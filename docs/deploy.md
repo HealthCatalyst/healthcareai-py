@@ -65,7 +65,7 @@ trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classifi
 
 ```python
 # Load data from a sample .csv file
-prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+prediction_dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
 ```
 
 ### MSSQL
@@ -155,7 +155,7 @@ import healthcareai.common.database_connections as hcai_db
 
 def main():
     # Load data from a sample .csv file
-    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+    prediction_dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
 
     # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
