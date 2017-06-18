@@ -242,24 +242,27 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.show()
 
 
-def plot_random_forest_feature_importance(trained_rf_classifier, x_train, feature_names, save=False):
+def plot_random_forest_feature_importance(trained_random_forest, x_train, feature_names, save=False):
     """
-    Given a scikit learn random forest classifier, an x_train array, the feature names save or display a feature
+    Given a scikit learn random forest estimator, an x_train array, the feature names save or display a feature
     importance plot.
     
     Args:
-        trained_rf_classifier (sklearn.ensemble.RandomForestClassifier): 
+        trained_random_forest (sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.RandomForestRegressor): 
         x_train (numpy.array): A 2D numpy array that was used for training 
         feature_names (list): Column names in the x_train set
         save (bool): True to save the plot, false to display it in a blocking thread
     """
     # Unwrap estimator if it is a sklearn randomized search estimator
     # best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
-    best_rf = trained_rf_classifier
-    # Validate estimator is a random forest classifier and raise error if it is not
-    if not isinstance(best_rf, sklearn.ensemble.RandomForestClassifier):
-        print(type(trained_rf_classifier))
-        raise HealthcareAIError('Feature plotting only works with a scikit learn RandomForestClassifier.')
+    best_rf = trained_random_forest
+
+    # Validate estimator is a random forest estimator and raise error if it is not
+    is_rf_classifier = isinstance(best_rf, sklearn.ensemble.RandomForestClassifier)
+    is_rf_regressor = isinstance(best_rf, sklearn.ensemble.RandomForestRegressor)
+    if not (is_rf_classifier or is_rf_regressor):
+        print(type(trained_random_forest))
+        raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
 
     # Arrange columns in order of importance
     # TODO this portion could probably be extracted and tested, since the plot is difficult to test
