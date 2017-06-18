@@ -169,7 +169,7 @@ class TrainedSupervisedModel(object):
 
         # Create a new dataframe with the grain column from the original dataframe
         results = pd.DataFrame()
-        results[self.grain_column] = dataframe[[self.grain_column]]
+        results[self.grain_column] = dataframe[self.grain_column].values
         results['Prediction'] = y_predictions
 
         return results
@@ -293,7 +293,7 @@ class TrainedSupervisedModel(object):
             raise HealthcareAIError('Warning! The number of predictions does not match the number of rows.')
 
         # Add predictions column to dataframe
-        results['Prediction'] = predictions['Prediction']
+        results['Prediction'] = predictions['Prediction'].values
 
         return results
 

@@ -3,6 +3,7 @@ site_url: http://healthcare.ai
 repo_url: https://github.com/HealthCatalyst/healthcareai-py
 
 theme: readthedocs
+site_favicon: favicon.ico
 docs_dir: docs
 
 pages:
