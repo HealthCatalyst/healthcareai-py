@@ -8,17 +8,18 @@ If you have not installed healthcare.ai, refer to the instructions here:
 To run this example:
   python3 example_regression_2.py
 
-This code uses the DiabetesClinicalSampleData.csv source file.
+This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
 
 import healthcareai.common.file_io_utilities as hcai_io_utilities
 import healthcareai.common.database_connections as hcai_db
+import healthcareai.datasets as hcai_datasets
 
 
 def main():
-    # Load data from a sample .csv file
-    prediction_dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+    # Load the diabetes sample data
+    prediction_dataframe = hcai_datasets.load_diabetes()
 
     # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
