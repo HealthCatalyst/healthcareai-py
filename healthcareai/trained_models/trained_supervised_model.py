@@ -221,7 +221,11 @@ class TrainedSupervisedModel(object):
             # Subset the dataframe to only columns that were saved from the original model training
             prepared_dataframe = prepared_dataframe[self.column_names]
         except KeyError as ke:
-            # TODO Case for pre_dummified_columns != None
+            required_columns = self.column_names
+            found_columns = list(dataframe.columns)
+            # If a pre-dummified dataset is expected as the input, list the pre-dummified columns instead of the dummies
+            if not self.pre_dummified_columns is None:
+                required_columns = self.pre_dummified_columns
             error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
             which will be ignored, but you must pass in all the required fields.\n
@@ -231,7 +235,7 @@ class TrainedSupervisedModel(object):
             Given fields: {}
             
             Likely missing field(s): {}
-            """.format(self.column_names, list(dataframe.columns), ke)
+            """.format(required_columns, found_columns, ke)
             raise HealthcareAIError(error_message)
 
         return prepared_dataframe
