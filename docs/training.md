@@ -38,7 +38,7 @@ dataframe.replace(['None'], [None], inplace=True)
 ### CSV
 
 ```python
-dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
 ```
 
 
@@ -173,7 +173,7 @@ from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 def main():
     # ## Load data from a sample .csv file
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+    dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
 
     # ## Load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'

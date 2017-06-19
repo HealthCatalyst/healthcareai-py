@@ -15,6 +15,8 @@ class TestImpactCoding(unittest.TestCase):
         e) actual values are assigned correctly
     """
 
+    # TODO deprecate `fixture` after a better test for impact coding is devised.
+
     def test_column_renaming(self):
         df = pd.read_csv(fixture('iris_classification.csv'), na_values=['None'])
         code_column_name = 'DRG'

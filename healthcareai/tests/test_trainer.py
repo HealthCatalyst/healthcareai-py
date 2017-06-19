@@ -8,12 +8,13 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.tests.helpers as helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
+import healthcareai.datasets as hcai_datasets
 
 
 class TestSupervisedModelTrainer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        df = helpers.load_sample_dataframe()
+        df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
         columns_to_remove = ['PatientID']
@@ -38,7 +39,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.5, 0.8, result['roc_auc'])
+        helpers.assertBetween(self, 0.5, 0.85, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     # TODO see if there is a way to make this test work - it fails on travisCI because of this:
@@ -60,7 +61,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        helpers.assertBetween(self, 500, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 500, 750, result['mean_squared_error'])
         helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
@@ -95,7 +96,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
     def test_linear_regression_raises_error_on_missing_columns(self):
         # TODO how is this working since the model does not use the training df???
-        training_df = helpers.load_sample_dataframe()
+        training_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID'], axis=1, inplace=True)
@@ -104,7 +105,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         trained_linear_model = self.regression_trainer.linear_regression()
 
         # Load a new df for predicting
-        prediction_df = helpers.load_sample_dataframe()
+        prediction_df = hcai_datasets.load_diabetes()
 
         # Drop columns that model expects
         prediction_df.drop('GenderFLG', axis=1, inplace=True)

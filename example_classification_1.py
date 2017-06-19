@@ -8,18 +8,19 @@ If you have not installed healthcare.ai, refer to the instructions here:
 To run this example:
   python3 example_classification_1.py
 
-This code uses the DiabetesClinicalSampleData.csv source file.
+This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
 
 import healthcareai.trained_models.trained_supervised_model as tsm_plots
 import healthcareai.common.database_connections as hcai_db
+import healthcareai.datasets as hcai_datasets
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
 
 def main():
-    # ## Load data from a sample .csv file
-    dataframe = pd.read_csv('healthcareai/tests/fixtures/DiabetesClinicalSampleData.csv', na_values=['None'])
+    # Load the diabetes sample data
+    dataframe = hcai_datasets.load_diabetes()
 
     # ## Load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
