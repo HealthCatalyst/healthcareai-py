@@ -67,7 +67,6 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
-        self.model_name = None
         self._train_time = None
 
     @property
@@ -534,31 +533,6 @@ class TrainedSupervisedModel(object):
                 self.model_name,
                 self.metrics['mean_squared_error'],
                 self.metrics['mean_absolute_error']))
-
-    def get_training_results(self):
-        """
-        Returns metrics, stats and hyperparameters of a trained supervised model including the model name, training time,
-        hyperparameters, and performance metrics.
-
-        Returns:
-            dict: dictionary containing model name, training time, hyperparameters, and performance metrics
-        """
-        hyperparameters = self.best_hyperparameters
-        if hyperparameters is None:
-            hyperparameters = 'N/A: No hyperparameter search was performed'
-
-        performance_metrics = {}
-        if self._model_type == 'classification':
-            performance_metrics['accuracy'] = self.metrics['accuracy']
-            performance_metrics['roc_auc'] = self.metrics['roc_auc']
-            performance_metrics['pr_auc'] = self.metrics['pr_auc']
-        elif self._model_type == 'regression':
-            performance_metrics['mean_squared_error'] = self.metrics['mean_squared_error']
-            performance_metrics['mean_absolute_error'] = self.metrics['mean_absolute_error']
-        return {'model_name': self.model_name,
-                'train_time_seconds':self._train_time,
-                'hyperparameters':hyperparameters,
-                'performance_metrics':performance_metrics}
 
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
