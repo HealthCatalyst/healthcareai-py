@@ -1,2 +1,2 @@
 include README.md
-include healthcareai/tests/fixtures/DiabetesClincialSampleData.csv
+include healthcareai/datasets/data/diabetes.csv
