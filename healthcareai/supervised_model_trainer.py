@@ -82,10 +82,6 @@ class SupervisedModelTrainer(object):
         trained_model = self._advanced_trainer.knn(scoring_metric='roc_auc', hyperparameter_grid=None,
                                                    randomized_search=True)
 
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
-
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)
 
@@ -105,10 +101,6 @@ class SupervisedModelTrainer(object):
         trained_model = self._advanced_trainer.random_forest_regressor(trees=200,
                                                                        scoring_metric='neg_mean_squared_error',
                                                                        randomized_search=True)
-
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
 
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)
@@ -134,10 +126,6 @@ class SupervisedModelTrainer(object):
         trained_model = self._advanced_trainer.random_forest_classifier(trees=200, scoring_metric='roc_auc',
                                                                         randomized_search=True)
 
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
-
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)
 
@@ -159,10 +147,6 @@ class SupervisedModelTrainer(object):
         # Train the model
         trained_model = self._advanced_trainer.logistic_regression(randomized_search=False)
 
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
-
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)
 
@@ -180,10 +164,6 @@ class SupervisedModelTrainer(object):
 
         # Train the model
         trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
-
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
 
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)
@@ -213,10 +193,6 @@ class SupervisedModelTrainer(object):
         print(
             'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric,
                                                                                      trained_model.algorithm_name))
-
-        # Save the name and training time to the model
-        trained_model.model_name = model_name
-        trained_model._train_time = round(time.time() - t0, 2)
 
         # Display the model metrics
         print_training_results(model_name, t0, trained_model)

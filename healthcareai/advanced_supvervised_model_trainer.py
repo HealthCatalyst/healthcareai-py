@@ -1,6 +1,7 @@
 import sklearn
 import numpy as np
 import pandas as pd
+import time
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -409,6 +410,9 @@ class AdvancedSupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: a TrainedSupervisedModel
         """
+        # Get time before model training
+        t0 = time.time()
+
         algorithm.fit(self.x_train, self.y_train)
 
         # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
@@ -441,6 +445,9 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm))
+
+        # Save the training time to the trained model
+        trained_supervised_model._train_time = round(time.time() - t0, 2)
 
         return trained_supervised_model
 
