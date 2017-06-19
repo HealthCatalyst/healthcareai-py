@@ -211,8 +211,8 @@ class TrainedSupervisedModel(object):
                     # a message warning that these new values will be dropped and imputed
                     new_values = {v for v in dataframe[column].unique() if not (v in col_categories or pd.isnull(v))}
                     if len(new_values) > 0:
-                        category_message = 'Column {} contains levels not seen in the training set. These levels have been '
-                        category_message += 'removed and will be imputed or the corresponding rows dropped.\nNew levels: {}'
+                        category_message = """Column {} contains levels not seen in the training set. These levels have
+                        been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
                         print(category_message.format(column, new_values))
 
             # Run the saved data preparation pipeline
