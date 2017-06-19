@@ -58,6 +58,9 @@ class TrainedSupervisedModel(object):
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
             pre_dummified_columns (list): List of column names used as features before dummification
+            categorical_column_info (dict): A dictionary mapping the name of each (pre-dummified) categorical column
+                to a pandas.Series containing whose index consists of the different levels of the category and whose
+                values consist of the frequencies with which these levels occur in the training data
         """
         self.model = model
         self.feature_model = feature_model
