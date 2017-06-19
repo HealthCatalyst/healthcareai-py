@@ -42,8 +42,8 @@ def top_k_features(dataframe, linear_model, k=3):
         raise HealthcareAIError('You requested {} top features, which is more than the {} features from the original'
                                 ' model. Please choose {} or less.'.format(k, max_model_features, max_model_features))
 
-    # Multiply the values with the coefficients from the trained model
-    step1 = pd.DataFrame(dataframe.values * linear_model.coef_, columns=dataframe.columns)
+    # Multiply the values with the coefficients from the trained model and take the magnitude
+    step1 = pd.DataFrame(np.abs(dataframe.values * linear_model.coef_), columns=dataframe.columns)
     step2 = step1.apply(descending_sort, axis=1)
 
     results = list(step2.values[:, :k])
