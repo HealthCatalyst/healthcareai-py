@@ -4,6 +4,7 @@ import pandas as pd
 
 
 def fixture(file):
+    # TODO deprecate after a better test for impact coding is devised.
     """ Returns the absolute path for a fixtures that contains sample data.
 
     Parameters
@@ -21,10 +22,6 @@ def fixture(file):
     return path.join(path.abspath(path.dirname(__file__)),
                      'fixtures',
                      file)
-
-
-def load_sample_dataframe():
-    return pd.read_csv(fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
 
 
 def assertBetween(self, min, max, input):
