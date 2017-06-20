@@ -555,11 +555,12 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
     metrics_by_model = {}
 
     try:
-        for model in trained_supervised_models:
+        for index, model in enumerate(trained_supervised_models):
             if not isinstance(model, TrainedSupervisedModel):
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'
                                         .format(model))
-            metrics_by_model[model.algorithm_name] = model.metrics
+            algorithm_name = "{}: {}".format(index + 1, model.algorithm_name)
+            metrics_by_model[algorithm_name] = model.metrics
     except TypeError:
         # input is not iterable (assume single TSM)
         if not isinstance(trained_supervised_models, TrainedSupervisedModel):
