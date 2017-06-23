@@ -1,10 +1,9 @@
 import unittest
 
 import numpy as np
-import pandas as pd
 
-from healthcareai.tests import helpers
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
+import healthcareai.datasets as hcai_datasets
 
 from healthcareai import AdvancedSupervisedModelTrainer
 import healthcareai.tests.helpers as test_helpers
@@ -23,7 +22,7 @@ GRAIN_COLUMN_NAME = 'PatientEncounterID'
 class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.df = helpers.load_sample_dataframe()
+        cls.df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
         columns_to_remove = ['PatientID']
@@ -82,7 +81,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
 
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
+        df = hcai_datasets.load_diabetes()
         # Drop uninformative columns
         df.drop(['PatientID'], axis=1, inplace=True)
 
@@ -103,10 +102,9 @@ class TestRandomForestClassification(unittest.TestCase):
         test_helpers.assertBetween(self, 0.7, 0.97, rf.metrics['roc_auc'])
 
     def test_random_foarest_tuning_2_column_raises_error(self):
-        cols = ['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'),
-                         na_values=['None'],
-                         usecols=cols)
+        df_raw = hcai_datasets.load_diabetes()
+        # select only specific columns
+        df = df_raw[['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']]
 
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(
@@ -123,7 +121,7 @@ class TestRandomForestClassification(unittest.TestCase):
 
 class TestLogisticRegression(unittest.TestCase):
     def setUp(self):
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
+        df = hcai_datasets.load_diabetes()
 
         # Drop uninformative columns
         df.drop(['PatientID'], axis=1, inplace=True)
@@ -151,7 +149,7 @@ class TestLogisticRegression(unittest.TestCase):
 class TestMetricValidation(unittest.TestCase):
     # TODO this is pretty spartan testing only looking for happy path on binary classification
     def setUp(self):
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
+        df = hcai_datasets.load_diabetes()
 
         # Drop uninformative columns
         df.drop(['PatientID'], axis=1, inplace=True)
@@ -174,13 +172,13 @@ class TestMetricValidation(unittest.TestCase):
 
 class TestHelpers(unittest.TestCase):
     def test_class_counter_on_binary(self):
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
+        df = hcai_datasets.load_diabetes()
         df.dropna(axis=0, how='any', inplace=True)
         result = count_unique_elements_in_column(df, 'ThirtyDayReadmitFLG')
         self.assertEqual(result, 2)
 
     def test_class_counter_on_many(self):
-        df = pd.read_csv(test_helpers.fixture('DiabetesClinicalSampleData.csv'), na_values=['None'])
+        df = hcai_datasets.load_diabetes()
         result = count_unique_elements_in_column(df, 'PatientEncounterID')
         self.assertEqual(result, 1000)
 

@@ -5,13 +5,15 @@ import healthcareai.tests.helpers as helpers
 import healthcareai.trained_models.trained_supervised_model
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
+import healthcareai.datasets as hcai_datasets
+
 
 
 class TestTrainedSupervisedModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """ Load a dataframe, train a linear model and prepare a prediction dataframe for assertions """
-        training_df = helpers.load_sample_dataframe()
+        training_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID'], axis=1, inplace=True)
@@ -35,7 +37,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.trained_lr = classification_trainer.logistic_regression()
 
         # Load a new df for predicting
-        cls.prediction_df = helpers.load_sample_dataframe()
+        cls.prediction_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
         columns_to_remove = ['PatientID']
