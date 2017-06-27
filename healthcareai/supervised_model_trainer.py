@@ -80,7 +80,7 @@ class SupervisedModelTrainer(object):
                                                    randomized_search=True)
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         return trained_model
 
@@ -99,7 +99,7 @@ class SupervisedModelTrainer(object):
                                                                        randomized_search=True)
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         return trained_model
 
@@ -122,7 +122,7 @@ class SupervisedModelTrainer(object):
                                                                         randomized_search=True)
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         # Save or show the feature importance graph
         hcai_tsm.plot_rf_features_from_tsm(trained_model, self._advanced_trainer.x_train, save=save_plot)
@@ -142,7 +142,7 @@ class SupervisedModelTrainer(object):
         trained_model = self._advanced_trainer.logistic_regression(randomized_search=False)
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         return trained_model
 
@@ -159,7 +159,7 @@ class SupervisedModelTrainer(object):
         trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         return trained_model
 
@@ -187,7 +187,7 @@ class SupervisedModelTrainer(object):
                                                                                      trained_model.algorithm_name))
 
         # Display the model metrics
-        print_training_results(model_name, trained_model)
+        trained_model.print_training_results()
 
         return trained_model
 
@@ -195,33 +195,3 @@ class SupervisedModelTrainer(object):
     def advanced_features(self):
         """ Returns the underlying AdvancedSupervisedModelTrainer instance. For advanced users only. """
         return self._advanced_trainer
-
-
-def print_training_results(model_name, trained_model):
-    """
-    Print metrics, stats and hyperparameters of a training.
-    
-    Args:
-        model_name (str): Name of the model 
-        t0 (float): Training start time
-        trained_model (TrainedSupervisedModel): The trained supervised model
-    """
-    train_time = trained_model._train_time
-    print('    Trained a {} model in {} seconds'.format(model_name, train_time))
-
-    hyperparameters = trained_model.best_hyperparameters
-    if hyperparameters is None:
-        hyperparameters = 'N/A: No hyperparameter search was performed'
-    print('Best hyperparameters found are:\n    {}'.format(hyperparameters))
-
-    if trained_model.is_classification:
-        print('{} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
-            model_name,
-            trained_model.metrics['accuracy'],
-            trained_model.metrics['roc_auc'],
-            trained_model.metrics['pr_auc']))
-    elif trained_model.is_regression:
-        print('{} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
-            model_name,
-            trained_model.metrics['mean_squared_error'],
-            trained_model.metrics['mean_absolute_error']))
