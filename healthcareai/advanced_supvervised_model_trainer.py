@@ -444,10 +444,8 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_predictions=test_set_predictions,
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
-            metric_by_name=self.metrics(algorithm))
-
-        # Save the training time to the trained model
-        trained_supervised_model._train_time = round(time.time() - t0, 2)
+            metric_by_name=self.metrics(algorithm),
+            training_time=round(time.time() - t0, 2))
 
         return trained_supervised_model
 
