@@ -40,7 +40,7 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
-                 training_time = "Not Recorded"):
+                 training_time = None):
         """
         Create an instance of a TrainedSupervisedModel
         
@@ -56,7 +56,7 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
-            training_time (float): The time it took to train the model
+            training_time (float): The time in seconds it took to train the model
         """
         self.model = model
         self.feature_model = feature_model
@@ -69,7 +69,7 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
-        self._train_time = training_time
+        self.train_time = training_time
 
     @property
     def algorithm_name(self):
@@ -517,7 +517,7 @@ class TrainedSupervisedModel(object):
         print('{} Training Results:'.format(self.algorithm_name))
         print('- Training time:')
         print('    Trained the {} model in {} seconds'.format(self.algorithm_name,
-                                                            self._train_time))
+                                                            round(self.train_time, 2)))
 
         hyperparameters = self.best_hyperparameters
         if hyperparameters is None:

@@ -443,7 +443,7 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
-            training_time=round(time.time() - t0, 2))
+            training_time=time.time() - t0)
 
         return trained_supervised_model
 
