@@ -48,22 +48,7 @@ class SupervisedModelTrainer(object):
         # Save the original dataframe columns to the parent class
         self._advanced_trainer.pre_dummified_columns = dataframe.columns.values
 
-        # Identify the categorical columns
-        categorical_columns = dataframe.select_dtypes(include=[object, 'category']).columns.copy()
-        for column in categorical_columns:
-            if column in [predicted_column, grain_column]:
-                categorical_columns = categorical_columns.drop(column)
-
-        # Get the distribution of values for each categorical column
-        categorical_column_info = {}
-        for column in categorical_columns:
-            value_distribution = dataframe[column].value_counts(sort=False)
-            # Sort by the index to ensure the correct dummy is dropped in get_dummies(drop_first=True)
-            value_distribution.sort_index(inplace=True)
-            value_distribution *= 1 / value_distribution.values.sum()
-            categorical_column_info[column] = value_distribution
-
-        self._advanced_trainer.categorical_column_info = categorical_column_info
+        self._advanced_trainer.categorical_column_info = self.categorical_column_info(dataframe)
 
     @property
     def clean_dataframe(self):
@@ -210,6 +195,31 @@ class SupervisedModelTrainer(object):
     def advanced_features(self):
         """ Returns the underlying AdvancedSupervisedModelTrainer instance. For advanced users only. """
         return self._advanced_trainer
+
+    def categorical_column_info(self, dataframe):
+        """ Identify the categorical columns and return a dictionary mapping column names to a Pandas dataframe whose
+        index consists of categorical levels and whose values are the frequency at which a level occurs.
+
+        Returns:
+            dict: a dictionary mapping categorical columns to Pandas dataframes containing the levels and their
+            relative frequencies
+        """
+        # Identify the categorical columns
+        categorical_columns = dataframe.select_dtypes(include=[object, 'category']).columns.copy()
+        for column in categorical_columns:
+            if column in [self.predicted_column, self.grain_column]:
+                categorical_columns = categorical_columns.drop(column)
+
+        # Get the distribution of values for each categorical column
+        column_info = {}
+        for column in categorical_columns:
+            value_distribution = dataframe[column].value_counts(sort=False)
+            # Sort by the index to ensure the correct dummy is dropped in get_dummies(drop_first=True)
+            value_distribution.sort_index(inplace=True)
+            value_distribution *= 1 / value_distribution.values.sum()
+            column_info[column] = value_distribution
+
+        return column_info
 
 
 def print_training_timer(model_name, start_timestamp):
