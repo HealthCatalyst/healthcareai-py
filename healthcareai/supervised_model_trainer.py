@@ -22,10 +22,8 @@ class SupervisedModelTrainer(object):
             grain_column (str): The name of the grain column
             verbose (bool): Set to true for verbose output. Defaults to False.
         """
-        self.grain_column = grain_column,
-        self.predicted_column = predicted_column,
-        self.grain_column = grain_column,
-        self.grain_column = grain_column,
+        self.predicted_column = predicted_column
+        self.grain_column = grain_column
 
         # Build the pipeline
         # TODO This pipeline may drop nulls in prediction rows if impute=False

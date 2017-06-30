@@ -208,9 +208,7 @@ class AdvancedSupervisedModelTrainer(object):
             performance_metrics = hcai_model_evaluation.calculate_binary_classification_metrics(
                 trained_sklearn_estimator,
                 self.X_test,
-                self.y_test,
-
-            )
+                self.y_test)
         elif self.model_type is 'regression':
             performance_metrics = hcai_model_evaluation.calculate_regression_metrics(trained_sklearn_estimator,
                                                                                      self.X_test, self.y_test)

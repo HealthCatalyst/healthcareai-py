@@ -145,8 +145,8 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
 
         # Sort each because column order matters for equality checks
-        expected = expected.sort(axis=1)
-        result = result.sort(axis=1)
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
 
         self.assertTrue(result.equals(expected))
 
@@ -167,8 +167,8 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
 
         # Sort each because column order matters for equality checks
-        expected = expected.sort(axis=1)
-        result = result.sort(axis=1)
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
 
         self.assertTrue(result.equals(expected))
 
@@ -189,8 +189,8 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
         result = transformers.DataFrameConvertColumnToNumeric('integer_strings').fit_transform(df)
 
         # Sort each because column order matters for equality checks
-        expected = expected.sort(axis=1)
-        result = result.sort(axis=1)
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
 
         self.assertTrue(result.equals(expected))
 
@@ -207,8 +207,8 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
         result = transformers.DataFrameConvertColumnToNumeric('numeric').fit_transform(df)
 
         # Sort each because column order matters for equality checks
-        expected = expected.sort(axis=1)
-        result = result.sort(axis=1)
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
 
         self.assertTrue(result.equals(expected))
 
