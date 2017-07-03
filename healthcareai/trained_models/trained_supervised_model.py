@@ -39,7 +39,8 @@ class TrainedSupervisedModel(object):
                  test_set_predictions,
                  test_set_class_labels,
                  test_set_actual,
-                 metric_by_name):
+                 metric_by_name,
+                 training_time = None):
         """
         Create an instance of a TrainedSupervisedModel
         
@@ -55,6 +56,7 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
+            training_time (float): The time in seconds it took to train the model
         """
         self.model = model
         self.feature_model = feature_model
@@ -67,6 +69,7 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
+        self.train_time = training_time
 
     @property
     def algorithm_name(self):
@@ -505,6 +508,33 @@ class TrainedSupervisedModel(object):
         # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
             raise HealthcareAIError('This function only runs on a binary classification model.')
+
+    def print_training_results(self):
+        """
+        Print metrics, stats and hyperparameters of a trained supervised model including the model name, training time,
+        hyperparameters, and performance metrics.
+        """
+        print('{} Training Results:'.format(self.algorithm_name))
+        print('- Training time:')
+        print('    Trained the {} model in {} seconds'.format(self.algorithm_name,
+                                                            round(self.train_time, 2)))
+
+        hyperparameters = self.best_hyperparameters
+        if hyperparameters is None:
+            hyperparameters = 'N/A: No hyperparameter search was performed'
+        print('- Best hyperparameters found were:\n    {}'.format(hyperparameters))
+
+        if self._model_type == 'classification':
+            print('- {} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
+                self.algorithm_name,
+                self.metrics['accuracy'],
+                self.metrics['roc_auc'],
+                self.metrics['pr_auc']))
+        elif self._model_type == 'regression':
+            print('- {} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
+                self.algorithm_name,
+                self.metrics['mean_squared_error'],
+                self.metrics['mean_absolute_error']))
 
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
