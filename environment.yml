@@ -1,5 +1,5 @@
 name: hcconda
-channels: !!python/tuple
+channels:
 - defaults
 dependencies:
 - _license=1.1=py35_1
@@ -11,7 +11,7 @@ dependencies:
 - anaconda-navigator=1.3.1=py35_0
 - argcomplete=1.0.0=py35_1
 - astroid=1.4.7=py35_0
-- astropy=1.2.1=np111py35_0
+- astropy=1.3.3=np112py35_0
 - babel=2.3.4=py35_0
 - backports=1.0=py35_0
 - beautifulsoup4=4.5.1=py35_0
@@ -19,7 +19,7 @@ dependencies:
 - blaze=0.10.1=py35_0
 - bokeh=0.12.2=py35_0
 - boto=2.42.0=py35_0
-- bottleneck=1.1.0=np111py35_0
+- bottleneck=1.2.1=np112py35_0
 - bzip2=1.0.6=vc14_3
 - cffi=1.7.0=py35_0
 - chest=0.2.3=py35_0
@@ -52,7 +52,7 @@ dependencies:
 - get_terminal_size=1.0.0=py35_0
 - gevent=1.1.2=py35_0
 - greenlet=0.4.10=py35_0
-- h5py=2.6.0=np111py35_2
+- h5py=2.7.0=np112py35_0
 - hdf5=1.8.15.1=vc14_4
 - heapdict=1.0.0=py35_1
 - icu=57.1=vc14_0
@@ -74,16 +74,16 @@ dependencies:
 - jupyter_core=4.2.0=py35_0
 - lazy-object-proxy=1.2.1=py35_0
 - libdynd=0.7.2=0
-- libpng=1.6.22=vc14_0
+- libpng=1.6.27=vc14_0
 - libtiff=4.0.6=vc14_2
-- llvmlite=0.13.0=py35_0
+- llvmlite=0.18.0=py35_0
 - locket=0.2.0=py35_1
 - lxml=3.6.4=py35_0
 - markupsafe=0.23=py35_2
-- matplotlib=1.5.3=np111py35_0
+- matplotlib=2.0.2=np112py35_0
 - menuinst=1.4.1=py35_0
 - mistune=0.7.3=py35_0
-- mkl=11.3.3=1
+- mkl=2017.0.1=0
 - mkl-service=1.1.2=py35_2
 - mpmath=0.19=py35_1
 - multipledispatch=0.4.8=py35_0
@@ -97,13 +97,13 @@ dependencies:
 - nltk=3.2.1=py35_0
 - nose=1.3.7=py35_1
 - notebook=4.2.3=py35_0
-- numba=0.28.1=np111py35_0
-- numexpr=2.6.1=np111py35_0
-- numpy=1.11.2=py35_0
+- numba=0.33.0=np112py35_0
+- numexpr=2.6.2=np112py35_0
+- numpy=1.12.1=py35_0
 - odo=0.5.0=py35_1
 - openpyxl=2.3.2=py35_0
 - openssl=1.0.2j=vc14_0
-- pandas=0.19.1=np111py35_0
+- pandas=0.20.2=np112py35_0
 - partd=0.3.6=py35_0
 - path.py=8.2.1=py35_0
 - pathlib2=2.1.0=py35_0
@@ -129,11 +129,12 @@ dependencies:
 - pyopenssl=16.0.0=py35_0
 - pyparsing=2.1.4=py35_0
 - pyqt=5.6.0=py35_0
-- pytables=3.2.2=np111py35_4
+- pytables=3.2.2=np112py35_4
 - pytest=2.9.2=py35_0
 - python=3.5.2=0
 - python-dateutil=2.5.3=py35_0
 - pytz=2016.6.1=py35_0
+- pywavelets=0.5.2=np112py35_0
 - pywin32=220=py35_1
 - pyyaml=3.12=py35_0
 - pyzmq=15.4.0=py35_0
@@ -143,9 +144,9 @@ dependencies:
 - qtpy=1.1.2=py35_0
 - requests=2.11.1=py35_0
 - rope=0.9.4=py35_1
-- scikit-image=0.12.3=np111py35_1
-- scikit-learn=0.18=np111py35_0
-- scipy=0.18.1=np111py35_0
+- scikit-image=0.13.0=np112py35_0
+- scikit-learn=0.18.1=np112py35_1
+- scipy=0.19.0=np112py35_0
 - setuptools=27.2.0=py35_1
 - simplegeneric=0.8.1=py35_1
 - singledispatch=3.4.0.3=py35_0
@@ -156,7 +157,7 @@ dependencies:
 - sphinx=1.4.6=py35_0
 - spyder=3.0.0=py35_0
 - sqlalchemy=1.0.13=py35_0
-- statsmodels=0.6.1=np111py35_1
+- statsmodels=0.8.0=np112py35_0
 - sympy=1.0=py35_0
 - tk=8.5.18=vc14_0
 - toolz=0.8.0=py35_0
@@ -190,5 +191,5 @@ dependencies:
   - rope-py3k==0.9.4.post1
   - tables==3.2.2
   - win-unicode-console==0.5
-prefix: C:\Users\david.healey\AppData\Local\Continuum\Anaconda3\envs\hcconda
+prefix: C:\ProgramData\Anaconda3\envs\hcconda
 
