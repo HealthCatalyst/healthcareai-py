@@ -3,6 +3,12 @@ import numpy as np
 import pandas as pd
 import time
 
+from sklearn.metrics import classification_report, confusion_matrix
+
+np.random.seed(123)
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -13,7 +19,8 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
 
-from healthcareai.common.randomized_search import get_algorithm
+from healthcareai.common.randomized_search import get_algorithm, \
+    get_algorithm_neural_network
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
@@ -212,7 +219,8 @@ class AdvancedSupervisedModelTrainer(object):
         elif self.model_type is 'regression':
             performance_metrics = hcai_model_evaluation.calculate_regression_metrics(trained_sklearn_estimator,
                                                                                      self.X_test, self.y_test)
-
+        # Shufang testing:
+        print(performance_metrics)
         return performance_metrics
 
     def logistic_regression(self,
@@ -397,6 +405,63 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
+    def create_nn(self, activation='relu', neurons=22, optimizer='adam', scoring_metric='mae'):
+        algorithm = Sequential()
+        algorithm.add(Dense(neurons, input_dim=22, activation=activation))
+        algorithm.add(Dense(neurons, activation=activation))
+        algorithm.add(Dense(1, activation='sigmoid'))
+        algorithm.compile(loss='binary_crossentropy',
+                          # can also use one hot encoding with categorical_crossentropy
+                          # for binary: binary_crossentropy sigmoid
+                          # for multiclass: softmax sparse_categorical_crossentropy
+                          optimizer=optimizer,
+                          metrics=[scoring_metric])
+        return algorithm
+
+    def neural_network_classifier(self,
+                                  scoring_metric='roc_auc',
+                                  hyperparameter_grid=None,
+                                  randomized_search=True,
+                                  number_iteration_samples=3):
+        """
+        Tune the neural network using grid search over the parameters.
+        Tuning is performed by cross validation.
+
+        Args:
+
+        """
+        self.validate_classification('Neural Network Classifier')
+
+        # Create a neural network architecture
+        #TODO customize input/output dims
+        algorithm = KerasClassifier(build_fn=self.create_nn, verbose=0)
+
+        #TODO change hyperparameter grid
+        if hyperparameter_grid is None:
+            # activation = ['relu']
+            # # neurons = calculate_nn_number_of_neurons_hyperparameter(
+            # #   X_train.shape[1], 'classification')
+            # neurons = [22]
+            # batch_size = [3]
+            # epochs = [100]
+            # optimizer = ['adam']
+
+            hyperparameter_grid = dict(activation=['relu'],
+                                       neurons=[10],
+                                       batch_size=[5],
+                                       epochs=[100],
+                                       optimizer=['adam'])
+
+        algorithm = get_algorithm_neural_network(algorithm,
+                                                 scoring_metric,
+                                                 hyperparameter_grid,
+                                                 randomized_search,
+                                                 number_iteration_samples=1)
+
+        trained_supervised_model = self._create_trained_supervised_model_nn(algorithm)
+
+        return trained_supervised_model
+
     def _create_trained_supervised_model(self, algorithm, include_factor_model=True):
         """
         Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
@@ -437,6 +502,82 @@ class AdvancedSupervisedModelTrainer(object):
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
             column_names=self.X_test.columns.values,
+            grain_column=self.grain_column,
+            prediction_column=self.predicted_column,
+            test_set_predictions=test_set_predictions,
+            test_set_class_labels=test_set_class_labels,
+            test_set_actual=self.y_test,
+            metric_by_name=self.metrics(algorithm),
+            training_time=time.time() - t0)
+
+        return trained_supervised_model
+
+    def _create_trained_supervised_model_nn(self, algorithm, include_factor_model=True):
+        """
+        Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
+
+        Args:
+            algorithm (sklearn.base.BaseEstimator): The scikit learn algorithm, ready to fit.
+            include_factor_model (bool): Trains a model for top factors. Defaults to True
+
+        Returns:
+            TrainedSupervisedModel: a TrainedSupervisedModel
+        """
+        # Get time before model training
+        t0 = time.time()
+
+        ## testing
+        '''
+        from sklearn.preprocessing import Normalizer
+        scaler = Normalizer().fit(self.x_train)
+        self.x_train = scaler.transform(self.x_train)
+        self.X_test = scaler.transform(self.X_test)
+        ''' 
+        column_names = self.X_test.columns.values
+        self.x_train = np.array(self.x_train)
+        self.X_test = np.array(self.X_test)
+        self.y_train = np.array(self.y_train)
+        self.y_test = np.array(self.y_test)
+        print(self.x_train[:10])
+
+        print('start training...')
+        result = algorithm.fit(self.x_train, self.y_train)
+        print('\nBest trained hyper-parameter set is:\n')
+        print(result.best_params_)
+        print('\nBest training accuracy is:\n')
+        print(result.best_score_)
+        print('\nHyper-parameter tuning has completed. \n')
+
+        # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
+        # test set is saved inside the object as well as the calculated thresholds.
+        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
+        # PEP 8
+        test_set_predictions = None
+        test_set_class_labels = None
+        if self.is_classification:
+            # Save both the probabilities and labels
+            test_set_predictions = algorithm.predict_proba(self.X_test)
+            test_set_class_labels = algorithm.predict(self.X_test)
+            print('test_set_class_labels:', test_set_class_labels)
+            print('Classification report:')
+            print(classification_report(self.y_test, test_set_class_labels))
+            print('Confusion matrix:')
+            print(confusion_matrix(self.y_test, test_set_class_labels))
+            print('predict_proba ends.')
+        elif self.is_regression:
+            test_set_predictions = algorithm.predict(self.X_test)
+
+        if include_factor_model:
+            factor_model = hcai_factors.prepare_fit_model_for_factors(self.model_type, self.x_train, self.y_train)
+        else:
+            factor_model = None
+
+        trained_supervised_model = hcai_tsm.TrainedSupervisedModel(
+            model=algorithm,
+            feature_model=factor_model,
+            fit_pipeline=self.pipeline,
+            model_type=self.model_type,
+            column_names=column_names,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
             test_set_predictions=test_set_predictions,
