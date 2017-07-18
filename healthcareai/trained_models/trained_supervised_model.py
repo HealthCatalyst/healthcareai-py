@@ -40,7 +40,7 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
-                 pre_dummified_columns=None,
+                 colnames_pre_pipeline=None,
                  categorical_column_info = None):
         """
         Create an instance of a TrainedSupervisedModel
@@ -57,7 +57,8 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
-            pre_dummified_columns (list): List of column names used as features before dummification
+            colnames_pre_pipeline (list): List of column names used as features before running the data preparation
+                pipeline (e.g. before dummification)
             categorical_column_info (dict): A dictionary mapping the name of each (pre-dummified) categorical column
                 to a pandas.Series containing whose index consists of the different levels of the category and whose
                 values consist of the frequencies with which these levels occur in the training data
@@ -73,7 +74,7 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
-        self.pre_dummified_columns = pre_dummified_columns
+        self.colnames_pre_pipeline = colnames_pre_pipeline
         self.categorical_column_info = categorical_column_info
 
     @property
@@ -198,11 +199,11 @@ class TrainedSupervisedModel(object):
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
             df2 = dataframe.copy()
-            if self.pre_dummified_columns is not None:
-                df2 = df2[self.pre_dummified_columns]
+            if self.colnames_pre_pipeline is not None:
+                df2 = df2[self.colnames_pre_pipeline]
 
-            # Change the dtype of the categorical columns in the prediction dataframe to 'category' with levels determined
-            # by the training data
+            # Change the dtype of the categorical columns in the prediction dataframe to 'category' with levels
+            # determined by the training data before running the data preparation pipeline
             if self.categorical_column_info is not None:
                 for column in self.categorical_column_info:
                     col_categories = self.categorical_column_info[column].index
@@ -224,8 +225,8 @@ class TrainedSupervisedModel(object):
             required_columns = self.column_names
             found_columns = list(dataframe.columns)
             # If a pre-dummified dataset is expected as the input, list the pre-dummified columns instead of the dummies
-            if not self.pre_dummified_columns is None:
-                required_columns = self.pre_dummified_columns
+            if not self.colnames_pre_pipeline is None:
+                required_columns = self.colnames_pre_pipeline
             error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
             which will be ignored, but you must pass in all the required fields.\n

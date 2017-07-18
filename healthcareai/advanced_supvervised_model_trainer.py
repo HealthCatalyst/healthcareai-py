@@ -24,7 +24,8 @@ class AdvancedSupervisedModelTrainer(object):
     metrics.
     """
 
-    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
+    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False,
+                 colnames_pre_pipeline = None):
         """
         Creates an instance of AdvancedSupervisedModelTrainer.
         
@@ -34,6 +35,9 @@ class AdvancedSupervisedModelTrainer(object):
             predicted_column (str): The name of the predicted/target/label column
             grain_column (str): The grain column
             verbose (bool): Verbose output
+            colnames_pre_pipeline (): The column names of the dataframe before going through the pipeline (e.g.
+                before dummification). These are used to check that the data contains all the necessary columns if
+                pre-pipeline data is going to be fed to the trained model.
         """
         # Validate model type is sane
         if model_type not in SUPPORTED_MODEL_TYPES:
@@ -49,7 +53,7 @@ class AdvancedSupervisedModelTrainer(object):
         self.y_train = None
         self.y_test = None
         self.pipeline = None
-        self.pre_dummified_columns = None
+        self.colnames_pre_pipeline = colnames_pre_pipeline
         self.categorical_column_info = None
 
         self._console_log(
@@ -441,7 +445,7 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
-            pre_dummified_columns = self.pre_dummified_columns,
+            colnames_pre_pipeline = self.colnames_pre_pipeline,
             categorical_column_info = self.categorical_column_info)
 
         return trained_supervised_model

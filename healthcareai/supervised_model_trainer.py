@@ -37,16 +37,14 @@ class SupervisedModelTrainer(object):
 
         # Instantiate the advanced class
         self._advanced_trainer = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column,
-                                                                grain_column, verbose)
+                                                                grain_column, verbose,
+                                                                colnames_pre_pipeline = dataframe.columns.values)
 
         # Save the pipeline to the parent class
         self._advanced_trainer.pipeline = pipeline
 
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
-
-        # Save the original dataframe columns to the parent class
-        self._advanced_trainer.pre_dummified_columns = dataframe.columns.values
 
         self._advanced_trainer.categorical_column_info = self.categorical_column_info(dataframe)
 
