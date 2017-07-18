@@ -19,8 +19,7 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
 
-from healthcareai.common.randomized_search import get_algorithm, \
-    get_algorithm_neural_network
+from healthcareai.common.randomized_search import get_algorithm, get_algorithm_neural_network
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
@@ -52,6 +51,7 @@ class AdvancedSupervisedModelTrainer(object):
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.verbose = verbose
+        self.columns = None
         self.x_train = None
         self.X_test = None
         self.y_train = None
@@ -117,6 +117,9 @@ class AdvancedSupervisedModelTrainer(object):
         """
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
+        # Save off a copy of the column names before converting to a numpy array
+        self.columns = X.columns.values
+        X = X.as_matrix()
 
         self.x_train, self.X_test, self.y_train, self.y_test = sklearn.model_selection.train_test_split(
             X, y, test_size=.20, random_state=random_seed)
@@ -350,7 +353,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
             number_iteration_samples = 5
@@ -389,7 +392,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
             number_iteration_samples = 5
@@ -458,7 +461,7 @@ class AdvancedSupervisedModelTrainer(object):
                                                  randomized_search,
                                                  number_iteration_samples=1)
 
-        trained_supervised_model = self._create_trained_supervised_model_nn(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -501,7 +504,7 @@ class AdvancedSupervisedModelTrainer(object):
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
-            column_names=self.X_test.columns.values,
+            column_names=self.columns,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
             test_set_predictions=test_set_predictions,
@@ -577,7 +580,7 @@ class AdvancedSupervisedModelTrainer(object):
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
-            column_names=column_names,
+            column_names=self.columns,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
             test_set_predictions=test_set_predictions,
