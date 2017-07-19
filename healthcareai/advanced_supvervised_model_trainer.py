@@ -19,8 +19,7 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
 
-from healthcareai.common.randomized_search import get_algorithm, \
-    get_algorithm_neural_network
+from healthcareai.common.randomized_search import get_algorithm, get_algorithm_neural_network
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
