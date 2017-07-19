@@ -192,9 +192,12 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the columns the model expects.
         """
 
-        # Add response column if not included in prediction data
-        if self.prediction_column not in dataframe.columns.values:
-            dataframe[self.prediction_column] = np.NaN
+        # We want to be able to make predictions on new data (without labels) so don't want to insist that the
+        # prediction column be present in the new data.  To get around this, add the prediction columns filled with
+        # NaNs.  This column should be dropped when the dataframe is run through the pipeline.
+        if self.prediction_column not in dataframe.columns.values \
+               and self.prediction_column in self.colnames_pre_pipeline:
+           dataframe[self.prediction_column] = np.NaN
 
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
