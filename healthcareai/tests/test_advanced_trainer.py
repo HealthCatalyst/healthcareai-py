@@ -78,6 +78,37 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
     def test_classification_trainer_linear_regression_raises_error(self):
         self.assertRaises(HealthcareAIError, self.classification_trainer.linear_regression)
 
+class TestNeuralNetworkClassificaton(unittest.TestCase):
+    def setUp(self):
+        df = hcai_datasets.load_diabetes()
+
+        # Drop uninformative columns
+        df.drop(['PatientID'], axis=1, inplace=True)
+
+        np.random.seed(42)
+        clean_df = pipelines.full_pipeline(
+            CLASSIFICATION,
+            CLASSIFICATION_PREDICTED_COLUMN,
+            GRAIN_COLUMN_NAME,
+            impute=True).fit_transform(df)
+
+        self.classification_trainer = AdvancedSupervisedModelTrainer(
+            clean_df,
+            CLASSIFICATION,
+            CLASSIFICATION_PREDICTED_COLUMN,
+            data_scaling=True)
+
+        self.classification_trainer.train_test_split(random_seed=0)
+
+    def test_neural_network_tuning(self):
+        nn = self.classification_trainer.neural_network_classifier(randomized_search=True)
+        self.assertIsInstance(nn, TrainedSupervisedModel)
+        test_helpers.assertBetween(self, 0.5, 0.8, nn.metrics['roc_auc'])
+
+    def test_neural_network_no_tuning(self):
+        nn = self.classification_trainer.neural_network_classifier(randomized_search=False)
+        self.assertIsInstance(nn, TrainedSupervisedModel)
+        test_helpers.assertBetween(self, 0.5, 0.8, nn.metrics['roc_auc'])
 
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
