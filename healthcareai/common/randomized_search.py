@@ -46,8 +46,7 @@ def get_algorithm_neural_network(estimator,
                                  scoring_metric,
                                  hyperparameter_grid,
                                  randomized_search,
-                                 number_iteration_samples=10,
-                                 **non_randomized_estimator_kwargs):
+                                 number_iteration_samples=1):
     """Get an estimator for neural network"""
     if randomized_search:
         algorithm = RandomizedSearchCV(estimator=estimator,
@@ -58,6 +57,6 @@ def get_algorithm_neural_network(estimator,
                                        n_jobs=1)
 
     else:
-        algorithm = estimator(**non_randomized_estimator_kwargs)
+        algorithm = estimator
 
     return algorithm
