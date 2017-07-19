@@ -23,15 +23,22 @@ if __name__ == "__main__":
         model_type='classification',
         predicted_column='NSP',
         grain_column='id',
+        data_scaling=True,
         verbose=False)
 
     # Split the data into training and testing sets
     classification_trainer.train_test_split()
 
     # Train the neural network classifier with randomized search
-    trained_nn = classification_trainer.neural_network_classifier()
+    trained_nn = classification_trainer.neural_network_classifier(randomized_search=True)
 
     # Create ROC/PR curve
     trained_nn.roc_plot()
     trained_nn.pr_plot()
 
+    # Train the neural network classifier without randomized search
+    trained_nn = classification_trainer.neural_network_classifier(randomized_search=False)
+
+    # Create ROC/PR curve
+    trained_nn.roc_plot()
+    trained_nn.pr_plot()
