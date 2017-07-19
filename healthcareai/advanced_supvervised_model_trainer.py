@@ -32,7 +32,7 @@ class AdvancedSupervisedModelTrainer(object):
     metrics.
     """
 
-    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, verbose=False):
+    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, data_scaling=False, verbose=False):
         """
         Creates an instance of AdvancedSupervisedModelTrainer.
         
@@ -52,11 +52,13 @@ class AdvancedSupervisedModelTrainer(object):
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.verbose = verbose
+        self.columns = None
         self.x_train = None
         self.X_test = None
         self.y_train = None
         self.y_test = None
         self.pipeline = None
+        self.data_scaling = data_scaling
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
@@ -118,8 +120,22 @@ class AdvancedSupervisedModelTrainer(object):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
+        # Save off a copy of the column names before converting to a numpy array
+        self.columns = X.columns.values
+
         self.x_train, self.X_test, self.y_train, self.y_test = sklearn.model_selection.train_test_split(
             X, y, test_size=.20, random_state=random_seed)
+
+        # Scale the x variables, turn this on when using neural network
+        if self.data_scaling:
+            names = list(self.columns)
+            is_numeric = np.vectorize(lambda x: np.issubdtype(x, np.number))
+            numeric_col_bool = list(is_numeric(X.dtypes))
+            numeric_col = [i for (i, v) in zip(names, numeric_col_bool) if v]
+            self.feature_scaling(numeric_col)
+
+        self.x_train = np.array(self.x_train)
+        self.X_test = np.array(self.X_test)
 
         self._console_log('\nShape of X_train: {}\ny_train: {}\nX_test: {}\ny_test: {}'.format(
             self.x_train.shape,
@@ -219,8 +235,7 @@ class AdvancedSupervisedModelTrainer(object):
         elif self.model_type is 'regression':
             performance_metrics = hcai_model_evaluation.calculate_regression_metrics(trained_sklearn_estimator,
                                                                                      self.X_test, self.y_test)
-        # Shufang testing:
-        print(performance_metrics)
+
         return performance_metrics
 
     def logistic_regression(self,
@@ -350,7 +365,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
             number_iteration_samples = 5
@@ -389,7 +404,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.X_test.columns),
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
             number_iteration_samples = 5
@@ -405,21 +420,32 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
-    def create_nn(self, activation='relu', neurons=22, optimizer='adam', scoring_metric='mae'):
-        algorithm = Sequential()
-        algorithm.add(Dense(neurons, input_dim=22, activation=activation))
-        algorithm.add(Dense(neurons, activation=activation))
-        algorithm.add(Dense(1, activation='sigmoid'))
-        algorithm.compile(loss='binary_crossentropy',
+    def create_nn(self,
+                  neurons_num=None,
+                  activation='relu',
+                  optimizer='adam',
+                  scoring_metric='accuracy'):
+
+        # Calculate number of neurons
+        input_dim = self.x_train.shape[1]
+        if neurons_num is None:
+            neurons_num = (input_dim + 2) // 2
+
+        # Create a neural network architecture
+        neuralnet = Sequential()
+        neuralnet.add(Dense(input_dim, input_dim=input_dim, activation=activation))
+        neuralnet.add(Dense(neurons_num, activation=activation))
+        neuralnet.add(Dense(2, activation='softmax'))
+        neuralnet.compile(loss='sparse_categorical_crossentropy',
                           # can also use one hot encoding with categorical_crossentropy
                           # for binary: binary_crossentropy sigmoid
                           # for multiclass: softmax sparse_categorical_crossentropy
                           optimizer=optimizer,
                           metrics=[scoring_metric])
-        return algorithm
+        return neuralnet
 
     def neural_network_classifier(self,
-                                  scoring_metric='roc_auc',
+                                  scoring_metric='accuracy',
                                   hyperparameter_grid=None,
                                   randomized_search=True,
                                   number_iteration_samples=3):
@@ -432,33 +458,28 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Neural Network Classifier')
 
-        # Create a neural network architecture
-        #TODO customize input/output dims
-        algorithm = KerasClassifier(build_fn=self.create_nn, verbose=0)
+        # Create a wrapper for sklearn
+        neuralnet = KerasClassifier(build_fn=self.create_nn, verbose=0)
 
         #TODO change hyperparameter grid
         if hyperparameter_grid is None:
-            # activation = ['relu']
-            # # neurons = calculate_nn_number_of_neurons_hyperparameter(
-            # #   X_train.shape[1], 'classification')
-            # neurons = [22]
-            # batch_size = [3]
-            # epochs = [100]
-            # optimizer = ['adam']
+            activation = ['relu']
+            batch_size = [5]
+            epochs = [20]
+            optimizer = ['adam']
 
-            hyperparameter_grid = dict(activation=['relu'],
-                                       neurons=[10],
-                                       batch_size=[5],
-                                       epochs=[100],
-                                       optimizer=['adam'])
+            hyperparameter_grid = dict(activation=activation,
+                                       batch_size=batch_size,
+                                       epochs=epochs,
+                                       optimizer=optimizer)
 
-        algorithm = get_algorithm_neural_network(algorithm,
+        algorithm = get_algorithm_neural_network(neuralnet,
                                                  scoring_metric,
                                                  hyperparameter_grid,
                                                  randomized_search,
                                                  number_iteration_samples=1)
 
-        trained_supervised_model = self._create_trained_supervised_model_nn(algorithm)
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
         return trained_supervised_model
 
@@ -501,83 +522,7 @@ class AdvancedSupervisedModelTrainer(object):
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
-            column_names=self.X_test.columns.values,
-            grain_column=self.grain_column,
-            prediction_column=self.predicted_column,
-            test_set_predictions=test_set_predictions,
-            test_set_class_labels=test_set_class_labels,
-            test_set_actual=self.y_test,
-            metric_by_name=self.metrics(algorithm),
-            training_time=time.time() - t0)
-
-        return trained_supervised_model
-
-    def _create_trained_supervised_model_nn(self, algorithm, include_factor_model=True):
-        """
-        Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
-
-        Args:
-            algorithm (sklearn.base.BaseEstimator): The scikit learn algorithm, ready to fit.
-            include_factor_model (bool): Trains a model for top factors. Defaults to True
-
-        Returns:
-            TrainedSupervisedModel: a TrainedSupervisedModel
-        """
-        # Get time before model training
-        t0 = time.time()
-
-        ## testing
-        '''
-        from sklearn.preprocessing import Normalizer
-        scaler = Normalizer().fit(self.x_train)
-        self.x_train = scaler.transform(self.x_train)
-        self.X_test = scaler.transform(self.X_test)
-        ''' 
-        column_names = self.X_test.columns.values
-        self.x_train = np.array(self.x_train)
-        self.X_test = np.array(self.X_test)
-        self.y_train = np.array(self.y_train)
-        self.y_test = np.array(self.y_test)
-        print(self.x_train[:10])
-
-        print('start training...')
-        result = algorithm.fit(self.x_train, self.y_train)
-        print('\nBest trained hyper-parameter set is:\n')
-        print(result.best_params_)
-        print('\nBest training accuracy is:\n')
-        print(result.best_score_)
-        print('\nHyper-parameter tuning has completed. \n')
-
-        # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
-        # test set is saved inside the object as well as the calculated thresholds.
-        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
-        # PEP 8
-        test_set_predictions = None
-        test_set_class_labels = None
-        if self.is_classification:
-            # Save both the probabilities and labels
-            test_set_predictions = algorithm.predict_proba(self.X_test)
-            test_set_class_labels = algorithm.predict(self.X_test)
-            print('test_set_class_labels:', test_set_class_labels)
-            print('Classification report:')
-            print(classification_report(self.y_test, test_set_class_labels))
-            print('Confusion matrix:')
-            print(confusion_matrix(self.y_test, test_set_class_labels))
-            print('predict_proba ends.')
-        elif self.is_regression:
-            test_set_predictions = algorithm.predict(self.X_test)
-
-        if include_factor_model:
-            factor_model = hcai_factors.prepare_fit_model_for_factors(self.model_type, self.x_train, self.y_train)
-        else:
-            factor_model = None
-
-        trained_supervised_model = hcai_tsm.TrainedSupervisedModel(
-            model=algorithm,
-            feature_model=factor_model,
-            fit_pipeline=self.pipeline,
-            model_type=self.model_type,
-            column_names=column_names,
+            column_names=self.columns,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
             test_set_predictions=test_set_predictions,
