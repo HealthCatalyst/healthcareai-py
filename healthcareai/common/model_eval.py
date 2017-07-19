@@ -138,9 +138,6 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     roc = compute_roc(y_test, probability_predictions)
     pr = compute_pr(y_test, probability_predictions)
 
-    # Shufang testing
-    print('roc from calculate_binary_classification_metric', roc)
-
     # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
     return {'accuracy': accuracy, **roc, **pr}
 
