@@ -35,7 +35,7 @@ class AdvancedSupervisedModelTrainer(object):
             predicted_column (str): The name of the predicted/target/label column
             grain_column (str): The grain column
             verbose (bool): Verbose output
-            colnames_pre_pipeline (): The column names of the dataframe before going through the pipeline (e.g.
+            colnames_pre_pipeline (list): The column names of the dataframe before going through the pipeline (e.g.
                 before dummification). These are used to check that the data contains all the necessary columns if
                 pre-pipeline data is going to be fed to the trained model.
         """
