@@ -7,12 +7,30 @@ import pandas as pd
 import sklearn.metrics as skmetrics
 
 from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 DIAGONAL_LINE_COLOR = '#bbbbbb'
 DIAGONAL_LINE_STYLE = 'dotted'
 
+
+def compute_confusion_matrix(y_test, class_predictions):
+    """
+    Compute the confusion matrix for classifiers.
+
+    Args:
+
+    """
+    _validate_predictions_and_labels_are_equal_length(class_predictions, y_test)
+
+    # Compute confusion matrix
+    cmatrix = confusion_matrix(y_test, class_predictions)
+
+    # Get a list of classes in the test dataset
+    class_names = list(set(y_test))
+
+    return cmatrix, class_names
 
 def compute_roc(y_test, probability_predictions):
     """
@@ -112,7 +130,7 @@ def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     return result
 
 
-def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y_test):
+def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, binary=True):
     """
     Given a trained estimator, calculate metrics
 
@@ -130,17 +148,21 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
     _validate_predictions_and_labels_are_equal_length(x_test, y_test)
 
     # Get binary and probability classification predictions
-    binary_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
+    class_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
     probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
 
     # Calculate accuracy
-    accuracy = skmetrics.accuracy_score(y_test, binary_predictions)
-    roc = compute_roc(y_test, probability_predictions)
-    pr = compute_pr(y_test, probability_predictions)
+    accuracy = skmetrics.accuracy_score(y_test, class_predictions)
 
-    # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
-    return {'accuracy': accuracy, **roc, **pr}
-
+    # Select appropriate matrics for binary/multiclass classifications
+    cmatrix, _ = compute_confusion_matrix(y_test, class_predictions)
+    if binary:
+        roc = compute_roc(y_test, probability_predictions)
+        pr = compute_pr(y_test, probability_predictions)
+        # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
+        return {'accuracy': accuracy, 'cmatrix': cmatrix, **roc, **pr}
+    else:
+        return {'accuracy': accuracy, 'cmatrix': cmatrix}
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     """
