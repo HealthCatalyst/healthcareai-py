@@ -43,6 +43,7 @@ if __name__ == "__main__":
     # Create ROC/PR curve
     trained_nn.roc_plot()
     trained_nn.pr_plot()
+    trained_nn.confusion_matrix_plot()
 
     # Train the neural network classifier without randomized search
     trained_nn = classification_trainer.neural_network_classifier(randomized_search=False)
@@ -50,3 +51,4 @@ if __name__ == "__main__":
     # Create ROC/PR curve
     trained_nn.roc_plot()
     trained_nn.pr_plot()
+    trained_nn.confusion_matrix_plot()
