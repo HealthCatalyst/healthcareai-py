@@ -99,17 +99,17 @@ class TestTopFactors(unittest.TestCase):
                                           'mathematicians': ['Gauss', 'Euler', 'Gauss', 'Galois', 'Gauss',
                                                              'Euler', 'Grothendiek', 'Wiles', 'Hilbert', 'Hilbert'],
                                           'predicted': ['Y', 'Y', 'N', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'Y']},
-                                         columns = ['grain', 'letters', 'numeric', 'numbers_mod_3', 'float',
-                                                    'mathematicians', 'predicted'])
+                                         columns=['grain', 'letters', 'numeric', 'numbers_mod_3', 'float',
+                                                  'mathematicians', 'predicted'])
         # Set mathematician column to category and choose the order in which the levels are listed (default is
         # alphabetical)
         cls.get_levels_df['mathematicians'] = cls.get_levels_df['mathematicians'].astype('category',
-                                                                                         categories = ['Wiles',
-                                                                                                       'Euler',
-                                                                                                       'Grotheniek',
-                                                                                                       'Hilbert',
-                                                                                                       'Gauss']
-                                                                                         , ordered = False)
+                                                                                         categories=['Wiles',
+                                                                                                     'Euler',
+                                                                                                     'Grotheniek',
+                                                                                                     'Hilbert',
+                                                                                                     'Gauss'],
+                                                                                         ordered=False)
 
         # Reset random seed
         np.random.seed()
