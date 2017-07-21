@@ -20,7 +20,12 @@ def compute_confusion_matrix(y_test, class_predictions):
     Compute the confusion matrix for classifiers.
 
     Args:
+        y_test (list) : true label values corresponding to the predictions. Also length n.
+        class_predictions (list) : predicted classes coming from an ML algorithm of length n.
 
+    Returns:
+        cmatrix: a confusion matrix
+        class_names: names of the classes from the true label
     """
     _validate_predictions_and_labels_are_equal_length(class_predictions, y_test)
 
@@ -138,6 +143,7 @@ def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, 
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+        binary (bool): specify if the classification is binary (True) or multiclass (False)
 
     Returns:
         dict: A dictionary of metrics objects
