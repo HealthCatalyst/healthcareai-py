@@ -1,8 +1,10 @@
 import time
+import os
 from datetime import datetime
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import confusion_matrix
 
 import healthcareai.common.database_writers
 import healthcareai.common.file_io_utilities as hcai_io
@@ -12,6 +14,7 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.common.database_connections as hcai_db
 import healthcareai.common.database_validators as hcai_dbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
+from matplotlib import pyplot as plt
 
 
 class TrainedSupervisedModel(object):
@@ -390,10 +393,59 @@ class TrainedSupervisedModel(object):
         engine = hcai_db.build_sqlite_engine(database)
         healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
+    def print_confusion_matrix(self, cmatrix=None, class_names=None):
+
+        # calculate confusion matrix and the class names if they are not given
+        if cmatrix is None or class_names is None:
+            cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
+
+        col_width = max([len(str(x)) for x in class_names]+[5])
+
+        # Print header
+        print("     ", end='')
+        for class_name in class_names:
+            print("%{0}s".format(col_width) % class_name, end='')
+        print('\n')
+
+        # Print rows
+        for i, label in enumerate(class_names):
+            print("%{0}s".format(col_width) % label, end='')
+            for j in range(len(class_names)):
+                print("%{0}s".format(col_width) % cmatrix[i, j], end='')
+            print('\n')
+
+    def confusion_matrix_plot(self, cmatrix=None, class_names=None, save=True):
+
+        # calculate confusion matrix and the class names if they are not given
+        if cmatrix is None or class_names is None:
+            cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
+
+        plt.figure()
+        plt.imshow(cmatrix, interpolation='nearest', cmap=plt.get_cmap('YlOrRd'))
+        for i, arr in enumerate(cmatrix):
+            for j, val in enumerate(arr):
+                plt.text(j - 0.1, i + 0.1, val, fontsize=12)
+        plt.title('Confusion Matrix')
+        plt.colorbar()
+        tick_marks = np.arange(len(class_names))
+        plt.xticks(tick_marks, class_names, rotation=45)
+        plt.yticks(tick_marks, class_names)
+        plt.ylabel('True classes')
+        plt.xlabel('Predicted classes')
+
+        if save:
+            plt.savefig('ConfusionMatrix.png')
+            source_path = os.path.dirname(os.path.abspath(__file__))
+            print('\nConfusion matrix plot saved in: {}'.format(source_path))
+
+
     def roc_plot(self):
         """ Returns a plot of the ROC curve of the holdout set from model training. """
         self.validate_classification()
-        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
+        if self.is_binary_classification():
+            tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
+        else:
+            raise HealthcareAIError('Error. For multiclass classification, use confusion matrix instead.')
 
     def roc(self, print_output=True):
         """
@@ -449,7 +501,10 @@ class TrainedSupervisedModel(object):
     def pr_plot(self):
         """ Returns a plot of the PR curve of the holdout set from model training. """
         self.validate_classification()
-        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
+        if self.is_binary_classification():
+            tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
+        else:
+            raise HealthcareAIError('Error. For multiclass classification, use confusion matrix instead.')
 
     def pr(self, print_output=True):
         """
@@ -507,7 +562,19 @@ class TrainedSupervisedModel(object):
         """
         # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
-            raise HealthcareAIError('This function only runs on a binary classification model.')
+            #raise HealthcareAIError('This function only runs on a binary classification model.')
+            raise HealthcareAIError('This function only runs on a classification model.')
+
+    def is_binary_classification(self):
+        """
+        Check if a classification is binary.
+        """
+        self.validate_classification()
+        num_classes = len(list(set(self.test_set_actual)))
+        if num_classes == 2:
+            return True
+        else:
+            return False
 
     def print_training_results(self):
         """
