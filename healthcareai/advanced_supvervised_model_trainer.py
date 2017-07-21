@@ -440,7 +440,7 @@ class AdvancedSupervisedModelTrainer(object):
         neuralnet = Sequential()
         neuralnet.add(Dense(input_dim, input_dim=input_dim, activation=activation))
         neuralnet.add(Dense(neurons_num, activation=activation))
-        neuralnet.add(Dense(2, activation='softmax'))
+        neuralnet.add(Dense(out_dim, activation='softmax'))
         neuralnet.compile(loss='sparse_categorical_crossentropy',
                           # can also use one hot encoding with categorical_crossentropy
                           # for binary: binary_crossentropy sigmoid
