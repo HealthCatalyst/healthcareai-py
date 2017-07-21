@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import time
 
-from sklearn.metrics import classification_report, confusion_matrix
-
 np.random.seed(123)
 from keras.models import Sequential
 from keras.layers import Dense
@@ -445,8 +443,7 @@ class AdvancedSupervisedModelTrainer(object):
         input_dim = self.x_train.shape[1]
 
         # Calculate output dimension
-        out = list(set(self.y_train))
-        out_dim = max(out) + 1
+        out_dim = len(list(set(self.y_train)))
 
         # Calculate number of neurons
         if neurons_num is None:
@@ -469,7 +466,7 @@ class AdvancedSupervisedModelTrainer(object):
                                   scoring_metric='accuracy',
                                   hyperparameter_grid=None,
                                   randomized_search=True,
-                                  number_iteration_samples=3):
+                                  number_iteration_samples=1):
         """
         Tune the neural network using grid search over the parameters.
         Tuning is performed by cross validation.
@@ -489,7 +486,7 @@ class AdvancedSupervisedModelTrainer(object):
         # Create a wrapper for sklearn
         neuralnet = KerasClassifier(build_fn=self.create_nn, verbose=0)
 
-        #TODO change hyperparameter grid
+        # Initiate a hyperparameter grid if not specified
         if hyperparameter_grid is None:
             activation = ['relu']
             batch_size = [5]
@@ -505,7 +502,7 @@ class AdvancedSupervisedModelTrainer(object):
                                                  scoring_metric,
                                                  hyperparameter_grid,
                                                  randomized_search,
-                                                 number_iteration_samples=1)
+                                                 number_iteration_samples)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
