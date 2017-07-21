@@ -223,8 +223,10 @@ class SupervisedModelTrainer(object):
         for column in categorical_columns:
             value_distribution = dataframe[column].value_counts(sort=False)
             # Sort by the index to ensure the correct dummy is dropped in get_dummies(drop_first=True)
-            value_distribution.sort_index(inplace=True)
-            value_distribution *= 1 / value_distribution.values.sum()
+            value_distribution.sort_index(inplace=True) # get counts for each factor level
+            total_count = value_distribution.values.sum() # get the number of occurences for all levels of the factor
+            # divide the factor level counts by the total number to get the factor level frequencies
+            value_distribution *= 1 / total_count
             column_info[column] = value_distribution
 
         return column_info
