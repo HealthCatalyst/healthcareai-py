@@ -5,17 +5,18 @@ import pandas as pd
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 
+
 class TestTopFactors(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        ''' Load a dataframe, train a linear model and prepare prediction dataframes for assertions '''
+        """ Load a dataframe, train a linear model and prepare prediction data frames for assertions """
         rows = 200
         np.random.seed(112358)
         train_df = pd.DataFrame({'id': range(rows),
-                                 'x': np.random.uniform(low = -5, high = 5, size = rows),
-                                 'y': np.random.normal(loc = 0, scale= 1, size=rows),
+                                 'x': np.random.uniform(low=-5, high=5, size=rows),
+                                 'y': np.random.normal(loc=0, scale=1, size=rows),
                                  'color': np.random.choice(['red', 'blue', 'green'], size=rows),
-                                 'gender': np.random.choice(['male', 'female'], size = rows)},
+                                 'gender': np.random.choice(['male', 'female'], size=rows)},
                                 columns=['id', 'x', 'y', 'color', 'gender'])
         # Assign labels
         # build true decision boundary using temp variable
@@ -26,7 +27,7 @@ class TestTopFactors(unittest.TestCase):
         # Add noise to avoid perfect separation
         train_df['temp'] += np.random.normal(scale=1, size=rows)
         # Add label
-        train_df['response'] = np.where(train_df['temp'] > 0 , 'Y', 'N')
+        train_df['response'] = np.where(train_df['temp'] > 0, 'Y', 'N')
         # drop temp column
         train_df.drop('temp', axis=1, inplace=True)
 
@@ -57,8 +58,7 @@ class TestTopFactors(unittest.TestCase):
                                     columns=['id', 'x', 'y', 'color', 'gender'])
 
         # put these rows in a dataframe with all of the training data
-        cls.large = pd.concat([cls.one_row1, cls.one_row2, train_df.drop('response', axis = 1)])
-
+        cls.large = pd.concat([cls.one_row1, cls.one_row2, train_df.drop('response', axis=1)])
         # prediction dataframe missing a numeric column
         cls.missing_x = pd.DataFrame({'id': range(50),
                                       'y': np.random.normal(loc=0, scale=1, size=50),
@@ -79,7 +79,7 @@ class TestTopFactors(unittest.TestCase):
                                       'y': [-0.3, -0.3],
                                       'color': ['purple', np.NaN],
                                       'gender': ['female', 'female']},
-                                    columns=['id', 'x', 'y', 'color', 'gender'])
+                                     columns=['id', 'x', 'y', 'color', 'gender'])
 
         # dataframe with new category levels in two columns
         cls.new_color_and_gender = pd.DataFrame({'id': [1728, 1729],
@@ -92,13 +92,12 @@ class TestTopFactors(unittest.TestCase):
         # Reset random seed
         np.random.seed()
 
-
     def test_single_row_prediction(self):
         # Check that we can make predictions on single row dataframes
         row1_predictions = self.trained_lr.make_predictions(self.one_row1)
         row2_predictions = self.trained_lr.make_predictions(self.one_row2)
         # Compare predictions to fixed values
-        self.assertEqual(np.round(row1_predictions.iloc[0,1], decimals = 6), 0.921645)
+        self.assertEqual(np.round(row1_predictions.iloc[0, 1], decimals=6), 0.921645)
         self.assertEqual(np.round(row2_predictions.iloc[0, 1], decimals=6), 0.935244)
         # As a futher sanity check, note that using the "true" decision boundary, we would have
         # sigmoid(2.4 - 0.7 + 1) = sigmoid(2.7) ~ 0.937 in the first case and
@@ -110,12 +109,12 @@ class TestTopFactors(unittest.TestCase):
         row2_predictions = self.trained_lr.make_predictions(self.one_row2)
         full_predictions = self.trained_lr.make_predictions(self.large)
         # Compare predictions when the row is by itself or in a dataframe with all the training data
-        self.assertEqual(row1_predictions.iloc[0, 1], full_predictions.iloc[0,1])
+        self.assertEqual(row1_predictions.iloc[0, 1], full_predictions.iloc[0, 1])
         self.assertEqual(row2_predictions.iloc[0, 1], full_predictions.iloc[1, 1])
 
     def test_raises_error_on_missing_column(self):
         # Check that error is raised when a column (numeric or categorical) is missing completely
-        self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe = self.missing_x)
+        self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe=self.missing_x)
         self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe=self.missing_color)
 
     def test_impute_new_categorical_levels(self):
@@ -125,4 +124,3 @@ class TestTopFactors(unittest.TestCase):
         new_factor_predictions2 = self.trained_lr.make_predictions(self.new_color_and_gender)
         self.assertEqual(new_factor_predictions1.iloc[0, 1], new_factor_predictions1.iloc[1, 1])
         self.assertEqual(new_factor_predictions2.iloc[0, 1], new_factor_predictions2.iloc[1, 1])
-        
