@@ -104,11 +104,13 @@ class TestNeuralNetworkClassificaton(unittest.TestCase):
         nn = self.classification_trainer.neural_network_classifier(randomized_search=True)
         self.assertIsInstance(nn, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.5, 0.8, nn.metrics['roc_auc'])
+        test_helpers.assertBetween(self, 160, 180, nn.metrics['cmatrix'][0][0])
 
     def test_neural_network_no_tuning(self):
         nn = self.classification_trainer.neural_network_classifier(randomized_search=False)
         self.assertIsInstance(nn, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.5, 0.8, nn.metrics['roc_auc'])
+        test_helpers.assertBetween(self, 160, 180, nn.metrics['cmatrix'][0][0])
 
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
@@ -126,11 +128,13 @@ class TestRandomForestClassification(unittest.TestCase):
         rf = self.trainer.random_forest_classifier(trees=200, randomized_search=False)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.8, 0.97, rf.metrics['roc_auc'])
+        test_helpers.assertBetween(self, 160, 180, rf.metrics['cmatrix'][0][0])
 
     def test_random_forest_tuning(self):
         rf = self.trainer.random_forest_classifier(randomized_search=True)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.7, 0.97, rf.metrics['roc_auc'])
+        test_helpers.assertBetween(self, 160, 180, rf.metrics['cmatrix'][0][0])
 
     def test_random_foarest_tuning_2_column_raises_error(self):
         df_raw = hcai_datasets.load_diabetes()
@@ -175,6 +179,7 @@ class TestLogisticRegression(unittest.TestCase):
     def test_logistic_regression_no_tuning(self):
         self.assertIsInstance(self.lr, TrainedSupervisedModel)
         test_helpers.assertBetween(self, 0.5, 0.8, self.lr.metrics['roc_auc'])
+        test_helpers.assertBetween(self, 160, 180, self.lr.metrics['cmatrix'][0][0])
 
 
 class TestMetricValidation(unittest.TestCase):
