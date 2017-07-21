@@ -558,6 +558,17 @@ class AdvancedSupervisedModelTrainer(object):
         if not self.is_classification:
             raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
 
+    def is_binary_classification(self):
+        """
+        Check if a classification is binary.
+        """
+        if self.is_classification:
+            num_classes = len(list(set(self.y_test)))
+            if num_classes == 2:
+                return True
+            else:
+                return False
+
     def _console_log(self, message):
         if self.verbose:
             print('AdvancedSupervisedModelTrainer :: {}'.format(message))
