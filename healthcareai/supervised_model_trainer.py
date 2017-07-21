@@ -36,9 +36,13 @@ class SupervisedModelTrainer(object):
         clean_dataframe = pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._advanced_trainer = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column,
-                                                                grain_column, verbose,
-                                                                colnames_pre_pipeline = dataframe.columns.values)
+        self._advanced_trainer = AdvancedSupervisedModelTrainer(
+            dataframe=clean_dataframe,
+            model_type=model_type,
+            predicted_column=predicted_column,
+            grain_column=grain_column,
+            original_column_names=dataframe.columns.values,
+            verbose=verbose)
 
         # Save the pipeline to the parent class
         self._advanced_trainer.pipeline = pipeline
