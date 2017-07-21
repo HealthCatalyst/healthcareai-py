@@ -72,7 +72,11 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
             # Turn off warning around replace
             pd.options.mode.chained_assignment = None  # default='warn'
             # Replace 'Y'/'N' with 1/0
-            X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
+            # The target variable can either be coded with 'Y/N' or numbers 0, 1, 2, 3, ...
+            if X[self.target_column].dtype == np.int64: # Added for number labeled target variable.
+                return X
+            else:
+                X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
 
         return X
 
