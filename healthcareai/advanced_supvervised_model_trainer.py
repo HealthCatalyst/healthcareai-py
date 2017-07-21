@@ -306,7 +306,7 @@ class AdvancedSupervisedModelTrainer(object):
         return trained_supervised_model
 
     def knn(self,
-            scoring_metric='roc_auc',
+            scoring_metric='accuracy',
             hyperparameter_grid=None,
             randomized_search=True,
             number_iteration_samples=10):
@@ -343,7 +343,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def random_forest_classifier(self,
                                  trees=200,
-                                 scoring_metric='roc_auc',
+                                 scoring_metric='accuracy',
                                  hyperparameter_grid=None,
                                  randomized_search=True,
                                  number_iteration_samples=5):
