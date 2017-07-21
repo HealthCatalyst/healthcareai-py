@@ -29,3 +29,14 @@ def load_diabetes():
 def load_ctg():
     """Load ctg dataset for neural network testing"""
     return load_data('ctg.csv')
+
+def load_multiclass():
+    """
+    Load a dataset for multi class classification
+
+    Note: the dataset contains two columns named `target_str` and `target_num`.
+        `target_str` contains strings, e.g. 'one', 'two', 'three', ...
+        `target_num` contains numbers, e.g. 1, 2, 3, ...
+        Choose one variable as a classification outcome and drop the other one.
+    """
+    return load_data('dermatology_multiclass_data.csv')
