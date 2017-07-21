@@ -4,6 +4,7 @@ import pandas as pd
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
+from healthcareai.common.get_categorical_levels import get_categorical_levels
 
 
 class TestTopFactors(unittest.TestCase):
@@ -89,11 +90,32 @@ class TestTopFactors(unittest.TestCase):
                                                  'gender': ['other', np.NaN]},
                                                 columns=['id', 'x', 'y', 'color', 'gender'])
 
+        # dataframe with known distribution of cagegory levels
+        cls.get_levels_df = pd.DataFrame({'grain': range(10),
+                                          'letters': ['A', 'A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'D'],
+                                          'numeric': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                                          'numbers_mod_3': ['1', '2', '0', '1', '2', '0', '1', '2', '0', '1'],
+                                          'float': [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0],
+                                          'mathematicians': ['Gauss', 'Euler', 'Gauss', 'Galois', 'Gauss',
+                                                             'Euler', 'Grothendiek', 'Wiles', 'Hilbert', 'Hilbert'],
+                                          'predicted': ['Y', 'Y', 'N', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'Y']},
+                                         columns = ['grain', 'letters', 'numeric', 'numbers_mod_3', 'float',
+                                                    'mathematicians', 'predicted'])
+        # Set mathematician column to category and choose the order in which the levels are listed (default is
+        # alphabetical)
+        cls.get_levels_df['mathematicians'] = cls.get_levels_df['mathematicians'].astype('category',
+                                                                                         categories = ['Wiles',
+                                                                                                       'Euler',
+                                                                                                       'Grotheniek',
+                                                                                                       'Hilbert',
+                                                                                                       'Gauss']
+                                                                                         , ordered = False)
+
         # Reset random seed
         np.random.seed()
 
     def test_single_row_prediction(self):
-        # Check that we can make predictions on single row dataframes
+        # This test checks that we can make predictions on single row dataframes
         row1_predictions = self.trained_lr.make_predictions(self.one_row1)
         row2_predictions = self.trained_lr.make_predictions(self.one_row2)
         # Compare predictions to fixed values
@@ -104,7 +126,7 @@ class TestTopFactors(unittest.TestCase):
         # sigmoid(0 + 1 + 0 + 2) = sigmoid(3) ~ 0.953 in the second case
 
     def test_predictions_are_independent(self):
-        # Check that the prediction for a single row is independent of the other rows
+        # This test checks that the prediction for a single row is independent of the other rows
         row1_predictions = self.trained_lr.make_predictions(self.one_row1)
         row2_predictions = self.trained_lr.make_predictions(self.one_row2)
         full_predictions = self.trained_lr.make_predictions(self.large)
@@ -113,14 +135,33 @@ class TestTopFactors(unittest.TestCase):
         self.assertEqual(row2_predictions.iloc[0, 1], full_predictions.iloc[1, 1])
 
     def test_raises_error_on_missing_column(self):
-        # Check that error is raised when a column (numeric or categorical) is missing completely
+        # This test checks that an error is raised when a column (numeric or categorical) is missing completely
         self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe=self.missing_x)
         self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe=self.missing_color)
 
     def test_impute_new_categorical_levels(self):
-        # Check that new factor levels are being imputed correctly by comparing the prediction on a row with new
-        # factor levels to a row with the same data and the new levels replaced with NaNs
+        # This test checks that new factor levels are being imputed correctly by comparing the prediction on a row with
+        # new factor levels to a row with the same data and the new levels replaced with NaNs
         new_factor_predictions1 = self.trained_lr.make_predictions(self.new_color)
         new_factor_predictions2 = self.trained_lr.make_predictions(self.new_color_and_gender)
         self.assertEqual(new_factor_predictions1.iloc[0, 1], new_factor_predictions1.iloc[1, 1])
         self.assertEqual(new_factor_predictions2.iloc[0, 1], new_factor_predictions2.iloc[1, 1])
+
+    def test_get_categorical_levels(self):
+        # This test checkst that get_categorical_levels() behaves as desired
+        categorical_level_info = get_categorical_levels(dataframe=self.get_levels_df,
+                                                        columns_to_ignore=['grain', 'predicted'])
+        # Check that numeric columns are not included
+        self.assertFalse('float' in categorical_level_info)
+        # Check that specified columns are not included
+        self.assertFalse('predicted' in categorical_level_info)
+        # Check that the right number of columns are included
+        self.assertEqual(len(categorical_level_info), 3)
+        # Check that the distributions are correctly calculated
+        self.assertEqual(np.round(categorical_level_info['letters']['A'], 6), 0.4)
+        self.assertEqual(np.round(categorical_level_info['letters']['C'], 6), 0.2)
+        self.assertEqual(np.round(categorical_level_info['numbers_mod_3']['2'], 6), 0.3)
+        # Check that the desired ordering of category levels is preserved
+        self.assertEqual(categorical_level_info['numbers_mod_3'].index[1], '1')
+        self.assertEqual(categorical_level_info['mathematicians'].index[0], 'Wiles')
+        self.assertEqual(categorical_level_info['mathematicians'].index[4], 'Gauss')
