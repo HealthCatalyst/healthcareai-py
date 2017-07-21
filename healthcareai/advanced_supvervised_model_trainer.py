@@ -425,8 +425,14 @@ class AdvancedSupervisedModelTrainer(object):
                   optimizer='adam',
                   scoring_metric='accuracy'):
 
-        # Calculate number of neurons
+        # Calculate input dimension
         input_dim = self.x_train.shape[1]
+
+        # Calculate output dimension
+        out = list(set(self.y_train))
+        out_dim = max(out) + 1
+
+        # Calculate number of neurons
         if neurons_num is None:
             neurons_num = (input_dim + 2) // 2
 
