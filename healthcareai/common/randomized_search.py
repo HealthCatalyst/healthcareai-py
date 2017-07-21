@@ -41,13 +41,30 @@ def get_algorithm(estimator,
 
     return algorithm
 
-# Added for neural network
+
 def get_algorithm_neural_network(estimator,
                                  scoring_metric,
                                  hyperparameter_grid,
                                  randomized_search,
                                  number_iteration_samples=1):
-    """Get an estimator for neural network"""
+    """
+    Get an estimator for neural network. Basically the same with get_algorithm().
+    Slightly adjusted for KerasClassifier.
+
+    Args:
+        estimator: a KerasClassifier
+        scoring_metric (str): a model evaluation metric from Keras.
+        hyperparameter_grid (dict): An object containing key value pairs of the specific hyperparameter space to search
+            through.
+        randomized_search (bool): Whether the method should return a randomized search estimator (as opposed to a
+            simple algorithm).
+        number_iteration_samples (int): If performing randomized search, this is the number of samples that are run in
+            the hyperparameter space. Higher numbers will be slower, but end up with better results, since it is more
+            likely that the true optimal hyperparameter is found.
+
+    Returns:
+        algorithm: a scikit learn algorithm ready to `.fit()`
+    """
     if randomized_search:
         algorithm = RandomizedSearchCV(estimator=estimator,
                                        scoring=scoring_metric,
