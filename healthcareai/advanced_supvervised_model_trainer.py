@@ -40,6 +40,7 @@ class AdvancedSupervisedModelTrainer(object):
             model_type (str): 'classification' or 'regression'
             predicted_column (str): The name of the predicted/target/label column
             grain_column (str): The grain column
+            data_scaling (bool): if True, perform feature scaling on numeric variables; if False, not.
             verbose (bool): Verbose output
         """
         # Validate model type is sane
@@ -426,7 +427,20 @@ class AdvancedSupervisedModelTrainer(object):
                   activation='relu',
                   optimizer='adam',
                   scoring_metric='accuracy'):
+        """
+        Define one type of neural network architecture based on Keras.
+        The neural network contains one input layer, one hidden layer, and one output layer.
 
+        Args:
+            neurons_num (int): number of neurons in the hidden layer.
+            activation (str): the type of activation functions. See 'Activations' from the Keras docs.
+            optimizer (str): the type of optimizers. See 'Optimizers' from the Keras docs.
+            scoring_metric (str): See 'Metrics' from the Keras docs. Note the scoring_metric in Keras is different from sklearn.
+
+        Returns:
+            neuralnet: a neural network architecture
+
+        """
         # Calculate input dimension
         input_dim = self.x_train.shape[1]
 
@@ -445,8 +459,8 @@ class AdvancedSupervisedModelTrainer(object):
         neuralnet.add(Dense(out_dim, activation='softmax'))
         neuralnet.compile(loss='sparse_categorical_crossentropy',
                           # can also use one hot encoding with categorical_crossentropy
-                          # for binary: binary_crossentropy sigmoid
-                          # for multiclass: softmax sparse_categorical_crossentropy
+                          # for binary: use sigmoid with binary_crossentropy or settings for multiclass
+                          # for multiclass: use softmax with sparse_categorical_crossentropy
                           optimizer=optimizer,
                           metrics=[scoring_metric])
         return neuralnet
@@ -461,7 +475,14 @@ class AdvancedSupervisedModelTrainer(object):
         Tuning is performed by cross validation.
 
         Args:
+            scoring_metric (str): Keras metrics
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
 
+        Returns:
+            TrainedSupervisedModel:
         """
         self.validate_classification('Neural Network Classifier')
 
