@@ -451,8 +451,8 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
-            original_column_names= self.original_column_names,
-            categorical_column_info = self.categorical_column_info)
+            original_column_names=self.original_column_names,
+            categorical_column_info=self.categorical_column_info)
 
         return trained_supervised_model
 

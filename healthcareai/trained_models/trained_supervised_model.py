@@ -189,7 +189,8 @@ class TrainedSupervisedModel(object):
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
 
         Returns:
-            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the columns the model expects.
+            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
+            columns the model expects.
         """
 
         # We want to be able to make predictions on new data (without labels) so don't want to insist that the
