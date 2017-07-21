@@ -26,10 +26,6 @@ def load_diabetes():
     """Load and return the diabetes dataset"""
     return load_data('diabetes.csv')
 
-def load_ctg():
-    """Load ctg dataset for neural network testing"""
-    return load_data('ctg.csv')
-
 def load_multiclass():
     """
     Load a dataset for multi class classification
