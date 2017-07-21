@@ -394,7 +394,14 @@ class TrainedSupervisedModel(object):
         healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
     def print_confusion_matrix(self, cmatrix=None, class_names=None):
+        """
+        Print a well arranged confusion matrix to evaluate classification results.
 
+        Arges:
+            cmatrix (array): an input confusion matrix. If not given, calculate from compute_confusion_matrix().
+            class_names (list): label of each class. If not given, calculate from compute_confusion_matrix().
+
+        """
         # calculate confusion matrix and the class names if they are not given
         if cmatrix is None or class_names is None:
             cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
@@ -415,7 +422,15 @@ class TrainedSupervisedModel(object):
             print('\n')
 
     def confusion_matrix_plot(self, cmatrix=None, class_names=None, save=True):
+        """
+        Plot a confusion matrix to evaluate classification results.
 
+        Arges:
+            cmatrix (array): an input confusion matrix. If not given, calculate from compute_confusion_matrix().
+            class_names (list): label of each class. If not given, calculate from compute_confusion_matrix().
+            save (bool): if True, save the confusion matrix to a file `ConfusionMatrix.png`; if False, not.
+
+        """
         # calculate confusion matrix and the class names if they are not given
         if cmatrix is None or class_names is None:
             cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
