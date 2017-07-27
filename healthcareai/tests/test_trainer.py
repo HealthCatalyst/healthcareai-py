@@ -33,6 +33,13 @@ class TestSupervisedModelTrainer(unittest.TestCase):
                                                         impute=True,
                                                         verbose=False)
 
+        cls.regression_trainer_impute_false = SupervisedModelTrainer(df,
+                                                                     'SystolicBPNBR',
+                                                                     'regression',
+                                                                     grain_column='PatientEncounterID',
+                                                                     impute=False,
+                                                                     verbose=False)
+
     def test_knn(self):
         trained_knn = self.classification_trainer.knn()
 
@@ -120,6 +127,15 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         # Try the ROC plot
         self.assertRaises(HealthcareAIError, trained_linear_model.roc_plot)
 
+    def test_impute_false_nan_data(self):
+        # Train the linear regression model with impute = False
+        trained_linear_model = self.regression_trainer_impute_false.linear_regression()
+
+        # Load a new df for predicting
+        prediction_df = hcai_datasets.load_diabetes()
+
+        # Assert that the number of rows of prediction should be equal between df and model predictions
+        self.assertEqual(len(trained_linear_model.make_predictions(prediction_df)), len(prediction_df))
 
 @contextmanager
 def captured_output():
