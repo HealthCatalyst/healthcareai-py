@@ -14,6 +14,7 @@ class DataFrameImputer(TransformerMixin):
         Columns of other types are imputed with mean of column.
 
         """
+
     def fit(self, X, y=None):
         # Grab list of object column names before doing imputation
         self.obj_list = X.select_dtypes(include=['object']).columns.values
@@ -31,3 +32,19 @@ class DataFrameImputer(TransformerMixin):
             X[i] = X[i].astype(object)
 
         return X
+
+
+class DataFrameDropNaN(TransformerMixin):
+    def __init__(self):
+        """Remove NaN values.
+
+        Columns that are NaN or None are removed.
+
+        """
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        # Uses pandas.DataFrame.dropna function where axis=1 is column action, and
+        # how='all' requires all the values to be NaN or None to be removed.
+        return X.dropna(axis=1, how='all')
