@@ -206,3 +206,19 @@ class DataFrameOverSampling(TransformerMixin):
         result[self.predicted_column] = y_over_sampled
 
         return result
+
+
+class DataFrameDropNaN(TransformerMixin):
+    def __init__(self):
+        """Remove NaN values.
+
+        Columns that are NaN or None are removed.
+
+        """
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        # Uses pandas.DataFrame.dropna function where axis=1 is column action, and
+        # how='all' requires all the values to be NaN or None to be removed.
+        return X.dropna(axis=1, how='all')
