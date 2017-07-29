@@ -26,8 +26,6 @@ class SupervisedModelTrainer(object):
         self.grain_column = grain_column
 
         # Build the pipeline
-        # TODO This pipeline may drop nulls in prediction rows if impute=False
-        # TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
         prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
 
@@ -157,6 +155,23 @@ class SupervisedModelTrainer(object):
 
         # Train the model
         trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
+
+        # Display the model metrics
+        trained_model.print_training_results()
+
+        return trained_model
+
+    def lasso_regression(self):
+        """ Train a lasso regression model and print out the model performance metrics.
+
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
+        model_name = 'Lasso Regression'
+        print('\nTraining {}'.format(model_name))
+
+        # Train the model
+        trained_model = self._advanced_trainer.lasso_regression(randomized_search=False)
 
         # Display the model metrics
         trained_model.print_training_results()

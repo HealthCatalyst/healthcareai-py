@@ -4,7 +4,7 @@ import pandas as pd
 import time
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
@@ -266,7 +266,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
@@ -274,6 +274,39 @@ class AdvancedSupervisedModelTrainer(object):
             number_iteration_samples = 2
 
         algorithm = get_algorithm(LinearRegression,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
+
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
+
+        return trained_supervised_model
+
+    def lasso_regression(self, scoring_metric='neg_mean_squared_error',
+                         hyperparameter_grid=None,
+                         randomized_search=True,
+                         number_iteration_samples=2):
+        """
+        A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
+        hyperparameter grid.
+
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel:
+        """
+        self.validate_regression('Lasso Regression')
+        if hyperparameter_grid is None:
+            hyperparameter_grid = {"fit_intercept": [True, False]}
+            number_iteration_samples = 2
+
+        algorithm = get_algorithm(Lasso,
                                   scoring_metric,
                                   hyperparameter_grid,
                                   randomized_search,
