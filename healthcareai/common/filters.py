@@ -72,6 +72,11 @@ class DataframeNullValueFilter(TransformerMixin):
         validate_dataframe_input(x)
 
         subset = [c for c in x.columns if c not in self.excluded_columns]
+
         x.dropna(axis=0, how='any', inplace=True, subset=subset)
+
+        if x.empty:
+            raise HealthcareAIError(
+                'No rows left in the DataFrame after pipeline due to NaN values located in every row')
 
         return x
