@@ -1,12 +1,10 @@
 import sklearn
 import numpy as np
-import pandas as pd
 import time
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors

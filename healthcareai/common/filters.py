@@ -77,6 +77,8 @@ class DataframeNullValueFilter(TransformerMixin):
 
         if x.empty:
             raise HealthcareAIError(
-                'No rows left in the DataFrame after pipeline due to NaN values located in every row')
+                "Because imputation is set to False, rows with missing or null/NaN values are being dropped. "
+                "In this case, all rows contain null values and therefore were ALL dropped. "
+                "Please consider using imputation or assessing the data quality and availability")
 
         return x

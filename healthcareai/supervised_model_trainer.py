@@ -26,6 +26,8 @@ class SupervisedModelTrainer(object):
         self.grain_column = grain_column
 
         # Build the pipeline
+        # Note: Missing numeric values are imputed in prediction. If we don't impute, then some rows on the prediction
+        # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
         prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
 
