@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import unittest
 import healthcareai.common.filters as filters
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -61,7 +62,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.DataframeDateTimeColumnFilter().fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeColumnSuffixFilter().fit_transform, junk)
 
     def test_removes_nothing_when_it_finds_no_matches(self):
         df = pd.DataFrame({
@@ -70,7 +71,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
+        result = filters.DataframeColumnSuffixFilter().fit_transform(df)
 
         self.assertEqual(len(result), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
@@ -82,7 +83,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'DTS': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
+        result = filters.DataframeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -95,7 +96,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_DTS': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
+        result = filters.DataframeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -108,10 +109,21 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_dts': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
+        result = filters.DataframeColumnSuffixFilter().fit_transform(df)
         expected = ['category', 'gender', 'admit_dts']
 
         self.assertEqual(len(result), 3)
+        self.assertEqual(list(result.columns).sort(), expected.sort())
+
+
+class TestDataframeColumnDatetimeFilter(unittest.TestCase):
+    def test_datetime_column_removal(self):
+        dates = pd.date_range('1/1/2011', periods=10, freq='H')
+        df = pd.DataFrame(data={"number": np.random.randn(len(dates)), "date": dates})
+
+        result = filters.DataFrameColumnDateTimeFilter().fit_transform(df)
+        expected = ['number']
+
         self.assertEqual(list(result.columns).sort(), expected.sort())
 
 
