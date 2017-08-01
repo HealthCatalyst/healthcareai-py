@@ -17,8 +17,7 @@ def is_dataframe(possible_dataframe):
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
-    """ Given a pandas dataframe, remove columns with suffix 'DTS', and removing any columns that has the type datetime
-    """
+    """ Given a pandas dataframe, remove columns with suffix 'DTS' """
 
     def __init__(self):
         pass
