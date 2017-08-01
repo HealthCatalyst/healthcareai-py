@@ -16,8 +16,9 @@ def is_dataframe(possible_dataframe):
     return issubclass(DataFrame, type(possible_dataframe))
 
 
-class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
-    """ Given a pandas dataframe, remove columns with suffix 'DTS' """
+class DataframeDateTimeColumnFilter(TransformerMixin):
+    """ Given a pandas dataframe, remove columns with suffix 'DTS', and removing any columns that has the type datetime
+    """
 
     def __init__(self):
         pass
@@ -31,8 +32,11 @@ class DataframeDateTimeColumnSuffixFilter(TransformerMixin):
         # Build a list that contains column names that do not end in 'DTS'
         filtered_column_names = [column for column in x.columns if not column.endswith('DTS')]
 
-        # return the filtered dataframe
-        return x[filtered_column_names]
+        # Only select the column names that does not end with DTS
+        x = x[filtered_column_names]
+
+        # Select all data excluding datetime columns
+        return x.select_dtypes(exclude=["datetime"])
 
 
 class DataframeColumnRemover(TransformerMixin):

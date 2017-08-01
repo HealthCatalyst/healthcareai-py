@@ -61,7 +61,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.DataframeDateTimeColumnSuffixFilter().fit_transform, junk)
+            self.assertRaises(HealthcareAIError, filters.DataframeDateTimeColumnFilter().fit_transform, junk)
 
     def test_removes_nothing_when_it_finds_no_matches(self):
         df = pd.DataFrame({
@@ -70,7 +70,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
 
         self.assertEqual(len(result), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
@@ -82,7 +82,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'DTS': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -95,7 +95,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_DTS': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
         expected = ['category', 'gender']
 
         self.assertEqual(len(result), 3)
@@ -108,7 +108,7 @@ class TestDataframeColumnSuffixFilter(unittest.TestCase):
             'admit_dts': [1, 5, 4]
         })
 
-        result = filters.DataframeDateTimeColumnSuffixFilter().fit_transform(df)
+        result = filters.DataframeDateTimeColumnFilter().fit_transform(df)
         expected = ['category', 'gender', 'admit_dts']
 
         self.assertEqual(len(result), 3)
