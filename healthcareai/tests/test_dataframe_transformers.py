@@ -286,5 +286,56 @@ class TestDataframeOverSampler(unittest.TestCase):
         self.assertEqual(true_count, false_count)
 
 
+class TestRemovesNANs(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({'a': [1, None, 2, 3, None],
+                                'b': ['m', 'f', None, 'f', None],
+                                'c': [3, 4, 5, None, None],
+                                'd': [None, 8, 1, 3, None],
+                                'e': [None, None, None, None, None],
+                                'label': ['Y', 'N', 'Y', 'N', None]})
+
+    def runTest(self):
+        df_final = transformers.DataFrameDropNaN().fit_transform(self.df)
+        self.assertTrue(df_final.equals(pd.DataFrame({'a': [1, None, 2, 3, None],
+                                                      'b': ['m', 'f', None, 'f', None],
+                                                      'c': [3, 4, 5, None, None],
+                                                      'd': [None, 8, 1, 3, None],
+                                                      'label': ['Y', 'N', 'Y', 'N', None]})))
+
+    def tearDown(self):
+        del self.df
+
+
+class TestFeatureScaling(unittest.TestCase):
+    def setUp(self):
+        self.df = pd.DataFrame({'a': [1, 3, 2, 3],
+                                'b': ['m', 'f', 'b', 'f'],
+                                'c': [3, 4, 5, 5],
+                                'd': [6, 8, 1, 3],
+                                'label': ['Y', 'N', 'Y', 'N']})
+
+        self.df_repeat = pd.DataFrame({'a': [1, 3, 2, 3],
+                                       'b': ['m', 'f', 'b', 'f'],
+                                       'c': [3, 4, 5, 5],
+                                       'd': [6, 8, 1, 3],
+                                       'label': ['Y', 'N', 'Y', 'N']})
+
+    def runTest(self):
+        feature_scaling = transformers.DataFrameFeatureScaling()
+        df_final = feature_scaling.fit_transform(self.df).round(5)
+        self.assertTrue(df_final.equals(pd.DataFrame({'a': [-1.507557, 0.904534, -0.301511, 0.904534],
+                                                      'b': ['m', 'f', 'b', 'f'],
+                                                      'c': [-1.507557, -0.301511, 0.904534, 0.904534],
+                                                      'd': [0.557086, 1.299867, -1.299867, -0.557086],
+                                                      'label': ['Y', 'N', 'Y', 'N']}).round(5)))
+
+        df_reused = transformers.DataFrameFeatureScaling(reuse=feature_scaling).fit_transform(self.df_repeat).round(5)
+        self.assertTrue(df_reused.equals(pd.DataFrame({'a': [-1.507557, 0.904534, -0.301511, 0.904534],
+                                                       'b': ['m', 'f', 'b', 'f'],
+                                                       'c': [-1.507557, -0.301511, 0.904534, 0.904534],
+                                                       'd': [0.557086, 1.299867, -1.299867, -0.557086],
+                                                       'label': ['Y', 'N', 'Y', 'N']}).round(5)))
+
 if __name__ == '__main__':
     unittest.main()
