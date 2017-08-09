@@ -1,12 +1,10 @@
 import sklearn
 import numpy as np
-import pandas as pd
 import time
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors
@@ -71,34 +69,6 @@ class AdvancedSupervisedModelTrainer(object):
         Easy check to consolidate magic strings in all the model type switches.
         """
         return self.model_type == 'regression'
-
-    def feature_scaling(self, columns_to_scale):
-        """ First pass a a feature scaler. """
-        # TODO convert to TransformerMixin
-        # TODO document
-        # TODO test
-        # NB: Must happen AFTER self.X_train, self.X_test,
-        #     self.y_train, self.y_test are defined.
-        #     Must happen AFTER imputation is done so there
-        #     are no missing values.
-        #     Must happen AFTER under/over sampling is done
-        #     so that we scale the under/over sampled dataset.
-        # TODO: How to warn the user if they call this method at the wrong time?
-        x_train_scaled_subset = self.x_train[columns_to_scale]
-        x_test_scaled_subset = self.X_test[columns_to_scale]
-        scaler = StandardScaler()
-
-        scaler.fit(x_train_scaled_subset)
-
-        X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_train_scaled_subset))
-        X_train_scaled_subset_dataframe.index = x_train_scaled_subset.index
-        X_train_scaled_subset_dataframe.columns = x_train_scaled_subset.columns
-        self.x_train[columns_to_scale] = X_train_scaled_subset_dataframe
-
-        X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_test_scaled_subset))
-        X_test_scaled_subset_dataframe.index = x_test_scaled_subset.index
-        X_test_scaled_subset_dataframe.columns = x_test_scaled_subset.columns
-        self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
 
     def train_test_split(self, random_seed=None):
         """
@@ -266,7 +236,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
@@ -274,6 +244,39 @@ class AdvancedSupervisedModelTrainer(object):
             number_iteration_samples = 2
 
         algorithm = get_algorithm(LinearRegression,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
+
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
+
+        return trained_supervised_model
+
+    def lasso_regression(self, scoring_metric='neg_mean_squared_error',
+                         hyperparameter_grid=None,
+                         randomized_search=True,
+                         number_iteration_samples=2):
+        """
+        A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
+        hyperparameter grid.
+
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel:
+        """
+        self.validate_regression('Lasso Regression')
+        if hyperparameter_grid is None:
+            hyperparameter_grid = {"fit_intercept": [True, False]}
+            number_iteration_samples = 2
+
+        algorithm = get_algorithm(Lasso,
                                   scoring_metric,
                                   hyperparameter_grid,
                                   randomized_search,
