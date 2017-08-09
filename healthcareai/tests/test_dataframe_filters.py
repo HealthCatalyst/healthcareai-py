@@ -224,6 +224,14 @@ class TestDataframeNullValueFilter(unittest.TestCase):
         result = filters.DataframeNullValueFilter().fit_transform(df)
         self.assertEqual(len(result), 1)
 
+    def test_removes_row_all_nulls_exception(self):
+        df = pd.DataFrame({'a': [1, None, 2, 3],
+                           'b': ['m', 'f', None, 'f'],
+                           'c': [3, 4, 5, None],
+                           'd': [None, 8, 1, 3],
+                           'label': ['Y', 'N', 'Y', 'N']})
+
+        self.assertRaises(HealthcareAIError, filters.DataframeNullValueFilter().fit_transform, df)
 
 if __name__ == '__main__':
     unittest.main()
