@@ -40,7 +40,9 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
-                 training_time = None):
+                 original_column_names=None,
+                 categorical_column_info=None,
+                 training_time=None):
         """
         Create an instance of a TrainedSupervisedModel
         
@@ -56,6 +58,11 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
+            original_column_names (list): List of column names used as features before running the data preparation
+                pipeline (e.g. before dummification)
+            categorical_column_info (dict): A dictionary mapping the name of each (pre-dummified) categorical column
+                to a pandas.Series containing whose index consists of the different levels of the category and whose
+                values consist of the frequencies with which these levels occur in the training data
             training_time (float): The time in seconds it took to train the model
         """
         self.model = model
@@ -69,6 +76,8 @@ class TrainedSupervisedModel(object):
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
         self._metric_by_name = metric_by_name
+        self.original_column_names = original_column_names
+        self.categorical_column_info = categorical_column_info
         self.train_time = training_time
 
     @property
@@ -183,20 +192,48 @@ class TrainedSupervisedModel(object):
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
 
         Returns:
-            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the columns the model expects.
+            pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
+            columns the model expects.
         """
+
+        # We want to be able to make predictions on new data (without labels) so don't want to insist that the
+        # prediction column be present in the new data.  To get around this, add the prediction columns filled with
+        # NaNs.  This column should be dropped when the dataframe is run through the pipeline.
+        if self.prediction_column not in dataframe.columns.values \
+               and self.prediction_column in self.original_column_names:
+           dataframe[self.prediction_column] = np.NaN
 
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
+            df2 = dataframe.copy()
+            if self.original_column_names is not None:
+                df2 = df2[self.original_column_names]
+
+            # Change the dtype of the categorical columns in the prediction dataframe to 'category' with levels
+            # determined by the training data before running the data preparation pipeline
+            if self.categorical_column_info is not None:
+                for column in self.categorical_column_info:
+                    col_categories = self.categorical_column_info[column].index
+                    df2[column] = df2[column].astype('category', categories=col_categories)
+                    # Check whether the prediction data contains categories not present in the training set and print
+                    # a message warning that these new values will be dropped and imputed
+                    new_values = {v for v in dataframe[column].unique() if not (v in col_categories or pd.isnull(v))}
+                    if len(new_values) > 0:
+                        category_message = """Column {} contains levels not seen in the training set. These levels have
+                        been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
+                        print(category_message.format(column, new_values))
 
             # Run the saved data preparation pipeline
-            # TODO dummies will not run if a prediction dataframe only has: 1 row or all the same value in a categorical
-            # TODO column
-            prepared_dataframe = self.fit_pipeline.transform(dataframe)
+            prepared_dataframe = self.fit_pipeline.transform(df2)
 
             # Subset the dataframe to only columns that were saved from the original model training
             prepared_dataframe = prepared_dataframe[self.column_names]
         except KeyError as ke:
+            required_columns = self.column_names
+            found_columns = list(dataframe.columns)
+            # If a pre-dummified dataset is expected as the input, list the pre-dummified columns instead of the dummies
+            if not self.original_column_names is None:
+                required_columns = self.original_column_names
             error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
             which will be ignored, but you must pass in all the required fields.\n
@@ -206,7 +243,7 @@ class TrainedSupervisedModel(object):
             Given fields: {}
             
             Likely missing field(s): {}
-            """.format(self.column_names, list(dataframe.columns), ke)
+            """.format(required_columns, found_columns, ke)
             raise HealthcareAIError(error_message)
 
         return prepared_dataframe
