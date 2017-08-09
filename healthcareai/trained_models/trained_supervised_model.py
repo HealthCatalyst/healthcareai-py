@@ -41,7 +41,7 @@ class TrainedSupervisedModel(object):
                  test_set_actual,
                  metric_by_name,
                  original_column_names=None,
-                 categorical_column_info=None
+                 categorical_column_info=None,
                  training_time=None):
         """
         Create an instance of a TrainedSupervisedModel
