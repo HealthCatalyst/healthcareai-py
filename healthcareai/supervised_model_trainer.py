@@ -12,7 +12,7 @@ class SupervisedModelTrainer(object):
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
         """
         Set up a SupervisedModelTrainer
-        
+
         Args:
             dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
             predicted_column (str): The name of the prediction column 
@@ -26,19 +26,21 @@ class SupervisedModelTrainer(object):
         self.grain_column = grain_column
 
         # Build the pipeline
-        # TODO This pipeline may drop nulls in prediction rows if impute=False
-        # TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276
+        # Note: Missing numeric values are imputed in prediction. If we don't impute, then some rows on the prediction
+        # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
+        prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
 
         # Run the raw data through the data preparation pipeline
         clean_dataframe = pipeline.fit_transform(dataframe)
+        _ = prediction_pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
         self._advanced_trainer = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column,
                                                                 grain_column, verbose)
 
         # Save the pipeline to the parent class
-        self._advanced_trainer.pipeline = pipeline
+        self._advanced_trainer.pipeline = prediction_pipeline
 
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
@@ -155,6 +157,23 @@ class SupervisedModelTrainer(object):
 
         # Train the model
         trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
+
+        # Display the model metrics
+        trained_model.print_training_results()
+
+        return trained_model
+
+    def lasso_regression(self):
+        """ Train a lasso regression model and print out the model performance metrics.
+
+        Returns:
+            TrainedSupervisedModel: A trained supervised model.
+        """
+        model_name = 'Lasso Regression'
+        print('\nTraining {}'.format(model_name))
+
+        # Train the model
+        trained_model = self._advanced_trainer.lasso_regression(randomized_search=False)
 
         # Display the model metrics
         trained_model.print_training_results()
