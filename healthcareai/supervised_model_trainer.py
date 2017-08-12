@@ -1,6 +1,7 @@
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
+from healthcareai.common.get_categorical_levels import get_categorical_levels
 
 
 class SupervisedModelTrainer(object):
@@ -36,14 +37,23 @@ class SupervisedModelTrainer(object):
         _ = prediction_pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._advanced_trainer = AdvancedSupervisedModelTrainer(clean_dataframe, model_type, predicted_column,
-                                                                grain_column, verbose)
+        self._advanced_trainer = AdvancedSupervisedModelTrainer(
+            dataframe=clean_dataframe,
+            model_type=model_type,
+            predicted_column=predicted_column,
+            grain_column=grain_column,
+            original_column_names=dataframe.columns.values,
+            verbose=verbose)
 
         # Save the pipeline to the parent class
         self._advanced_trainer.pipeline = prediction_pipeline
 
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
+
+        self._advanced_trainer.categorical_column_info = get_categorical_levels(dataframe = dataframe,
+                                                                                columns_to_ignore = [grain_column,
+                                                                                                     predicted_column])
 
     @property
     def clean_dataframe(self):
