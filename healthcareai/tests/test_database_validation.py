@@ -19,15 +19,12 @@ skip_mssql_tests = "SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_T
 
 
 class TestValidateDestinationTableConnection(unittest.TestCase):
-    """
-    Note that testing this is very tricky since there are two ways
-    to raise a HealtcareAIError.
-    """
-
+    """ Note that testing this is very tricky since there are two ways to raise a HealtcareAIError. """
     # TODO switch to SQLITE
 
+    @unittest.skipIf(skip_mssql_tests, "Skipping this on Travis CI.")
     def test_raises_error_on_table_not_existing(self):
-        """Note this should definitely run on all testing platforms"""
+        """Note this should definitely run on all testing platforms when it isn't bound to MSSQL"""
         self.assertRaises(
             HealthcareAIError,
             validate_catalyst_prediction_sam_connection,
