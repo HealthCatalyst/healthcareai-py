@@ -1,4 +1,5 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) 
@@ -8,12 +9,57 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- AzureBlogStorageHelper class to make storing text & pickled objects simple.
-- table_archiver() utility function makes it easy to create a timestamped history from any table.
-
 ### Changed
 
 ### Fixed
+
+### Deprecated
+
+### Removed
+
+## [1.0] - 2017-08-15
+
+**Note this is a major release and most of the API has changed. Please consult the documentation for full details**
+
+### Added
+
+- SupervisedModelTrainer class: the main simple API
+- AdvancedSupervisedModelTrainer class: the main advanced user API
+- TrainedSupervisedModel class: the object returned after training that is easy to .save(). It has many convenience functions to get metrics, graphs, and contains the trained model, a feature model and the data preparation pipeline which makes deployment simple.
+- SupervisedModelTrainer.ensemble()
+- Lasso, KNN
+- AzureBlogStorageHelper class to make storing text & pickled objects simple.
+- table_archiver() utility function makes it easy to create a timestamped history from any table.
+- Five new combinations of prediction dataframes to make deployment easy and flexible.
+- Database connection helpers for MSSQL, MySQL, SQLite
+- file I/O utilities for pickling objects or JSON
+- many new dataframe filters and transformers that are used in the SupervisedModelTrainer or can be used individually.
+- feature scaling transformer
+- Architecture diagram and document
+- Examples split into training and prediction
+- Randomized hyperparameter search by default on SupervisedModelTrainer
+
+### Changed
+
+- load_diabetes(): a built in sample dataset rather than manually digging around for the .csv file.
+- Better PR/ROC plots w/ ideal cutoffs marked
+- Better metrics
+- Google style docstrings on most functions
+- Much more helpful error messages
+- Lots of code simplification and decoupling
+- 126 new tests (up from 11)
+
+### Fixed
+
+- [Many, many things](https://github.com/HealthCatalyst/healthcareai-py/issues/163)
+
+### Removed
+
+- DevelopTrainedSupervisedModel **entire class**
+- DeploySupervisedModel **entire class**
+- model_eval.clfreport()
+- model_eval.findtopthreefactors()
+- filters.remove_datetime_columns()
 
 ## [0.1.8] - 2017-02-16
 
