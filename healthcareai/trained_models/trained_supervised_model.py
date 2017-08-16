@@ -388,7 +388,7 @@ class TrainedSupervisedModel(object):
             healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df, schema=schema)
         except HealthcareAIError as hcaie:
             # Run validation and alert user
-            hcai_dbval.validate_destination_table_connection(server, table, self.grain_column, self.prediction_column)
+            hcai_dbval.validate_catalyst_prediction_sam_connection(server, table, self.grain_column, self.prediction_column)
             raise HealthcareAIError(hcaie.message)
 
     def predict_to_sqlite(self,
