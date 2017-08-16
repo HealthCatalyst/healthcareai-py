@@ -1,7 +1,8 @@
-from healthcareai.common.healthcareai_error import HealthcareAIError
 import time
 import datetime
 import pandas as pd
+
+from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def table_archiver(server, database, source_table, destination_table, timestamp_column_name='ArchivedDTS'):
@@ -11,12 +12,15 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
 
     This should build a new table if the table doesn't exist.
 
-    :param server: server name
-    :param database: database name
-    :param source_table: source table name
-    :param destination_table: destination table name
-    :param timestamp_column_name: new timestamp column name
-    :rtype: str: basic stats about how many records were archived
+    Args:
+        server (str): Server name 
+        database (str): Database name 
+        source_table (str): Source table name 
+        destination_table (str): Destination table name 
+        timestamp_column_name (str): New timestamp column name 
+
+    Returns:
+        (str): A string with details on records archived.
     
     Example usage:
 
@@ -51,8 +55,12 @@ def table_archiver(server, database, source_table, destination_table, timestamp_
 
     end_time = time.time()
     delta_time = end_time - start_time
-    result = 'Archived {} records from {}/{}/{} to {} in {} seconds'.format(number_records_to_add, server, database,
-                                                                            source_table, destination_table,
-                                                                            delta_time)
+    result = 'Archived {0} records from {1}/{2}/{3} to {4} in {5} seconds'.format(
+        number_records_to_add,
+        server,
+        database,
+        source_table,
+        destination_table,
+        delta_time)
 
     return result

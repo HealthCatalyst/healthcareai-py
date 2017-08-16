@@ -19,7 +19,7 @@ def readme():
         return long_description
 
 setup(name='healthcareai',
-      version='0.1.8',
+      version='1.0',
       maintainer='Levi Thatcher',
       maintainer_email='levi.thatcher@healthcatalyst.com',
       license='MIT',
@@ -31,10 +31,12 @@ setup(name='healthcareai',
       install_requires=[
           'matplotlib>=1.5.3',
           'numpy>=1.11.2',
-          'pandas>=0.19.0',
-          'pyodbc>=3.0.10',
+          'pandas>=0.20.0',
+          # 'pyodbc>=3.0.10',
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
+          'imbalanced-learn>=0.2.1',
+          'sqlalchemy>=1.1.5', 'sklearn'
       ],
       package_data={
           'examples': ['*.py', '*.ipynb']
