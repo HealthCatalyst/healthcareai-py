@@ -70,7 +70,7 @@ If you did get an error, or run into other installation issues, please [let us k
 ## Getting Started
 
 1. Read through the docs on this site.
-2. Start with either `example_regression_1.py` or `example_classification_1.py`
+2. Start with either `example_regression_1.py` or `example_classification_1.py` using our sample diabetes dataset.
 3. Modify the queries and parameters to match your data.
 4. Decide on what kind of prediction output you want.
 5. Set up your database tables to match the output schema. See the [prediction types](prediction_types.md) document for details.
