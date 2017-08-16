@@ -59,8 +59,7 @@ def validate_catalyst_prediction_sam_connection(server, destination_table, grain
 
         return _close_connection(db_connection)
 
-    except pyodbc.DatabaseError:
-        print('caught exception')
+    except pyodbc.DatabaseError as de:
         _close_connection(db_connection)
 
         error_message = """Failed to insert data into {}.\n
@@ -69,8 +68,10 @@ def validate_catalyst_prediction_sam_connection(server, destination_table, grain
         2. Verify you have read/write access.
         3. Verify that your Grain ID column might matches the input table.
         4. Verify that the output column is 'predictedprobNBR' for classification, or 'predictedvalueNBR' for regression
-        """.format(destination_table)
-        print('raising now...')
+        
+        More details:
+        {}
+        """.format(destination_table, de)
         raise HealthcareAIError(error_message)
 
 
