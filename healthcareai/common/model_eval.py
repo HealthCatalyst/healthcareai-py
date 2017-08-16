@@ -261,7 +261,6 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
     is_rf_classifier = isinstance(best_rf, sklearn.ensemble.RandomForestClassifier)
     is_rf_regressor = isinstance(best_rf, sklearn.ensemble.RandomForestRegressor)
     if not (is_rf_classifier or is_rf_regressor):
-        print(type(trained_random_forest))
         raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
 
     # Arrange columns in order of importance

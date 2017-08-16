@@ -47,8 +47,6 @@ install:
   - "activate hcconda"
 
 build_script:
-  # Upload mdf and ldf file for integration tests
-  - ps: iex .\appveyor\CIBuild_DBCreate.ps1
   # Build the compiled extension
   #- "%CMD_IN_ENV% python setup.py build"
   - "python setup.py build"

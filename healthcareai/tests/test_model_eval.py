@@ -6,6 +6,7 @@ import sklearn
 
 import healthcareai.common.model_eval as hcai_eval
 from healthcareai.common.healthcareai_error import HealthcareAIError
+import healthcareai.tests.helpers as test_helpers
 
 
 class TestROC(unittest.TestCase):
@@ -31,7 +32,7 @@ class TestPR(unittest.TestCase):
 
         # PR_AUC
         out = hcai_eval.compute_pr(df['b'], df['a'])
-        self.assertAlmostEqual(round(out['pr_auc'], 4), 0.8622)
+        test_helpers.assertBetween(self, 0.8, 0.87, out['pr_auc'])
         self.assertAlmostEqual(round(out['best_precision'], 4), 0.8000)
         self.assertAlmostEqual(round(out['best_recall'], 4), 0.6957)
 
