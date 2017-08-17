@@ -65,7 +65,7 @@ trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classifi
 
 ```python
 # Load data from a sample .csv file
-prediction_dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
+prediction_dataframe = healthcareai.load_csv('healthcareai/datasets/data/diabetes.csv')
 ```
 
 ### MSSQL
@@ -149,30 +149,34 @@ predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', inde
 import pandas as pd
 import sqlalchemy
 
-import healthcareai.common.file_io_utilities as hcai_io_utilities
+import healthcareai
 import healthcareai.common.database_connections as hcai_db
 
 
 def main():
-    # Load data from a sample .csv file
-    prediction_dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
+    # Load the included diabetes sample data
+    prediction_dataframe = healthcareai.load_diabetes()
 
-    # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
+    # prediction_dataframe = healthcareai.load_csv('path/to/your.csv')
+
+    # ...or load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
     # database = 'SAM'
     # query = """SELECT *
     #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
-    #             WHERE SystolicBPNBR is null"""
+    #             WHERE ThirtyDayReadmitFLG is null"""
     #
     # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # prediction_dataframe = pd.read_sql(query, engine)
 
-    # Drop columns that won't help machine learning
-    columns_to_remove = ['PatientID']
-    prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
+    # Peek at the first 5 rows of data
+    print(prediction_dataframe.head(5))
 
-    # Load the saved model and print out the metrics
-    trained_model = hcai_io_utilities.load_saved_model('2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
+    # Load the saved model using your filename.
+    # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
+    # Note the file you saved in example_classification_1.py and set that here.
+    trained_model = healthcareai.load_saved_model('2017-08-16T16-45-57_classification_RandomForestClassifier.pkl')
 
     # Any saved model can be inspected for properties such as plots, metrics, columns, etc. (More examples in the docs)
     trained_model.roc_plot()
@@ -195,16 +199,14 @@ def main():
     print(factors.head())
 
     # ## Get predictions with factors
-    predictions_with_factors_df = trained_model.make_predictions_with_k_factors(
-      prediction_dataframe,
-      number_top_features=3)
+    predictions_with_factors_df = trained_model.make_predictions_with_k_factors(prediction_dataframe,
+                                                                                number_top_features=3)
     print('\n\n-------------------[ Predictions + factors ]----------------------------------------------------\n')
     print(predictions_with_factors_df.head())
 
     # ## Get original dataframe with predictions and factors
     original_plus_predictions_and_factors = trained_model.make_original_with_predictions_and_factors(
-        prediction_dataframe,
-        number_top_features=3)
+        prediction_dataframe, number_top_features=3)
     print('\n\n-------------------[ Original + predictions + factors ]-------------------------------------------\n')
     print(original_plus_predictions_and_factors.head())
 
@@ -228,7 +230,7 @@ def main():
     # userid = 'fake_user'
     # password = 'fake_password'
     # table = 'prediction_output'
-    # mysql_connection_string = 'Server={};Database={};Uid={;Pwd={};'.format(server, database, userid, password)
+    # mysql_connection_string = 'Server={};Database={};Uid={};Pwd={};'.format(server, database, userid, password)
     # mysql_engine = sqlalchemy.create_engine(mysql_connection_string)
     # predictions_with_factors_df.to_sql(table, mysql_engine, if_exists='append', index=False)
 

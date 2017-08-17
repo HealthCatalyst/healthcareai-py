@@ -13,17 +13,33 @@ This code uses the diabetes sample data in datasets/data/diabetes.csv.
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-from healthcareai import AdvancedSupervisedModelTrainer
+import healthcareai
 import healthcareai.common.filters as hcai_filters
 import healthcareai.common.transformers as hcai_transformers
-import healthcareai.datasets as hcai_datasets
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 
 
 def main():
-    # Load the diabetes sample data
-    dataframe = hcai_datasets.load_diabetes()
+    # Load the included diabetes sample data
+    dataframe = healthcareai.load_diabetes()
+
+    # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
+    # dataframe = healthcareai.load_csv('path/to/your.csv')
+
+    # ...or load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # server = 'localhost'
+    # database = 'SAM'
+    # query = """SELECT *
+    #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
+    #             -- In this step, just grab rows that have a target
+    #             WHERE ThirtyDayReadmitFLG is not null"""
+    #
+    # engine = hcai_db.build_mssql_engine(server=server, database=database)
+    # dataframe = pd.read_sql(query, engine)
+
+    # Peek at the first 5 rows of data
+    print(dataframe.head(5))
 
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
@@ -52,7 +68,7 @@ def main():
     # clean_training_dataframe = custom_pipeline.fit_transform(dataframe)
 
     # Step 2: Instantiate an Advanced Trainer class with your clean and prepared training data
-    classification_trainer = AdvancedSupervisedModelTrainer(
+    classification_trainer = healthcareai.AdvancedSupervisedModelTrainer(
         dataframe=clean_training_dataframe,
         model_type='classification',
         predicted_column='ThirtyDayReadmitFLG',

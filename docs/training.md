@@ -38,7 +38,7 @@ dataframe.replace(['None'], [None], inplace=True)
 ### CSV
 
 ```python
-dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
+dataframe = healthcareai.load_csv('healthcareai/datasets/data/diabetes.csv')
 ```
 
 
@@ -161,21 +161,23 @@ trained_random_forest.save()
 
 ## Full example code
 
-Note: you can run this out-of-the-box from the healthcareai-py folder:
 
 ```python
 import pandas as pd
 
+import healthcareai
 import healthcareai.trained_models.trained_supervised_model as tsm_plots
 import healthcareai.common.database_connections as hcai_db
-from healthcareai.supvervised_model_trainer import SupervisedModelTrainer
 
 
 def main():
-    # ## Load data from a sample .csv file
-    dataframe = pd.read_csv('healthcareai/datasets/data/diabetes.csv', na_values=['None'])
+    # Load the included diabetes sample data
+    dataframe = healthcareai.load_diabetes()
 
-    # ## Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
+    # dataframe = healthcareai.load_csv('path/to/your.csv')
+
+    # ...or load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
     # database = 'SAM'
     # query = """SELECT *
@@ -186,11 +188,14 @@ def main():
     # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # dataframe = pd.read_sql(query, engine)
 
+    # Peek at the first 5 rows of data
+    print(dataframe.head(5))
+
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
 
     # Step 1: Setup a healthcareai classification trainer. This prepares your data for model building
-    classification_trainer = SupervisedModelTrainer(
+    classification_trainer = healthcareai.SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='ThirtyDayReadmitFLG',
         model_type='classification',
@@ -252,6 +257,8 @@ def main():
         save=False)
 
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
+    # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
+    # Note the file you saved and that will be used in example_classification_2.py
     trained_random_forest.save()
 
 

@@ -2,7 +2,7 @@
 
 ## Gathering the data
 
-If you have interesting data in a CSV file or even across serveral
+If you have interesting data in a CSV file or even across several
 databases on a single server, you are in good shape. While it's easiest
 to pull data into healthcareai via a single table, one can also use joins
 to gather data from separate tables or databases.

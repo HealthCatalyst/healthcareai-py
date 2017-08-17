@@ -12,16 +12,18 @@ This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
 
-from healthcareai.supervised_model_trainer import SupervisedModelTrainer
+import healthcareai
 import healthcareai.common.database_connections as hcai_db
-import healthcareai.datasets as hcai_datasets
 
 
 def main():
-    # Load the diabetes sample data
-    dataframe = hcai_datasets.load_diabetes()
+    # Load the included diabetes sample data
+    dataframe = healthcareai.load_diabetes()
 
-    # ## Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
+    # dataframe = healthcareai.load_csv('path/to/your.csv')
+
+    # ...or load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
     # database = 'SAM'
     # query = """SELECT *
@@ -32,11 +34,11 @@ def main():
     # engine = hcai_db.build_mssql_engine(server=server, database=database)
     # dataframe = pd.read_sql(query, engine)
 
-    # Drop columns that won't help machine learning
-    dataframe.drop(['PatientID'], axis=1, inplace=True)
+    # Peek at the first 5 rows of data
+    print(dataframe.head(5))
 
     # Step 1: Setup a healthcareai regression trainer. This prepares your data for model building
-    regression_trainer = SupervisedModelTrainer(
+    regression_trainer = healthcareai.SupervisedModelTrainer(
         dataframe=dataframe,
         predicted_column='SystolicBPNBR',
         model_type='regression',

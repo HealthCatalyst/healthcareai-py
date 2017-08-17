@@ -46,7 +46,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.5, 0.85, result['roc_auc'])
+        helpers.assertBetween(self, 0.5, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     # TODO see if there is a way to make this test work - it fails on travisCI because of this:
@@ -74,7 +74,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        helpers.assertBetween(self, 500, 750, result['mean_squared_error'])
+        helpers.assertBetween(self, 500, 800, result['mean_squared_error'])
         helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
@@ -83,7 +83,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
-        helpers.assertBetween(self, 400, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 400, 750, result['mean_squared_error'])
         helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
 
     def test_logistic_regression(self):
