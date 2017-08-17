@@ -74,7 +74,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        helpers.assertBetween(self, 500, 750, result['mean_squared_error'])
+        helpers.assertBetween(self, 500, 800, result['mean_squared_error'])
         helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
@@ -83,7 +83,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
-        helpers.assertBetween(self, 400, 700, result['mean_squared_error'])
+        helpers.assertBetween(self, 400, 750, result['mean_squared_error'])
         helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
 
     def test_logistic_regression(self):
