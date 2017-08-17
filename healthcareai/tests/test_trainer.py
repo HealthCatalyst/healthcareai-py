@@ -46,7 +46,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
-        helpers.assertBetween(self, 0.5, 0.85, result['roc_auc'])
+        helpers.assertBetween(self, 0.5, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
     # TODO see if there is a way to make this test work - it fails on travisCI because of this:
