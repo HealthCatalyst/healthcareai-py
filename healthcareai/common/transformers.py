@@ -38,7 +38,7 @@ class DataFrameImputer(TransformerMixin):
         num_total = sum(X.select_dtypes(include=[np.number]).count())
         percentage_imputed = num_nans/num_total*100
 
-        print(f"Percentage Imputed: {percentage_imputed}%")
+        print("Percentage Imputed: {}%".format(percentage_imputed))
 
         # return self for scikit compatibility
         return self
