@@ -74,8 +74,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_linear_model.metrics
 
-        helpers.assertBetween(self, 500, 800, result['mean_squared_error'])
-        helpers.assertBetween(self, 18, 29, result['mean_absolute_error'])
+        helpers.assertBetween(self, 450, 800, result['mean_squared_error'])
+        helpers.assertBetween(self, 16, 29, result['mean_absolute_error'])
 
     def test_random_forest_regression(self):
         trained_rf_regressor = self.regression_trainer.random_forest_regression()
