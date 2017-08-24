@@ -44,8 +44,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         trained_knn = self.classification_trainer.knn()
 
         result = trained_knn.metrics
-        self.assertIsInstance(trained_knn, TrainedSupervis
-        edModel)
+        self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
         helpers.assertBetween(self, 0.5, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
