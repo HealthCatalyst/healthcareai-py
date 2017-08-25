@@ -34,6 +34,11 @@ class DataFrameImputer(TransformerMixin):
                                or pd.core.common.is_categorical_dtype(X[c])
                                else X[c].mean() for c in X], index=X.columns)
 
+        num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
+        num_total = sum(X.select_dtypes(include=[np.number]).count())
+        percentage_imputed = num_nans/num_total*100
+
+        print("Percentage Imputed: {}%".format(percentage_imputed))
 
         # return self for scikit compatibility
         return self

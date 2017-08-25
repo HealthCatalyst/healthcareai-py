@@ -18,8 +18,6 @@ def full_pipeline(model_type, predicted_column, grain_column, impute=True):
         ('remove_grain_column', hcai_filters.DataframeColumnRemover(grain_column)),
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
-        # TODO This pipeline may drop nulls in prediction rows if impute=False
-        # TODO See https://github.com/HealthCatalyst/healthcareai-py/issues/276
         ('imputation', hcai_transformers.DataFrameImputer(impute=impute)),
         ('null_row_filter', hcai_filters.DataframeNullValueFilter(excluded_columns=None)),
         ('convert_target_to_binary', hcai_transformers.DataFrameConvertTargetToBinary(model_type, predicted_column)),
