@@ -1,10 +1,8 @@
-doc-warnings: yes
+kdoc-warnings: yes
 test-warnings: yes
 strictness: veryhigh
 autodetect: yes
 max-line-length: 120
-requirements:
-    - dev-requirements.txt
 python-targets:
     - 3
 pep8:
