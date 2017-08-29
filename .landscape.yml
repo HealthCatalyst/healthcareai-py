@@ -1,4 +1,4 @@
-kdoc-warnings: yes
+doc-warnings: yes
 test-warnings: yes
 strictness: veryhigh
 autodetect: yes
