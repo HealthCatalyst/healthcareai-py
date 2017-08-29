@@ -1,5 +1,6 @@
 # healthcareai
 
+[![Code Health](https://landscape.io/github/HealthCatalyst/healthcareai-py/master/landscape.svg?style=flat)](https://landscape.io/github/HealthCatalyst/healthcareai-py/master)
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/HealthCatalyst/healthcareai-py?branch=master&svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
 [![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=master)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
