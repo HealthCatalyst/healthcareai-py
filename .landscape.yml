@@ -1,0 +1,16 @@
+doc-warnings: yes
+test-warnings: yes
+strictness: veryhigh
+autodetect: yes
+max-line-length: 120
+requirements:
+    - dev-requirements.txt
+python-targets:
+    - 3
+pep8:
+    full: true
+pylint:
+    run: true
+    disable:
+      - too-few-public-methods
+      - invalid-name
