@@ -14,6 +14,6 @@ def load_csv(file_path):
     """
     try:
         return pd.read_csv(file_path, na_values=['None', 'null'])
-    except FileNotFoundError as fe:
+    except FileNotFoundError:
         raise HealthcareAIError(
             """No csv file was found at: {}.\nPlease check your path and try again.""".format(file_path))
