@@ -71,32 +71,23 @@ tag) so we can help others along this process.
 
 ## Getting started
 
-- Visit [healthcare.ai](http://healthcareai-py.readthedocs.io/en/latest/) to read the docs and find examples.
-    * Including this [notebook](notebooks/Example1.ipynb)
-- Open Sphinx (which installed with Anaconda) and copy the examples into a new file
-- Modify the queries and parameters to match your data
-- If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
-  ```sql
-  CREATE TABLE [SAM].[dbo].[HCAIClassificationBASE] (
-   [BindingID] [int] ,
-   [BindingNM] [varchar] (255),
-   [LastLoadDTS] [datetime2] (7),
-   [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-   [PredictedProbNBR] [decimal] (38, 2),
-   [Factor1TXT] [varchar] (255),
-   [Factor2TXT] [varchar] (255),
-   [Factor3TXT] [varchar] (255))
+1. Read through the [Getting Started](http://healthcareai-py.readthedocs.io/en/latest/getting_started/) section of the [healthcareai-py](http://healthcareai-py.readthedocs.io/en/latest/) documentation.
 
-  CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
-   [BindingID] [int],
-   [BindingNM] [varchar] (255),
-   [LastLoadDTS] [datetime2] (7),
-   [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-   [PredictedValueNBR] [decimal] (38, 2),
-   [Factor1TXT] [varchar] (255),
-   [Factor2TXT] [varchar] (255),
-   [Factor3TXT] [varchar] (255))
-  ```
+2. Read through the example files to learn how to use the healthcareai-py API.
+    * For examples of how to train and evaluate a supervised model, inspect and run either `example_regression_1.py` or `example_classification_1.py` using our sample diabetes dataset.
+    * For examples of how to use a model to make predictions, inspect and run either `example_regression_2.py` or `example_classification_2.py` after running one of the first examples.
+    * For examples of more advanced use cases, inspect and run `example_advanced.py`.
+
+3. To train and evaluate your own model, modify the queries and parameters in either `example_regression_1.py` or `example_classification_1.py` to match your own data.
+
+4. Decide what type of prediction output you want. See [Choosing a Prediction Output Type](http://healthcareai-py.readthedocs.io/en/latest/prediction_types/) for details.
+
+5. Set up your database tables to match the schema of the output type you chose. 
+   * If you are working in a Health Catalyst EDW ecosystem (primarily MSSQL), please see the [Health Catalyst EDW Instructions](http://healthcareai-py.readthedocs.io/en/latest/catalyst_edw_instructions/) for setup.
+   * Otherwise, please see [Working With Other Databases](http://healthcareai-py.readthedocs.io/en/latest/databases/)
+    for details about writing to different databases (MSSQL, MySQL, SQLite, CSV)
+
+6. Congratulations! After running one of the example files with your own data, you should have a trained model. To use your model to make predictions, modify either `example_regression_2.py` or `example_classification_2.py` to use your new model. You can then run it to see the results. 
 
 ## For Issues
 
