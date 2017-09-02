@@ -9,11 +9,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Percentage of nulls reported via console.
+- new top-level `load_csv()` function makes it easier for users by avoiding any pandas knowledge.
+
 ### Changed
+
+- Catalyst db validation test now makes it's own safely named database and table, runs the test then cleans it up. This
+eliminated the need for .mdf fixtures on appveyor.
+- validate_catalyst_prediction_sam_connection made much more robust with tests.
+- Conda environment files cleaned up substantially, speeding up builds.
+- Release preparation notes moved out of README and into a separate doc.
 
 ### Fixed
 
 - Feature importance plots now have a configurable limit to the amount of features they show with a default of 15.
+- Dataframe column filter handles None gracefully. For example, if no grain column is specified.
+- Getting started section of README vastly improved.
+
 
 ### Deprecated
 
