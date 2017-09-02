@@ -20,7 +20,7 @@ class DataFrameImputer(TransformerMixin):
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
 
-    def __init__(self, impute=True, imput_output=False):
+    def __init__(self, impute=True, imput_output=True):
         self.impute = impute
         self.object_columns = None
         self.fill = None
