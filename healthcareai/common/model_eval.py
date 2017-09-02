@@ -255,11 +255,7 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
         save (bool): True to save the plot, false to display it in a blocking thread
     """
 
-    # Validate estimator is a random forest estimator and raise error if it is not
-    is_rf_classifier = isinstance(trained_random_forest, sklearn.ensemble.RandomForestClassifier)
-    is_rf_regressor = isinstance(trained_random_forest, sklearn.ensemble.RandomForestRegressor)
-    if not (is_rf_classifier or is_rf_regressor):
-        raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
+    _validate_random_forest_estimator(trained_random_forest)
 
     # Sort the feature names and relative importances
     # TODO this portion could probably be extracted and tested, since the plot is difficult to test
@@ -272,10 +268,8 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
 
     number_of_features = x_train.shape[1]
 
-    if number_of_features <= feature_limit:
-        x_axis_limit = range(number_of_features)
-    else:
-        x_axis_limit = range(feature_limit)
+    # build a range using the lesser value
+    x_axis_limit = range(min(number_of_features, feature_limit))
 
     # Get the standard deviations for error bars
     standard_deviations = _standard_deviations_of_importances(trained_random_forest)
@@ -313,6 +307,20 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
         plt.close(figure)
     else:
         plt.show()
+
+
+def _validate_random_forest_estimator(trained_random_forest):
+    """
+    Validates that an input is a random forest estimator and raises an error if it is not.
+
+    Args:
+        trained_random_forest: any input
+    """
+    is_rf_classifier = isinstance(trained_random_forest, sklearn.ensemble.RandomForestClassifier)
+    is_rf_regressor = isinstance(trained_random_forest, sklearn.ensemble.RandomForestRegressor)
+
+    if not (is_rf_classifier or is_rf_regressor):
+        raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
 
 
 def _standard_deviations_of_importances(trained_random_forest):

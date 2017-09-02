@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- Feature importance plots now have a configurable limit to the amount of features they show with a default of 15.
+
 ### Deprecated
 
 ### Removed
