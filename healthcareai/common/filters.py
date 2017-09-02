@@ -67,6 +67,9 @@ class DataframeColumnRemover(TransformerMixin):
 
     def transform(self, X, y=None):
         validate_dataframe_input(X)
+        if self.columns_to_remove is None:
+            # if there is no grain column, for example
+            return X
 
         # Build a list of all columns except for the grain column'
         filtered_column_names = [c for c in X.columns if c not in self.columns_to_remove]
