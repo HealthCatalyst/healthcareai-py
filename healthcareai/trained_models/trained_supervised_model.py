@@ -1,3 +1,4 @@
+"""A Trained Supervised Model."""
 import time
 from datetime import datetime
 
@@ -16,7 +17,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 class TrainedSupervisedModel(object):
     """
-    The meta-object that is created when training supervised models. 
+    The meta-object that is created when training supervised models.
     
     This object contains
     
@@ -44,7 +45,7 @@ class TrainedSupervisedModel(object):
                  categorical_column_info=None,
                  training_time=None):
         """
-        Create an instance of a TrainedSupervisedModel
+        Create an instance of a TrainedSupervisedModel.
         
         Args:
             model (sklearn.base.BaseEstimator): The fit scikit learn algorithm for prediction
@@ -82,7 +83,7 @@ class TrainedSupervisedModel(object):
 
     @property
     def algorithm_name(self):
-        """ Model name extracted from the class type """
+        """Model name extracted from the class type."""
         model = hcai_helpers.extract_estimator_from_meta_estimator(self.model)
         name = type(model).__name__
 
@@ -91,7 +92,7 @@ class TrainedSupervisedModel(object):
     @property
     def is_classification(self):
         """
-        Returns True if trainer is set up for classification 
+        Return True if trainer is set up for classification.
 
         Easy check to consolidate magic strings in all the model type switches.
         """
@@ -100,7 +101,7 @@ class TrainedSupervisedModel(object):
     @property
     def is_regression(self):
         """
-        Returns True if trainer is set up for regression 
+        Return True if trainer is set up for regression.
 
         Easy check to consolidate magic strings in all the model type switches.
         """
@@ -108,18 +109,18 @@ class TrainedSupervisedModel(object):
 
     @property
     def best_hyperparameters(self):
-        """ Best hyperparameters found if model is a meta estimator """
+        """Best hyperparameters found if model is a meta estimator."""
         return hcai_helpers.get_hyperparameters_from_meta_estimator(self.model)
 
     @property
     def model_type(self):
-        """ Model type: 'regression' or 'classification' """
+        """Model type: 'regression' or 'classification'."""
         return self._model_type
 
     @property
     def binary_classification_scores(self):
         # TODO low priority, but test this
-        """ Returns the probability scores of the first class for a binary classification model. """
+        """Return the probability scores of the first class for a binary classification model."""
         if self.is_regression:
             raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
 
@@ -129,19 +130,18 @@ class TrainedSupervisedModel(object):
 
     @property
     def metrics(self):
-        """ Return the metrics that were calculated when the model was trained. """
+        """Return the metrics that were calculated when the model was trained."""
         return self._metric_by_name
 
     def save(self, filename=None, debug=True):
         """
-        Save this object to a pickle file with the given file name
+        Save this object to a pickle file with the given file name.
         
         Args:
             filename (str): Optional filename override. Defaults to `timestamp_<MODEL_TYPE>_<ALGORITHM_NAME>.pkl`. For
                 example: `2017-05-27T09-12-30_regression_LinearRegression.pkl`
             debug (bool): Print debug output to console by default
         """
-
         if filename is None:
             time_string = time.strftime("%Y-%m-%dT%H-%M-%S")
             filename = '{}_{}_{}.pkl'.format(time_string, self.model_type, self.algorithm_name)
@@ -153,7 +153,7 @@ class TrainedSupervisedModel(object):
 
     def make_predictions(self, dataframe):
         """
-        Given a new dataframe, apply data transformations and return a dataframe of predictions 
+        Given a new dataframe, apply data transformations and return a dataframe of predictions.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -161,7 +161,6 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame: A dataframe containing the grain id and predicted values
         """
-
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
@@ -183,6 +182,8 @@ class TrainedSupervisedModel(object):
 
     def prepare_and_subset(self, dataframe):
         """
+        Prepare and subset the raw data using the pipeline saved during training.
+
         Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns that were
         in the original model.
         
@@ -195,7 +196,6 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
             columns the model expects.
         """
-
         # We want to be able to make predictions on new data (without labels) so don't want to insist that the
         # prediction column be present in the new data.  To get around this, add the prediction columns filled with
         # NaNs.  This column should be dropped when the dataframe is run through the pipeline.
@@ -250,7 +250,7 @@ class TrainedSupervisedModel(object):
 
     def make_factors(self, dataframe, number_top_features=3):
         """
-        Given a prediction dataframe, build and return a list of the top k features in dataframe format
+        Given a prediction dataframe, build and return a list of the top k features in dataframe format.
         
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -259,7 +259,6 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame:  A dataframe containing the grain id and factors
         """
-
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
@@ -287,8 +286,10 @@ class TrainedSupervisedModel(object):
 
     def make_predictions_with_k_factors(self, dataframe, number_top_features=3):
         """
+        Create a datarrame with predictions and factors.
+
         Given a prediction dataframe, build and return a dataframe with the grain column, the predictions and the top k
-        feautures.
+        features.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -297,7 +298,6 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame: Predictions with factors and grain column
         """
-
         # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice. Consider
         # Get the factors and predictions
         results = self.make_factors(dataframe, number_top_features=number_top_features)
@@ -314,8 +314,10 @@ class TrainedSupervisedModel(object):
 
     def make_original_with_predictions_and_factors(self, dataframe, number_top_features=3):
         """
+        Create a dataframe containing the original data, predictions and factors.
+
         Given a prediction dataframe, build and return a dataframe with the all the original columns, the predictions, 
-        and the top k feautures.
+        and the top k features.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -324,7 +326,6 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame:  
         """
-
         # TODO Note this is inefficient since we are running the raw dataframe through the pipeline twice.
         # Get the factors and predictions
         results = self.make_predictions_with_k_factors(dataframe, number_top_features=number_top_features)
@@ -339,8 +340,10 @@ class TrainedSupervisedModel(object):
 
     def create_catalyst_dataframe(self, dataframe):
         """
+        Create a Health Catalyst specific dataframe of predictions.
+
         Given a prediction dataframe, build and return a dataframe with the health catalyst specific column names, the
-        predictions, and the top 3 feautures.
+        predictions, and the top 3 features.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -371,7 +374,6 @@ class TrainedSupervisedModel(object):
             predicted_column_name (str): optional predicted column name (defaults to PredictedProbNBR or
                 PredictedValueNBR)
         """
-
         # Make predictions in specific format
         sam_df = self.create_catalyst_dataframe(dataframe)
 
@@ -398,7 +400,7 @@ class TrainedSupervisedModel(object):
                           prediction_generator,
                           predicted_column_name=None):
         """
-        Given a dataframe you want predictions on, make predictions and save them to an sqlite table
+        Given a dataframe you want predictions on, make predictions and save them to an sqlite table.
 
         Args:
             prediction_dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -428,13 +430,13 @@ class TrainedSupervisedModel(object):
         healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
     def roc_plot(self):
-        """ Returns a plot of the ROC curve of the holdout set from model training. """
+        """Return a plot of the ROC curve of the holdout set from model training."""
         self.validate_classification()
         tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
     def roc(self, print_output=True):
         """
-        Prints out ROC details and returns them with cutoffs.
+        Print out ROC details and return them with cutoffs.
         
         Note this is a simple subset of TrainedSupervisedModel.metrics()
         
@@ -484,15 +486,16 @@ class TrainedSupervisedModel(object):
         return roc
 
     def pr_plot(self):
-        """ Returns a plot of the PR curve of the holdout set from model training. """
+        """Return a plot of the PR curve of the holdout set from model training."""
         self.validate_classification()
         tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
         """
-        Prints out PR details and returns them with cutoffs.
+        Print out PR details and return them with cutoffs.
 
         Note this is a simple subset of TrainedSupervisedModel.metrics()
+
         Args:
             print_output (bool): True (default) to print a table of output.
 
@@ -538,9 +541,9 @@ class TrainedSupervisedModel(object):
         return pr
 
     def validate_classification(self):
-        """
-        Checks that a model is classification and raises an error if it is not. Run this on any method that only makes
-        sense for classification.
+        """Validate that a model is classification and raise an error if it is not.
+
+        Run this on any method that only makes sense for classification.
         """
         # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
@@ -548,8 +551,9 @@ class TrainedSupervisedModel(object):
 
     def print_training_results(self):
         """
-        Print metrics, stats and hyperparameters of a trained supervised model including the model name, training time,
-        hyperparameters, and performance metrics.
+        Print metrics, stats and hyperparameters of a trained supervised model.
+
+        This includes the model name, training time, hyperparameters, and performance metrics.
         """
         print('{} Training Results:'.format(self.algorithm_name))
         print('- Training time:')
@@ -576,7 +580,7 @@ class TrainedSupervisedModel(object):
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
     """
-    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search
+    Given an instance of a TrainedSupervisedModel, return the main estimator, regardless of random search.
     
     Args:
         trained_supervised_model (TrainedSupervisedModel):
@@ -604,7 +608,7 @@ def get_estimator_from_trained_supervised_model(trained_supervised_model):
 
 def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
     """
-    Given a single or list of trained supervised models, plot a ROC or PR curve for each one
+    Given a single or list of trained supervised models, plot a ROC or PR curve for each one.
     
     Args:
         plot_type (str): 'ROC' (default) or 'PR' 
@@ -642,15 +646,21 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
     plotter(metrics_by_model, save=save, debug=False)
 
 
-def plot_rf_features_from_tsm(trained_supervised_model, x_train, save=False):
+def plot_rf_features_from_tsm(trained_supervised_model, x_train, feature_limit=15, save=False):
     """
     Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph.
     
     Args:
-        trained_supervised_model (TrainedSupervisedModel): 
+        trained_supervised_model (TrainedSupervisedModel):
         x_train (numpy.array): A 2D numpy array that was used for training 
+        feature_limit (int): The maximum number of features to plot
         save (bool): True to save the plot, false to display it in a blocking thread
     """
     model = get_estimator_from_trained_supervised_model(trained_supervised_model)
     column_names = trained_supervised_model.column_names
-    hcai_model_evaluation.plot_random_forest_feature_importance(model, x_train, column_names, save=save)
+    hcai_model_evaluation.plot_random_forest_feature_importance(
+        model,
+        x_train,
+        column_names,
+        feature_limit=feature_limit,
+        save=save)

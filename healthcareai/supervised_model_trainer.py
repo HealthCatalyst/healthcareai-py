@@ -1,3 +1,5 @@
+"""Trains Supervised Models."""
+
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
@@ -5,14 +7,11 @@ from healthcareai.common.get_categorical_levels import get_categorical_levels
 
 
 class SupervisedModelTrainer(object):
-    """
-    This class helps create a model using several common classifiers and regressors, both of which report appropiate
-    metrics.
-    """
+    """This class trains models using several common classifiers and regressors and reports appropriate metrics."""
 
     def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
         """
-        Set up a SupervisedModelTrainer
+        Set up a SupervisedModelTrainer.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
@@ -59,14 +58,15 @@ class SupervisedModelTrainer(object):
 
     @property
     def clean_dataframe(self):
-        """ Returns the dataframe after the preparation pipeline (imputation and such) """
+        """Return the dataframe after the preparation pipeline (imputation and such)."""
         return self._advanced_trainer.dataframe
 
-    def random_forest(self, save_plot=False):
+    def random_forest(self, feature_importance_limit=15, save_plot=False):
         # TODO Convenience method. Probably not needed?
-        """ Train a random forest model and print out the model performance metrics.
+        """Train a random forest model and print out the model performance metrics.
 
         Args:
+            feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
             save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
                 display.
 
@@ -74,12 +74,14 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         if self._advanced_trainer.model_type is 'classification':
-            return self.random_forest_classification(save_plot=save_plot)
+            return self.random_forest_classification(
+                feature_importance_limit=feature_importance_limit,
+                save_plot=save_plot)
         elif self._advanced_trainer.model_type is 'regression':
             return self.random_forest_regression()
 
     def knn(self):
-        """ Train a knn model and print out the model performance metrics.
+        """Train a knn model and print out the model performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -97,7 +99,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_regression(self):
-        """ Train a random forest regression model and print out the model performance metrics.
+        """Train a random forest regression model and print out the model performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -115,34 +117,40 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-    def random_forest_classification(self, save_plot=False):
-        """ Train a random forest classification model, print out performance metrics and show a feature importance plot.
+    def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
+        """Train a random forest classification model, print performance metrics and show a feature importance plot.
         
         Args:
+            feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
             save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
                 display.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-
         model_name = 'Random Forest Classification'
         print('\nTraining {}'.format(model_name))
 
         # Train the model
-        trained_model = self._advanced_trainer.random_forest_classifier(trees=200, scoring_metric='roc_auc',
-                                                                        randomized_search=True)
+        trained_model = self._advanced_trainer.random_forest_classifier(
+            trees=200,
+            scoring_metric='roc_auc',
+            randomized_search=True)
 
         # Display the model metrics
         trained_model.print_training_results()
 
         # Save or show the feature importance graph
-        hcai_tsm.plot_rf_features_from_tsm(trained_model, self._advanced_trainer.x_train, save=save_plot)
+        hcai_tsm.plot_rf_features_from_tsm(
+            trained_model,
+            self._advanced_trainer.x_train,
+            feature_limit=feature_importance_limit,
+            save=save_plot)
 
         return trained_model
 
     def logistic_regression(self):
-        """ Train a logistic regression model and print out the model performance metrics.
+        """Train a logistic regression model and print out the model performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -159,7 +167,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def linear_regression(self):
-        """ Train a linear regression model and print out the model performance metrics.
+        """Train a linear regression model and print out the model performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -176,7 +184,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def lasso_regression(self):
-        """ Train a lasso regression model and print out the model performance metrics.
+        """Train a lasso regression model and print out the model performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -193,7 +201,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def ensemble(self):
-        """ Train a ensemble model and print out the model performance metrics.
+        """Train a ensemble model and print out the model performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -222,5 +230,5 @@ class SupervisedModelTrainer(object):
 
     @property
     def advanced_features(self):
-        """ Returns the underlying AdvancedSupervisedModelTrainer instance. For advanced users only. """
+        """Return the underlying AdvancedSupervisedModelTrainer instance. For advanced users only."""
         return self._advanced_trainer

@@ -112,7 +112,11 @@ def main():
     )
 
     # Show the random forest feature importance graph
-    hcai_tsm.plot_rf_features_from_tsm(trained_random_forest, classification_trainer.x_train, save=False)
+    hcai_tsm.plot_rf_features_from_tsm(
+        trained_random_forest,
+        classification_trainer.x_train,
+        feature_limit=20,
+        save=False)
 
     # ## Train a custom ensemble of models
     # The ensemble methods take a dictionary of TrainedSupervisedModels by a name of your choice

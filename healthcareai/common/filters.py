@@ -1,3 +1,8 @@
+"""Filters
+
+This module contains filters for preprocessing data. Most operate on DataFrames and are named appropriately.
+"""
+
 from sklearn.base import TransformerMixin
 from pandas.core.frame import DataFrame
 
@@ -5,19 +10,19 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def validate_dataframe_input(possible_dataframe):
-    """ Simple validation that raises an error if an input is not a pandas dataframe. Silent if it is. """
+    """Validate that input is a pandas dataframe and raise an error if it is not. Stays silent if it is."""
     if is_dataframe(possible_dataframe) is False:
         raise HealthcareAIError(
             'This transformer requires a pandas dataframe and you passed in a {}'.format(type(possible_dataframe)))
 
 
 def is_dataframe(possible_dataframe):
-    """ Simple helper that returns True if an input is a pandas dataframe """
+    """Simple helper that returns True if an input is a pandas dataframe."""
     return issubclass(DataFrame, type(possible_dataframe))
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
-    """ Given a pandas dataframe, remove columns with suffix 'DTS' """
+    """Given a pandas dataframe, remove columns with suffix 'DTS'."""
 
     def __init__(self):
         pass
@@ -36,7 +41,7 @@ class DataframeColumnSuffixFilter(TransformerMixin):
 
 
 class DataFrameColumnDateTimeFilter(TransformerMixin):
-    """ Given a pandas dataframe, remove any columns that has the type datetime """
+    """Given a pandas dataframe, remove any columns that has the type datetime."""
 
     def __init__(self):
         pass
@@ -52,7 +57,7 @@ class DataFrameColumnDateTimeFilter(TransformerMixin):
 
 
 class DataframeColumnRemover(TransformerMixin):
-    """ Given a pandas dataframe, remove the given column or columns in list form """
+    """Given a pandas dataframe, remove the given column or columns in list form."""
 
     def __init__(self, columns_to_remove):
         self.columns_to_remove = columns_to_remove
@@ -62,6 +67,9 @@ class DataframeColumnRemover(TransformerMixin):
 
     def transform(self, X, y=None):
         validate_dataframe_input(X)
+        if self.columns_to_remove is None:
+            # if there is no grain column, for example
+            return X
 
         # Build a list of all columns except for the grain column'
         filtered_column_names = [c for c in X.columns if c not in self.columns_to_remove]
@@ -71,14 +79,10 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    """ Given a pandas dataframe, remove rows that contain null values in any column except the excluded """
+    """Given a pandas dataframe, remove rows that contain null values in any column except the excluded."""
 
     def __init__(self, excluded_columns=None):
         # TODO validate excluded column is a list
-        """
-        Given a pandas dataframe, return a dataframe after removing any rows with Null values
-        :param excluded_columns: an array of column names to ignore
-        """
         self.excluded_columns = excluded_columns or []
 
     def fit(self, x, y=None):

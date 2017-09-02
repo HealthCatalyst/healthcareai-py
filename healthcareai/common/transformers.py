@@ -1,3 +1,7 @@
+"""Transformers
+
+This module contains transformers for preprocessing data. Most operate on DataFrames and are named appropriately.
+"""
 import numpy as np
 import pandas as pd
 
@@ -38,7 +42,7 @@ class DataFrameImputer(TransformerMixin):
         if self.imput_output:
             num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
             num_total = sum(X.select_dtypes(include=[np.number]).count())
-            percentage_imputed = num_nans/num_total*100
+            percentage_imputed = num_nans / num_total * 100
             print("Percentage Imputed: %.2f%%" % percentage_imputed)
             print("Note: Impute will always happen on prediction dataframe, otherwise rows are dropped, and will lead "
                   "to missing predictions")
@@ -66,7 +70,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
     Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV). Passes through data
     for regression models unchanged. This is to simplify the data pipeline logic. (Though that may be a more appropriate
     place for the logic...)
-    
+
     Note that this makes healthcareai only handle N/Y in pred column
     """
 
@@ -91,7 +95,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
 
 
 class DataFrameCreateDummyVariables(TransformerMixin):
-    """ Convert all categorical columns into dummy/indicator variables. Exclude given columns. """
+    """Convert all categorical columns into dummy/indicator variables. Exclude given columns."""
 
     def __init__(self, excluded_columns=None):
         self.excluded_columns = excluded_columns
@@ -115,7 +119,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
-    """ Convert a column into numeric variables. """
+    """Convert a column into numeric variables."""
 
     def __init__(self, column_name):
         self.column_name = column_name
@@ -151,7 +155,6 @@ class DataFrameUnderSampling(TransformerMixin):
     def transform(self, X, y=None):
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
-
 
         # Extract predicted column
         y = np.squeeze(X[[self.predicted_column]])
@@ -222,12 +225,7 @@ class DataFrameOverSampling(TransformerMixin):
 
 
 class DataFrameDropNaN(TransformerMixin):
-    """
-    Remove NaN values.
-
-    Columns that are NaN or None are removed.
-
-    """
+    """Remove NaN values. Columns that are NaN or None are removed."""
 
     def __init__(self):
         pass
@@ -242,12 +240,8 @@ class DataFrameDropNaN(TransformerMixin):
 
 
 class DataFrameFeatureScaling(TransformerMixin):
-    """
-    Scales numeric features.
+    """Scales numeric features. Columns that are numerics are scaled, or otherwise specified."""
 
-    Columns that are numerics are scaled, or otherwise specified.
-
-    """
     def __init__(self, columns_to_scale=None, reuse=None):
         self.columns_to_scale = columns_to_scale
         self.reuse = reuse
