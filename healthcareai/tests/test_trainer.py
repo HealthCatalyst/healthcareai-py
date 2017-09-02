@@ -49,12 +49,12 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         helpers.assertBetween(self, 0.5, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
 
-    # TODO see if there is a way to make this test work - it fails on travisCI because of this:
+    # TODO see if there is a way to make this test work in travisCI. It fails with this error:
     # TODO > _tkinter.TclError: no display name and no $DISPLAY environment variable
     @unittest.skipIf("SKIP_MSSQL_TESTS" in os.environ and os.environ["SKIP_MSSQL_TESTS"] == "true",
                      "Skipping this on Travis CI.")
     def test_random_forest_classification(self):
-        # Force plot to save to prevent blocking when testing
+        # Force plot to save to prevent matplotlib blocking during testing
         trained_random_forest = self.classification_trainer.random_forest_classification(save_plot=True)
         result = trained_random_forest.metrics
         self.assertIsInstance(trained_random_forest, TrainedSupervisedModel)

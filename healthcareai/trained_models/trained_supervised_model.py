@@ -642,15 +642,21 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
     plotter(metrics_by_model, save=save, debug=False)
 
 
-def plot_rf_features_from_tsm(trained_supervised_model, x_train, save=False):
+def plot_rf_features_from_tsm(trained_supervised_model, x_train, feature_limit=15, save=False):
     """
     Given an instance of a TrainedSupervisedModel, the x_train data, display or save a feature importance graph.
     
     Args:
-        trained_supervised_model (TrainedSupervisedModel): 
+        trained_supervised_model (TrainedSupervisedModel):
         x_train (numpy.array): A 2D numpy array that was used for training 
+        feature_limit (int): The maximum number of features to plot
         save (bool): True to save the plot, false to display it in a blocking thread
     """
     model = get_estimator_from_trained_supervised_model(trained_supervised_model)
     column_names = trained_supervised_model.column_names
-    hcai_model_evaluation.plot_random_forest_feature_importance(model, x_train, column_names, save=save)
+    hcai_model_evaluation.plot_random_forest_feature_importance(
+        model,
+        x_train,
+        column_names,
+        feature_limit=feature_limit,
+        save=save)
