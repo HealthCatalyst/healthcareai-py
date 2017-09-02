@@ -1,3 +1,5 @@
+"""Model evaluation tools."""
+
 import os
 import sklearn
 import itertools
@@ -16,7 +18,7 @@ DIAGONAL_LINE_STYLE = 'dotted'
 
 def compute_roc(y_test, probability_predictions):
     """
-    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds
+    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds.
 
     Args:
         y_test (list) : true label values corresponding to the predictions. Also length n.
@@ -52,8 +54,8 @@ def compute_roc(y_test, probability_predictions):
 
 
 def compute_pr(y_test, probability_predictions):
-    """ 
-    Compute Precision-Recall, thresholds and PR AUC
+    """
+    Compute Precision-Recall, thresholds and PR AUC.
 
     Args:
         y_test (list) : true label values corresponding to the predictions. Also length n.
@@ -90,7 +92,7 @@ def compute_pr(y_test, probability_predictions):
 
 def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained estimator, calculate metrics
+    Given a trained estimator, calculate metrics.
 
     Args:
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
@@ -114,7 +116,7 @@ def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
 
 def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained estimator, calculate metrics
+    Given a trained estimator, calculate metrics.
 
     Args:
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
@@ -144,7 +146,7 @@ def calculate_binary_classification_metrics(trained_sklearn_estimator, x_test, y
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     """
-    From a given dictionary of thresholds by model, create a ROC curve for each model
+    From a given dictionary of thresholds by model, create a ROC curve for each model.
 
     Args:
         roc_thresholds_by_model (dict): A dictionary of ROC thresholds by model name.
@@ -194,7 +196,7 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
 
 def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     """
-    From a given dictionary of thresholds by model, create a PR curve for each model
+    From a given dictionary of thresholds by model, create a PR curve for each model.
     
     Args:
         pr_thresholds_by_model (dict): A dictionary of PR thresholds by model name.
@@ -244,8 +246,7 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
 
 def plot_random_forest_feature_importance(trained_random_forest, x_train, feature_names, feature_limit=15, save=False):
     """
-    Given a scikit learn random forest estimator, an x_train array, the feature names save or display a feature
-    importance plot.
+    Given a random forest estimator, an x_train array, the feature names save or display a feature importance plot.
     
     Args:
         trained_random_forest (sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.RandomForestRegressor): 
@@ -254,7 +255,6 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
         feature_limit (int): Number of features to display on graph
         save (bool): True to save the plot, false to display it in a blocking thread
     """
-
     _validate_random_forest_estimator(trained_random_forest)
 
     # Sort the feature names and relative importances
@@ -317,7 +317,6 @@ def _validate_random_forest_estimator(trained_random_forest):
     Args:
         trained_random_forest: any input
     """
-
     is_rf_classifier = isinstance(trained_random_forest, sklearn.ensemble.RandomForestClassifier)
     is_rf_regressor = isinstance(trained_random_forest, sklearn.ensemble.RandomForestRegressor)
 
@@ -336,7 +335,6 @@ def _standard_deviations_of_importances(trained_random_forest):
     Returns:
         list: A numeric list
     """
-
     # Get the individual feature importances from each tree to find the standard deviation for plotting error bars
     individual_feature_importances = [tree.feature_importances_ for tree in trained_random_forest.estimators_]
     standard_deviations = np.std(individual_feature_importances, axis=0)
