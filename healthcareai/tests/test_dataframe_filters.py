@@ -152,6 +152,18 @@ class TestDataframeGrainColumnDataFilter(unittest.TestCase):
         self.assertEqual(len(result.columns), 3)
         self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
 
+    def test_removes_nothing_when_none_is_passed(self):
+        df = pd.DataFrame({
+            'category': ['a', 'b', 'c'],
+            'gender': ['F', 'M', 'F'],
+            'age': [1, 5, 4]
+        })
+
+        result = filters.DataframeColumnRemover(None).fit_transform(df)
+
+        self.assertEqual(len(result.columns), 3)
+        self.assertEqual(list(result.columns).sort(), list(df.columns).sort())
+
     def test_removes_match(self):
         df = pd.DataFrame({
             'category': ['a', 'b', 'c'],

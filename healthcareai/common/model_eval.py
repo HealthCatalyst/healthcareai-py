@@ -269,7 +269,8 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
     number_of_features = x_train.shape[1]
 
     # build a range using the lesser value
-    x_axis_limit = range(min(number_of_features, feature_limit))
+    max_features = min(number_of_features, feature_limit)
+    x_axis_limit = range(max_features)
 
     # Get the standard deviations for error bars
     standard_deviations = _standard_deviations_of_importances(trained_random_forest)
@@ -279,8 +280,8 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
 
     # Set up the plot and axes
     figure = plt.figure()
-    plt.title("Relative Feature Importance")
-    plt.ylabel('Relative Feature Importance')
+    plt.title('Top {} (of {}) Important Features'.format(max_features, number_of_features))
+    plt.ylabel('Relative Importance')
 
     # Plot each feature
     plt.bar(
