@@ -311,11 +311,12 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
 
 def _validate_random_forest_estimator(trained_random_forest):
     """
-    Validates that an input is a random forest estimator and raises an error if it is not.
+    Validate that an input is a random forest estimator and raise an error if it is not.
 
     Args:
         trained_random_forest: any input
     """
+
     is_rf_classifier = isinstance(trained_random_forest, sklearn.ensemble.RandomForestClassifier)
     is_rf_regressor = isinstance(trained_random_forest, sklearn.ensemble.RandomForestRegressor)
 
@@ -334,6 +335,7 @@ def _standard_deviations_of_importances(trained_random_forest):
     Returns:
         list: A numeric list
     """
+
     # Get the individual feature importances from each tree to find the standard deviation for plotting error bars
     individual_feature_importances = [tree.feature_importances_ for tree in trained_random_forest.estimators_]
     standard_deviations = np.std(individual_feature_importances, axis=0)

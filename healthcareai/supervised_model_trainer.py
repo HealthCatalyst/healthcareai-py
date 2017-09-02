@@ -117,8 +117,8 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
-        """ Train a random forest classification model, print out performance metrics and show a feature importance
-        plot.
+        """
+        Train a random forest classification model, print out performance metrics and show a feature importance plot.
         
         Args:
             feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
