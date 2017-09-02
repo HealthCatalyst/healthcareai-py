@@ -84,7 +84,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         result = trained_rf_regressor.metrics
 
         helpers.assertBetween(self, 350, 750, result['mean_squared_error'])
-        helpers.assertBetween(self, 10, 20, result['mean_absolute_error'])
+        helpers.assertBetween(self, 10, 25, result['mean_absolute_error'])
 
     def test_logistic_regression(self):
         trained_lr = self.classification_trainer.logistic_regression()
