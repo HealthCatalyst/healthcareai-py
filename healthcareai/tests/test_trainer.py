@@ -101,8 +101,8 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_ensemble.metrics
 
-        helpers.assertBetween(self, 0.6, 0.95, result['roc_auc'])
-        helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.6, 0.97, result['roc_auc'])
+        helpers.assertBetween(self, 0.6, 0.97, result['accuracy'])
 
     def test_ensemble_regression(self):
         self.assertRaises(HealthcareAIError, self.regression_trainer.ensemble)
