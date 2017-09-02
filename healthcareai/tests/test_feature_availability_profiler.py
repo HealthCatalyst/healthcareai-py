@@ -31,7 +31,7 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
         df_out = feature_availability_profiler(data_frame=self.df,
                                                admit_col_name='AdmitDTS',
                                                last_load_col_name='LastLoadDTS',
-                                               plot_flag= False,
+                                               plot_flag=False,
                                                list_flag=False)
 
         self.assertTrue(df_out.iloc[-1, 1] > 65 and df_out.iloc[-1, 1] < 85)
