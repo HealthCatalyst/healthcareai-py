@@ -1,8 +1,7 @@
 from healthcareai.common.feature_availability_profiler import feature_availability_profiler
 import pandas as pd
-import time
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import timedelta
 from random import randrange
 import unittest
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -11,8 +10,7 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 class TestFeatureAvailabilityProfiler(unittest.TestCase):
     def setUp(self):
         self.df = pd.DataFrame(np.random.randn(1000, 4),
-                               columns=['A', 'B', 'AdmitDTS',
-                                       'LastLoadDTS'])
+                               columns=['A', 'B', 'AdmitDTS', 'LastLoadDTS'])
         # generate load date
         self.df['LastLoadDTS'] = pd.datetime(2015, 5, 20)
         # generate datetime objects for admit date
@@ -30,17 +28,18 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
         self.df.loc[a, ['B']] = np.nan
 
     def runTest(self):
-        dfOut = feature_availability_profiler(data_frame=self.df,
-                                              admit_col_name='AdmitDTS',
-                                              last_load_col_name='LastLoadDTS',
-                                              plot_flag= False,
-                                              list_flag=False)
+        df_out = feature_availability_profiler(data_frame=self.df,
+                                               admit_col_name='AdmitDTS',
+                                               last_load_col_name='LastLoadDTS',
+                                               plot_flag=False,
+                                               list_flag=False)
 
-        self.assertTrue(dfOut.iloc[-1,1] > 65 and dfOut.iloc[-1,1] < 85)
-        self.assertTrue(dfOut.iloc[-1, 0] > 40 and dfOut.iloc[-1, 0] < 60)
+        self.assertTrue(df_out.iloc[-1, 1] > 65 and df_out.iloc[-1, 1] < 85)
+        self.assertTrue(df_out.iloc[-1, 0] > 40 and df_out.iloc[-1, 0] < 60)
 
     def tearDown(self):
         del self.df
+
 
 class TestFeatureAvailabilityProfilerError1(unittest.TestCase):
     def setUp(self):
@@ -49,13 +48,14 @@ class TestFeatureAvailabilityProfilerError1(unittest.TestCase):
                                         'LastLoadDTS'])
 
     def runTest(self):
-         with self.assertRaises(HealthcareAIError) as error:
+        with self.assertRaises(HealthcareAIError) as error:
             dfOut = feature_availability_profiler(data_frame=self.df,
                                                   admit_col_name='AdmitDTS',
                                                   last_load_col_name='LastLoadDTS',
                                                   plot_flag=False,
                                                   list_flag=False)
-         self.assertEqual('Admit Date column is not a date type', error.exception.message)
+        self.assertEqual('Admit Date column is not a date type', error.exception.message)
+
 
 class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
     def setUp(self):
@@ -67,13 +67,14 @@ class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
 
     def runTest(self):
         with self.assertRaises(HealthcareAIError) as error:
-            dfOut = feature_availability_profiler(data_frame=self.df,
-                                                  admit_col_name='AdmitDTS',
-                                                  last_load_col_name='LastLoadDTS',
-                                                  plot_flag=False,
-                                                  list_flag=False)
+            df_out = feature_availability_profiler(data_frame=self.df,
+                                                   admit_col_name='AdmitDTS',
+                                                   last_load_col_name='LastLoadDTS',
+                                                   plot_flag=False,
+                                                   list_flag=False)
         self.assertEqual('Last Load Date column is not a date type',
                          error.exception.message)
+
 
 class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
     def setUp(self):
@@ -94,11 +95,11 @@ class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
 
     def runTest(self):
         with self.assertRaises(HealthcareAIError) as error:
-            dfOut = feature_availability_profiler(data_frame=self.df,
-                                                  admit_col_name='AdmitDTS',
-                                                  last_load_col_name='LastLoadDTS',
-                                                  plot_flag=False,
-                                                  list_flag=False)
+            df_out = feature_availability_profiler(data_frame=self.df,
+                                                   admit_col_name='AdmitDTS',
+                                                   last_load_col_name='LastLoadDTS',
+                                                   plot_flag=False,
+                                                   list_flag=False)
         self.assertEqual('Dataframe must be at least 3 columns',
                          error.exception.message)
 
