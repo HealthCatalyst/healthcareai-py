@@ -7,12 +7,14 @@ from healthcareai.common.impact_coding import impact_coding_on_a_single_column
 
 
 class TestImpactCoding(unittest.TestCase):
-    """ Tests :
-        a) column is being re-named correctly
-        b) column is dropped
-        c) number of impact values equals the number of distinct categories
-        d) amount of data after is equal to the expected number of rows
-        e) actual values are assigned correctly
+    """Test impact coding.
+
+    a) column is being re-named correctly
+    b) column is dropped
+    c) number of impact values equals the number of distinct categories
+    d) amount of data after is equal to the expected number of rows
+    e) actual values are assigned correctly
+
     """
 
     # TODO deprecate `fixture` after a better test for impact coding is devised.
