@@ -4,7 +4,7 @@ import healthcareai.common.transformers as hcai_transformers
 import healthcareai.common.filters as hcai_filters
 
 
-def full_pipeline(model_type, predicted_column, grain_column, impute=True, imput_output=True):
+def full_pipeline(model_type, predicted_column, grain_column, impute=True, verbose=True):
     """
     Builds the data preparation pipeline. Sequentially runs transformers and filters to clean and prepare the data.
     
@@ -18,7 +18,7 @@ def full_pipeline(model_type, predicted_column, grain_column, impute=True, imput
         ('remove_grain_column', hcai_filters.DataframeColumnRemover(grain_column)),
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
-        ('imputation', hcai_transformers.DataFrameImputer(impute=impute, imput_output=imput_output)),
+        ('imputation', hcai_transformers.DataFrameImputer(impute=impute, verbose=verbose)),
         ('null_row_filter', hcai_filters.DataframeNullValueFilter(excluded_columns=None)),
         ('convert_target_to_binary', hcai_transformers.DataFrameConvertTargetToBinary(model_type, predicted_column)),
         ('prediction_to_numeric', hcai_transformers.DataFrameConvertColumnToNumeric(predicted_column)),

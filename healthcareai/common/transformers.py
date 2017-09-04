@@ -20,11 +20,11 @@ class DataFrameImputer(TransformerMixin):
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
 
-    def __init__(self, impute=True, imput_output=True):
+    def __init__(self, impute=True, verbose=True):
         self.impute = impute
         self.object_columns = None
         self.fill = None
-        self.imput_output = imput_output
+        self.verbose = verbose
 
     def fit(self, X, y=None):
         # Return if not imputing
@@ -39,7 +39,7 @@ class DataFrameImputer(TransformerMixin):
                                   or pd.core.common.is_categorical_dtype(X[c])
                                else X[c].mean() for c in X], index=X.columns)
 
-        if self.imput_output:
+        if self.verbose:
             num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
             num_total = sum(X.select_dtypes(include=[np.number]).count())
             percentage_imputed = num_nans / num_total * 100
