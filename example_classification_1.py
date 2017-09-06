@@ -18,6 +18,7 @@ import healthcareai.common.database_connections as hcai_db
 
 
 def main():
+    """Template script for using healthcareai to train a classification model."""
     # Load the included diabetes sample data
     dataframe = healthcareai.load_diabetes()
 
@@ -32,7 +33,7 @@ def main():
     #             -- In this step, just grab rows that have a target
     #             WHERE ThirtyDayReadmitFLG is not null"""
     #
-    # engine = hcai_db.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine_using_trusted_connections(server=server, database=database)
     # dataframe = pd.read_sql(query, engine)
 
     # Peek at the first 5 rows of data
