@@ -77,7 +77,7 @@ database = 'SAM'
 query = """SELECT *
             FROM [SAM].[dbo].[DiabetesClincialSampleData]
             WHERE SystolicBPNBR is null"""
-engine = hcai_db.build_mssql_engine(server=server, database=database)
+engine = hcai_db.build_mssql_engine_using_trusted_connections(server=server, database=database)
 prediction_dataframe = pd.read_sql(query, engine)
 ```
 
@@ -122,7 +122,7 @@ server = 'localhost'
 database = 'my_database'
 table = 'predictions_output'
 schema = 'dbo'
-engine = hcai_db.build_mssql_engine(server, database)
+engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
 
 predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 ```
@@ -167,7 +167,7 @@ def main():
     #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
     #             WHERE ThirtyDayReadmitFLG is null"""
     #
-    # engine = hcai_db.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine_using_trusted_connections(server=server, database=database)
     # prediction_dataframe = pd.read_sql(query, engine)
 
     # Peek at the first 5 rows of data
@@ -221,7 +221,7 @@ def main():
     # database = 'my_database'
     # table = 'predictions_output'
     # schema = 'dbo'
-    # engine = hcai_db.build_mssql_engine(server, database)
+    # engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     # ## MySQL using standard authentication
