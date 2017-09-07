@@ -119,7 +119,7 @@ class SupervisedModelTrainer(object):
         """Train a random forest classification model, print performance metrics and show a feature importance plot.
         
         Args:
-            feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
+            feature_importance_limit (int): The maximum number of features to show in the feature importance plot
             save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
                 display.
 

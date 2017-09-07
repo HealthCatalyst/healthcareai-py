@@ -38,7 +38,7 @@ dataframe.replace(['None'], [None], inplace=True)
 ### CSV
 
 ```python
-dataframe = healthcareai.load_csv('healthcareai/datasets/data/diabetes.csv')
+dataframe = healthcareai.load_csv('path_to_your/data.csv')
 ```
 
 
