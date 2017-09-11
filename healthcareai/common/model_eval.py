@@ -296,7 +296,8 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
     # x axis scales by default
     # set y axis min to zero
     plt.ylim(ymin=0)
-    plt.tight_layout()
+    # plt.tight_layout() # Do not use tight_layout until https://github.com/matplotlib/matplotlib/issues/5456 is fixed
+    # Because long feature names cause this error
 
     # Save or display the plot
     if save:
