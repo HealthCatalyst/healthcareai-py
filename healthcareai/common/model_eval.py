@@ -1,3 +1,5 @@
+"""Model evaluation tools."""
+
 import os
 import sklearn
 import itertools
@@ -39,7 +41,7 @@ def compute_confusion_matrix(y_test, class_predictions):
 
 def compute_roc(y_test, probability_predictions):
     """
-    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds
+    Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds.
 
     Args:
         y_test (list) : true label values corresponding to the predictions. Also length n.
@@ -75,8 +77,8 @@ def compute_roc(y_test, probability_predictions):
 
 
 def compute_pr(y_test, probability_predictions):
-    """ 
-    Compute Precision-Recall, thresholds and PR AUC
+    """
+    Compute Precision-Recall, thresholds and PR AUC.
 
     Args:
         y_test (list) : true label values corresponding to the predictions. Also length n.
@@ -113,7 +115,7 @@ def compute_pr(y_test, probability_predictions):
 
 def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained estimator, calculate metrics
+    Given a trained estimator, calculate metrics.
 
     Args:
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
@@ -137,7 +139,7 @@ def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
 
 def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, binary=True):
     """
-    Given a trained estimator, calculate metrics
+    Given a trained estimator, calculate metrics.
 
     Args:
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
@@ -172,7 +174,7 @@ def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, 
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     """
-    From a given dictionary of thresholds by model, create a ROC curve for each model
+    From a given dictionary of thresholds by model, create a ROC curve for each model.
 
     Args:
         roc_thresholds_by_model (dict): A dictionary of ROC thresholds by model name.
@@ -222,7 +224,7 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
 
 def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     """
-    From a given dictionary of thresholds by model, create a PR curve for each model
+    From a given dictionary of thresholds by model, create a PR curve for each model.
     
     Args:
         pr_thresholds_by_model (dict): A dictionary of PR thresholds by model name.
@@ -270,53 +272,60 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.show()
 
 
-def plot_random_forest_feature_importance(trained_random_forest, x_train, feature_names, save=False):
+def plot_random_forest_feature_importance(trained_random_forest, x_train, feature_names, feature_limit=15, save=False):
     """
-    Given a scikit learn random forest estimator, an x_train array, the feature names save or display a feature
-    importance plot.
+    Given a random forest estimator, an x_train array, the feature names save or display a feature importance plot.
     
     Args:
         trained_random_forest (sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.RandomForestRegressor): 
         x_train (numpy.array): A 2D numpy array that was used for training 
         feature_names (list): Column names in the x_train set
+        feature_limit (int): Number of features to display on graph
         save (bool): True to save the plot, false to display it in a blocking thread
     """
-    # Unwrap estimator if it is a sklearn randomized search estimator
-    # best_rf = get_estimator_from_trained_supervised_model(trained_rf_classifier)
-    best_rf = trained_random_forest
+    _validate_random_forest_estimator(trained_random_forest)
 
-    # Validate estimator is a random forest estimator and raise error if it is not
-    is_rf_classifier = isinstance(best_rf, sklearn.ensemble.RandomForestClassifier)
-    is_rf_regressor = isinstance(best_rf, sklearn.ensemble.RandomForestRegressor)
-    if not (is_rf_classifier or is_rf_regressor):
-        print(type(trained_random_forest))
-        raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
-
-    # Arrange columns in order of importance
+    # Sort the feature names and relative importances
     # TODO this portion could probably be extracted and tested, since the plot is difficult to test
-    importances = best_rf.feature_importances_
-    feature_importances = [tree.feature_importances_ for tree in best_rf.estimators_]
-    standard_deviations = np.std(feature_importances, axis=0)
-    indices = np.argsort(importances)[::-1]
-    namelist = [feature_names[i] for i in indices]
+    aggregate_features_importances = trained_random_forest.feature_importances_
+    indices = np.argsort(aggregate_features_importances)[::-1]
+    sorted_feature_names = [feature_names[i] for i in indices]
+
+    # limit the plot to the top n features so it stays legible on models with lots of features
+    subset_indices = indices[0:feature_limit]
+
+    number_of_features = x_train.shape[1]
+
+    # build a range using the lesser value
+    max_features = min(number_of_features, feature_limit)
+    x_axis_limit = range(max_features)
+
+    # Get the standard deviations for error bars
+    standard_deviations = _standard_deviations_of_importances(trained_random_forest)
 
     # Turn off matplotlib interactive mode
     plt.ioff()
 
-    # Set up the plot
+    # Set up the plot and axes
     figure = plt.figure()
-    plt.title("Feature Importance")
-    plt.ylabel('Relative Feature Importance')
+    plt.title('Top {} (of {}) Important Features'.format(max_features, number_of_features))
+    plt.ylabel('Relative Importance')
 
     # Plot each feature
-    x_train_shape = x_train.shape[1]
-    x_train_range = range(x_train_shape)
+    plt.bar(
+        # this should go as far as the model or limit whichever is less
+        x_axis_limit,
+        aggregate_features_importances[subset_indices],
+        color="g",
+        yerr=standard_deviations[subset_indices],
+        align="center")
 
-    plt.bar(x_train_range, importances[indices], color="g", yerr=standard_deviations[indices], align="center")
-    plt.xticks(x_train_range, namelist, rotation=90)
-    plt.xlim([-1, x_train_shape])
-    plt.gca().set_ylim(bottom=0)
-    plt.tight_layout()
+    plt.xticks(x_axis_limit, sorted_feature_names, rotation=90)
+    # x axis scales by default
+    # set y axis min to zero
+    plt.ylim(ymin=0)
+    # plt.tight_layout() # Do not use tight_layout until https://github.com/matplotlib/matplotlib/issues/5456 is fixed
+    # Because long feature names cause this error
 
     # Save or display the plot
     if save:
@@ -328,6 +337,38 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
         plt.close(figure)
     else:
         plt.show()
+
+
+def _validate_random_forest_estimator(trained_random_forest):
+    """
+    Validate that an input is a random forest estimator and raise an error if it is not.
+
+    Args:
+        trained_random_forest: any input
+    """
+    is_rf_classifier = isinstance(trained_random_forest, sklearn.ensemble.RandomForestClassifier)
+    is_rf_regressor = isinstance(trained_random_forest, sklearn.ensemble.RandomForestRegressor)
+
+    if not (is_rf_classifier or is_rf_regressor):
+        raise HealthcareAIError('Feature plotting only works with a scikit learn Random Forest estimator.')
+
+
+def _standard_deviations_of_importances(trained_random_forest):
+    """
+    Given a scikit-learn trained random forest estimator, return the standard deviations of all feature importances.
+
+    Args:
+        trained_random_forest (sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.RandomForestRegressor): the
+            trained estimator
+
+    Returns:
+        list: A numeric list
+    """
+    # Get the individual feature importances from each tree to find the standard deviation for plotting error bars
+    individual_feature_importances = [tree.feature_importances_ for tree in trained_random_forest.estimators_]
+    standard_deviations = np.std(individual_feature_importances, axis=0)
+
+    return standard_deviations
 
 
 def _validate_predictions_and_labels_are_equal_length(predictions, true_values):

@@ -1,5 +1,35 @@
 # Contributing
 
+You want to help? Woohoo! We welcome that and are willing to help newbies get started.
+
+Please see [our contribution guidelines](https://github.com/HealthCatalyst/healthcareai-py/blob/master/CONTRIBUTING.md) for instructions on setting up your development environment
+
+## Workflow
+
+1. [Identify an issue that](https://github.com/HealthCatalyst/healthcareai-r/issues) suits your skill level
+    * Only look for issues in the Backlog category
+    * If you're new to open source, please look for issues with the `bug low`, `help wanted`, or `docs` tags
+    * Please reach out with questions on details and where to start
+2. Create a topic branch to work in; here are [instructions](CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
+3. Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
+4. Make changes and use the throwaway file to validate that your packages changes work
+    * Make small commits after getting a small piece working
+    * Push often so your changes are backed up. See [this](https://gist.github.com/blackfalcon/8428401#push-your-branch) for more details.
+5. Early on, create a [pull request](https://yangsu.github.io/pull-request-tutorial/) such that Levi and team can discuss the changes that you're making. Conversation is good.
+6. When you have resolved the issue you chose, do the following:
+    * Check that the unit tests are passing
+    * Check that pyflakes and pylint don't show any issues
+    * Merge the master branch into your topic branch (so that you have the latest changes from master)
+        ```bash
+        git checkout LeviBugFix
+        git fetch
+        git merge --no-ff origin/master
+        ```
+    * Again, check that the unit tests are passing
+7. Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code
+  review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
+
+
 ## How to set up your dev environment
 
 ### Set up git

@@ -13,33 +13,35 @@ This code uses the diabetes sample data in datasets/data/diabetes.csv.
 import pandas as pd
 import sqlalchemy
 
-import healthcareai.common.file_io_utilities as hcai_io_utilities
+import healthcareai
 import healthcareai.common.database_connections as hcai_db
-import healthcareai.datasets as hcai_datasets
 
 
 def main():
-    # Load the diabetes sample data
-    prediction_dataframe = hcai_datasets.load_diabetes()
+    """Template script for using healthcareai predict using a trained classification model."""
+    # Load the included diabetes sample data
+    prediction_dataframe = healthcareai.load_diabetes()
 
-    # Load data from a MSSQL server: Uncomment to pull data from MSSQL server
+    # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
+    # prediction_dataframe = healthcareai.load_csv('path/to/your.csv')
+
+    # ...or load data from a MSSQL server: Uncomment to pull data from MSSQL server
     # server = 'localhost'
     # database = 'SAM'
     # query = """SELECT *
     #             FROM [SAM].[dbo].[DiabetesClincialSampleData]
-    #             WHERE SystolicBPNBR is null"""
+    #             WHERE ThirtyDayReadmitFLG is null"""
     #
-    # engine = hcai_db.build_mssql_engine(server=server, database=database)
+    # engine = hcai_db.build_mssql_engine_using_trusted_connections(server=server, database=database)
     # prediction_dataframe = pd.read_sql(query, engine)
 
-    # Drop columns that won't help machine learning
-    columns_to_remove = ['PatientID']
-    prediction_dataframe.drop(columns_to_remove, axis=1, inplace=True)
+    # Peek at the first 5 rows of data
+    print(prediction_dataframe.head(5))
 
     # Load the saved model using your filename.
     # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
     # Note the file you saved in example_classification_1.py and set that here.
-    trained_model = hcai_io_utilities.load_saved_model('your_filename_here.pkl')
+    trained_model = healthcareai.load_saved_model('2017-08-16T16-45-57_classification_RandomForestClassifier.pkl')
 
     # Any saved model can be inspected for properties such as plots, metrics, columns, etc. (More examples in the docs)
     trained_model.roc_plot()
@@ -84,7 +86,7 @@ def main():
     # database = 'my_database'
     # table = 'predictions_output'
     # schema = 'dbo'
-    # engine = hcai_db.build_mssql_engine(server, database)
+    # engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
     # predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 
     # ## MySQL using standard authentication

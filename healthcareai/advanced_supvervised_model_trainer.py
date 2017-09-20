@@ -1,16 +1,13 @@
 import sklearn
 import numpy as np
-import pandas as pd
 import time
 
-np.random.seed(123)
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors
@@ -29,7 +26,16 @@ class AdvancedSupervisedModelTrainer(object):
     metrics.
     """
 
-    def __init__(self, dataframe, model_type, predicted_column, grain_column=None, data_scaling=False, verbose=False):
+    # TODO check constructor usages
+    def __init__(
+        self,
+        dataframe,
+        model_type,
+        predicted_column,
+        grain_column=None,
+        data_scaling=False,
+        original_column_names=None,
+        verbose=False):
         """
         Creates an instance of AdvancedSupervisedModelTrainer.
         
@@ -38,6 +44,9 @@ class AdvancedSupervisedModelTrainer(object):
             model_type (str): 'classification' or 'regression'
             predicted_column (str): The name of the predicted/target/label column
             grain_column (str): The grain column
+            original_column_names (list): The original column names of the dataframe before going through the pipeline
+                (before dummification). These are used to check that the data contains all the necessary columns if
+                pre-pipeline data is going to be fed to the trained model.
             data_scaling (bool): if True, perform feature scaling on numeric variables; if False, not.
             verbose (bool): Verbose output
         """
@@ -50,12 +59,15 @@ class AdvancedSupervisedModelTrainer(object):
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.verbose = verbose
+        # TODO this is probably redundant now that original_column_names exists
         self.columns = None
         self.x_train = None
         self.X_test = None
         self.y_train = None
         self.y_test = None
         self.pipeline = None
+        self.original_column_names = original_column_names
+        self.categorical_column_info = None
         self.data_scaling = data_scaling
 
         self._console_log(
@@ -79,34 +91,6 @@ class AdvancedSupervisedModelTrainer(object):
         """
         return self.model_type == 'regression'
 
-    def feature_scaling(self, columns_to_scale):
-        """ First pass a a feature scaler. """
-        # TODO convert to TransformerMixin
-        # TODO document
-        # TODO test
-        # NB: Must happen AFTER self.X_train, self.X_test,
-        #     self.y_train, self.y_test are defined.
-        #     Must happen AFTER imputation is done so there
-        #     are no missing values.
-        #     Must happen AFTER under/over sampling is done
-        #     so that we scale the under/over sampled dataset.
-        # TODO: How to warn the user if they call this method at the wrong time?
-        x_train_scaled_subset = self.x_train[columns_to_scale]
-        x_test_scaled_subset = self.X_test[columns_to_scale]
-        scaler = StandardScaler()
-
-        scaler.fit(x_train_scaled_subset)
-
-        X_train_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_train_scaled_subset))
-        X_train_scaled_subset_dataframe.index = x_train_scaled_subset.index
-        X_train_scaled_subset_dataframe.columns = x_train_scaled_subset.columns
-        self.x_train[columns_to_scale] = X_train_scaled_subset_dataframe
-
-        X_test_scaled_subset_dataframe = pd.DataFrame(scaler.transform(x_test_scaled_subset))
-        X_test_scaled_subset_dataframe.index = x_test_scaled_subset.index
-        X_test_scaled_subset_dataframe.columns = x_test_scaled_subset.columns
-        self.X_test[columns_to_scale] = X_test_scaled_subset_dataframe
-
     def train_test_split(self, random_seed=None):
         """
         Splits the dataframe into train and test sets.
@@ -118,6 +102,7 @@ class AdvancedSupervisedModelTrainer(object):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
+        # TODO this is probably redundant now that original_column_names exists
         # Save off a copy of the column names before converting to a numpy array
         self.columns = X.columns.values
 
@@ -226,6 +211,7 @@ class AdvancedSupervisedModelTrainer(object):
         performance_metrics = None
 
         if self.model_type is 'classification':
+            # TODO this needs a refactor - it should detect if it is binary
             performance_metrics = hcai_model_evaluation.calculate_classification_metrics(
                 trained_sklearn_estimator,
                 self.X_test,
@@ -289,7 +275,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_regression('Linear Regression')
         if hyperparameter_grid is None:
@@ -297,6 +283,39 @@ class AdvancedSupervisedModelTrainer(object):
             number_iteration_samples = 2
 
         algorithm = get_algorithm(LinearRegression,
+                                  scoring_metric,
+                                  hyperparameter_grid,
+                                  randomized_search,
+                                  number_iteration_samples=number_iteration_samples)
+
+        trained_supervised_model = self._create_trained_supervised_model(algorithm)
+
+        return trained_supervised_model
+
+    def lasso_regression(self, scoring_metric='neg_mean_squared_error',
+                         hyperparameter_grid=None,
+                         randomized_search=True,
+                         number_iteration_samples=2):
+        """
+        A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
+        hyperparameter grid.
+
+        Args:
+            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            hyperparameter_grid (dict): hyperparameters by name
+            randomized_search (bool): True for randomized search (default)
+            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
+                hyperparameter space. More may lead to a better model, but will take longer.
+
+        Returns:
+            TrainedSupervisedModel:
+        """
+        self.validate_regression('Lasso Regression')
+        if hyperparameter_grid is None:
+            hyperparameter_grid = {"fit_intercept": [True, False]}
+            number_iteration_samples = 2
+
+        algorithm = get_algorithm(Lasso,
                                   scoring_metric,
                                   hyperparameter_grid,
                                   randomized_search,
@@ -365,6 +384,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
+            # TODO this is probably redundant now that original_column_names exists
             max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
@@ -404,6 +424,7 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
+            # TODO this is probably redundant now that original_column_names exists
             max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
                                                                                     self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
@@ -547,6 +568,7 @@ class AdvancedSupervisedModelTrainer(object):
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
+            # TODO this is probably redundant now that original_column_names exists
             column_names=self.columns,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
@@ -554,6 +576,8 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
+            original_column_names=self.original_column_names,
+            categorical_column_info=self.categorical_column_info,
             training_time=time.time() - t0)
 
         return trained_supervised_model

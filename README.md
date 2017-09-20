@@ -1,8 +1,8 @@
 # healthcareai
 
-[![Appveyor build status](https://ci.appveyor.com/api/projects/status/17ap55llddwe16wy/branch/master?svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
-[![Code Issues](https://www.quantifiedcode.com/api/v1/project/6316902dcb7a407f84aa56ec58a5c14c/snapshot/origin:85:HEAD/badge.svg)](https://www.quantifiedcode.com/app/project/6316902dcb7a407f84aa56ec58a5c14c)
-[![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=85)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
+[![Code Health](https://landscape.io/github/HealthCatalyst/healthcareai-py/master/landscape.svg?style=flat)](https://landscape.io/github/HealthCatalyst/healthcareai-py/master)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/HealthCatalyst/healthcareai-py?branch=master&svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
+[![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=master)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
 [![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
@@ -71,32 +71,23 @@ tag) so we can help others along this process.
 
 ## Getting started
 
-- Visit [healthcare.ai](http://healthcareai-py.readthedocs.io/en/latest/) to read the docs and find examples.
-    * Including this [notebook](notebooks/Example1.ipynb)
-- Open Sphinx (which installed with Anaconda) and copy the examples into a new file
-- Modify the queries and parameters to match your data
-- If you plan on deploying a model (ie, pushing predictions to SQL Server), run this in SSMS beforehand:
-  ```sql
-  CREATE TABLE [SAM].[dbo].[HCAIClassificationBASE] (
-   [BindingID] [int] ,
-   [BindingNM] [varchar] (255),
-   [LastLoadDTS] [datetime2] (7),
-   [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-   [PredictedProbNBR] [decimal] (38, 2),
-   [Factor1TXT] [varchar] (255),
-   [Factor2TXT] [varchar] (255),
-   [Factor3TXT] [varchar] (255))
+1. Read through the [Getting Started](http://healthcareai-py.readthedocs.io/en/latest/getting_started/) section of the [healthcareai-py](http://healthcareai-py.readthedocs.io/en/latest/) documentation.
 
-  CREATE TABLE [SAM].[dbo].[HCAIPredictionRegressionBASE] (
-   [BindingID] [int],
-   [BindingNM] [varchar] (255),
-   [LastLoadDTS] [datetime2] (7),
-   [PatientEncounterID] [decimal] (38, 0), --< change to your grain col
-   [PredictedValueNBR] [decimal] (38, 2),
-   [Factor1TXT] [varchar] (255),
-   [Factor2TXT] [varchar] (255),
-   [Factor3TXT] [varchar] (255))
-  ```
+2. Read through the example files to learn how to use the healthcareai-py API.
+    * For examples of how to train and evaluate a supervised model, inspect and run either `example_regression_1.py` or `example_classification_1.py` using our sample diabetes dataset.
+    * For examples of how to use a model to make predictions, inspect and run either `example_regression_2.py` or `example_classification_2.py` after running one of the first examples.
+    * For examples of more advanced use cases, inspect and run `example_advanced.py`.
+
+3. To train and evaluate your own model, modify the queries and parameters in either `example_regression_1.py` or `example_classification_1.py` to match your own data.
+
+4. Decide what type of prediction output you want. See [Choosing a Prediction Output Type](http://healthcareai-py.readthedocs.io/en/latest/prediction_types/) for details.
+
+5. Set up your database tables to match the schema of the output type you chose. 
+   * If you are working in a Health Catalyst EDW ecosystem (primarily MSSQL), please see the [Health Catalyst EDW Instructions](http://healthcareai-py.readthedocs.io/en/latest/catalyst_edw_instructions/) for setup.
+   * Otherwise, please see [Working With Other Databases](http://healthcareai-py.readthedocs.io/en/latest/databases/)
+    for details about writing to different databases (MSSQL, MySQL, SQLite, CSV)
+
+6. Congratulations! After running one of the example files with your own data, you should have a trained model. To use your model to make predictions, modify either `example_regression_2.py` or `example_classification_2.py` to use your new model. You can then run it to see the results. 
 
 ## For Issues
 
@@ -106,123 +97,3 @@ tag) so we can help others along this process.
     * Goals (ie, what are you trying to accomplish)
     * Crystal clear steps for reproducing the error
 - You can also log a new issue in the GitHub repo by clicking [here](https://github.com/HealthCatalyst/healthcareai-py/issues/new)
-
-## Contributing
-
-You want to help? Woohoo! We welcome that and are willing to help newbies get started.
-
-Please see [our contribution guidelines](https://github.com/HealthCatalyst/healthcareai-py/blob/master/CONTRIBUTING.md) for instructions on setting up your development environment
-
-### Workflow
-
-1. [Identify an issue that](https://github.com/HealthCatalyst/healthcareai-r/issues) suits your skill level
-    * Only look for issues in the Backlog category
-    * If you're new to open source, please look for issues with the `bug low`, `help wanted`, or `docs` tags
-    * Please reach out with questions on details and where to start
-2. Create a topic branch to work in; here are [instructions](CONTRIBUTING.md#create-a-topic-branch-that-you-can-work-in)
-3. Create a throwaway file on the Desktop (or somewhere outside the repo), based on an example
-4. Make changes and use the throwaway file to validate that your packages changes work
-    * Make small commits after getting a small piece working
-    * Push often so your changes are backed up. See [this](https://gist.github.com/blackfalcon/8428401#push-your-branch) for more details.
-5. Early on, create a [pull request](https://yangsu.github.io/pull-request-tutorial/) such that Levi and team can discuss the changes that you're making. Conversation is good.
-6. When you have resolved the issue you chose, do the following:
-    * Check that the unit tests are passing
-    * Check that pyflakes and pylint don't show any issues
-    * Merge the master branch into your topic branch (so that you have the latest changes from master)
-        ```bash
-        git checkout LeviBugFix
-        git fetch
-        git merge --no-ff origin/master
-        ```
-    * Again, check that the unit tests are passing
-7. Now that your changes are working, communicate that to Levi in the pull request, such that he knows to do the code
-  review associated with the PR. Please *don't* do tons of work and *then* start a PR. Early is good.
-
-## PyPI Package Creation and Updating
-
-**Note these instructions are for maintainers only.**
-
-First, read this [Packaging and Distributing Projects](https://packaging.python.org/distributing/) guide.
-
-It's also worth noting that while this *should* be done on the [pypi test site](https://testpypi.python.org/pypi), I've
-run into a great deal of trouble with conflicting guides authenticating to the test site. So be smart about this.
-
-1. **Build a source distribution**: from python3 (ran in windows anaconda python 3) run `python setup.py sdist`
-2. **Register the package** by using the[form on pypi](https://pypi.python.org/pypi?%3Aaction=pkg_edit&name=healthcareai).
-  Upload your `PKG-INFO` that was generated inside the `.egg` file.
-3. **Upload the package** using [twine](https://pypi.python.org/pypi/twine)
-    - `twine upload dist/healthcareai-<version>.tar.gz`
-    - **NOTE** You can only ever upload a file name **once**. To get around this I was adding a *rc* number to the
-      version in `setup.py`. However, this **will break the appveyor build**, so you'll need to remove the `.rc` before
-      you push to github.
-4. Verify install on all three platforms (linux, macOS, windows) by:
-    1. `pip uninstall healthcareai`
-    2. `pip install healthcareai`
-    3. From a python console, type `from healthcareai import SupervisedModelTrainer`
-
-### Release process (Including Read The Docs)
-
-1. update all version numbers
-    - `setup.py`
-2. update CHANGELOG
-    - Move all items under **unreleased** to a new release number
-    - Leave the template under **unreleased**
-3. merge in the PR
-4. create release on github releases (making sure this matches the release number in `setup.py`)
-5. Create and upload the new pypi release (see above)
-6. update readthedocs settings
-    - **Admin** > **Versions**
-    - Ensure that the new release number is checked for **public**
-7. Manually build new read the docs
-    - **Builds** > **Build version <new release>**
-8. verify the new version builds and is viewable at the public url
-
-### Conda Packaging and Distribution
-
-Creating a conda package is much easier if you have already built the PyPI package.
-
-1. Install prerequisites (only needed once)
-    + Install conda build `conda install conda-build`
-    + Install anaconda cli `conda install anaconda-client`
-    + Login to anaconda.org with `anaconda login`
-2. Configure conda
-    + `conda config --set always_yes true`
-    + `conda config --set anaconda_upload no`
-3. Create the skeleton conda recipe from the existing PyPI package
-    + `conda skeleton pypi healthcareai`
-4. Build the conda package for the main python versions
-    + `conda build --python 2.7 healthcareai`
-    + `conda build --python 3.4 healthcareai`
-    + `conda build --python 3.5 healthcareai`
-    + `conda build --python 3.6 healthcareai`
-5. Convert the existing builds to work on all platforms (win32, win64, osx62, linux32, linux64). Note this can take a while.
-    + `conda convert --platform all win-64/healthcareai-*-py*.tar.bz2 -o <PATH_TO_BUILD_DIRECTORY>`
-6. Upload to anaconda using the anaconda cli
-    + Note that you'll have to keep track of where the builds are put!
-    + `anaconda upload <PATH_TO_BUILD_DIRECTORY>/**/healthcareai*.tar.bz2`
-7. Clean up the mess
-    + `conda build purge`
-
-##### Helpful Resources
-
-- Conda [Building Packages](https://conda.io/docs/building/build.html)
-- [Anaconda.org dashboard](https://anaconda.org/catalyst/healthcareai)
-- Taken from the excellent [conda.io docs](https://conda.io/docs/build_tutorials/pkgs.html)
-- Also, some taken from this [Travis CI build](https://gist.github.com/yoavram/05a3c04ddcf317a517d5)#
-
-
-## Sphinx Progress
-
-Ideally, this project will have a user guide, (currently in the form of the docs folder) and method level documentation generated by sphinx.
-
-1. Install sphinx
-2. install 
-
-From the `dox/_build` (you may need to create it if it doesn't exist) directory, run`sphinx-apidoc.exe -f -o ../ ../../healthcareai && sphinx-build.exe -b html ../ ./ && python -m http.server 8888 --bind 127.0.0.1`
-
-### Sphinx resources
-
-- [An idiot’s guide to Python documentation with Sphinx and ReadTheDocs](https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/)
-- [First Steps with Sphinx](http://www.sphinx-doc.org/en/stable/tutorial.html)
-- [Napoleon - Marching toward legible docstrings](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/)
-- [napoleon configuration](http://www.sphinx-doc.org/en/stable/ext/napoleon.html#configuration)

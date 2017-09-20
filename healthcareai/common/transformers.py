@@ -1,16 +1,21 @@
+"""Transformers
+
+This module contains transformers for preprocessing data. Most operate on DataFrames and are named appropriately.
+"""
 import numpy as np
 import pandas as pd
 
 from sklearn.base import TransformerMixin
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
+from sklearn.preprocessing import StandardScaler
 
 
 class DataFrameImputer(TransformerMixin):
     """
     Impute missing values in a dataframe.
 
-    Columns of dtype object (assumed categorical) are imputed with the mode (most frequent value in column).
+    Columns of dtype object or category (assumed categorical) are imputed with the mode (most frequent value in column).
 
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
@@ -29,7 +34,15 @@ class DataFrameImputer(TransformerMixin):
         self.object_columns = X.select_dtypes(include=['object']).columns.values
 
         self.fill = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O') else X[c].mean() for c in X], index=X.columns)
+                               if X[c].dtype == np.dtype('O')
+                                  or pd.core.common.is_categorical_dtype(X[c])
+                               else X[c].mean() for c in X], index=X.columns)
+
+        num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
+        num_total = sum(X.select_dtypes(include=[np.number]).count())
+        percentage_imputed = num_nans / num_total * 100
+
+        print("Percentage Imputed: {}%".format(percentage_imputed))
 
         # return self for scikit compatibility
         return self
@@ -42,7 +55,8 @@ class DataFrameImputer(TransformerMixin):
         result = X.fillna(self.fill)
 
         for i in self.object_columns:
-            result[i] = result[i].astype(object)
+            if result[i].dtype not in ['object', 'category']:
+                result[i] = result[i].astype('object')
 
         return result
 
@@ -53,7 +67,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
     Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV). Passes through data
     for regression models unchanged. This is to simplify the data pipeline logic. (Though that may be a more appropriate
     place for the logic...)
-    
+
     Note that this makes healthcareai only handle N/Y in pred column
     """
 
@@ -82,7 +96,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
 
 
 class DataFrameCreateDummyVariables(TransformerMixin):
-    """ Convert all categorical columns into dummy/indicator variables. Exclude given columns. """
+    """Convert all categorical columns into dummy/indicator variables. Exclude given columns."""
 
     def __init__(self, excluded_columns=None):
         self.excluded_columns = excluded_columns
@@ -106,7 +120,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
-    """ Convert a column into numeric variables. """
+    """Convert a column into numeric variables."""
 
     def __init__(self, column_name):
         self.column_name = column_name
@@ -142,7 +156,6 @@ class DataFrameUnderSampling(TransformerMixin):
     def transform(self, X, y=None):
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
-
 
         # Extract predicted column
         y = np.squeeze(X[[self.predicted_column]])
@@ -210,3 +223,42 @@ class DataFrameOverSampling(TransformerMixin):
         result[self.predicted_column] = y_over_sampled
 
         return result
+
+
+class DataFrameDropNaN(TransformerMixin):
+    """Remove NaN values. Columns that are NaN or None are removed."""
+
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        # Uses pandas.DataFrame.dropna function where axis=1 is column action, and
+        # how='all' requires all the values to be NaN or None to be removed.
+        return X.dropna(axis=1, how='all')
+
+
+class DataFrameFeatureScaling(TransformerMixin):
+    """Scales numeric features. Columns that are numerics are scaled, or otherwise specified."""
+
+    def __init__(self, columns_to_scale=None, reuse=None):
+        self.columns_to_scale = columns_to_scale
+        self.reuse = reuse
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        # Check if it's reuse, if so, then use the reuse's DataFrameFeatureScaling
+        if self.reuse:
+            return self.reuse.fit_transform(X, y)
+
+        # Check if we know what columns to scale, if not, then get all the numeric columns' names
+        if not self.columns_to_scale:
+            self.columns_to_scale = list(X.select_dtypes(include=[np.number]).columns)
+
+        X[self.columns_to_scale] = StandardScaler().fit_transform(X[self.columns_to_scale])
+
+        return X

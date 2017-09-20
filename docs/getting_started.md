@@ -50,6 +50,14 @@ You may need to install the following dependencies:
      2. Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
      3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
+#### macOS matplot issues
+
+After running healthcareai, you may see an error about python not being installed as a framework. The cause of this is truly that the default rendering back end is Cocoa.
+Simply change matplotlib's rendering engine as follows ([Credit GitHub user](https://github.com/JuliaPy/PyCall.jl/issues/218)):
+
+> I assume you have installed the pip matplotlib, there is a directory in you root called ~/.matplotlib.
+> Create a file ``~/.matplotlib/matplotlibrc` there and add the following code: `backend: TkAgg`
+
 ### Linux and macOS (via docker)
 
 - Install [docker](https://docs.docker.com/engine/installation/)
@@ -70,7 +78,7 @@ If you did get an error, or run into other installation issues, please [let us k
 ## Getting Started
 
 1. Read through the docs on this site.
-2. Start with either `example_regression_1.py` or `example_classification_1.py`
+2. Start with either `example_regression_1.py` or `example_classification_1.py` using our sample diabetes dataset.
 3. Modify the queries and parameters to match your data.
 4. Decide on what kind of prediction output you want.
 5. Set up your database tables to match the output schema. See the [prediction types](prediction_types.md) document for details.

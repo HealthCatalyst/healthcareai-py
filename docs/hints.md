@@ -2,7 +2,7 @@
 
 ## Gathering the data
 
-If you have interesting data in a CSV file or even across serveral
+If you have interesting data in a CSV file or even across several
 databases on a single server, you are in good shape. While it's easiest
 to pull data into healthcareai via a single table, one can also use joins
 to gather data from separate tables or databases.
@@ -24,4 +24,5 @@ creating a model. Here are some practical examples of that:
 
 - Start small. You can often get a good idea of model performance by starting with 10k rows instead of 1M.
 - Don't throw out rows with missing values. We'll help you experiment with [imputation](https://en.wikipedia.org/wiki/Imputation_(statistics)), which may improve the model's performance.
+- Prediction data with missing values will automatically be imputed, on the other hand training data with missing values has an option to be imputed or not imputed.
 - Focus on new features. Rather than finding more rows of the same columns, finding or engineering better columns (ie, features) will give better results.

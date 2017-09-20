@@ -48,7 +48,7 @@ def load_pickle_file(filename):
     try:
         with open(filename, 'rb') as open_file:
             return pickle.load(open_file)
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         raise HealthcareAIError(
             'No file named \'{}\' was found. Please verify the file you intend to load'.format(filename))
 
