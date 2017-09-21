@@ -182,9 +182,9 @@ class TestLogisticRegression(unittest.TestCase):
         test_helpers.assertBetween(self, 160, 180, self.lr.metrics['confusion_matrix'][0][0])
 
 
-class TestMetricValidation(unittest.TestCase):
-    # TODO this is pretty spartan testing only looking for happy path on binary classification
+class TestBinaryClassificationMetricValidation(unittest.TestCase):
     def setUp(self):
+        """Load and prepare data, instantiate a trainer, and train test split."""
         df = hcai_datasets.load_diabetes()
 
         # Drop uninformative columns
@@ -196,14 +196,83 @@ class TestMetricValidation(unittest.TestCase):
             CLASSIFICATION_PREDICTED_COLUMN,
             GRAIN_COLUMN_NAME,
             impute=True).fit_transform(df)
+
         self.classification_trainer = AdvancedSupervisedModelTrainer(
             clean_df,
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
 
+        self.classification_trainer.train_test_split()
+
+    def test_number_of_classes_property(self):
+        self.assertEqual(2, self.classification_trainer.number_of_classes)
+
+    def test_is_classifier(self):
+        self.assertTrue(self.classification_trainer.is_classification)
+
+    def test_is_regression_false(self):
+        self.assertFalse(self.classification_trainer.is_regression)
+
+    def test_is_binary_classifier_true(self):
+        self.assertTrue(self.classification_trainer.is_binary_classification)
+
+    def test_class_labels_property(self):
+        # set literal saves a function call to set()
+        self.assertEqual({0, 1}, set(self.classification_trainer.class_labels))
+
     def test_validate_score_metric_for_number_of_classes(self):
         self.assertTrue(self.classification_trainer.validate_score_metric_for_number_of_classes('pr_auc'))
         self.assertTrue(self.classification_trainer.validate_score_metric_for_number_of_classes('roc_auc'))
+
+
+class TestMulticlassMetricValidation(unittest.TestCase):
+    def setUp(self):
+        """Load and prepare data, instantiate a trainer, and train test split."""
+        df = hcai_datasets.load_dermatology()
+
+        # Drop uninformative columns
+        df.drop(['target_str'], axis=1, inplace=True)
+
+        clean_df = pipelines.full_pipeline(
+            CLASSIFICATION,
+            'target_num',
+            'PatientID',
+            impute=True).fit_transform(df)
+
+        self.multiclass_trainer = AdvancedSupervisedModelTrainer(
+            clean_df,
+            model_type=CLASSIFICATION,
+            predicted_column='target_num',
+            grain_column='PatientID',
+        )
+
+        self.multiclass_trainer.train_test_split(random_seed=0)
+
+    def test_number_of_classes_property(self):
+        self.assertEqual(6, self.multiclass_trainer.number_of_classes)
+
+    def test_is_classifier(self):
+        self.assertTrue(self.multiclass_trainer.is_classification)
+
+    def test_is_regression_false(self):
+        self.assertFalse(self.multiclass_trainer.is_regression)
+
+    def test_is_binary_classifier_false(self):
+        self.assertFalse(self.multiclass_trainer.is_binary_classification)
+
+    def test_class_labels_property(self):
+        # set literal saves a function call to set()
+        self.assertEqual({1, 2, 3, 4, 5, 6}, set(self.multiclass_trainer.class_labels))
+
+    def test_validate_score_metric_for_number_of_classes_raises_errors_on_binary_score_metrics(self):
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_trainer.validate_score_metric_for_number_of_classes,
+            'pr_auc')
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_trainer.validate_score_metric_for_number_of_classes,
+            'roc_auc')
 
 
 class TestHelpers(unittest.TestCase):

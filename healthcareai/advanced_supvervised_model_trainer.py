@@ -207,12 +207,11 @@ class AdvancedSupervisedModelTrainer(object):
 
         # TODO test this for errors and multiclass
         # TODO make this more robust for other scoring metrics
-        classes = hcai_helpers.count_unique_elements_in_column(self.dataframe, self.predicted_column)
-        if classes is 2:
+        if self.number_of_classes == 2:
             # return True for testing
             return True
-        elif classes > 2 and metric in ['pr_auc', 'roc_auc']:
-            raise (HealthcareAIError('AUC (aka roc_auc) cannot be used for more than two classes. Please choose another'
+        elif self.number_of_classes > 2 and metric in ['pr_auc', 'roc_auc']:
+            raise (HealthcareAIError('ROC and PR cannot be used for more than two classes. Please choose another'
                                      ' metric such as \'accuracy\''))
 
     def metrics(self, trained_sklearn_estimator):

@@ -6,13 +6,12 @@ If you have not installed healthcare.ai, refer to the instructions here:
   http://healthcareai-py.readthedocs.io
 
 To run this example:
-  python3 example_classification_1.py
+  python3 example_multiclass.py
 
-This code uses the diabetes sample data in datasets/data/diabetes.csv.
+This code uses the included dermatology sample data set.
 """
 
 import healthcareai
-import healthcareai.trained_models.trained_supervised_model as tsm_plots
 
 
 def main():
