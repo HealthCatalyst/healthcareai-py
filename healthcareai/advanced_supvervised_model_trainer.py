@@ -1,10 +1,8 @@
 import sklearn
 import numpy as np
+import pandas as pd
 import time
 
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression, LogisticRegression, Lasso
 from sklearn.neighbors import KNeighborsClassifier
@@ -13,8 +11,9 @@ import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
+import healthcareai.common.transformers as hcai_transformers
 
-from healthcareai.common.randomized_search import get_algorithm, get_algorithm_neural_network
+from healthcareai.common.randomized_search import get_algorithm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
@@ -33,7 +32,6 @@ class AdvancedSupervisedModelTrainer(object):
         model_type,
         predicted_column,
         grain_column=None,
-        data_scaling=False,
         original_column_names=None,
         verbose=False):
         """
@@ -47,7 +45,6 @@ class AdvancedSupervisedModelTrainer(object):
             original_column_names (list): The original column names of the dataframe before going through the pipeline
                 (before dummification). These are used to check that the data contains all the necessary columns if
                 pre-pipeline data is going to be fed to the trained model.
-            data_scaling (bool): if True, perform feature scaling on numeric variables; if False, not.
             verbose (bool): Verbose output
         """
         # Validate model type is sane
@@ -68,7 +65,6 @@ class AdvancedSupervisedModelTrainer(object):
         self.pipeline = None
         self.original_column_names = original_column_names
         self.categorical_column_info = None
-        self.data_scaling = data_scaling
 
         self._console_log(
             'Shape and top 5 rows of original dataframe:\n{}\n{}'.format(self.dataframe.shape, self.dataframe.head()))
@@ -107,6 +103,7 @@ class AdvancedSupervisedModelTrainer(object):
     def is_binary_classification(self):
         """Check if a classification is binary."""
         return self.number_of_classes == 2
+
     def train_test_split(self, random_seed=None):
         """
         Splits the dataframe into train and test sets.
@@ -124,14 +121,6 @@ class AdvancedSupervisedModelTrainer(object):
 
         self.x_train, self.X_test, self.y_train, self.y_test = sklearn.model_selection.train_test_split(
             X, y, test_size=.20, random_state=random_seed)
-
-        # Scale the x variables, turn this on when using neural network
-        if self.data_scaling:
-            names = list(self.columns)
-            is_numeric = np.vectorize(lambda x: np.issubdtype(x, np.number))
-            numeric_col_bool = list(is_numeric(X.dtypes))
-            numeric_col = [i for (i, v) in zip(names, numeric_col_bool) if v]
-            self.feature_scaling(numeric_col)
 
         self.x_train = np.array(self.x_train)
         self.X_test = np.array(self.X_test)
@@ -458,94 +447,6 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
-    def create_nn(self,
-                  neurons_num=None,
-                  activation='relu',
-                  optimizer='adam',
-                  scoring_metric='accuracy'):
-        """
-        Define one type of neural network architecture based on Keras.
-        The neural network contains one input layer, one hidden layer, and one output layer.
-
-        Args:
-            neurons_num (int): number of neurons in the hidden layer.
-            activation (str): the type of activation functions. See 'Activations' from the Keras docs.
-            optimizer (str): the type of optimizers. See 'Optimizers' from the Keras docs.
-            scoring_metric (str): See 'Metrics' from the Keras docs. Note the scoring_metric in Keras is different from sklearn.
-
-        Returns:
-            neuralnet: a neural network architecture
-
-        """
-        # Calculate input dimension
-        input_dim = self.x_train.shape[1]
-
-        # Calculate output dimension
-        out_dim = len(list(set(self.y_train)))
-
-        # Calculate number of neurons
-        if neurons_num is None:
-            neurons_num = (input_dim + 2) // 2
-
-        # Create a neural network architecture
-        neuralnet = Sequential()
-        neuralnet.add(Dense(input_dim, input_dim=input_dim, activation=activation))
-        neuralnet.add(Dense(neurons_num, activation=activation))
-        neuralnet.add(Dense(out_dim, activation='softmax'))
-        neuralnet.compile(loss='sparse_categorical_crossentropy',
-                          # can also use one hot encoding with categorical_crossentropy
-                          # for binary: use sigmoid with binary_crossentropy or settings for multiclass
-                          # for multiclass: use softmax with sparse_categorical_crossentropy
-                          optimizer=optimizer,
-                          metrics=[scoring_metric])
-        return neuralnet
-
-    def neural_network_classifier(self,
-                                  scoring_metric='accuracy',
-                                  hyperparameter_grid=None,
-                                  randomized_search=True,
-                                  number_iteration_samples=1):
-        """
-        Tune the neural network using grid search over the parameters.
-        Tuning is performed by cross validation.
-
-        Args:
-            scoring_metric (str): Keras metrics
-            hyperparameter_grid (dict): hyperparameters by name
-            randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
-
-        Returns:
-            TrainedSupervisedModel:
-        """
-        self.validate_classification('Neural Network Classifier')
-
-        # Create a wrapper for sklearn
-        neuralnet = KerasClassifier(build_fn=self.create_nn, verbose=0)
-
-        # Initiate a hyperparameter grid if not specified
-        if hyperparameter_grid is None:
-            activation = ['relu']
-            batch_size = [5]
-            epochs = [20]
-            optimizer = ['adam']
-
-            hyperparameter_grid = dict(activation=activation,
-                                       batch_size=batch_size,
-                                       epochs=epochs,
-                                       optimizer=optimizer)
-
-        algorithm = get_algorithm_neural_network(neuralnet,
-                                                 scoring_metric,
-                                                 hyperparameter_grid,
-                                                 randomized_search,
-                                                 number_iteration_samples)
-
-        trained_supervised_model = self._create_trained_supervised_model(algorithm)
-
-        return trained_supervised_model
-
     def _create_trained_supervised_model(self, algorithm, include_factor_model=True):
         """
         Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
@@ -618,7 +519,6 @@ class AdvancedSupervisedModelTrainer(object):
         """
         if not self.is_classification:
             raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
-
 
     def _console_log(self, message):
         if self.verbose:

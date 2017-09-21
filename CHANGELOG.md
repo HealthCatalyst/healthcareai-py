@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Percentage of nulls reported via console.
 - new top-level `load_csv()` function makes it easier for users by avoiding any pandas knowledge.
+- New top-level `load_dermatology()` function that returns a dataframe with a multiclass derm dataset
+- New properties on `SupervisedModelTrainer`: `.class_labels` and `.number_of_classes`
+- Nice printout when training that shows how many and which classes for classification tasks
 
 ### Changed
 
@@ -19,6 +22,8 @@ eliminated the need for .mdf fixtures on appveyor.
 - validate_catalyst_prediction_sam_connection made much more robust with tests.
 - Conda environment files cleaned up substantially, speeding up builds.
 - Release preparation notes moved out of README and into a separate doc.
+- More robust metrics that deal with binary or multiclass support better
+- Changed all classification scoring defaults from `roc_auc` (binary only) to `accuracy` (binary and multiclass)
 
 ### Fixed
 

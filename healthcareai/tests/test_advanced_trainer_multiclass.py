@@ -59,43 +59,6 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.classification_trainer.linear_regression)
 
 
-class TestNeuralNetworkClassificaton(unittest.TestCase):
-    def setUp(self):
-        df = hcai_datasets.load_dermatology()
-
-        # Drop uninformative columns
-        df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
-
-        np.random.seed(42)
-        clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(df)
-
-        self.classification_trainer = AdvancedSupervisedModelTrainer(
-            clean_df,
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            data_scaling=True)
-
-        self.classification_trainer.train_test_split(random_seed=0)
-
-    def test_neural_network_tuning(self):
-        nn = self.classification_trainer.neural_network_classifier(randomized_search=True)
-        self.assertIsInstance(nn, TrainedSupervisedModel)
-
-        self.assertRaises(HealthcareAIError, nn.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, nn.metrics['confusion_matrix'][0][0])
-
-    def test_neural_network_no_tuning(self):
-        nn = self.classification_trainer.neural_network_classifier(randomized_search=False)
-        self.assertIsInstance(nn, TrainedSupervisedModel)
-
-        self.assertRaises(HealthcareAIError, nn.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, nn.metrics['confusion_matrix'][0][0])
-
-
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
         df = hcai_datasets.load_dermatology()

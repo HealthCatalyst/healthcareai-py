@@ -52,8 +52,7 @@ class SupervisedModelTrainer(object):
 
         self._advanced_trainer.categorical_column_info = get_categorical_levels(
             dataframe=dataframe,
-            columns_to_ignore=[grain_column,
-                               predicted_column])
+            columns_to_ignore=[grain_column, predicted_column])
 
     @property
     def clean_dataframe(self):
