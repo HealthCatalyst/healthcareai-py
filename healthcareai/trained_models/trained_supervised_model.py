@@ -497,7 +497,9 @@ class TrainedSupervisedModel(object):
         """Return a plot of the ROC curve of the holdout set from model training."""
         self._validate_classification()
         if not self.is_binary_classification():
-            raise HealthcareAIError('For multiclass classification, try the confusion matrix instead.')
+            raise HealthcareAIError('ROC plots only work for binary classification (\'Y\'/\'N\').\n'
+                                    'For multiple classes (\'DRG1\'/\'DRG2\'/\'DRG3\'/...) use the '
+                                    'confusion matrix instead.')
 
         tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
@@ -556,8 +558,9 @@ class TrainedSupervisedModel(object):
         """Return a plot of the PR curve of the holdout set from model training."""
         self._validate_classification()
         if not self.is_binary_classification():
-            raise HealthcareAIError('For multiclass classification, try the confusion matrix instead.')
-
+            raise HealthcareAIError('PR plots only work for binary classification (\'Y\'/\'N\').\n'
+                                    'For multiple classes (\'DRG1\'/\'DRG2\'/\'DRG3\'/...) use the '
+                                    'confusion matrix instead.')
         tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
@@ -700,7 +703,7 @@ def get_estimator_from_trained_supervised_model(trained_supervised_model):
 
 def tsm_classification_comparison_plots(trained_supervised_models, plot_type='ROC', save=False):
     """
-    Given a single or list of trained supervised models, plot a ROC or PR curve for each one.
+    Given a single or list of trained binary classification models, plot a ROC or PR curve for each one.
     
     Args:
         plot_type (str): 'ROC' (default) or 'PR' 
@@ -722,6 +725,9 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
             if not isinstance(model, TrainedSupervisedModel):
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'
                                         .format(model))
+            if not model.is_binary_classification():
+                raise HealthcareAIError('Comparison plots only work for binary classification tasks.')
+
             algorithm_name = "{}: {}".format(index + 1, model.algorithm_name)
             metrics_by_model[algorithm_name] = model.metrics
     except TypeError:

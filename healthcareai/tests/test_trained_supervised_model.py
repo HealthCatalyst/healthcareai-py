@@ -11,7 +11,7 @@ import healthcareai.datasets as hcai_datasets
 class TestTrainedSupervisedModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """ Load a dataframe, train a linear model and prepare a prediction dataframe for assertions """
+        """Load a dataframe, train a few models and prepare a prediction dataframes for assertions"""
         training_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
@@ -52,6 +52,18 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             cls.prediction_df,
             number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)
+
+        # Multi class for testing
+        dermatology = healthcareai.load_dermatology()
+        cls.multiclass_trainer = SupervisedModelTrainer(
+            dermatology,
+            'target_num',
+            'classification',
+            impute=True,
+            grain_column='PatientID',
+            verbose=False)
+
+        cls.multiclass_logistic_regression = cls.multiclass_trainer.logistic_regression()
 
     def test_is_classification(self):
         self.assertTrue(self.trained_lr.is_classification)
@@ -131,6 +143,17 @@ class TestTrainedSupervisedModel(unittest.TestCase):
                           healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
                           bad_list)
 
+    def test_multiclass_class_number(self):
+        self.assertEqual(6, self.multiclass_trainer.number_of_classes)
+
+    def test_multiclass_class_labels(self):
+        self.assertEqual(set([1, 2, 3, 4, 5, 6]), set(self.multiclass_trainer.class_labels))
+
+    def test_multiclass_raises_errors_on_binary_metrics(self):
+        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc)
+        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr)
+        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc_plot)
+        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
 
 if __name__ == '__main__':
     unittest.main()
