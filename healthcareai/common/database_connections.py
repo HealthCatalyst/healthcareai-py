@@ -1,3 +1,5 @@
+"""Database connections."""
+
 import urllib
 import sqlalchemy
 
@@ -21,8 +23,10 @@ except ImportError:
 
 
 def build_mssql_trusted_connection_string(server, database):
-    """ Given a server and database name, build a Trusted Connection MSSQL connection string """
-    return 'DRIVER={SQL Server Native Client 11.0};Server=' + server + ';Database=' + database + ';Trusted_Connection=yes;'
+    """Given a server and database name, build a Trusted Connection MSSQL connection string."""
+    conn = 'DRIVER={SQL Server Native Client 11.0};Server=' + server + \
+           ';Database=' + database + ';Trusted_Connection=yes;'
+    return conn
 
 
 def build_mysql_connection_string(server, database, userid, password):
@@ -32,7 +36,7 @@ def build_mysql_connection_string(server, database, userid, password):
 
 
 def build_sqlite_engine(file_path):
-    """ Build an sqlite engine. """
+    """Build an sqlite engine."""
     hcai_db_library.validate_sqlite3_is_loaded()
     engine = sqlite3.connect(file_path)
     return engine
@@ -46,7 +50,7 @@ def build_sqlite_in_memory_connection_string():
 
 def build_mssql_engine_using_trusted_connections(server, database):
     """
-    Given a server and database name, build a Trusted Connection MSSQL database engine. NOTE: Requires `pyodbc`
+    Build a Trusted Connection MSSQL database engine. NOTE: Requires `pyodbc`
     
     Args:
         server (str): Server name 

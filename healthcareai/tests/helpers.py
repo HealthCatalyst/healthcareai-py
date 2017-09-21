@@ -1,11 +1,10 @@
+"""Test helpers."""
 from os import path
-
-import pandas as pd
 
 
 def fixture(file):
     # TODO deprecate after a better test for impact coding is devised.
-    """ Returns the absolute path for a fixtures that contains sample data.
+    """Return the absolute path for a fixtures that contains sample data.
 
     Parameters
     ----------
@@ -24,7 +23,7 @@ def fixture(file):
                      file)
 
 
-def assertBetween(self, min, max, input):
+def assertBetween(self, minimum, maximum, value):
     """Fail if value is not between min and max (inclusive)."""
-    self.assertGreaterEqual(input, min)
-    self.assertLessEqual(input, max)
+    self.assertGreaterEqual(value, minimum)
+    self.assertLessEqual(value, maximum)
