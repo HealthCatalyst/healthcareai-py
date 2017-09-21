@@ -1,4 +1,4 @@
-"""Filters
+"""Filters for dataframes.
 
 This module contains filters for preprocessing data. Most operate on DataFrames and are named appropriately.
 """
@@ -17,12 +17,13 @@ def validate_dataframe_input(possible_dataframe):
 
 
 def is_dataframe(possible_dataframe):
-    """Simple helper that returns True if an input is a pandas dataframe."""
+    """Return true if input is a pandas dataframe."""
     return issubclass(DataFrame, type(possible_dataframe))
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
-    """Given a pandas dataframe, remove columns with suffix 'DTS'."""
+
+    """Remove columns with suffix 'DTS'."""
 
     def __init__(self):
         pass
@@ -41,7 +42,8 @@ class DataframeColumnSuffixFilter(TransformerMixin):
 
 
 class DataFrameColumnDateTimeFilter(TransformerMixin):
-    """Given a pandas dataframe, remove any columns that has the type datetime."""
+
+    """Remove any columns that has the type datetime."""
 
     def __init__(self):
         pass
@@ -57,7 +59,8 @@ class DataFrameColumnDateTimeFilter(TransformerMixin):
 
 
 class DataframeColumnRemover(TransformerMixin):
-    """Given a pandas dataframe, remove the given column or columns in list form."""
+
+    """Remove the given column or columns in list form."""
 
     def __init__(self, columns_to_remove):
         self.columns_to_remove = columns_to_remove
@@ -79,7 +82,8 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    """Given a pandas dataframe, remove rows that contain null values in any column except the excluded."""
+
+    """Remove rows that contain null values in any column except the excluded."""
 
     def __init__(self, excluded_columns=None):
         # TODO validate excluded column is a list

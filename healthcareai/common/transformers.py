@@ -1,4 +1,4 @@
-"""Transformers
+"""Transformers for dataframes.
 
 This module contains transformers for preprocessing data. Most operate on DataFrames and are named appropriately.
 """
@@ -181,6 +181,7 @@ class DataFrameUnderSampling(TransformerMixin):
 
 
 class DataFrameOverSampling(TransformerMixin):
+
     """
     Performs oversampling on a dataframe.
 
@@ -226,6 +227,7 @@ class DataFrameOverSampling(TransformerMixin):
 
 
 class DataFrameDropNaN(TransformerMixin):
+
     """Remove NaN values. Columns that are NaN or None are removed."""
 
     def __init__(self):
@@ -241,6 +243,7 @@ class DataFrameDropNaN(TransformerMixin):
 
 
 class DataFrameFeatureScaling(TransformerMixin):
+
     """Scales numeric features. Columns that are numerics are scaled, or otherwise specified."""
 
     def __init__(self, columns_to_scale=None, reuse=None):
