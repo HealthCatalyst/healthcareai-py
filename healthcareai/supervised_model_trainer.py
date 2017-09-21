@@ -70,7 +70,6 @@ class SupervisedModelTrainer(object):
         return self._advanced_trainer.number_of_classes
 
     def random_forest(self, feature_importance_limit=15, save_plot=False):
-        # TODO Convenience method. Probably not needed?
         """Train a random forest model and print out the model performance metrics.
 
         Args:

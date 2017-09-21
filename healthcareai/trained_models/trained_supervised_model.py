@@ -120,8 +120,8 @@ class TrainedSupervisedModel(object):
 
     @property
     def binary_classification_scores(self):
-        # TODO low priority, but test this
         """Return the probability scores of the first class for a binary classification model."""
+        # TODO low priority, but test this
         if self.is_regression:
             raise HealthcareAIError('ROC/PR plots are not used to evaluate regression models.')
 

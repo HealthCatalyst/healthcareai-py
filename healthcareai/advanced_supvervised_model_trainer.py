@@ -25,7 +25,6 @@ class AdvancedSupervisedModelTrainer(object):
     metrics.
     """
 
-    # TODO check constructor usages
     def __init__(
         self,
         dataframe,
@@ -56,7 +55,6 @@ class AdvancedSupervisedModelTrainer(object):
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.verbose = verbose
-        # TODO this is probably redundant now that original_column_names exists
         self.columns = None
         self.x_train = None
         self.X_test = None
@@ -115,7 +113,6 @@ class AdvancedSupervisedModelTrainer(object):
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
 
-        # TODO this is probably redundant now that original_column_names exists
         # Save off a copy of the column names before converting to a numpy array
         self.columns = X.columns.values
 
@@ -194,7 +191,6 @@ class AdvancedSupervisedModelTrainer(object):
             metric (str): a string of the scoring metric
         """
 
-        # TODO test this for errors and multiclass
         # TODO make this more robust for other scoring metrics
         if self.number_of_classes == 2:
             # return True for testing
@@ -390,9 +386,9 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
-            # TODO this is probably redundant now that original_column_names exists
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
-                                                                                    self.model_type)
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(
+                len(self.columns),
+                self.model_type)
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
             number_iteration_samples = 5
 
@@ -430,9 +426,9 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
-            # TODO this is probably redundant now that original_column_names exists
-            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(len(self.columns),
-                                                                                    self.model_type)
+            max_features = hcai_helpers.calculate_random_forest_mtry_hyperparameter(
+                len(self.columns),
+                self.model_type)
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
             number_iteration_samples = 5
 
@@ -486,7 +482,6 @@ class AdvancedSupervisedModelTrainer(object):
             feature_model=factor_model,
             fit_pipeline=self.pipeline,
             model_type=self.model_type,
-            # TODO this is probably redundant now that original_column_names exists
             column_names=self.columns,
             grain_column=self.grain_column,
             prediction_column=self.predicted_column,
