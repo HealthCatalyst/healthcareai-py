@@ -16,7 +16,7 @@ import healthcareai.pipelines.data_preparation as pipelines
 
 # Set some constants to save errors and typing
 CLASSIFICATION = 'classification'
-CLASSIFICATION_PREDICTED_COLUMN = 'target_num' # Number labeled target
+CLASSIFICATION_PREDICTED_COLUMN = 'target_num'  # Number labeled target
 GRAIN_COLUMN_NAME = 'PatientID'
 COLUMNS_TO_REMOVE = 'target_str'
 
@@ -58,6 +58,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
     def test_classification_trainer_linear_regression_raises_error(self):
         self.assertRaises(HealthcareAIError, self.classification_trainer.linear_regression)
 
+
 class TestNeuralNetworkClassificaton(unittest.TestCase):
     def setUp(self):
         df = hcai_datasets.load_dermatology()
@@ -94,6 +95,7 @@ class TestNeuralNetworkClassificaton(unittest.TestCase):
         self.assertRaises(HealthcareAIError, nn.roc_plot)
         test_helpers.assertBetween(self, 15, 30, nn.metrics['confusion_matrix'][0][0])
 
+
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
         df = hcai_datasets.load_dermatology()
@@ -118,30 +120,6 @@ class TestRandomForestClassification(unittest.TestCase):
         self.assertRaises(HealthcareAIError, rf.roc_plot)
         test_helpers.assertBetween(self, 15, 30, rf.metrics['confusion_matrix'][0][0])
 
-class TestMetricValidation(unittest.TestCase):
-    # TODO this is pretty spartan testing only looking for happy path on binary classification
-    def setUp(self):
-        df = hcai_datasets.load_dermatology()
-
-        # Drop uninformative columns
-        df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
-
-        np.random.seed(42)
-        clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(df)
-        self.classification_trainer = AdvancedSupervisedModelTrainer(
-            clean_df,
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN)
-
-    def test_validate_score_metric_for_number_of_classes(self):
-        self.assertRaises(HealthcareAIError,
-                          self.classification_trainer.validate_score_metric_for_number_of_classes, metric='pr_auc')
-        self.assertRaises(HealthcareAIError,
-                          self.classification_trainer.validate_score_metric_for_number_of_classes, metric='roc_auc')
 
 class TestHelpers(unittest.TestCase):
     def test_class_counter_on_binary(self):
