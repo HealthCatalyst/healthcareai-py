@@ -65,6 +65,11 @@ class SupervisedModelTrainer(object):
         """Return class labels"""
         return self._advanced_trainer.class_labels
 
+    @property
+    def number_of_classes(self):
+        """Return number of classes"""
+        return self._advanced_trainer.number_of_classes
+
     def random_forest(self, feature_importance_limit=15, save_plot=False):
         # TODO Convenience method. Probably not needed?
         """Train a random forest model and print out the model performance metrics.
@@ -91,7 +96,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'KNN'
-        print('\nTraining {}'.format(model_name))
+        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.knn(
@@ -136,7 +141,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Random Forest Classification'
-        print('\nTraining {}'.format(model_name))
+        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.random_forest_classifier(
@@ -163,7 +168,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Logistic Regression'
-        print('\nTraining {}'.format(model_name))
+        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.logistic_regression(randomized_search=False)
@@ -197,7 +202,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Lasso Regression'
-        print('\nTraining {}'.format(model_name))
+        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.lasso_regression(randomized_search=False)
@@ -213,16 +218,17 @@ class SupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        # TODO consider making a scoring parameter (which will necessitate some more logic
+        # TODO consider making a scoring parameter (which will necessitate some more logic)
         model_name = 'ensemble {}'.format(self._advanced_trainer.model_type)
-        print('\nTraining {}'.format(model_name))
 
         # Train the appropriate ensemble of models
         if self._advanced_trainer.model_type is 'classification':
+            print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
             metric = 'accuracy'
             trained_model = self._advanced_trainer.ensemble_classification(scoring_metric=metric)
         elif self._advanced_trainer.model_type is 'regression':
             # TODO stub
+            print('\nTraining {}'.format(model_name))
             metric = 'neg_mean_squared_error'
             trained_model = self._advanced_trainer.ensemble_regression(scoring_metric=metric)
 
