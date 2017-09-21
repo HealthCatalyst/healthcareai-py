@@ -458,14 +458,14 @@ class TrainedSupervisedModel(object):
                 print("%{0}s".format(col_width) % cmatrix[i, j], end='')
             print('\n')
 
-    def confusion_matrix_plot(self, confusion_matrix=None, class_names=None, save=True):
+    def confusion_matrix_plot(self, confusion_matrix=None, class_names=None, save=False):
         """
         Plot a confusion matrix to evaluate classification results.
 
         Arges:
             confusion_matrix (array): an input confusion matrix. Calculate using compute_confusion_matrix() if not given
             class_names (list): label of each class. Calculate using compute_confusion_matrix() if not given
-            save (bool): if True, save the confusion matrix to a file `ConfusionMatrix.png`; if False, not.
+            save (bool): Defaults False. If true, save the confusion matrix to `ConfusionMatrix.png`.
         """
         # calculate confusion matrix and the class names if they are not given
         if confusion_matrix is None or class_names is None:
@@ -478,7 +478,9 @@ class TrainedSupervisedModel(object):
         for i, arr in enumerate(confusion_matrix):
             for j, val in enumerate(arr):
                 plt.text(j - 0.1, i + 0.1, val, fontsize=12)
-        plt.title('Confusion Matrix')
+
+        accuracy = round(self.metrics['accuracy'], 2)
+        plt.title('{} Confusion Matrix. Accuracy: {}'.format(self.algorithm_name, accuracy))
         plt.colorbar()
         tick_marks = np.arange(len(class_names))
         plt.xticks(tick_marks, class_names, rotation=45)

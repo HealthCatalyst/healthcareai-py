@@ -106,7 +106,8 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        columns_to_dummify = X.select_dtypes(include=[object, 'category'])
+        # build a list of columns names
+        columns_to_dummify = list(X.select_dtypes(include=[object, 'category']).columns.values)
 
         # remove excluded columns (if they are still in the list)
         for column in columns_to_dummify:

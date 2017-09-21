@@ -31,6 +31,8 @@ def load_dermatology():
     """
     Load a dermatology dataset for multi class classification
 
+    Dataset from http://archive.ics.uci.edu/ml/datasets/dermatology
+
     Note: the dataset contains two columns named `target_str` and `target_num`.
         `target_str` contains strings, e.g. 'one', 'two', 'three', ...
         `target_num` contains numbers, e.g. 1, 2, 3, ...

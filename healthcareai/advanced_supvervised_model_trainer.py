@@ -133,13 +133,13 @@ class AdvancedSupervisedModelTrainer(object):
         self.validate_regression('Ensemble Regression')
         raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
 
-    def ensemble_classification(self, scoring_metric='roc_auc', trained_model_by_name=None):
+    def ensemble_classification(self, scoring_metric='accuracy', trained_model_by_name=None):
         """
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
 
         Args:
-            scoring_metric (str): The metric used to rank the models. Defaults to 'roc_auc'
+            scoring_metric (str): The metric used to rank the models. Defaults to 'accuracy'
             trained_model_by_name (dict): A dictionary of trained models to compare for a custom ensemble
 
         Returns:
@@ -227,7 +227,7 @@ class AdvancedSupervisedModelTrainer(object):
         return results
 
     def logistic_regression(self,
-                            scoring_metric='roc_auc',
+                            scoring_metric='accuracy',
                             hyperparameter_grid=None,
                             randomized_search=True,
                             number_iteration_samples=10):
