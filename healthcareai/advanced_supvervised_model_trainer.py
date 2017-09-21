@@ -91,6 +91,22 @@ class AdvancedSupervisedModelTrainer(object):
         """
         return self.model_type == 'regression'
 
+    @property
+    def class_labels(self):
+        """Return the class labels sorted"""
+        self.validate_classification()
+        return np.sort(self.y_test.unique())
+
+    @property
+    def number_of_classes(self):
+        """Number of classes"""
+        self.validate_classification()
+        return len(self.class_labels)
+
+    @property
+    def is_binary_classification(self):
+        """Check if a classification is binary."""
+        return self.number_of_classes == 2
     def train_test_split(self, random_seed=None):
         """
         Splits the dataframe into train and test sets.
@@ -207,22 +223,24 @@ class AdvancedSupervisedModelTrainer(object):
 
         Args:
             trained_sklearn_estimator (sklearn.base.BaseEstimator): A scikit-learn trained algorithm
-        """
-        performance_metrics = None
 
-        if self.model_type is 'classification':
-            # TODO this needs a refactor - it should detect if it is binary
-            performance_metrics = hcai_model_evaluation.calculate_classification_metrics(
+        Returns:
+            dict: The metrics appropriate for the model type
+        """
+        results = None
+
+        if self.is_classification:
+            results = hcai_model_evaluation.compute_classification_metrics(
                 trained_sklearn_estimator,
                 self.X_test,
-                self.y_test,
-                binary=self.is_binary_classification()
-            )
-        elif self.model_type is 'regression':
-            performance_metrics = hcai_model_evaluation.calculate_regression_metrics(trained_sklearn_estimator,
-                                                                                     self.X_test, self.y_test)
+                self.y_test)
+        elif self.is_regression:
+            results = hcai_model_evaluation.compute_regression_metrics(
+                trained_sklearn_estimator,
+                self.X_test,
+                self.y_test)
 
-        return performance_metrics
+        return results
 
     def logistic_regression(self,
                             scoring_metric='roc_auc',
@@ -602,16 +620,6 @@ class AdvancedSupervisedModelTrainer(object):
         if not self.is_classification:
             raise HealthcareAIError('A {} model can only be trained with a classification trainer.'.format(model_name))
 
-    def is_binary_classification(self):
-        """
-        Check if a classification is binary.
-        """
-        if self.is_classification:
-            num_classes = len(list(set(self.y_test)))
-            if num_classes == 2:
-                return True
-            else:
-                return False
 
     def _console_log(self, message):
         if self.verbose:

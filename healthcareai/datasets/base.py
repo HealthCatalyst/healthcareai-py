@@ -26,9 +26,10 @@ def load_diabetes():
     """Load and return the diabetes dataset"""
     return load_data('diabetes.csv')
 
-def load_multiclass():
+
+def load_dermatology():
     """
-    Load a dataset for multi class classification
+    Load a dermatology dataset for multi class classification
 
     Note: the dataset contains two columns named `target_str` and `target_num`.
         `target_str` contains strings, e.g. 'one', 'two', 'three', ...

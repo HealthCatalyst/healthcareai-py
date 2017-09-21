@@ -9,7 +9,6 @@ import pandas as pd
 import sklearn.metrics as skmetrics
 
 from matplotlib import pyplot as plt
-from sklearn.metrics import confusion_matrix
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
@@ -26,18 +25,19 @@ def compute_confusion_matrix(y_test, class_predictions):
         class_predictions (list) : predicted classes coming from an ML algorithm of length n.
 
     Returns:
-        cmatrix: a confusion matrix
+        confusion_matrix: a confusion matrix
         class_names: names of the classes from the true label
     """
     _validate_predictions_and_labels_are_equal_length(class_predictions, y_test)
 
     # Compute confusion matrix
-    cmatrix = confusion_matrix(y_test, class_predictions)
+    confusion_matrix = skmetrics.confusion_matrix(y_test, class_predictions)
 
     # Get a list of classes in the test dataset
     class_names = list(set(y_test))
 
-    return cmatrix, class_names
+    return confusion_matrix, class_names
+
 
 def compute_roc(y_test, probability_predictions):
     """
@@ -113,7 +113,7 @@ def compute_pr(y_test, probability_predictions):
             'pr_thresholds': pr_thresholds}
 
 
-def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
+def compute_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     """
     Given a trained estimator, calculate metrics.
 
@@ -137,20 +137,21 @@ def calculate_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     return result
 
 
-def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, binary=True):
+def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     """
-    Given a trained estimator, calculate metrics.
+    Compute classification metrics for a trained estimator.
+
+    Note this computes accuracy and a confusion matrix and optionally adds PR and ROC for binary classification tasks.
 
     Args:
         trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
-        binary (bool): specify if the classification is binary (True) or multiclass (False)
 
     Returns:
         dict: A dictionary of metrics objects
     """
-    # Squeeze down y_test to 1D
+    # Squeeze down y_test from nD to 1D
     y_test = np.squeeze(y_test)
 
     _validate_predictions_and_labels_are_equal_length(x_test, y_test)
@@ -159,18 +160,28 @@ def calculate_classification_metrics(trained_sklearn_estimator, x_test, y_test, 
     class_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
     probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
 
-    # Calculate accuracy
+    # Compute the accuracy
     accuracy = skmetrics.accuracy_score(y_test, class_predictions)
 
+    # Compute the confusion matrix
+    confusion_matrix, _ = compute_confusion_matrix(y_test, class_predictions)
+
+    results = {'accuracy': accuracy, 'confusion_matrix': confusion_matrix}
+
     # Select appropriate matrics for binary/multiclass classifications
-    cmatrix, _ = compute_confusion_matrix(y_test, class_predictions)
-    if binary:
+    # TODO Assumes a numpy array, may need a try catch or cast to a numpy array
+    number_classes = len(y_test.unique())
+    if number_classes == 2:
+        # If it is a binary classification task, also compute ROC and PR
         roc = compute_roc(y_test, probability_predictions)
         pr = compute_pr(y_test, probability_predictions)
-        # Unpack the roc and pr dictionaries so the metric lookup is easier for plot and ensemble methods
-        return {'accuracy': accuracy, 'cmatrix': cmatrix, **roc, **pr}
-    else:
-        return {'accuracy': accuracy, 'cmatrix': cmatrix}
+
+        # Unpack the roc and pr dictionaries into a flat dictionary
+        # so metric lookup is easier for plot and ensemble methods
+        results = {**results, **roc, **pr}
+
+    return results
+
 
 def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
     """

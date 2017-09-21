@@ -24,7 +24,7 @@ COLUMNS_TO_REMOVE = 'target_str'
 class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.df = hcai_datasets.load_multiclass()
+        cls.df = hcai_datasets.load_dermatology()
 
         # Drop columns that won't help machine learning
         columns_to_remove = [COLUMNS_TO_REMOVE]
@@ -60,7 +60,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
 
 class TestNeuralNetworkClassificaton(unittest.TestCase):
     def setUp(self):
-        df = hcai_datasets.load_multiclass()
+        df = hcai_datasets.load_dermatology()
 
         # Drop uninformative columns
         df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
@@ -85,18 +85,18 @@ class TestNeuralNetworkClassificaton(unittest.TestCase):
         self.assertIsInstance(nn, TrainedSupervisedModel)
 
         self.assertRaises(HealthcareAIError, nn.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, nn.metrics['cmatrix'][0][0])
+        test_helpers.assertBetween(self, 15, 30, nn.metrics['confusion_matrix'][0][0])
 
     def test_neural_network_no_tuning(self):
         nn = self.classification_trainer.neural_network_classifier(randomized_search=False)
         self.assertIsInstance(nn, TrainedSupervisedModel)
 
         self.assertRaises(HealthcareAIError, nn.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, nn.metrics['cmatrix'][0][0])
+        test_helpers.assertBetween(self, 15, 30, nn.metrics['confusion_matrix'][0][0])
 
 class TestRandomForestClassification(unittest.TestCase):
     def setUp(self):
-        df = hcai_datasets.load_multiclass()
+        df = hcai_datasets.load_dermatology()
         # Drop uninformative columns
         df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
 
@@ -110,18 +110,18 @@ class TestRandomForestClassification(unittest.TestCase):
         rf = self.trainer.random_forest_classifier(trees=200, randomized_search=False)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         self.assertRaises(HealthcareAIError, rf.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, rf.metrics['cmatrix'][0][0])
+        test_helpers.assertBetween(self, 15, 30, rf.metrics['confusion_matrix'][0][0])
 
     def test_random_forest_tuning(self):
         rf = self.trainer.random_forest_classifier(randomized_search=True)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         self.assertRaises(HealthcareAIError, rf.roc_plot)
-        test_helpers.assertBetween(self, 15, 30, rf.metrics['cmatrix'][0][0])
+        test_helpers.assertBetween(self, 15, 30, rf.metrics['confusion_matrix'][0][0])
 
 class TestMetricValidation(unittest.TestCase):
     # TODO this is pretty spartan testing only looking for happy path on binary classification
     def setUp(self):
-        df = hcai_datasets.load_multiclass()
+        df = hcai_datasets.load_dermatology()
 
         # Drop uninformative columns
         df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
@@ -145,13 +145,13 @@ class TestMetricValidation(unittest.TestCase):
 
 class TestHelpers(unittest.TestCase):
     def test_class_counter_on_binary(self):
-        df = hcai_datasets.load_multiclass()
+        df = hcai_datasets.load_dermatology()
         df.dropna(axis=0, how='any', inplace=True)
         result = count_unique_elements_in_column(df, 'target_num')
         self.assertEqual(result, 6)
 
     def test_class_counter_on_many(self):
-        df = hcai_datasets.load_multiclass()
+        df = hcai_datasets.load_dermatology()
         result = count_unique_elements_in_column(df, 'PatientID')
         self.assertEqual(result, 366)
 

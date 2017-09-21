@@ -50,14 +50,20 @@ class SupervisedModelTrainer(object):
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
 
-        self._advanced_trainer.categorical_column_info = get_categorical_levels(dataframe = dataframe,
-                                                                                columns_to_ignore = [grain_column,
-                                                                                                     predicted_column])
+        self._advanced_trainer.categorical_column_info = get_categorical_levels(
+            dataframe=dataframe,
+            columns_to_ignore=[grain_column,
+                               predicted_column])
 
     @property
     def clean_dataframe(self):
         """Return the dataframe after the preparation pipeline (imputation and such)."""
         return self._advanced_trainer.dataframe
+
+    @property
+    def class_labels(self):
+        """Return class labels"""
+        return self._advanced_trainer.class_labels
 
     def random_forest(self, feature_importance_limit=15, save_plot=False):
         # TODO Convenience method. Probably not needed?
@@ -88,8 +94,10 @@ class SupervisedModelTrainer(object):
         print('\nTraining {}'.format(model_name))
 
         # Train the model
-        trained_model = self._advanced_trainer.knn(scoring_metric='roc_auc', hyperparameter_grid=None,
-                                                   randomized_search=True)
+        trained_model = self._advanced_trainer.knn(
+            scoring_metric='accuracy',
+            hyperparameter_grid=None,
+            randomized_search=True)
 
         # Display the model metrics
         trained_model.print_training_results()
@@ -106,9 +114,10 @@ class SupervisedModelTrainer(object):
         print('\nTraining {}'.format(model_name))
 
         # Train the model
-        trained_model = self._advanced_trainer.random_forest_regressor(trees=200,
-                                                                       scoring_metric='neg_mean_squared_error',
-                                                                       randomized_search=True)
+        trained_model = self._advanced_trainer.random_forest_regressor(
+            trees=200,
+            scoring_metric='neg_mean_squared_error',
+            randomized_search=True)
 
         # Display the model metrics
         trained_model.print_training_results()
@@ -132,7 +141,7 @@ class SupervisedModelTrainer(object):
         # Train the model
         trained_model = self._advanced_trainer.random_forest_classifier(
             trees=200,
-            scoring_metric='roc_auc',
+            scoring_metric='accuracy',
             randomized_search=True)
 
         # Display the model metrics
@@ -210,7 +219,7 @@ class SupervisedModelTrainer(object):
 
         # Train the appropriate ensemble of models
         if self._advanced_trainer.model_type is 'classification':
-            metric = 'roc_auc'
+            metric = 'accuracy'
             trained_model = self._advanced_trainer.ensemble_classification(scoring_metric=metric)
         elif self._advanced_trainer.model_type is 'regression':
             # TODO stub

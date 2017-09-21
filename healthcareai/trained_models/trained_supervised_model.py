@@ -5,8 +5,6 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import confusion_matrix
-
 import healthcareai.common.database_writers
 import healthcareai.common.file_io_utilities as hcai_io
 import healthcareai.common.helpers as hcai_helpers
@@ -460,23 +458,24 @@ class TrainedSupervisedModel(object):
                 print("%{0}s".format(col_width) % cmatrix[i, j], end='')
             print('\n')
 
-    def confusion_matrix_plot(self, cmatrix=None, class_names=None, save=True):
+    def confusion_matrix_plot(self, confusion_matrix=None, class_names=None, save=True):
         """
         Plot a confusion matrix to evaluate classification results.
 
         Arges:
-            cmatrix (array): an input confusion matrix. If not given, calculate from compute_confusion_matrix().
-            class_names (list): label of each class. If not given, calculate from compute_confusion_matrix().
+            confusion_matrix (array): an input confusion matrix. Calculate using compute_confusion_matrix() if not given
+            class_names (list): label of each class. Calculate using compute_confusion_matrix() if not given
             save (bool): if True, save the confusion matrix to a file `ConfusionMatrix.png`; if False, not.
-
         """
         # calculate confusion matrix and the class names if they are not given
-        if cmatrix is None or class_names is None:
-            cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
+        if confusion_matrix is None or class_names is None:
+            confusion_matrix, class_names = hcai_model_evaluation.compute_confusion_matrix(
+                self.test_set_actual,
+                self.test_set_class_labels)
 
         plt.figure()
-        plt.imshow(cmatrix, interpolation='nearest', cmap=plt.get_cmap('YlOrRd'))
-        for i, arr in enumerate(cmatrix):
+        plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.get_cmap('YlOrRd'))
+        for i, arr in enumerate(confusion_matrix):
             for j, val in enumerate(arr):
                 plt.text(j - 0.1, i + 0.1, val, fontsize=12)
         plt.title('Confusion Matrix')
@@ -491,15 +490,16 @@ class TrainedSupervisedModel(object):
             plt.savefig('ConfusionMatrix.png')
             source_path = os.path.dirname(os.path.abspath(__file__))
             print('\nConfusion matrix plot saved in: {}'.format(source_path))
-
+        else:
+            plt.show()
 
     def roc_plot(self):
         """Return a plot of the ROC curve of the holdout set from model training."""
-        self.validate_classification()
-        if self.is_binary_classification():
-            tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
-        else:
-            raise HealthcareAIError('Error. For multiclass classification, use confusion matrix instead.')
+        self._validate_classification()
+        if not self.is_binary_classification():
+            raise HealthcareAIError('For multiclass classification, try the confusion matrix instead.')
+
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='ROC')
 
     def roc(self, print_output=True):
         """
@@ -513,7 +513,8 @@ class TrainedSupervisedModel(object):
         Returns:
             dict: A subset of TrainedSupervisedModel.metrics() that are ROC specific
         """
-        self.validate_classification()
+        self._validate_binary_classification()
+
         metrics = self._metric_by_name
         roc = {
             'roc_auc': metrics['roc_auc'],
@@ -524,7 +525,6 @@ class TrainedSupervisedModel(object):
             'true_positive_rates': metrics['true_positive_rates'],
             'false_positive_rates': metrics['false_positive_rates'],
         }
-        # roc = self._metric_by_name
 
         if print_output:
             print(('\nReceiver Operating Characteristic (ROC):\n'
@@ -554,11 +554,11 @@ class TrainedSupervisedModel(object):
 
     def pr_plot(self):
         """Return a plot of the PR curve of the holdout set from model training."""
-        self.validate_classification()
-        if self.is_binary_classification():
-            tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
-        else:
-            raise HealthcareAIError('Error. For multiclass classification, use confusion matrix instead.')
+        self._validate_classification()
+        if not self.is_binary_classification():
+            raise HealthcareAIError('For multiclass classification, try the confusion matrix instead.')
+
+        tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
     def pr(self, print_output=True):
         """
@@ -572,7 +572,8 @@ class TrainedSupervisedModel(object):
         Returns:
             dict: A subset of TrainedSupervisedModel.metrics() that are PR specific
         """
-        self.validate_classification()
+        self._validate_binary_classification()
+
         metrics = self._metric_by_name
         pr = {
             'pr_auc': metrics['pr_auc'],
@@ -610,32 +611,37 @@ class TrainedSupervisedModel(object):
 
         return pr
 
-    def validate_classification(self):
+    def _validate_classification(self):
         """Validate that a model is classification and raise an error if it is not.
 
         Run this on any method that only makes sense for classification.
         """
-        # TODO add binary check and rename to validate_binary_classification
         if self.model_type != 'classification':
-            #raise HealthcareAIError('This function only runs on a binary classification model.')
             raise HealthcareAIError('This function only runs on a classification model.')
+
+    def _validate_binary_classification(self):
+        """Validate that a model is a binary classifier and raise an error if it is not.
+
+        Run this in any method that only makes sense for binary classification.
+        """
+        if not self.is_binary_classification():
+            raise HealthcareAIError('This function only runs on a binary classification model.')
 
     def is_binary_classification(self):
         """
         Check if a classification is binary.
         """
-        self.validate_classification()
+        self._validate_classification()
         num_classes = len(list(set(self.test_set_actual)))
-        if num_classes == 2:
-            return True
-        else:
-            return False
+
+        return num_classes == 2
 
     def print_training_results(self):
         """
-        Print metrics, stats and hyperparameters of a trained supervised model.
+        Print selected metrics, stats and hyperparameters.
 
-        This includes the model name, training time, hyperparameters, and performance metrics.
+        This includes the model name, training time, hyperparameters, and selected performance metrics chosen from the
+        `.metrics` property.
         """
         print('{} Training Results:'.format(self.algorithm_name))
         print('- Training time:')
@@ -648,16 +654,20 @@ class TrainedSupervisedModel(object):
         print('- Best hyperparameters found were:\n    {}'.format(hyperparameters))
 
         if self._model_type == 'classification':
-            print('- {} performance metrics:\n    Accuracy: {:03.2f}\n    ROC AUC: {:03.2f}\n    PR AUC: {:03.2f}'.format(
-                self.algorithm_name,
-                self.metrics['accuracy'],
-                self.metrics['roc_auc'],
-                self.metrics['pr_auc']))
+            self._print_selected_metrics(['accuracy', 'roc_auc', 'pr_auc'])
         elif self._model_type == 'regression':
-            print('- {} performance metrics:\n    Mean Squared Error (MSE): {}\n    Mean Absolute Error (MAE): {}'.format(
-                self.algorithm_name,
-                self.metrics['mean_squared_error'],
-                self.metrics['mean_absolute_error']))
+            self._print_selected_metrics(['mean_squared_error', 'mean_absolute_error'])
+
+    def _print_selected_metrics(self, metrics):
+        print('- {} selected performance metrics:'.format(self.algorithm_name))
+        # Print a few select metrics (if they exist)
+        for metric in metrics:
+            try:
+                print('    {}: {:03.2f}'.format(metric, self.metrics[metric]))
+            except TypeError:
+                print('    {}: {}'.format(metric, self.metrics[metric]))
+            except KeyError:
+                pass
 
 
 def get_estimator_from_trained_supervised_model(trained_supervised_model):
