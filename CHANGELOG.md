@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New top-level `load_dermatology()` function that returns a dataframe with a multiclass derm dataset
 - New properties on `SupervisedModelTrainer`: `.class_labels` and `.number_of_classes`
 - Nice printout when training that shows how many and which classes for classification tasks
+- Confusion matrices available via console `TrainedSupervisedModel.print_confusion_matrix()`
+    or plots `TrainedSupervisedModel.confusion_matrix_plot()`
 
 ### Changed
 
@@ -29,7 +31,7 @@ eliminated the need for .mdf fixtures on appveyor.
 
 - Feature importance plots now have a configurable limit to the amount of features they show with a default of 15.
 - Dataframe column filter handles None gracefully. For example, if no grain column is specified.
-- Getting started section of README vastly improved.
+- Getting started section of README vastly improved
 
 
 ### Deprecated
