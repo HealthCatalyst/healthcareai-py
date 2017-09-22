@@ -23,12 +23,12 @@ def main():
     print(dataframe.head(5))
 
     # Drop columns that won't help machine learning
-    dataframe.drop(['target_str'], axis=1, inplace=True)
+    dataframe.drop(['target_num'], axis=1, inplace=True)
 
     # Step 1: Setup a healthcareai classification trainer. This prepares your data for model building
     classification_trainer = healthcareai.SupervisedModelTrainer(
         dataframe,
-        predicted_column='target_num',
+        predicted_column='target_str',
         model_type='classification',
         grain_column='PatientID',
         impute=True)
@@ -37,16 +37,21 @@ def main():
     print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
     print(classification_trainer.clean_dataframe.head())
 
-    # Step 2: train some models
+    # Step 2: train some models and look at their confusion matrices
 
     # Train a KNN model
     trained_knn = classification_trainer.knn()
+    trained_knn.confusion_matrix_plot()
+    trained_knn.confusion_matrix_plot(normalize=False)
 
     # Train a logistic regression model
     trained_lr = classification_trainer.logistic_regression()
+    trained_lr.confusion_matrix_plot()
+    trained_lr.confusion_matrix_plot(normalize=False)
 
     # Train a random forest model and view the feature importance plot
     trained_random_forest = classification_trainer.random_forest(save_plot=False)
+    trained_random_forest.confusion_matrix_plot()
 
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
     # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
