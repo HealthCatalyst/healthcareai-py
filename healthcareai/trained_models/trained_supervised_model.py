@@ -1,10 +1,16 @@
 """A Trained Supervised Model."""
 import time
+
+import itertools
 import os
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
+
+from datetime import datetime
+from matplotlib import pyplot as plt
+from matplotlib import rcParams
+
 import healthcareai.common.database_writers
 import healthcareai.common.file_io_utilities as hcai_io
 import healthcareai.common.helpers as hcai_helpers
@@ -13,7 +19,9 @@ import healthcareai.common.top_factors as hcai_factors
 import healthcareai.common.database_connections as hcai_db
 import healthcareai.common.database_validators as hcai_dbval
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from matplotlib import pyplot as plt
+
+# fix all plot to auto layout
+rcParams.update({'figure.autolayout': True})
 
 
 class TrainedSupervisedModel(object):
@@ -201,8 +209,8 @@ class TrainedSupervisedModel(object):
         # prediction column be present in the new data.  To get around this, add the prediction columns filled with
         # NaNs.  This column should be dropped when the dataframe is run through the pipeline.
         if self.prediction_column not in dataframe.columns.values \
-               and self.prediction_column in self.original_column_names:
-           dataframe[self.prediction_column] = np.NaN
+                and self.prediction_column in self.original_column_names:
+            dataframe[self.prediction_column] = np.NaN
 
         try:
             # Raise an error here if any of the columns the model expects are not in the prediction dataframe
@@ -430,20 +438,21 @@ class TrainedSupervisedModel(object):
         engine = hcai_db.build_sqlite_engine(database)
         healthcareai.common.database_writers.write_to_db_agnostic(engine, table, sam_df)
 
-    def print_confusion_matrix(self, cmatrix=None, class_names=None):
+    def print_confusion_matrix(self, confusion_matrix=None, class_names=None):
         """
-        Print a well arranged confusion matrix to evaluate classification results.
+        Print a tidy confusion matrix to evaluate classification results.
 
         Arges:
-            cmatrix (array): an input confusion matrix. If not given, calculate from compute_confusion_matrix().
+            confusion_matrix (array): an input confusion matrix. If not given, calculate from compute_confusion_matrix().
             class_names (list): label of each class. If not given, calculate from compute_confusion_matrix().
 
         """
         # calculate confusion matrix and the class names if they are not given
-        if cmatrix is None or class_names is None:
-            cmatrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual, self.test_set_class_labels)
+        if confusion_matrix is None or class_names is None:
+            confusion_matrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual,
+                                                                                           self.test_set_class_labels)
 
-        col_width = max([len(str(x)) for x in class_names]+[5])
+        col_width = max([len(str(x)) for x in class_names] + [5])
 
         # Print header
         print("     ", end='')
@@ -455,38 +464,67 @@ class TrainedSupervisedModel(object):
         for i, label in enumerate(class_names):
             print("%{0}s".format(col_width) % label, end='')
             for j in range(len(class_names)):
-                print("%{0}s".format(col_width) % cmatrix[i, j], end='')
+                print("%{0}s".format(col_width) % confusion_matrix[i, j], end='')
             print('\n')
 
-    def confusion_matrix_plot(self, confusion_matrix=None, class_names=None, save=False):
+    def confusion_matrix_plot(
+            self,
+            confusion_matrix=None,
+            classes=None,
+            normalize=True,
+            save=False):
         """
         Plot a confusion matrix to evaluate classification results.
 
-        Arges:
-            confusion_matrix (array): an input confusion matrix. Calculate using compute_confusion_matrix() if not given
-            class_names (list): label of each class. Calculate using compute_confusion_matrix() if not given
+        Normalization can be applied by setting `normalize=True`.
+
+        Based on http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+
+        Args:
+            confusion_matrix (array): A confusion matrix. Calculates using compute_confusion_matrix() if not given
+            classes (list): Labels of each class. Calculate using compute_confusion_matrix() if not given
+            normalize (bool): Show normalized to help with class imbalance. Defaults to True. Displays counts if False.
             save (bool): Defaults False. If true, save the confusion matrix to `ConfusionMatrix.png`.
         """
+        # TODO factor out the calculation portion and plotting portions and put elsewhere. model_eval?
+        # TODO or implement scikit-plots and call it a day.
         # calculate confusion matrix and the class names if they are not given
-        if confusion_matrix is None or class_names is None:
-            confusion_matrix, class_names = hcai_model_evaluation.compute_confusion_matrix(
+        if confusion_matrix is None or classes is None:
+            confusion_matrix, classes = hcai_model_evaluation.compute_confusion_matrix(
                 self.test_set_actual,
                 self.test_set_class_labels)
 
-        plt.figure()
-        plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.get_cmap('YlOrRd'))
-        for i, arr in enumerate(confusion_matrix):
-            for j, val in enumerate(arr):
-                plt.text(j - 0.1, i + 0.1, val, fontsize=12)
-
         accuracy = round(self.metrics['accuracy'], 2)
-        plt.title('{} Confusion Matrix. Accuracy: {}'.format(self.algorithm_name, accuracy))
-        plt.colorbar()
-        tick_marks = np.arange(len(class_names))
-        plt.xticks(tick_marks, class_names, rotation=45)
-        plt.yticks(tick_marks, class_names)
-        plt.ylabel('True classes')
-        plt.xlabel('Predicted classes')
+
+        # Various settings for normalized vs non-normalized plots
+        if normalize:
+            number_format = '.2f'
+            title = 'Normalized Confusion Matrix\n{} (Overall Accuracy: {})'.format(self.algorithm_name, accuracy)
+            confusion_matrix = confusion_matrix.astype('float') / confusion_matrix.sum(axis=1)[:, np.newaxis]
+            plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.cm.Blues)
+            plt.colorbar()
+        else:
+            number_format = 'd'
+            title = 'Confusion Matrix\n{} (Overall Accuracy: {})'.format(self.algorithm_name, accuracy)
+            # hack to hide the colors on non-normalized while maintaining plot text alignment
+            plt.imshow(confusion_matrix, alpha=0)
+
+        plt.title(title)
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=90)
+        plt.yticks(tick_marks, classes)
+
+        # Plot number in each square using either a decimal or integer format
+        text_color_threshold = confusion_matrix.max() / 2.
+        for i, j in itertools.product(range(confusion_matrix.shape[0]), range(confusion_matrix.shape[1])):
+            temp_value = confusion_matrix[i, j]
+            temp_text_color = _confusion_matrix_text_color(normalize, temp_value, text_color_threshold)
+            temp_number = format(temp_value, number_format)
+
+            plt.text(j, i, temp_number, horizontalalignment="center", color=temp_text_color)
+
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
 
         if save:
             plt.savefig('ConfusionMatrix.png')
@@ -651,7 +689,7 @@ class TrainedSupervisedModel(object):
         print('{} Training Results:'.format(self.algorithm_name))
         print('- Training time:')
         print('    Trained the {} model in {} seconds'.format(self.algorithm_name,
-                                                            round(self.train_time, 2)))
+                                                              round(self.train_time, 2)))
 
         hyperparameters = self.best_hyperparameters
         if hyperparameters is None:
@@ -764,3 +802,24 @@ def plot_rf_features_from_tsm(trained_supervised_model, x_train, feature_limit=1
         column_names,
         feature_limit=feature_limit,
         save=save)
+
+
+def _confusion_matrix_text_color(normalize, value, threshold):
+    """
+    Determine the appropriate color for text on the confusion matrix plot.
+    
+    If it is not normalized, keep text black. If it is normalized, use white when it is beyond the threshold.
+    
+    Args:
+        normalize (bool): if the plot is normalized
+        value (int/float): the individual value
+        threshold (int/float): the threshold beyond which it should be white
+
+    Returns:
+        str: 'white' or 'black'
+    """
+    if normalize is False:
+        # Just show black numbers
+        return 'black'
+
+    return 'white' if value > threshold else 'black'
