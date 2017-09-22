@@ -32,11 +32,12 @@ setup(name='healthcareai',
           'matplotlib>=1.5.3',
           'numpy>=1.11.2',
           'pandas>=0.20.0',
-          # 'pyodbc>=3.0.10',
+          'tabulate==0.7.7,'
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
           'imbalanced-learn>=0.2.1',
-          'sqlalchemy>=1.1.5', 'sklearn'
+          'sqlalchemy>=1.1.5',
+          'sklearn'
       ],
       package_data={
           'examples': ['*.py', '*.ipynb']

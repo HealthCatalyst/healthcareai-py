@@ -17,7 +17,7 @@ def fixture(file):
     --------
     >>> fixtures('SampleData.csv')
     """
-    
+
     # TODO deprecate after a better test for impact coding is devised.
     return path.join(path.abspath(path.dirname(__file__)),
                      'fixtures',

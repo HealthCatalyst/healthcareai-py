@@ -10,6 +10,7 @@ import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot as plt
 from matplotlib import rcParams
+from tabulate import tabulate
 
 import healthcareai.common.database_writers
 import healthcareai.common.file_io_utilities as hcai_io
@@ -449,23 +450,17 @@ class TrainedSupervisedModel(object):
         """
         # calculate confusion matrix and the class names if they are not given
         if confusion_matrix is None or class_names is None:
-            confusion_matrix, class_names = hcai_model_evaluation.compute_confusion_matrix(self.test_set_actual,
-                                                                                           self.test_set_class_labels)
-
-        col_width = max([len(str(x)) for x in class_names] + [5])
+            confusion_matrix, class_names = hcai_model_evaluation.compute_confusion_matrix(
+                self.test_set_actual,
+                self.test_set_class_labels)
 
         # Print header
-        print("     ", end='')
-        for class_name in class_names:
-            print("%{0}s".format(col_width) % class_name, end='')
-        print('\n')
+        print('\nConfusion Matrix (Counts)\n'
+              '    - Predicted Classes are along the top\n'
+              '    - True Classes are along the left.\n\n')
 
-        # Print rows
-        for i, label in enumerate(class_names):
-            print("%{0}s".format(col_width) % label, end='')
-            for j in range(len(class_names)):
-                print("%{0}s".format(col_width) % confusion_matrix[i, j], end='')
-            print('\n')
+        # print the table using the excellent `tabulate` library
+        print(tabulate(confusion_matrix, headers=class_names, showindex=class_names, tablefmt='simple'))
 
     def confusion_matrix_plot(
             self,
