@@ -457,7 +457,7 @@ class TrainedSupervisedModel(object):
         # Print header
         print('\nConfusion Matrix (Counts)\n'
               '    - Predicted Classes are along the top\n'
-              '    - True Classes are along the left.\n\n')
+              '    - True Classes are along the left.\n')
 
         # print the table using the excellent `tabulate` library
         print(tabulate(confusion_matrix, headers=class_names, showindex=class_names, tablefmt='simple'))

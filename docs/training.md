@@ -6,15 +6,18 @@ Before you can make predictions, you need to train a model using known data.
 
 - This class lets you train and compare machine learning models on diverse
     datasets.
-- You can do both **classification** (for example, predicting Y/N) as well as
-    **regression** (for example, predicting a numeric value).
+- You can do **classification**
+    + Binary classification: For example, predicting a binary outcome like Sepsis Y/N
+    + Multi-lablel or multi-class classification.
+        * For example: predict a service line or diagnosis code
+- You can do **regression**
+    + For example, predicting a numeric value like length of stay.
 
 ## Am I ready for model creation?
 
 To build a model, please follow these guidelines for setting up your training data:
 
-- Don't use `0` or `1` for the dependent variable when doing binary classification. Use `Y`/`N` instead. The `IIF` function in T-SQL is an easy way to convert your target variables.
-- Don't pull in test data in this step. In other words, we just pull in those rows where the target (predicted column) has a value already.
+- The data you select for training your model needs to have values in the predicted column. These are often referred to as **labels** or **labeled data**.
 - Feature engineering is always a good idea. There are a few notes in the [hints](hints.md) document. Check out our [blog](http://healthcare.ai/blog) for ideas.
 
 ## Step 1: Load training data
@@ -89,6 +92,17 @@ Now that you have trained some models, let's evaluate and compare them.
 
 Each trained model has metrics that can be easily viewed by using the `.metrics` property. Depending on the model type, this can be a large list, so if you just want to see the ROC or PR metrics you can use `.roc()` or `.pr()` methods to print out the ideal cutoff and full list of cutoffs.
 
+### Which Metric to Evaluate?
+
+#### Classification
+
+- A confusion matrix can be used to evaluate any classifcation task, regardless of how many classes (or labels) you have.
+- If you have only two labels (or categories) for your task, then using the `.pr()` and `.roc()` can give you additional insight.
+
+#### Regression
+
+- Options for regression tasks are much simpler. Healthcareai will give you both Mean Squared Error (MSE) and Mean Absolute Error.
+
 ### Example code
 
 ```python
@@ -100,25 +114,33 @@ trained_knn.roc()
 
 # Print the PR thresholds
 trained_knn.pr()
+
+# Print the confusion matrix
+trained_knn.print_confusion_matrix()
 ```
 
 #### Individual plots
 
 ```python
-# View the ROC and PR plots
+# View the ROC, PR, and Confusion Matrix plots
 trained_knn.roc_plot()
 trained_knn.pr_plot()
+trained_knn.confusion_matrix_plot()
 
-# View the ROC and PR plots
+# View the ROC, PR, and Confusion Matrix plots
 trained_lr.roc_plot()
 trained_lr.pr_plot()
+trained_lr.confusion_matrix_plot()
 
-# View the ROC and PR plots
+# View the ROC, PR, and Confusion Matrix plots
 trained_random_forest.roc_plot()
 trained_random_forest.pr_plot()
+trained_random_forest.confusion_matrix_plot()
 ```
 
-#### Comparison plots
+#### Binary Classification Comparison plots
+
+Note these comparison plots only work for binary classification tasks (where you only have two labels or classes).
 
 The `healthcareai.common.model_eval.tsm_classification_comparison_plots` method plots ROC curves or PR curves of one or more trained models to directly compare models. It's arguments are:
 

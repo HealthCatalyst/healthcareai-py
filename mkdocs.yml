@@ -11,6 +11,7 @@ pages:
     - Getting Started: getting_started.md
     - Profiling Your Data: profiling_your_data.md
     - Training, Comparing and Saving Models: training.md
+    - Multi-label Classification: multiclass.md
     - Making Predictions and Deploying Models: deploy.md
     - Choosing a Prediction Output Type: prediction_types.md
     - Working With Other Databases: databases.md
