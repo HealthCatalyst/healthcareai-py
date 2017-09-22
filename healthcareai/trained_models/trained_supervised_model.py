@@ -481,7 +481,6 @@ class TrainedSupervisedModel(object):
             normalize (bool): Show normalized to help with class imbalance. Defaults to True. Displays counts if False.
             save (bool): Defaults False. If true, save the confusion matrix to `ConfusionMatrix.png`.
         """
-        # TODO factor out the calculation portion and plotting portions and put elsewhere. model_eval?
         # TODO or implement scikit-plots and call it a day.
         # calculate confusion matrix and the class names if they are not given
         if confusion_matrix is None or classes is None:

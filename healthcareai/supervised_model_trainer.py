@@ -1,4 +1,10 @@
-"""Trains Supervised Models."""
+"""
+Trains Supervised Models.
+
+Provides users a simple interface for machine learning.
+
+More advanced users may use `AdvancedSupervisedModelTrainer`
+"""
 
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm

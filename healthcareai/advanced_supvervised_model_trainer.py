@@ -1,6 +1,13 @@
+"""
+Trains Supervised Models.
+
+Provides users an advanced interface for machine learning.
+
+Less advanced users may use `SupervisedModelTrainer`
+"""
+
 import sklearn
 import numpy as np
-import pandas as pd
 import time
 
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -11,7 +18,6 @@ import healthcareai.common.model_eval as hcai_model_evaluation
 import healthcareai.common.top_factors as hcai_factors
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.helpers as hcai_helpers
-import healthcareai.common.transformers as hcai_transformers
 
 from healthcareai.common.randomized_search import get_algorithm
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -21,21 +27,23 @@ SUPPORTED_MODEL_TYPES = ['classification', 'regression']
 
 class AdvancedSupervisedModelTrainer(object):
     """
+    Train supervised models.
+
     This class helps create a model using several common classifiers and regressors, both of which report appropiate
     metrics.
     """
 
     def __init__(
-        self,
-        dataframe,
-        model_type,
-        predicted_column,
-        grain_column=None,
-        original_column_names=None,
-        verbose=False):
+            self,
+            dataframe,
+            model_type,
+            predicted_column,
+            grain_column=None,
+            original_column_names=None,
+            verbose=False):
         """
-        Creates an instance of AdvancedSupervisedModelTrainer.
-        
+        Create an instance of AdvancedSupervisedModelTrainer.
+
         Args:
             dataframe (pandas.DataFrame): The training data
             model_type (str): 'classification' or 'regression'
@@ -70,8 +78,8 @@ class AdvancedSupervisedModelTrainer(object):
     @property
     def is_classification(self):
         """
-        Returns True if trainer is set up for classification 
-        
+        Return True if trainer is set up for classification.
+
         Easy check to consolidate magic strings in all the model type switches.
         """
         return self.model_type == 'classification'
@@ -79,21 +87,21 @@ class AdvancedSupervisedModelTrainer(object):
     @property
     def is_regression(self):
         """
-        Returns True if trainer is set up for regression 
-        
+        Return True if trainer is set up for regression.
+
         Easy check to consolidate magic strings in all the model type switches.
         """
         return self.model_type == 'regression'
 
     @property
     def class_labels(self):
-        """Return the class labels sorted"""
+        """Get the class labels sorted alphabetically or numerically."""
         self.validate_classification()
         return np.sort(self.y_test.unique())
 
     @property
     def number_of_classes(self):
-        """Number of classes"""
+        """Calculate the number of classes."""
         self.validate_classification()
         return len(self.class_labels)
 
@@ -104,8 +112,8 @@ class AdvancedSupervisedModelTrainer(object):
 
     def train_test_split(self, random_seed=None):
         """
-        Splits the dataframe into train and test sets.
-        
+        Split the dataframe into train and test sets.
+
         Args:
             random_seed (int): An optional random seed for the random number generator. It is best to leave at the None
                 deafault. Useful for unit tests when reproducibility is required.
@@ -129,12 +137,15 @@ class AdvancedSupervisedModelTrainer(object):
             self.y_test.shape))
 
     def ensemble_regression(self, scoring_metric='neg_mean_squared_error', model_by_name=None):
+        """Train an ensemble of classifiers."""
         # TODO stub
         self.validate_regression('Ensemble Regression')
         raise HealthcareAIError('We apologize. An ensemble linear regression has not yet been implemented.')
 
     def ensemble_classification(self, scoring_metric='accuracy', trained_model_by_name=None):
         """
+        Train an ensemble of classifiers.
+
         This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
         your data.
 
@@ -185,12 +196,11 @@ class AdvancedSupervisedModelTrainer(object):
 
     def validate_score_metric_for_number_of_classes(self, metric):
         """
-        Check that a user's choice of scoring metric makes sense with the number of prediction classes
+        Validate the user's choice of scoring metric with the number of prediction classes.
 
         Args:
             metric (str): a string of the scoring metric
         """
-
         # TODO make this more robust for other scoring metrics
         if self.number_of_classes == 2:
             # return True for testing
@@ -201,8 +211,8 @@ class AdvancedSupervisedModelTrainer(object):
 
     def metrics(self, trained_sklearn_estimator):
         """
-        Given a trained estimator, calculate the appropriate performance metrics.
-        
+        Compute appropriate performance metrics.
+
         This is intended to be a thin wrapper around the toolbox metrics.
 
         Args:
@@ -232,7 +242,9 @@ class AdvancedSupervisedModelTrainer(object):
                             randomized_search=True,
                             number_iteration_samples=10):
         """
-        A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
+        Train a Logistic Regression classifier.
+
+        A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default
         hyperparameter grid.
 
         Args:
@@ -243,7 +255,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_classification('Logistic Regression')
         if hyperparameter_grid is None:
@@ -266,9 +278,11 @@ class AdvancedSupervisedModelTrainer(object):
                           randomized_search=True,
                           number_iteration_samples=2):
         """
+        Train a Liner regressor.
+
         A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
         hyperparameter grid.
-        
+
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
             hyperparameter_grid (dict): hyperparameters by name
@@ -299,6 +313,8 @@ class AdvancedSupervisedModelTrainer(object):
                          randomized_search=True,
                          number_iteration_samples=2):
         """
+        Train a Lasso regressor.
+
         A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
         hyperparameter grid.
 
@@ -333,9 +349,11 @@ class AdvancedSupervisedModelTrainer(object):
             randomized_search=True,
             number_iteration_samples=10):
         """
+        Train a KNN classifier.
+
         A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
         hyperparameter grid.
-        
+
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for classification
             hyperparameter_grid (dict): hyperparameters by name
@@ -344,7 +362,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_classification('KNN')
         if hyperparameter_grid is None:
@@ -370,9 +388,11 @@ class AdvancedSupervisedModelTrainer(object):
                                  randomized_search=True,
                                  number_iteration_samples=5):
         """
+        Train a random forest classifier.
+
         A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
         default hyperparameter grid.
-        
+
         Args:
             trees (int): number of trees to use if not performing a randomized grid search
             scoring_metric (str): Any sklearn scoring metric appropriate for classification
@@ -382,7 +402,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_classification('Random Forest Classifier')
         if hyperparameter_grid is None:
@@ -410,9 +430,11 @@ class AdvancedSupervisedModelTrainer(object):
                                 randomized_search=True,
                                 number_iteration_samples=5):
         """
+        Train a Random Forest regressor.
+
         A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
         default hyperparameter grid.
-        
+
         Args:
             trees (int): number of trees to use if not performing a randomized grid search
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
@@ -422,7 +444,7 @@ class AdvancedSupervisedModelTrainer(object):
                 hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
-            TrainedSupervisedModel: 
+            TrainedSupervisedModel:
         """
         self.validate_regression('Random Forest Regressor')
         if hyperparameter_grid is None:
@@ -445,7 +467,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def _create_trained_supervised_model(self, algorithm, include_factor_model=True):
         """
-        Trains an algorithm, prepares metrics, builds and returns a TrainedSupervisedModel
+        Train an algorithm, prepare metrics, build and return a TrainedSupervisedModel.
 
         Args:
             algorithm (sklearn.base.BaseEstimator): The scikit learn algorithm, ready to fit.
@@ -497,8 +519,8 @@ class AdvancedSupervisedModelTrainer(object):
 
     def validate_regression(self, model_name=None):
         """
-        Raises error if not a regression trainer.
-        
+        Raise an error if not a regression trainer.
+
         Args:
             model_name (str): Nice string for error messages
         """
@@ -507,7 +529,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def validate_classification(self, model_name=None):
         """
-        Raises error if not a classification trainer.
+        Raise an error if not a classification trainer.
 
         Args:
             model_name (str): Nice string for error messages
