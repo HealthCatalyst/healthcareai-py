@@ -21,11 +21,13 @@ class DataFrameImputer(TransformerMixin):
     """
 
     def __init__(self, impute=True):
+        """Instantiate the transformer."""
         self.impute = impute
         self.object_columns = None
         self.fill = None
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # Return if not imputing
         if self.impute is False:
             return self
@@ -34,8 +36,7 @@ class DataFrameImputer(TransformerMixin):
         self.object_columns = X.select_dtypes(include=['object']).columns.values
 
         self.fill = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O')
-                                  or pd.core.common.is_categorical_dtype(X[c])
+                               if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
                                else X[c].mean() for c in X], index=X.columns)
 
         num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
@@ -48,6 +49,7 @@ class DataFrameImputer(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # Return if not imputing
         if self.impute is False:
             return X
@@ -62,24 +64,29 @@ class DataFrameImputer(TransformerMixin):
 
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
-    # TODO Note that this makes healthcareai only handle N/Y in pred column
     """
-    Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV). Passes through data
-    for regression models unchanged. This is to simplify the data pipeline logic. (Though that may be a more appropriate
-    place for the logic...)
+    Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV).
+
+    Passes through data for regression models unchanged.
+    This is to simplify the data pipeline logic. (Though that may be a more appropriate place for the logic...)
 
     Note that this makes healthcareai only handle N/Y in pred column
     """
 
+    # TODO Note that this makes healthcareai only handle N/Y in pred column
+
     def __init__(self, model_type, target_column):
+        """Instantiate the transformer."""
         self.model_type = model_type
         self.target_column = target_column
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # TODO: put try/catch here when type = class and predictor is numeric
         # TODO this makes healthcareai only handle N/Y in pred column
         if self.model_type == 'classification':
@@ -87,7 +94,7 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
             pd.options.mode.chained_assignment = None  # default='warn'
             # Replace 'Y'/'N' with 1/0
             # The target variable can either be coded with 'Y/N' or numbers 0, 1, 2, 3, ...
-            if X[self.target_column].dtype == np.int64: # Added for number labeled target variable.
+            if X[self.target_column].dtype == np.int64:  # Added for number labeled target variable.
                 return X
             else:
                 X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
@@ -99,13 +106,16 @@ class DataFrameCreateDummyVariables(TransformerMixin):
     """Convert all categorical columns into dummy/indicator variables. Exclude given columns."""
 
     def __init__(self, excluded_columns=None):
+        """Instantiate the transformer."""
         self.excluded_columns = excluded_columns
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # build a list of columns names
         columns_to_dummify = list(X.select_dtypes(include=[object, 'category']).columns.values)
 
@@ -124,13 +134,16 @@ class DataFrameConvertColumnToNumeric(TransformerMixin):
     """Convert a column into numeric variables."""
 
     def __init__(self, column_name):
+        """Instantiate the transformer."""
         self.column_name = column_name
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         X[self.column_name] = pd.to_numeric(arg=X[self.column_name], errors='raise')
 
         return X
@@ -139,7 +152,7 @@ class DataFrameConvertColumnToNumeric(TransformerMixin):
 class DataFrameUnderSampling(TransformerMixin):
     """
     Performs undersampling on a dataframe.
-    
+
     Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
 
     Must be done AFTER imputation, since under/over sampling will not work with missing values (imblearn requires target
@@ -147,14 +160,17 @@ class DataFrameUnderSampling(TransformerMixin):
     """
 
     def __init__(self, predicted_column, random_seed=0):
+        """Instantiate the transformer."""
         self.random_seed = random_seed
         self.predicted_column = predicted_column
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
 
@@ -182,7 +198,6 @@ class DataFrameUnderSampling(TransformerMixin):
 
 
 class DataFrameOverSampling(TransformerMixin):
-
     """
     Performs oversampling on a dataframe.
 
@@ -193,14 +208,17 @@ class DataFrameOverSampling(TransformerMixin):
     """
 
     def __init__(self, predicted_column, random_seed=0):
+        """Instantiate the transformer."""
         self.random_seed = random_seed
         self.predicted_column = predicted_column
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # TODO how do we validate this happens before train/test split? Or do we need to? Can we implement it in the
         # TODO      simple trainer in the correct order and leave this to advanced users?
 
@@ -228,33 +246,37 @@ class DataFrameOverSampling(TransformerMixin):
 
 
 class DataFrameDropNaN(TransformerMixin):
-
     """Remove NaN values. Columns that are NaN or None are removed."""
 
     def __init__(self):
+        """Instantiate the transformer."""
         pass
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # Uses pandas.DataFrame.dropna function where axis=1 is column action, and
         # how='all' requires all the values to be NaN or None to be removed.
         return X.dropna(axis=1, how='all')
 
 
 class DataFrameFeatureScaling(TransformerMixin):
-
     """Scales numeric features. Columns that are numerics are scaled, or otherwise specified."""
 
     def __init__(self, columns_to_scale=None, reuse=None):
+        """Instantiate the transformer."""
         self.columns_to_scale = columns_to_scale
         self.reuse = reuse
 
     def fit(self, X, y=None):
+        """Fit the transformer."""
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         # Check if it's reuse, if so, then use the reuse's DataFrameFeatureScaling
         if self.reuse:
             return self.reuse.fit_transform(X, y)

@@ -22,16 +22,18 @@ def is_dataframe(possible_dataframe):
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
-
     """Remove columns with suffix 'DTS'."""
 
     def __init__(self):
+        """Instantiate the filter."""
         pass
 
     def fit(self, x, y=None):
+        """Fit the dataframe."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the dataframe."""
         validate_dataframe_input(x)
 
         # Build a list that contains column names that do not end in 'DTS'
@@ -42,16 +44,18 @@ class DataframeColumnSuffixFilter(TransformerMixin):
 
 
 class DataFrameColumnDateTimeFilter(TransformerMixin):
-
     """Remove any columns that has the type datetime."""
 
     def __init__(self):
+        """Instantiate the filter."""
         pass
 
     def fit(self, x, y=None):
+        """Fit the dataframe."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the dataframe."""
         validate_dataframe_input(x)
 
         # Select all data excluding datetime columns
@@ -59,16 +63,18 @@ class DataFrameColumnDateTimeFilter(TransformerMixin):
 
 
 class DataframeColumnRemover(TransformerMixin):
-
     """Remove the given column or columns in list form."""
 
     def __init__(self, columns_to_remove):
+        """Instantiate the filter."""
         self.columns_to_remove = columns_to_remove
 
     def fit(self, x, y=None):
+        """Fit the dataframe."""
         return self
 
     def transform(self, X, y=None):
+        """Transform the dataframe."""
         validate_dataframe_input(X)
         if self.columns_to_remove is None:
             # if there is no grain column, for example
@@ -82,17 +88,19 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-
     """Remove rows that contain null values in any column except the excluded."""
 
     def __init__(self, excluded_columns=None):
+        """Instantiate the filter."""
         # TODO validate excluded column is a list
         self.excluded_columns = excluded_columns or []
 
     def fit(self, x, y=None):
+        """Fit the dataframe."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the dataframe."""
         validate_dataframe_input(x)
 
         subset = [c for c in x.columns if c not in self.excluded_columns]

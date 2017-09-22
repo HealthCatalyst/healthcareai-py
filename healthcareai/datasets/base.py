@@ -1,3 +1,5 @@
+"""Dataset loading utilities."""
+
 import os
 from os.path import dirname
 from os.path import join
@@ -5,15 +7,15 @@ import pandas as pd
 
 
 def load_data(data_file_name):
-    """Loads data from module_path/data/data_file_name
+    """Load data from module_path/data/data_file_name.
 
     Args:
         data_file_name (str) : Name of csv file to be loaded from
         module_path/data/data_file_name. Example: 'diabetes.csv'
 
     Returns:
-        Pandas.core.frame.DataFrame: A pandas dataframe containing the loaded data.
-    
+        Pandas.core.frame.DataFrame: A pandas dataframe
+
     Examples:
         >>> load_data('diabetes.csv')
     """
@@ -23,13 +25,13 @@ def load_data(data_file_name):
 
 
 def load_diabetes():
-    """Load and return the diabetes dataset"""
+    """Load and return the diabetes dataset."""
     return load_data('diabetes.csv')
 
 
 def load_dermatology():
     """
-    Load a dermatology dataset for multi class classification
+    Load a dermatology dataset for multi class classification.
 
     Dataset from http://archive.ics.uci.edu/ml/datasets/dermatology
 

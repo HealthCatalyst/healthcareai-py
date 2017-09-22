@@ -3,7 +3,6 @@ from os import path
 
 
 def fixture(file):
-    # TODO deprecate after a better test for impact coding is devised.
     """Return the absolute path for a fixtures that contains sample data.
 
     Parameters
@@ -18,6 +17,8 @@ def fixture(file):
     --------
     >>> fixtures('SampleData.csv')
     """
+    
+    # TODO deprecate after a better test for impact coding is devised.
     return path.join(path.abspath(path.dirname(__file__)),
                      'fixtures',
                      file)
