@@ -2,6 +2,7 @@
 
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
+import healthcareai.common.cardinality_checks as hcai_ordinality
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
 from healthcareai.common.get_categorical_levels import get_categorical_levels
 
@@ -30,6 +31,10 @@ class SupervisedModelTrainer(object):
         # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
         prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
+
+        # Check for highly unique categorical values, warn the user, and allow
+        # them to proceed.
+        hcai_ordinality.check_high_cardinality(dataframe)
 
         # Run the raw data through the data preparation pipeline
         clean_dataframe = pipeline.fit_transform(dataframe)
