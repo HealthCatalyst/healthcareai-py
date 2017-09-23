@@ -105,6 +105,18 @@ class DataframeNullValueFilter(TransformerMixin):
 
         subset = [c for c in x.columns if c not in self.excluded_columns]
 
+        # Help the user out on training if they left all null columns in by telling them which to remove
+        all_null_columns = []
+        for column in x.columns:
+            if x[column].isnull().all():
+                all_null_columns.append(column)
+
+        if all_null_columns:
+            raise HealthcareAIError(
+                'Warning! You are about to drop any rows that contain '
+                'any null values, you have {} column(s) that are entirely null. '
+                'Please consider removing the following columns: {}'.format(len(all_null_columns), all_null_columns))
+
         x.dropna(axis=0, how='any', inplace=True, subset=subset)
 
         if x.empty:

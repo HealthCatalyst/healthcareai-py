@@ -257,5 +257,15 @@ class TestDataframeNullValueFilter(unittest.TestCase):
 
         self.assertRaises(HealthcareAIError, filters.DataframeNullValueFilter().fit_transform, df)
 
+    def test_removes_null_column_exception(self):
+        df = pd.DataFrame({'a': [1, 2, 3, 4],
+                           'b': [None, None, None, None],
+                           'c': [3, 4, 5, 6],
+                           'd': [1, 8, 1, 3],
+                           'label': ['Y', 'N', 'Y', 'N']})
+
+        self.assertTrue(df.b.isnull().all())
+        self.assertRaises(HealthcareAIError, filters.DataframeNullValueFilter().fit_transform, df)
+
 if __name__ == '__main__':
     unittest.main()

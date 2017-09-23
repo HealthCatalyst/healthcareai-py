@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Nice printout when training that shows how many and which classes for classification tasks
 - Confusion matrices available via console `TrainedSupervisedModel.print_confusion_matrix()`
     or plots `TrainedSupervisedModel.confusion_matrix_plot()`
+- `DataframeNullValueFilter` now raises a helpful error that identifies columns that are entirely null.
 
 ### Changed
 
