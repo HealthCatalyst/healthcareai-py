@@ -87,7 +87,11 @@ def check_high_cardinality(dataframe, exclusions, warning_threshold=0.3):
         the user.
     """
     row_count = len(dataframe)
-    cardinality = calculate_cardinality(dataframe.drop(exclusions, axis=1))
+    if exclusions:
+        dataframe = dataframe.drop(exclusions, axis=1)
+
+    cardinality = calculate_cardinality(dataframe)
+
     warnings = cardinality_threshold_filter(
         cardinality, 'unique_ratio',
         warning_threshold)
