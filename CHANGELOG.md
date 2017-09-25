@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Confusion matrices available via console `TrainedSupervisedModel.print_confusion_matrix()`
     or plots `TrainedSupervisedModel.confusion_matrix_plot()`
 - `DataframeNullValueFilter` now raises a helpful error that identifies columns that are entirely null.
+- `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
 
 ### Changed
 
