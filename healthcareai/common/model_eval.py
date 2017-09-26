@@ -39,29 +39,39 @@ def compute_confusion_matrix(y_test, class_predictions):
     return confusion_matrix, class_names
 
 
-def compute_roc(y_test, probability_predictions):
+def compute_roc(y_test, probability_predictions, positive_label):
     """
     Compute TPRs, FPRs, best cutoff, ROC auc, and raw thresholds.
 
     Args:
-        y_test (list) : true label values corresponding to the predictions. Also length n.
-        probability_predictions (list) : predictions coming from an ML algorithm of length n.
+        y_test (list) : n true label values corresponding to the predictions.
+        probability_predictions (list) : n predictions coming from a model.
+        positive_label (object): the positive class label
 
     Returns:
-        dict: 
-
+        dict: ROC details
     """
-    _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
+    _validate_predictions_and_labels_are_equal_length(
+        probability_predictions,
+        y_test)
 
     # Calculate ROC
-    false_positive_rates, true_positive_rates, roc_thresholds = skmetrics.roc_curve(y_test, probability_predictions)
-    roc_auc = skmetrics.roc_auc_score(y_test, probability_predictions)
+    false_positive_rates, true_positive_rates, roc_thresholds = \
+        skmetrics.roc_curve(
+            y_test,
+            probability_predictions,
+            pos_label=positive_label)
+
+    # Convert y_test to binary so that scikit can compute roc_auc
+    binary_y_test = convert_labels_to_binary(positive_label, y_test)
+    roc_auc = skmetrics.roc_auc_score(binary_y_test, probability_predictions)
 
     # get ROC ideal cutoffs (upper left, or 0,1)
     roc_distances = (false_positive_rates - 0) ** 2 + (true_positive_rates - 1) ** 2
 
-    # To prevent the case where there are two points with the same minimum distance, return only the first
-    # np.where returns a tuple (we want the first element in the first array)
+    # To prevent the case where there are two points with the same minimum
+    # distance, return only the first np.where returns a tuple (we want the
+    # first element in the first array)
     roc_index = np.where(roc_distances == np.min(roc_distances))[0][0]
     best_tpr = true_positive_rates[roc_index]
     best_fpr = false_positive_rates[roc_index]
@@ -76,23 +86,48 @@ def compute_roc(y_test, probability_predictions):
             'roc_thresholds': roc_thresholds}
 
 
-def compute_pr(y_test, probability_predictions):
+def convert_labels_to_binary(positive_label, y_test):
+    """
+    Convert labels to binary 1/0.
+
+    Args:
+        positive_label (object): The positive class label
+        y_test (list): A list of target labels
+
+    Returns:
+        list: A list of binary labels.
+
+    """
+    uniques = np.unique(y_test)
+
+    if len(uniques) != 2:
+        raise HealthcareAIError(
+            'Converting labels to binary is meant for binary tasks only.'
+            ' Your target list contains these classes: {}'.format(uniques))
+
+    return [1 if x == positive_label else 0 for x in y_test]
+
+
+def compute_pr(y_test, probability_predictions, positive_label):
     """
     Compute Precision-Recall, thresholds and PR AUC.
 
     Args:
-        y_test (list) : true label values corresponding to the predictions. Also length n.
-        probability_predictions (list) : predictions coming from an ML algorithm of length n.
+        y_test (list): true label values corresponding to the predictions.
+        positive_label (object): The positive class label
+        probability_predictions (list): predictions coming from an ML algorithm
 
     Returns:
-        dict: 
-
+        dict: PR details
     """
     _validate_predictions_and_labels_are_equal_length(probability_predictions, y_test)
 
     # Calculate PR
-    precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions)
-    pr_auc = skmetrics.average_precision_score(y_test, probability_predictions)
+    precisions, recalls, pr_thresholds = skmetrics.precision_recall_curve(y_test, probability_predictions, pos_label=positive_label)
+
+    # Convert y_test to binary so that scikit can compute pr_auc
+    binary_y_test = convert_labels_to_binary(positive_label, y_test)
+    pr_auc = skmetrics.average_precision_score(binary_y_test, probability_predictions)
 
     # get ideal cutoffs for suggestions (upper right or 1,1)
     pr_distances = (precisions - 1) ** 2 + (recalls - 1) ** 2
@@ -137,14 +172,49 @@ def compute_regression_metrics(trained_sklearn_estimator, x_test, y_test):
     return result
 
 
+def guess_positive_label(classes):
+    """
+    Guess a positive label from binary classes.
+
+    Applies the handy trick that most reasonable classes can be sorted
+    alphabetically, reversed and the first element is usually the positive
+    class.
+
+    This works for:
+
+    - True/False
+    - Y/N
+    - Yes/No
+    - 1/0
+    - -1/1
+
+    Args:
+        classes (list): A list of classes.
+
+    Returns:
+        object: The likely positive classes.
+    """
+    if len(classes) != 2:
+        raise HealthcareAIError(
+            'Guessing the positive label is meant for binary tasks only.'
+            ' You passed in {}'.format(classes))
+
+    result = list(classes)
+    result.sort(reverse=True)
+
+    return result[0]
+
+
 def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     """
     Compute classification metrics for a trained estimator.
 
-    Note this computes accuracy and a confusion matrix and optionally adds PR and ROC for binary classification tasks.
+    Note this computes accuracy and a confusion matrix and optionally adds PR
+    and ROC for binary classification tasks.
 
     Args:
-        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn estimator that has been `.fit()`
+        trained_sklearn_estimator (sklearn.base.BaseEstimator): a scikit-learn
+        estimator that has been `.fit()`
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
 
@@ -158,7 +228,8 @@ def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
 
     # Get binary and probability classification predictions
     class_predictions = np.squeeze(trained_sklearn_estimator.predict(x_test))
-    probability_predictions = np.squeeze(trained_sklearn_estimator.predict_proba(x_test)[:, 1])
+    raw_predictions = trained_sklearn_estimator.predict_proba(x_test)
+    probability_predictions = np.squeeze(raw_predictions[:, 1])
 
     # Compute the accuracy
     accuracy = skmetrics.accuracy_score(y_test, class_predictions)
@@ -168,13 +239,24 @@ def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
 
     results = {'accuracy': accuracy, 'confusion_matrix': confusion_matrix}
 
-    # Select appropriate matrics for binary/multiclass classifications
-    # TODO Assumes a numpy array, may need a try catch or cast to a numpy array
-    number_classes = len(y_test.unique())
+    # Select appropriate metric for binary vs multi-class classifications
+    number_classes = len(np.unique(y_test))
     if number_classes == 2:
         # If it is a binary classification task, also compute ROC and PR
-        roc = compute_roc(y_test, probability_predictions)
-        pr = compute_pr(y_test, probability_predictions)
+        # pick the first target string (or whatever) and change it to 1
+
+        # TODO roll this up as a parameter for ASMT and SMT and only assume
+        # TODO if none is given.
+        guessed_positive_label = guess_positive_label(y_test.unique())
+
+        roc = compute_roc(
+            y_test,
+            probability_predictions,
+            positive_label=guessed_positive_label)
+        pr = compute_pr(
+            y_test,
+            probability_predictions,
+            positive_label=guessed_positive_label)
 
         # Unpack the roc and pr dictionaries into a flat dictionary
         # so metric lookup is easier for plot and ensemble methods
@@ -235,12 +317,15 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
 
 def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     """
-    From a given dictionary of thresholds by model, create a PR curve for each model.
-    
+    Create a Precision Recall (PR) plot.
+
+    From a given dictionary of thresholds by model, create a PR curve for each
+    model.
+
     Args:
-        pr_thresholds_by_model (dict): A dictionary of PR thresholds by model name.
-        save (bool): False to display the image (default) or True to save it (but not display it)
-        debug (bool): verbost output.
+        pr_thresholds_by_model (dict): PR thresholds by model name.
+        save (bool): False displays the image, or True to save it (but not display it)
+        debug (bool): verbose output.
     """
     # TODO consolidate this and PR plotter into 1 function
     # TODO make the colors randomly generated from rgb values
@@ -283,26 +368,37 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.show()
 
 
-def plot_random_forest_feature_importance(trained_random_forest, x_train, feature_names, feature_limit=15, save=False):
+def plot_random_forest_feature_importance(
+        trained_random_forest,
+        x_train,
+        feature_names,
+        feature_limit=15,
+        save=False):
     """
-    Given a random forest estimator, an x_train array, the feature names save or display a feature importance plot.
-    
+    Plot the random forest feature importances.
+
+    Given a random forest estimator, an x_train array, the feature names save or
+    display a feature importance plot.
+
     Args:
-        trained_random_forest (sklearn.ensemble.RandomForestClassifier or sklearn.ensemble.RandomForestRegressor): 
-        x_train (numpy.array): A 2D numpy array that was used for training 
+        trained_random_forest (sklearn.ensemble.RandomForestClassifier or
+        sklearn.ensemble.RandomForestRegressor):
+        x_train (numpy.array): A 2D numpy array that was used for training
         feature_names (list): Column names in the x_train set
         feature_limit (int): Number of features to display on graph
-        save (bool): True to save the plot, false to display it in a blocking thread
+        save (bool): True saves the plot, false displays it in a blocking thread
     """
     _validate_random_forest_estimator(trained_random_forest)
 
     # Sort the feature names and relative importances
-    # TODO this portion could probably be extracted and tested, since the plot is difficult to test
+    # TODO this portion could probably be extracted and tested, since the plot
+    # TODO is difficult to test
     aggregate_features_importances = trained_random_forest.feature_importances_
     indices = np.argsort(aggregate_features_importances)[::-1]
     sorted_feature_names = [feature_names[i] for i in indices]
 
-    # limit the plot to the top n features so it stays legible on models with lots of features
+    # limit the plot to the top n features so it stays legible on models with
+    # lots of features
     subset_indices = indices[0:feature_limit]
 
     number_of_features = x_train.shape[1]
@@ -335,7 +431,8 @@ def plot_random_forest_feature_importance(trained_random_forest, x_train, featur
     # x axis scales by default
     # set y axis min to zero
     plt.ylim(ymin=0)
-    # plt.tight_layout() # Do not use tight_layout until https://github.com/matplotlib/matplotlib/issues/5456 is fixed
+    # plt.tight_layout() # Do not use tight_layout until
+    # https://github.com/matplotlib/matplotlib/issues/5456 is fixed
     # Because long feature names cause this error
 
     # Save or display the plot

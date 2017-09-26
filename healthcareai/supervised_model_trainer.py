@@ -77,7 +77,7 @@ class SupervisedModelTrainer(object):
 
     @property
     def clean_dataframe(self):
-        """Return the dataframe after the preparation pipeline (imputation and such)."""
+        """Return the dataframe after the preparation pipeline."""
         return self._advanced_trainer.dataframe
 
     @property
@@ -91,11 +91,14 @@ class SupervisedModelTrainer(object):
         return self._advanced_trainer.number_of_classes
 
     def random_forest(self, feature_importance_limit=15, save_plot=False):
-        """Train a random forest model and print out the model performance metrics.
+        """
+        Train a random forest model and print model performance metrics.
 
         Args:
-            feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
-            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
+            feature_importance_limit (int): The maximum number of features to
+            show in the feature importance plot
+            save_plot (bool): For the feature importance plot, True to save
+            plot (will not display). False by default to
                 display.
 
         Returns:
@@ -109,7 +112,7 @@ class SupervisedModelTrainer(object):
             return self.random_forest_regression()
 
     def knn(self):
-        """Train a knn model and print out the model performance metrics.
+        """Train a knn model and print model performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -129,7 +132,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_regression(self):
-        """Train a random forest regression model and print out the model performance metrics.
+        """Train a random forest regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -149,7 +152,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
-        """Train a random forest classification model, print performance metrics and show a feature importance plot.
+        """Train a random forest classification model, print metrics and show a feature importance plot.
         
         Args:
             feature_importance_limit (int): The maximum number of features to show in the feature importance plot
@@ -181,7 +184,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def logistic_regression(self):
-        """Train a logistic regression model and print out the model performance metrics.
+        """Train a logistic regression model and print performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -198,7 +201,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def linear_regression(self):
-        """Train a linear regression model and print out the model performance metrics.
+        """Train a linear regression model and print performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -215,7 +218,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def lasso_regression(self):
-        """Train a lasso regression model and print out the model performance metrics.
+        """Train a lasso regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -232,7 +235,7 @@ class SupervisedModelTrainer(object):
         return trained_model
 
     def ensemble(self):
-        """Train a ensemble model and print out the model performance metrics.
+        """Train a ensemble model and print performance metrics.
         
         Returns:
             TrainedSupervisedModel: A trained supervised model.
