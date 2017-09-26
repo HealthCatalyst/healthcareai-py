@@ -265,5 +265,9 @@ class SupervisedModelTrainer(object):
 
     @property
     def advanced_features(self):
-        """Return the underlying AdvancedSupervisedModelTrainer instance. For advanced users only."""
+        """
+        Return the underlying AdvancedSupervisedModelTrainer instance.
+
+        For advanced users only.
+        """
         return self._advanced_trainer

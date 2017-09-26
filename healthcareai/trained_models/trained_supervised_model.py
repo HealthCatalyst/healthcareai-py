@@ -528,7 +528,7 @@ class TrainedSupervisedModel(object):
             plt.show()
 
     def roc_plot(self):
-        """Return a plot of the ROC curve of the holdout set from model training."""
+        """Plot the ROC curve of the holdout set from model training."""
         self._validate_classification()
         if not self.is_binary_classification():
             raise HealthcareAIError('ROC plots only work for binary classification (\'Y\'/\'N\').\n'
@@ -589,11 +589,11 @@ class TrainedSupervisedModel(object):
         return roc
 
     def pr_plot(self):
-        """Return a plot of the PR curve of the holdout set from model training."""
+        """Plot the PR curve of the holdout set from model training."""
         self._validate_classification()
         if not self.is_binary_classification():
             raise HealthcareAIError('PR plots only work for binary classification (\'Y\'/\'N\').\n'
-                                    'For multiple classes (\'DRG1\'/\'DRG2\'/\'DRG3\'/...) use the '
+                                    'For multiple classes (\'red\'/\'green\'/\'blue\'/...) use the '
                                     'confusion matrix instead.')
         tsm_classification_comparison_plots(trained_supervised_models=self, plot_type='PR')
 
@@ -691,9 +691,11 @@ class TrainedSupervisedModel(object):
         print('- Best hyperparameters found were:\n    {}'.format(hyperparameters))
 
         if self._model_type == 'classification':
-            self._print_selected_metrics(['accuracy', 'roc_auc', 'pr_auc'])
+            self._print_selected_metrics(
+                ['accuracy', 'positive_label', 'roc_auc', 'pr_auc'])
         elif self._model_type == 'regression':
-            self._print_selected_metrics(['mean_squared_error', 'mean_absolute_error'])
+            self._print_selected_metrics(
+                ['mean_squared_error', 'mean_absolute_error'])
 
     def _print_selected_metrics(self, metrics):
         print('- {} selected performance metrics:'.format(self.algorithm_name))
@@ -701,7 +703,7 @@ class TrainedSupervisedModel(object):
         for metric in metrics:
             try:
                 print('    {}: {:03.2f}'.format(metric, self.metrics[metric]))
-            except TypeError:
+            except ValueError:
                 print('    {}: {}'.format(metric, self.metrics[metric]))
             except KeyError:
                 pass
@@ -760,7 +762,8 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'
                                         .format(model))
             if not model.is_binary_classification():
-                raise HealthcareAIError('Comparison plots only work for binary classification tasks.')
+                raise HealthcareAIError(
+                    'Comparison plots only work for binary classification tasks.')
 
             algorithm_name = "{}: {}".format(index + 1, model.algorithm_name)
             metrics_by_model[algorithm_name] = model.metrics

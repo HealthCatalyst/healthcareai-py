@@ -26,8 +26,12 @@ eliminated the need for .mdf fixtures on appveyor.
 - validate_catalyst_prediction_sam_connection made much more robust with tests.
 - Conda environment files cleaned up substantially, speeding up builds.
 - Release preparation notes moved out of README and into a separate doc.
-- More robust metrics that deal with binary or multiclass support better
+- More robust metrics that deal with binary or multi-class support better
 - Changed all classification scoring defaults from `roc_auc` (binary only) to `accuracy` (binary and multiclass)
+- Removed need for binary classification tasks to have a 'Y'/'N' in the
+prediction column. This can now be anything, and healthcareai tries to guess
+which is the positive class. Positive class is displayed in console output and
+on ROC/PR plots.
 
 ### Fixed
 

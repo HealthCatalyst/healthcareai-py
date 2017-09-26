@@ -258,6 +258,8 @@ def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
             probability_predictions,
             positive_label=guessed_positive_label)
 
+        results['positive_label'] = guessed_positive_label
+
         # Unpack the roc and pr dictionaries into a flat dictionary
         # so metric lookup is easier for plot and ensemble methods
         results = {**results, **roc, **pr}
@@ -296,14 +298,21 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         best_true_positive_rate = metrics['best_true_positive_rate']
         best_false_positive_rate = metrics['best_false_positive_rate']
 
+        # Build the legend for each line including positive label if specified
+        try:
+            positive_label = metrics['positive_label']
+            label = '{} (PR AUC = {}, positive label: {})'.format(model_name, round(roc_auc, 2), positive_label)
+        except KeyError:
+            label = '{} (PR AUC = {})'.format(model_name, round(roc_auc, 2))
+
         if debug:
             print('{} model:'.format(model_name))
             print(pd.DataFrame({'FPR': fpr, 'TPR': tpr}))
 
         # plot the line
-        label = '{} (ROC AUC = {})'.format(model_name, round(roc_auc, 2))
         plt.plot(fpr, tpr, color=color, label=label)
-        plt.plot([best_false_positive_rate], [best_true_positive_rate], marker='*', markersize=10, color=color)
+        plt.plot([best_false_positive_rate], [best_true_positive_rate],
+                 marker='*', markersize=10, color=color)
 
     plt.legend(loc="lower right")
 
@@ -349,12 +358,18 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
         best_recall = metrics['best_recall']
         best_precision = metrics['best_precision']
 
+        # Build the legend for each line including positive label if specified
+        try:
+            positive_label = metrics['positive_label']
+            label = '{} (PR AUC = {}, positive label: {})'.format(model_name, round(pr_auc, 2), positive_label)
+        except KeyError:
+            label = '{} (PR AUC = {})'.format(model_name, round(pr_auc, 2))
+
         if debug:
             print('{} model:'.format(model_name))
             print(pd.DataFrame({'Recall': recall, 'Precision': precision}))
 
         # plot the line
-        label = '{} (PR AUC = {})'.format(model_name, round(pr_auc, 2))
         plt.plot(recall, precision, color=color, label=label)
         plt.plot([best_recall], [best_precision], marker='*', markersize=10, color=color)
 
