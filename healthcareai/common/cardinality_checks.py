@@ -82,7 +82,7 @@ def check_high_cardinality(dataframe, exclusions, warning_threshold=0.3):
     Args:
         dataframe (pandas.core.frame.DataFrame): The raw dataframe before
         data preparation
-        exclusions (list): A list of columns to ignore (like the grain)
+        exclusions (str|list): A list of columns to ignore (like the grain)
         warning_threshold (float): The warning threshold above which to alert
         the user.
     """

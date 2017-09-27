@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     or plots `TrainedSupervisedModel.confusion_matrix_plot()`
 - `DataframeNullValueFilter` now raises a helpful error that identifies columns that are entirely null.
 - `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
+- Optional `binary_positive_label` argument for binary classification tasks
 
 ### Changed
 
@@ -30,8 +31,8 @@ eliminated the need for .mdf fixtures on appveyor.
 - Changed all classification scoring defaults from `roc_auc` (binary only) to `accuracy` (binary and multiclass)
 - Removed need for binary classification tasks to have a 'Y'/'N' in the
 prediction column. This can now be anything, and healthcareai tries to guess
-which is the positive class. Positive class is displayed in console output and
-on ROC/PR plots.
+which is the positive class if it is not specified. Positive class is displayed
+in console output and on ROC/PR plots.
 
 ### Fixed
 

@@ -205,7 +205,11 @@ def guess_positive_label(classes):
     return result[0]
 
 
-def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
+def compute_classification_metrics(
+        trained_sklearn_estimator,
+        x_test,
+        y_test,
+        binary_positive_label=None):
     """
     Compute classification metrics for a trained estimator.
 
@@ -217,6 +221,7 @@ def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
         estimator that has been `.fit()`
         x_test (numpy.ndarray): A 2d numpy array of the x_test set (features)
         y_test (numpy.ndarray): A 1d numpy array of the y_test set (predictions)
+        binary_positive_label (int|str): Optional positive class label for binary classification tasks.
 
     Returns:
         dict: A dictionary of metrics objects
@@ -242,23 +247,24 @@ def compute_classification_metrics(trained_sklearn_estimator, x_test, y_test):
     # Select appropriate metric for binary vs multi-class classifications
     number_classes = len(np.unique(y_test))
     if number_classes == 2:
+
+        if binary_positive_label is None:
+            # Guess the positive class if none is specified
+            positive_label = guess_positive_label(y_test.unique())
+        else:
+            positive_label = binary_positive_label
+
         # If it is a binary classification task, also compute ROC and PR
-        # pick the first target string (or whatever) and change it to 1
-
-        # TODO roll this up as a parameter for ASMT and SMT and only assume
-        # TODO if none is given.
-        guessed_positive_label = guess_positive_label(y_test.unique())
-
         roc = compute_roc(
             y_test,
             probability_predictions,
-            positive_label=guessed_positive_label)
+            positive_label=positive_label)
         pr = compute_pr(
             y_test,
             probability_predictions,
-            positive_label=guessed_positive_label)
+            positive_label=positive_label)
 
-        results['positive_label'] = guessed_positive_label
+        results['positive_label'] = positive_label
 
         # Unpack the roc and pr dictionaries into a flat dictionary
         # so metric lookup is easier for plot and ensemble methods

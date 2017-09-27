@@ -40,6 +40,7 @@ class AdvancedSupervisedModelTrainer(object):
             predicted_column,
             grain_column=None,
             original_column_names=None,
+            binary_positive_label=None,
             verbose=False):
         """
         Create an instance of AdvancedSupervisedModelTrainer.
@@ -52,6 +53,7 @@ class AdvancedSupervisedModelTrainer(object):
             original_column_names (list): The original column names of the dataframe before going through the pipeline
                 (before dummification). These are used to check that the data contains all the necessary columns if
                 pre-pipeline data is going to be fed to the trained model.
+            binary_positive_label (str|int): Optional positive class label for binary classification tasks.
             verbose (bool): Verbose output
         """
         # Validate model type is sane
@@ -63,6 +65,12 @@ class AdvancedSupervisedModelTrainer(object):
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.verbose = verbose
+        if binary_positive_label and binary_positive_label not in self.class_labels:
+            raise HealthcareAIError(
+                'The binary positive label specified ({}) was not found in '\
+                'the training data, which contains these labels: {}'.format(binary_positive_label, self.class_labels))
+        self.binary_positive_label = binary_positive_label
+
         self.columns = None
         self.x_train = None
         self.X_test = None
@@ -97,7 +105,8 @@ class AdvancedSupervisedModelTrainer(object):
     def class_labels(self):
         """Get the class labels sorted alphabetically or numerically."""
         self.validate_classification()
-        return np.sort(self.y_test.unique())
+        uniques = self.dataframe[self.predicted_column].unique()
+        return np.sort(uniques)
 
     @property
     def number_of_classes(self):
@@ -227,7 +236,8 @@ class AdvancedSupervisedModelTrainer(object):
             results = hcai_model_evaluation.compute_classification_metrics(
                 trained_sklearn_estimator,
                 self.X_test,
-                self.y_test)
+                self.y_test,
+                self.binary_positive_label)
         elif self.is_regression:
             results = hcai_model_evaluation.compute_regression_metrics(
                 trained_sklearn_estimator,

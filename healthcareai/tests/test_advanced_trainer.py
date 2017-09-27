@@ -152,20 +152,20 @@ class TestLogisticRegression(unittest.TestCase):
 class TestBinaryClassificationMetricValidation(unittest.TestCase):
     def setUp(self):
         """Load and prepare data, instantiate a trainer, and train test split."""
-        df = hcai_datasets.load_diabetes()
+        self.df = hcai_datasets.load_diabetes()
 
         # Drop uninformative columns
-        df.drop(['PatientID'], axis=1, inplace=True)
+        self.df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(
+        self.clean_df = pipelines.full_pipeline(
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN,
             GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(df)
+            impute=True).fit_transform(self.df)
 
         self.classification_trainer = AdvancedSupervisedModelTrainer(
-            clean_df,
+            self.clean_df,
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
 
@@ -185,11 +185,21 @@ class TestBinaryClassificationMetricValidation(unittest.TestCase):
 
     def test_class_labels_property(self):
         # set literal saves a function call to set()
-        self.assertEqual({0, 1}, set(self.classification_trainer.class_labels))
+        self.assertEqual({'Y', 'N'}, set(self.classification_trainer.class_labels))
 
     def test_validate_score_metric_for_number_of_classes(self):
         self.assertTrue(self.classification_trainer.validate_score_metric_for_number_of_classes('pr_auc'))
         self.assertTrue(self.classification_trainer.validate_score_metric_for_number_of_classes('roc_auc'))
+
+    def test_positive_label_not_found_raises_error(self):
+        self.assertRaises(
+            HealthcareAIError,
+            AdvancedSupervisedModelTrainer,
+            self.clean_df,
+            CLASSIFICATION,
+            CLASSIFICATION_PREDICTED_COLUMN,
+            binary_positive_label='fake_label'
+        )
 
 
 class TestMulticlassMetricValidation(unittest.TestCase):

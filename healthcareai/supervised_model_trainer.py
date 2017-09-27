@@ -9,7 +9,8 @@ More advanced users may use `AdvancedSupervisedModelTrainer`
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
-from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
+from healthcareai.advanced_supvervised_model_trainer import \
+    AdvancedSupervisedModelTrainer
 from healthcareai.common.get_categorical_levels import get_categorical_levels
 
 
@@ -20,7 +21,15 @@ class SupervisedModelTrainer(object):
     reports appropriate metrics.
     """
 
-    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
+    def __init__(
+            self,
+            dataframe,
+            predicted_column,
+            model_type,
+            impute=True,
+            grain_column=None,
+            binary_positive_label=None,
+            verbose=False):
         """
         Set up a SupervisedModelTrainer.
 
@@ -28,23 +37,49 @@ class SupervisedModelTrainer(object):
         other unique identifiers) and low cardinality features (a column where
         all values are equal.
 
+        If you have a binary classification task (one with two categories of
+        predictions), there are many common ways to encode your prediction
+        categories. healthcareai helps you by making these assumptions about
+        which is the positive class label. healthcareai assumes the following
+        are 'positive labels':
+
+        | Labels | Positive Label |
+        | ------ | -------------- |
+        | `True` | `True`/`False` |
+        | `1`    | `1`/`0`        |
+        | `1`    | `1`/`-1`       |
+        | `Y`    | `Y`/`N`        |
+        | `Yes`  | `Yes`/`No`     |
+
+        If you have another encoding you prefer to use you may specify the
+        `binary_positive_label` argument. For example, if you want to
+        identify `high_utilizers` vs `low_utilizers`) you would add the
+        `binary_positive_label='high_utilizers` argument when creating your
+        `SupervisedModelTrainer`.
+
         Args:
             dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
-            predicted_column (str): The name of the prediction column 
-            model_type (str): the trainer type - 'classification' or 'regression'
-            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows
-                that contain any null values.
+            predicted_column (str): The name of the prediction column
+            model_type (str): the trainer type ('classification' or 'regression')
+            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows that contain any null values.
             grain_column (str): The name of the grain column
+            binary_positive_label (str|int): Optional positive class label for binary classification tasks.
             verbose (bool): Set to true for verbose output. Defaults to False.
         """
         self.predicted_column = predicted_column
         self.grain_column = grain_column
+        self.binary_positive_label = binary_positive_label
 
         # Build the pipeline
-        # Note: Missing numeric values are imputed in prediction. If we don't impute, then some rows on the prediction
+        # Note: Missing numeric values are imputed in prediction. If we don't
+        # impute, then some rows on the prediction
         # data frame will be removed, which results in missing predictions.
-        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
-        prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
+        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column,
+                                                grain_column, impute=impute)
+        prediction_pipeline = hcai_pipelines.full_pipeline(model_type,
+                                                           predicted_column,
+                                                           grain_column,
+                                                           impute=True)
 
         # Run a low and high cardinality check. Warn the user, and allow
         # them to proceed.
@@ -62,6 +97,7 @@ class SupervisedModelTrainer(object):
             predicted_column=predicted_column,
             grain_column=grain_column,
             original_column_names=dataframe.columns.values,
+            binary_positive_label=self.binary_positive_label,
             verbose=verbose)
 
         # Save the pipeline to the parent class
@@ -118,7 +154,9 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'KNN'
-        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
+        print('\nTraining {} model on {} classes: {}'.format(model_name,
+                                                             self.number_of_classes,
+                                                             self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.knn(
@@ -151,7 +189,8 @@ class SupervisedModelTrainer(object):
 
         return trained_model
 
-    def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
+    def random_forest_classification(self, feature_importance_limit=15,
+                                     save_plot=False):
         """Train a random forest classification model, print metrics and show a feature importance plot.
         
         Args:
@@ -163,7 +202,9 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Random Forest Classification'
-        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
+        print('\nTraining {} model on {} classes: {}'.format(model_name,
+                                                             self.number_of_classes,
+                                                             self.class_labels))
 
         # Train the model
         trained_model = self._advanced_trainer.random_forest_classifier(
@@ -190,10 +231,13 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Logistic Regression'
-        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
+        print('\nTraining {} model on {} classes: {}'.format(model_name,
+                                                             self.number_of_classes,
+                                                             self.class_labels))
 
         # Train the model
-        trained_model = self._advanced_trainer.logistic_regression(randomized_search=False)
+        trained_model = self._advanced_trainer.logistic_regression(
+            randomized_search=False)
 
         # Display the model metrics
         trained_model.print_training_results()
@@ -210,7 +254,8 @@ class SupervisedModelTrainer(object):
         print('\nTraining {}'.format(model_name))
 
         # Train the model
-        trained_model = self._advanced_trainer.linear_regression(randomized_search=False)
+        trained_model = self._advanced_trainer.linear_regression(
+            randomized_search=False)
 
         # Display the model metrics
         trained_model.print_training_results()
@@ -224,10 +269,13 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         model_name = 'Lasso Regression'
-        print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
+        print('\nTraining {} model on {} classes: {}'.format(model_name,
+                                                             self.number_of_classes,
+                                                             self.class_labels))
 
         # Train the model
-        trained_model = self._advanced_trainer.lasso_regression(randomized_search=False)
+        trained_model = self._advanced_trainer.lasso_regression(
+            randomized_search=False)
 
         # Display the model metrics
         trained_model.print_training_results()
@@ -245,18 +293,23 @@ class SupervisedModelTrainer(object):
 
         # Train the appropriate ensemble of models
         if self._advanced_trainer.model_type is 'classification':
-            print('\nTraining {} model on {} classes: {}'.format(model_name, self.number_of_classes, self.class_labels))
+            print('\nTraining {} model on {} classes: {}'.format(model_name,
+                                                                 self.number_of_classes,
+                                                                 self.class_labels))
             metric = 'accuracy'
-            trained_model = self._advanced_trainer.ensemble_classification(scoring_metric=metric)
+            trained_model = self._advanced_trainer.ensemble_classification(
+                scoring_metric=metric)
         elif self._advanced_trainer.model_type is 'regression':
             # TODO stub
             print('\nTraining {}'.format(model_name))
             metric = 'neg_mean_squared_error'
-            trained_model = self._advanced_trainer.ensemble_regression(scoring_metric=metric)
+            trained_model = self._advanced_trainer.ensemble_regression(
+                scoring_metric=metric)
 
         print(
-            'Based on the scoring metric {}, the best algorithm found is: {}'.format(metric,
-                                                                                     trained_model.algorithm_name))
+            'Based on the scoring metric {}, the best algorithm found is: {}'.format(
+                metric,
+                trained_model.algorithm_name))
 
         # Display the model metrics
         trained_model.print_training_results()

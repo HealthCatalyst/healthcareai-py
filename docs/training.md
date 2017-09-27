@@ -47,7 +47,9 @@ dataframe = healthcareai.load_csv('path_to_your/data.csv')
 
 ## Step 2: Set up a Trainer
 
-The `SupervisedModelTrainer` class helps you train models. It cleans and prepares the data before model creation. It also assignes parameters specific to the type of model you eventually want (regression or classification). To set up a trainer you'll need these arguments:
+The `SupervisedModelTrainer` class helps you train models. It cleans and prepares the data before model creation. It also assignes parameters specific to the type of model you eventually want (regression or classification).
+
+To set up a trainer you'll need these arguments:
 
 - **dataframe** *(pandas.core.frame.DataFrame)*: The training data in a pandas dataframe
 - **predicted_column** *(str)*: The name of the prediction column 
@@ -55,7 +57,22 @@ The `SupervisedModelTrainer` class helps you train models. It cleans and prepare
 - **impute** *(bool)*: True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows
     that contain any null values.
 - **grain_column** *(str)*: The name of the grain column
+- **binary_positive_label** (str|int): Optional positive class label for binary classification tasks.
 - **verbose** *(bool)*: Set to true for verbose output. Defaults to False.
+
+### Binary Classification Options
+
+If you have a binary classification task (one with two categories of predictions), there are many common ways to encode your prediction categories. healthcareai helps you by making these assumptions about which is the positive class label. healthcareai assumes the following are 'positive labels':
+
+| Labels | Positive Label |
+| ------ | -------------- |
+| `True` | `True`/`False` |
+| `1`    | `1`/`0`        |
+| `1`    | `1`/`-1`       |
+| `Y`    | `Y`/`N`        |
+| `Yes`  | `Yes`/`No`     |
+
+If you have another encoding you prefer to use you may specify the `binary_positive_label` argument. For example, if you want to identify `high_utilizers` vs `low_utilizers`) you would add the `binary_positive_label='high_utilizers` argument when creating your `SupervisedModelTrainer`.
 
 ### Example code
 
