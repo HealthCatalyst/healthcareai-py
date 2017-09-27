@@ -7,11 +7,6 @@ databases on a single server, you are in good shape. While it's easiest
 to pull data into healthcareai via a single table, one can also use joins
 to gather data from separate tables or databases.
 
-What's most important is the following:
-
-- You have a column you're excited about predicting and some data that might be relevant
-- If you're predicting a binary outcome (ie, 0 or 1), you have to [convert the column to be Y or N](https://msdn.microsoft.com/en-us/library/hh213574.aspx).
-
 ## Feature Engineering
 
 It's almost always helpful to do some [feature engineering](https://en.wikipedia.org/wiki/Feature_engineering) before
