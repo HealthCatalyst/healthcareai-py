@@ -32,7 +32,7 @@ setup(name='healthcareai',
           'matplotlib>=1.5.3',
           'numpy>=1.11.2',
           'pandas>=0.20.0',
-          'tabulate==0.7.7'
+          'tabulate==0.7.7',
           'scipy>=0.18.1',
           'scikit-learn>=0.18',
           'imbalanced-learn>=0.2.1',
