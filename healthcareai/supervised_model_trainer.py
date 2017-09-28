@@ -30,6 +30,7 @@ class SupervisedModelTrainer(object):
         # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute,
                                                 verbose=True)
+
         prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True,
                                                            verbose=False)
 
