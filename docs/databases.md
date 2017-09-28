@@ -20,7 +20,7 @@ server = 'localhost'
 database = 'my_database'
 table = 'predictions_output'
 schema = 'dbo'
-engine = hcai_db.build_mssql_engine(server, database)
+engine = hcai_db.build_mssql_engine_using_trusted_connections(server, database)
 
 predictions_with_factors_df.to_sql(table, engine, schema=schema, if_exists='append', index=False)
 ```

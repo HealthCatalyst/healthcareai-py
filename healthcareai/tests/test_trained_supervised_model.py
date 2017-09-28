@@ -8,7 +8,6 @@ from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.datasets as hcai_datasets
 
 
-
 class TestTrainedSupervisedModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
