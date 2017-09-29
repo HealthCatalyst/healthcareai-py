@@ -38,6 +38,7 @@ run into a great deal of trouble with conflicting guides authenticating to the t
 7. Manually build new read the docs
     - **Builds** > **Build version <new release>**
 8. verify the new version builds and is viewable at the public url
+9. Verify the DOI links and badges on zenodo
 
 ### Conda Packaging and Distribution
 
