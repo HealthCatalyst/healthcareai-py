@@ -30,11 +30,14 @@ def compute_confusion_matrix(y_test, class_predictions):
     """
     _validate_predictions_and_labels_are_equal_length(class_predictions, y_test)
 
-    # Compute confusion matrix
-    confusion_matrix = skmetrics.confusion_matrix(y_test, class_predictions)
-
     # Get a list of classes in the test dataset
     class_names = list(set(y_test))
+
+    # Compute confusion matrix
+    confusion_matrix = skmetrics.confusion_matrix(
+        y_test,
+        class_predictions,
+        labels=class_names)
 
     return confusion_matrix, class_names
 

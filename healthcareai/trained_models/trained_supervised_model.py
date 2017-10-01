@@ -677,18 +677,19 @@ class TrainedSupervisedModel(object):
         """
         Print selected metrics, stats and hyperparameters.
 
-        This includes the model name, training time, hyperparameters, and selected performance metrics chosen from the
-        `.metrics` property.
+        This includes the model name, training time, hyperparameters, and
+        selected performance metrics chosen from the `.metrics` property.
         """
         print('{} Training Results:'.format(self.algorithm_name))
         print('- Training time:')
-        print('    Trained the {} model in {} seconds'.format(self.algorithm_name,
-                                                              round(self.train_time, 2)))
+        print('    {} seconds'.format(self.algorithm_name,
+                                      round(self.train_time, 2)))
 
         hyperparameters = self.best_hyperparameters
         if hyperparameters is None:
             hyperparameters = 'N/A: No hyperparameter search was performed'
-        print('- Best hyperparameters found were:\n    {}'.format(hyperparameters))
+        print('- Best hyperparameters found were:\n    {}'.format(
+            hyperparameters))
 
         if self._model_type == 'classification':
             self._print_selected_metrics(

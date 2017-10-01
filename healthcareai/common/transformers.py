@@ -57,7 +57,9 @@ class DataFrameImputer(TransformerMixin):
         result = X.fillna(self.fill)
 
         for i in self.object_columns:
-            if result[i].dtype not in ['object', 'category']:
+            # NOte numpy is not aware of dtype 'category' so you need to use
+            # np.str_
+            if result[i].dtype not in ['object', np.str_]:
                 result[i] = result[i].astype('object')
 
         return result

@@ -65,7 +65,7 @@ def cardinality_threshold_filter(dataframe, ratio_name, warning_threshold=0.3):
     return results
 
 
-def check_high_cardinality(dataframe, exclusions, warning_threshold=0.3):
+def check_high_cardinality(dataframe, exclusions=None, warning_threshold=0.3):
     """
     Alert user if highly cardinal features are found.
 
