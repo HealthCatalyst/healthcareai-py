@@ -25,4 +25,5 @@ def full_pipeline(model_type, predicted_column, grain_column, impute=True):
         ('null_row_filter', hcai_filters.DataframeNullValueFilter(excluded_columns=None)),
         ('create_dummy_variables', hcai_transformers.DataFrameCreateDummyVariables(excluded_columns=[predicted_column])),
     ])
+
     return pipeline

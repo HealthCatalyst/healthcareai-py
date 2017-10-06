@@ -310,9 +310,11 @@ def roc_plot_from_thresholds(roc_thresholds_by_model, save=False, debug=False):
         # Build the legend for each line including positive label if specified
         try:
             positive_label = metrics['positive_label']
-            label = '{} (PR AUC = {}, positive label: {})'.format(model_name, round(roc_auc, 2), positive_label)
+            label = '{} (ROC AUC = {}, positive label: {})'.format(
+                model_name,
+                round(roc_auc, 2), positive_label)
         except KeyError:
-            label = '{} (PR AUC = {})'.format(model_name, round(roc_auc, 2))
+            label = '{} (ROC AUC = {})'.format(model_name, round(roc_auc, 2))
 
         if debug:
             print('{} model:'.format(model_name))

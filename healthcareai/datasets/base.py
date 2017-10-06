@@ -17,7 +17,7 @@ def load_data(data_file_name):
     Examples:
         >>> load_data('diabetes.csv')
     """
-    file_path = os.join(os.dirname(__file__), 'data', data_file_name)
+    file_path = os.path.join(os.path.dirname(__file__), 'data', data_file_name)
 
     return pd.read_csv(file_path, na_values=['None'])
 
