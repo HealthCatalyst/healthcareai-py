@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Percentage of nulls reported via console.
 - new top-level `load_csv()` function makes it easier for users by avoiding any pandas knowledge.
+- `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
 
 ### Changed
 

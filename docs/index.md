@@ -18,4 +18,6 @@ Choose this Python package if one of the following apply:
 - You're working with 5M+ rows
 
 Otherwise, the [R package](http://healthcare.ai/r) is recommended, as it
-currently has more features and R is tends to be more newbie-friendly.
+currently has more features and R is tends to be more newbie-friendly. For a comparison of packages and capabilities, check out:
+
+![What can I do with healthcareai?](img/infographic_final.png)

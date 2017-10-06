@@ -59,10 +59,13 @@ def main():
     # Train and evaluate random forest model
     trained_random_forest = regression_trainer.random_forest_regression()
 
+    # Train and evaluate a lasso model
+    trained_lasso = regression_trainer.lasso_regression()
+
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
     # File names are timestamped and look like '2017-05-31T12-36-21_regression_LinearRegression.pkl')
     # Note the file you saved and that will be used in example_regression_2.py
-    trained_linear_model.save()
+    # trained_linear_model.save()
 
 
 if __name__ == "__main__":
