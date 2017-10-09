@@ -163,7 +163,7 @@ class TrainedSupervisedModel(object):
 
     def make_predictions(self, dataframe):
         """
-        Given a new dataframe, apply data transformations and return a dataframe of predictions.
+        Apply data transformations and return a dataframe of predictions.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -175,9 +175,20 @@ class TrainedSupervisedModel(object):
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
         # make predictions returning probabity of a class or value of regression
-        if self.is_classification:
+        if self.is_binary_classification():
             # Only save the prediction of one of the two classes
             y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
+        elif self.is_classification:
+            print('Appears to be non-binary classificaiton')
+            # TODO This needs further thought. Should the prediction column
+            # TODO stay numeric and add an additional class object column?
+            # TODO fix all the tests
+            y_predictions = self.model.predict(prepared_dataframe)
+            all_probabilities = self.model.predict_proba(prepared_dataframe)
+
+            # retrieve the probability of the single predicted class label
+            all_probabilities = {k: v for k, v in zip(self.model.classes_, np.squeeze(all_probabilities))}
+            y_probability = all_probabilities[y_predictions[0]]
         elif self.is_regression:
             y_predictions = self.model.predict(prepared_dataframe)
         else:
@@ -187,6 +198,13 @@ class TrainedSupervisedModel(object):
         results = pd.DataFrame()
         results[self.grain_column] = dataframe[self.grain_column].values
         results['Prediction'] = y_predictions
+
+        # TODO HACKS!
+        if y_probability is not None:
+            results['Probability'] = y_probability
+        if all_probabilities is not None:
+            results['All Probabilities'] = str(all_probabilities)
+            print(all_probabilities)
 
         return results
 
@@ -227,14 +245,28 @@ class TrainedSupervisedModel(object):
                     df2[column] = df2[column].astype('category', categories=col_categories)
                     # Check whether the prediction data contains categories not present in the training set and print
                     # a message warning that these new values will be dropped and imputed
-                    new_values = {v for v in dataframe[column].unique() if not (v in col_categories or pd.isnull(v))}
-                    if len(new_values) > 0:
+                    incoming_values = {v for v in dataframe[column].unique()}
+                    model_value_set = {v for v in col_categories}
+                    new_values = incoming_values - model_value_set
+                    if new_values:
                         category_message = """Column {} contains levels not seen in the training set. These levels have
                         been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
                         print(category_message.format(column, new_values))
 
+
+                    # new_values = {v for v in dataframe[column].unique() if not (v in col_categories or pd.isnull(v))}
+                    # if len(new_values) > 0:
+                    #     category_message = """Column {} contains levels not seen in the training set. These levels have
+                    #     been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
+                    #     print(category_message.format(column, new_values))
+
             # Run the saved data preparation pipeline
             prepared_dataframe = self.fit_pipeline.transform(df2)
+
+            # Add missing dummy columns
+            prepared_dataframe = add_missing_dummy_columns(
+                self.column_names,
+                prepared_dataframe)
 
             # Subset the dataframe to only columns that were saved from the original model training
             prepared_dataframe = prepared_dataframe[self.column_names]
@@ -242,7 +274,7 @@ class TrainedSupervisedModel(object):
             required_columns = self.column_names
             found_columns = list(dataframe.columns)
             # If a pre-dummified dataset is expected as the input, list the pre-dummified columns instead of the dummies
-            if not self.original_column_names is None:
+            if self.original_column_names is not None:
                 required_columns = self.original_column_names
             error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
@@ -821,3 +853,36 @@ def _confusion_matrix_text_color(normalize, value, threshold):
         return 'black'
 
     return 'white' if value > threshold else 'black'
+
+
+def add_missing_dummy_columns_from_dataframe(original_df, incoming_df):
+    # create sets for easy subtraction
+    # Select object & categorical columns from the original dataframe
+    original = {col for col in original_df.select_dtypes(
+        include=[object, 'category']).columns}
+    incoming = {col for col in incoming_df.columns}
+    missing = original - incoming
+
+    result = incoming_df.copy()
+
+    for x in missing:
+        # add each missing categorical/object column
+        result[x] = 0
+
+    return result
+
+
+def add_missing_dummy_columns(original_columns, incoming_df):
+    # create sets for easy subtraction
+    # Select object & categorical columns from the original dataframe
+    original = {col for col in original_columns}
+    incoming = {col for col in incoming_df.columns}
+    missing = original - incoming
+
+    result = incoming_df.copy()
+
+    for x in missing:
+        # add each missing categorical/object column
+        result[x] = 0
+
+    return result
