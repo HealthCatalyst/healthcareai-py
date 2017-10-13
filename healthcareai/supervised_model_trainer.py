@@ -15,7 +15,7 @@ class SupervisedModelTrainer(object):
     reports appropriate metrics.
     """
 
-    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=False):
+    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=True):
         """
         Set up a SupervisedModelTrainer.
 
@@ -28,9 +28,9 @@ class SupervisedModelTrainer(object):
             predicted_column (str): The name of the prediction column
             model_type (str): the trainer type - 'classification' or 'regression'
             impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop
-                rows that contain any null values.
+               rows that contain any null values.
             grain_column (str): The name of the grain column
-            verbose (bool): Set to true for verbose output. Defaults to False.
+            verbose (bool): Set to true for verbose output. Defaults to True.
         """
         self.predicted_column = predicted_column
         self.grain_column = grain_column
@@ -38,8 +38,11 @@ class SupervisedModelTrainer(object):
         # Build the pipeline
         # Note: Missing numeric values are imputed in prediction. If we don't impute, then some rows on the prediction
         # data frame will be removed, which results in missing predictions.
-        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute)
-        prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True)
+        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute,
+                                                verbose=True)
+
+        prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True,
+                                                           verbose=False)
 
         # Run a low and high cardinality check. Warn the user, and allow
         # them to proceed.
