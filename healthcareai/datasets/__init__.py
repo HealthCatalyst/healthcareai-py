@@ -18,5 +18,6 @@ __all__ = [
     'load_heart_disease',
     'load_mammographic_masses',
     'load_pima_indians_diabetes',
+    'load_prognostic_breast_cancer',
     'load_thoracic_surgery'
 ]

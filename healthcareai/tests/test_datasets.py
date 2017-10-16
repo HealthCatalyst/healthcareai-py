@@ -42,6 +42,11 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(768, df.shape[0])
         self.assertEqual(10, df.shape[1])
 
+    def test_load_prognostic_breast_cancer(self):
+        df = ds.load_prognostic_breast_cancer()
+        self.assertEqual(198, df.shape[0])
+        self.assertEqual(35, df.shape[1])
+
     def test_load_thoracic_surgery(self):
         df = ds.load_thoracic_surgery()
         self.assertEqual(470, df.shape[0])
