@@ -5,7 +5,7 @@ import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
 from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
 from healthcareai.common.get_categorical_levels import get_categorical_levels
-from healthcareai.common.output import trainer_output
+from healthcareai.common.trainer_output import trainer_output
 
 
 class SupervisedModelTrainer(object):
