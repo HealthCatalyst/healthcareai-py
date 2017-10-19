@@ -101,7 +101,10 @@ class SupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        return self._advanced_trainer.knn(scoring_metric='roc_auc', hyperparameter_grid=None, randomized_search=True)
+        return self._advanced_trainer.knn(
+            scoring_metric='roc_auc',
+            hyperparameter_grid=None,
+            randomized_search=True)
 
     @trainer_output
     def random_forest_regression(self):
@@ -110,8 +113,10 @@ class SupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        return self._advanced_trainer.random_forest_regressor(trees=200, scoring_metric='neg_mean_squared_error',
-                                                              randomized_search=True)
+        return self._advanced_trainer.random_forest_regressor(
+            trees=200,
+            scoring_metric='neg_mean_squared_error',
+            randomized_search=True)
 
     @trainer_output
     def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
@@ -125,15 +130,17 @@ class SupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        model = self._advanced_trainer.random_forest_classifier(trees=200,
-                                                                scoring_metric='roc_auc',
-                                                                randomized_search=True)
+        model = self._advanced_trainer.random_forest_classifier(
+            trees=200,
+            scoring_metric='roc_auc',
+            randomized_search=True)
 
         # Save or show the feature importance graph
-        hcai_tsm.plot_rf_features_from_tsm(model,
-                                           self._advanced_trainer.x_train,
-                                           feature_limit=feature_importance_limit,
-                                           save=save_plot)
+        hcai_tsm.plot_rf_features_from_tsm(
+            model,
+            self._advanced_trainer.x_train,
+            feature_limit=feature_importance_limit,
+            save=save_plot)
 
         return model
 
@@ -144,7 +151,8 @@ class SupervisedModelTrainer(object):
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        return self._advanced_trainer.logistic_regression(randomized_search=False)
+        return self._advanced_trainer.logistic_regression(
+            randomized_search=False)
 
     @trainer_output
     def linear_regression(self):
