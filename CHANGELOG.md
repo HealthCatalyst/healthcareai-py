@@ -21,6 +21,7 @@ eliminated the need for .mdf fixtures on appveyor.
 - validate_catalyst_prediction_sam_connection made much more robust with tests.
 - Conda environment files cleaned up substantially, speeding up builds.
 - Release preparation notes moved out of README and into a separate doc.
+- Decorators for `supervised_model_trainer` is now simplified, and debug option is no longer an option.
 
 ### Fixed
 
