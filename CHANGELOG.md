@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Percentage of nulls reported via console.
 - new top-level `load_csv()` function makes it easier for users by avoiding any pandas knowledge.
 - `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
+- 9 new sample healthcare data sets from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html).
 
 ### Changed
 
