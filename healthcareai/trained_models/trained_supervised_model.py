@@ -908,24 +908,6 @@ def _confusion_matrix_text_color(normalize, value, threshold):
     return 'white' if value > threshold else 'black'
 
 
-def add_missing_dummy_columns_from_dataframe(original_df, incoming_df):
-    # TODO test this
-    # create sets for easy subtraction
-    # Select object & categorical columns from the original dataframe
-    original = {col for col in original_df.select_dtypes(
-        include=[object, 'category']).columns}
-    incoming = {col for col in incoming_df.columns}
-    missing = original - incoming
-
-    result = incoming_df.copy()
-
-    for x in missing:
-        # add each missing categorical/object column
-        result[x] = 0
-
-    return result
-
-
 def fill_missing_dummy_columns(dummy_columns, dataframe, fill=0):
     """
     Create missing dummy columns and initialize with zeros.
