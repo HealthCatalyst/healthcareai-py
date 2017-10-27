@@ -11,7 +11,7 @@ try:
 except ImportError:
     sqlite3_is_loaded = False
 
-from healthcareai.common.filters import is_dataframe
+from healthcareai.common.validators import is_dataframe
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 

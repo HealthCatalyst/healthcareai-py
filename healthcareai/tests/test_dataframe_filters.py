@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import unittest
 import healthcareai.common.filters as filters
+import healthcareai.common.validators
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -13,7 +14,7 @@ class TestIsDataframe(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertTrue(filters.is_dataframe(df))
+        self.assertTrue(healthcareai.common.validators.is_dataframe(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -21,11 +22,12 @@ class TestIsDataframe(unittest.TestCase):
             42,
             [1, 2, 3],
             [[1, 2, 3], [1, 2, 3], [1, 2, 3], ],
-            {'a': 1}
+            {'a': 1},
+            None
         ]
 
         for junk in junk_inputs:
-            self.assertFalse(filters.is_dataframe(junk))
+            self.assertFalse(healthcareai.common.validators.is_dataframe(junk))
 
 
 class TestValidationError(unittest.TestCase):
@@ -36,7 +38,8 @@ class TestValidationError(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertIsNone(filters.validate_dataframe_input(df))
+        self.assertIsNone(
+            healthcareai.common.validators.validate_dataframe_input_for_transformer(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -48,7 +51,8 @@ class TestValidationError(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.validate_dataframe_input, junk)
+            self.assertRaises(HealthcareAIError,
+                              healthcareai.common.validators.validate_dataframe_input_for_transformer, junk)
 
 
 class TestDataframeColumnSuffixFilter(unittest.TestCase):
