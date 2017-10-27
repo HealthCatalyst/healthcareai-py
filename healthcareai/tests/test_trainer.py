@@ -108,7 +108,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.regression_trainer.ensemble)
 
     def test_linear_regression_raises_error_on_missing_columns(self):
-        # TODO how is this working since the model does not use the training df???
+        # TODO how is this working since the model does not use the training df?
         training_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning

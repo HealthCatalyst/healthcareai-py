@@ -97,7 +97,7 @@ class TestTopFactors(unittest.TestCase):
                                           'numbers_mod_3': ['1', '2', '0', '1', '2', '0', '1', '2', '0', '1'],
                                           'float': [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0],
                                           'mathematicians': ['Gauss', 'Euler', 'Gauss', 'Galois', 'Gauss',
-                                                             'Euler', 'Grothendiek', 'Wiles', 'Hilbert', 'Hilbert'],
+                                                             'Euler', 'Grothendieck', 'Wiles', 'Hilbert', 'Hilbert'],
                                           'predicted': ['Y', 'Y', 'N', 'Y', 'Y', 'N', 'N', 'N', 'Y', 'Y']},
                                          columns=['grain', 'letters', 'numeric', 'numbers_mod_3', 'float',
                                                   'mathematicians', 'predicted'])
@@ -106,7 +106,7 @@ class TestTopFactors(unittest.TestCase):
         cls.get_levels_df['mathematicians'] = cls.get_levels_df['mathematicians'].astype('category',
                                                                                          categories=['Wiles',
                                                                                                      'Euler',
-                                                                                                     'Grotheniek',
+                                                                                                     'Grothendieck',
                                                                                                      'Hilbert',
                                                                                                      'Gauss'],
                                                                                          ordered=False)
