@@ -22,7 +22,9 @@ def calculate_categorical_frequencies(dataframe, columns_to_ignore=None):
     """
     validate_dataframe_input_for_method(dataframe)
 
-    categorical_columns = get_categorical_column_names(dataframe, columns_to_ignore)
+    categorical_columns = get_categorical_column_names(
+        dataframe,
+        columns_to_ignore)
 
     frequencies_by_level = {}
 

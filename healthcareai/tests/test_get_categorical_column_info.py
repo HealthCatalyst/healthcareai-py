@@ -173,7 +173,9 @@ class TestCategoricalLevelsByColumn(unittest.TestCase):
             'all_a': ['a'] * 26
         })
 
-        df['alphabet_category'] = df['alphabet'].astype('category', categories=self.alphabet)
+        df['alphabet_category'] = df['alphabet'].astype(
+            'category',
+            categories=self.alphabet)
         df['abc_category'] = df.abc.astype(
             'category',
             categories=self.abc)
@@ -203,7 +205,9 @@ class TestCategoricalLevelsByColumn(unittest.TestCase):
         self.assertIsInstance(results, dict)
 
     def test_returns_dict_with_ignore_columns(self):
-        results = get_categorical_levels_by_column(self.df, ['things', 'stuff'])
+        results = get_categorical_levels_by_column(
+            self.df,
+            ['things', 'stuff'])
         self.assertIsInstance(results, dict)
 
     def test_works_without_exclusions(self):
@@ -245,7 +249,9 @@ class TestCategoricalLevelsByColumn(unittest.TestCase):
         self.assertDictEqual(expected, result)
 
     def test_works_with_multiple_exclusions(self):
-        result = get_categorical_levels_by_column(self.df, ['abc', 'alphabet_category'])
+        result = get_categorical_levels_by_column(
+            self.df,
+            ['abc', 'alphabet_category'])
 
         expected = {
             'abc_category': self.abc,
