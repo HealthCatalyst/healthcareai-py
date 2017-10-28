@@ -1,6 +1,10 @@
+import unittest
+import string
+import random
+
 import pandas as pd
 import numpy as np
-import unittest
+
 import healthcareai.common.transformers as transformers
 
 
@@ -128,21 +132,40 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 
 
 class TestDataFrameCreateDummyVariables(unittest.TestCase):
-    def test_dummies_for_binary_categorical(self):
+    def setUp(self):
+        self.alphabet = list(string.ascii_lowercase)
+
+        self.train_df = pd.DataFrame({
+            'aa_outcome': range(26),
+            'binary': np.random.choice(['a', 'b', 'a'], 26),
+            'alphabet': self.alphabet,
+            'numeric': random.sample(range(1, 100), 26),
+        })
+
+        self.train_df['binary'] = self.train_df['binary'].astype(
+            'category',
+            categories=['a', 'b'])
+
+    def test_binary_categorical(self):
         df = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category': ['a', 'b', 'a'],
+            'binary': ['a', 'b', 'a'],
             'numeric': [1, 2, 1],
         })
         expected = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category.b': [0, 1, 0],
+            'binary.b': [0, 1, 0],
             'numeric': [1, 2, 1],
         })
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary_category.b': 'uint8'})
+        expected = expected.astype({'binary.b': 'uint8'})
 
-        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        fit_dummifier = transformers.DataFrameCreateDummyVariables(
+            'aa_outcome').fit(df)
+
+        print(fit_dummifier.categorical_levels, fit_dummifier.excluded_columns)
+
+        result = fit_dummifier.transform(df)
 
         # Sort each because column order matters for equality checks
         expected = expected.sort_index(axis=1)
@@ -150,25 +173,53 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
         self.assertTrue(result.equals(expected))
 
-    def test_dummies_for_trinary_categorical(self):
+    def test_three_categorical(self):
         df = pd.DataFrame({
-            'binary_category': ['a', 'b', 'c'],
+            'trinary': ['a', 'b', 'c'],
             'aa_outcome': [1, 5, 4]
         })
         expected = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category.b': [0, 1, 0],
-            'binary_category.c': [0, 0, 1]
+            'trinary.b': [0, 1, 0],
+            'trinary.c': [0, 0, 1]
         })
 
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary_category.b': 'uint8', 'binary_category.c': 'uint8'})
+        expected = expected.astype({'trinary.b': 'uint8', 'trinary.c': 'uint8'})
 
-        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        result = transformers.DataFrameCreateDummyVariables(
+            'aa_outcome').fit_transform(df)
 
         # Sort each because column order matters for equality checks
         expected = expected.sort_index(axis=1)
         result = result.sort_index(axis=1)
+
+        self.assertTrue(result.equals(expected))
+
+    def test_remembers_2_categories_multiple_rows_represent_single_class(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary.b': [0, 0, 0],
+            'numeric': [1, 2, 1],
+        })
+        # cast as uint8 which the pandas.get_dummies() outputs
+        expected = expected.astype({'binary.b': 'uint8'})
+
+        trained = transformers.DataFrameCreateDummyVariables('aa_outcome') \
+            .fit(self.train_df)
+        result = trained.transform(prediction_df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
+
+        print('expected\n\n', expected, '\n\nresult\n\n', result)
 
         self.assertTrue(result.equals(expected))
 
@@ -336,6 +387,7 @@ class TestFeatureScaling(unittest.TestCase):
                                                        'c': [-1.507557, -0.301511, 0.904534, 0.904534],
                                                        'd': [0.557086, 1.299867, -1.299867, -0.557086],
                                                        'label': ['Y', 'N', 'Y', 'N']}).round(5)))
+
 
 if __name__ == '__main__':
     unittest.main()
