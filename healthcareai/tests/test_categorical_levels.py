@@ -4,7 +4,7 @@ import pandas as pd
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
-from healthcareai.common.get_categorical_levels import get_categorical_levels
+from healthcareai.common.categorical_levels import calculate_categorical_frequencies
 
 
 class TestTopFactors(unittest.TestCase):
@@ -149,8 +149,8 @@ class TestTopFactors(unittest.TestCase):
 
     def test_get_categorical_levels(self):
         # This test checkst that get_categorical_levels() behaves as desired
-        categorical_level_info = get_categorical_levels(dataframe=self.get_levels_df,
-                                                        columns_to_ignore=['grain', 'predicted'])
+        categorical_level_info = calculate_categorical_frequencies(dataframe=self.get_levels_df,
+                                                                   columns_to_ignore=['grain', 'predicted'])
         # Check that numeric columns are not included
         self.assertFalse('float' in categorical_level_info)
         # Check that specified columns are not included

@@ -1,14 +1,16 @@
+import string
 import unittest
 import pandas as pd
+import random
 
-from healthcareai.common.get_categorical_levels import \
+from healthcareai.common.categorical_levels import \
     calculate_categorical_frequencies, \
     _calculate_column_value_distribution_ratios, _sort_value_counts_by_index, \
-    _get_categoricals
+    get_categorical_column_names, get_categorical_levels_by_column
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
-class TestCatgoricalColumnInfo(unittest.TestCase):
+class TestCalculateCategoricalFrequencies(unittest.TestCase):
     def setUp(self):
         """Build a dataframe with different column dtypes."""
         df = pd.DataFrame({
@@ -157,7 +159,105 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
         self._assert_identical_value_distributions(expected, result)
 
 
-class TestNonIgnoredCategoricals(unittest.TestCase):
+class TestCategoricalLevelsByColumn(unittest.TestCase):
+    def setUp(self):
+        """Build a dataframe with different column dtypes."""
+        self.abc = ['a', 'b', 'c']
+        self.alphabet = list(string.ascii_lowercase)
+
+        df = pd.DataFrame({
+            'numbers1': range(26),
+            'numbers2': range(26),
+            'abc': [random.choice(self.abc) for _ in range(26)],
+            'alphabet': self.alphabet,
+            'all_a': ['a'] * 26
+        })
+
+        df['alphabet_category'] = df['alphabet'].astype('category', categories=self.alphabet)
+        df['abc_category'] = df.abc.astype(
+            'category',
+            categories=self.abc)
+
+        df['all_a_category'] = df.all_a.astype(
+            'category',
+            categories=['a'])
+
+        self.df = df
+
+        self.shared_expected = {
+            'abc': self.abc,
+            'abc_category': self.abc,
+            'all_a': ['a'],
+            'all_a_category': ['a'],
+            'alphabet': self.alphabet,
+            'alphabet_category': self.alphabet,
+        }
+
+    def test_raises_error_with_non_dataframe(self):
+        self.assertRaises(
+            HealthcareAIError,
+            get_categorical_levels_by_column, 'foo', 1)
+
+    def test_returns_dict_with_none_ignore_columns(self):
+        results = get_categorical_levels_by_column(self.df, None)
+        self.assertIsInstance(results, dict)
+
+    def test_returns_dict_with_ignore_columns(self):
+        results = get_categorical_levels_by_column(self.df, ['things', 'stuff'])
+        self.assertIsInstance(results, dict)
+
+    def test_works_without_exclusions(self):
+        result = get_categorical_levels_by_column(self.df)
+        self.assertDictEqual(self.shared_expected, result)
+
+    def test_works_with_none_exclusion(self):
+        result = get_categorical_levels_by_column(self.df, None)
+        self.assertDictEqual(self.shared_expected, result)
+
+    def test_works_with_non_existant_exclusion(self):
+        result = get_categorical_levels_by_column(self.df, 'foobar')
+        self.assertDictEqual(self.shared_expected, result)
+
+    def test_works_with_single_exclusion(self):
+        result = get_categorical_levels_by_column(self.df, 'abc')
+
+        expected = {
+            'abc_category': self.abc,
+            'all_a': ['a'],
+            'all_a_category': ['a'],
+            'alphabet': self.alphabet,
+            'alphabet_category': self.alphabet,
+        }
+
+        self.assertDictEqual(expected, result)
+
+    def test_works_with_single_exclusion_in_list(self):
+        result = get_categorical_levels_by_column(self.df, ['abc_category'])
+
+        expected = {
+            'abc': self.abc,
+            'all_a': ['a'],
+            'all_a_category': ['a'],
+            'alphabet': self.alphabet,
+            'alphabet_category': self.alphabet,
+        }
+
+        self.assertDictEqual(expected, result)
+
+    def test_works_with_multiple_exclusions(self):
+        result = get_categorical_levels_by_column(self.df, ['abc', 'alphabet_category'])
+
+        expected = {
+            'abc_category': self.abc,
+            'all_a': ['a'],
+            'all_a_category': ['a'],
+            'alphabet': self.alphabet,
+        }
+
+        self.assertDictEqual(expected, result)
+
+
+class TestGetCategoricalColumnNames(unittest.TestCase):
     def setUp(self):
         """Build a dataframe with different column dtypes."""
         df = pd.DataFrame({
@@ -176,41 +276,46 @@ class TestNonIgnoredCategoricals(unittest.TestCase):
 
         self.df = df
 
+    def test_raises_error_with_non_dataframe(self):
+        self.assertRaises(
+            HealthcareAIError,
+            get_categorical_column_names, 'foo', 1)
+
     def test_returns_list_with_none_ignore_columns(self):
-        results = _get_categoricals(self.df, None)
+        results = get_categorical_column_names(self.df, None)
         self.assertIsInstance(results, list)
 
     def test_returns_list_with_ignore_columns(self):
-        results = _get_categoricals(self.df, ['things', 'stuff'])
+        results = get_categorical_column_names(self.df, ['things', 'stuff'])
         self.assertIsInstance(results, list)
 
     def test_works_without_exclusions(self):
-        result = _get_categoricals(self.df)
+        result = get_categorical_column_names(self.df)
         expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
         self.assertListEqual(expected, result)
 
     def test_works_with_none_exclusion(self):
-        result = _get_categoricals(self.df, None)
+        result = get_categorical_column_names(self.df, None)
         expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
         self.assertListEqual(expected, result)
 
     def test_works_with_non_existant_exclusion(self):
-        result = _get_categoricals(self.df, 'foo')
+        result = get_categorical_column_names(self.df, 'foo')
         expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
         self.assertListEqual(expected, result)
 
     def test_works_with_single_exclusion(self):
-        result = _get_categoricals(self.df, 'abc')
+        result = get_categorical_column_names(self.df, 'abc')
         expected = ['abc_category', 'all_a', 'all_a_category']
         self.assertListEqual(expected, result)
 
     def test_works_with_single_exclusion_in_list(self):
-        result = _get_categoricals(self.df, ['abc_category'])
+        result = get_categorical_column_names(self.df, ['abc_category'])
         expected = ['abc', 'all_a', 'all_a_category']
         self.assertListEqual(expected, result)
 
     def test_works_with_multiple_exclusions(self):
-        result = _get_categoricals(
+        result = get_categorical_column_names(
             self.df,
             ['abc_category', 'all_a'])
         expected = ['abc', 'all_a_category']

@@ -234,6 +234,7 @@ class TrainedSupervisedModel(object):
             # Raise an error because required training columns are missing!
             self._raise_missing_column_error(dataframe)
 
+        # TODO should this be in the data prep pipeline?
         self._check_for_unseen_categorical_factors(dataframe, subset_df)
 
         # Run the saved data preparation pipeline

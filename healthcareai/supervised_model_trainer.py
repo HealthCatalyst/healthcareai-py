@@ -13,7 +13,7 @@ import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
 from healthcareai.advanced_supvervised_model_trainer import \
     AdvancedSupervisedModelTrainer
-from healthcareai.common.get_categorical_levels import calculate_categorical_frequencies
+from healthcareai.common.categorical_levels import calculate_categorical_frequencies
 
 
 class SupervisedModelTrainer(object):
