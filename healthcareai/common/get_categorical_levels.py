@@ -1,11 +1,15 @@
+"""Get Categorical Frequencies."""
 from healthcareai.common.validators import validate_dataframe_input_for_method
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
-def get_categorical_levels(dataframe, columns_to_ignore=None):
+def calculate_categorical_frequencies(dataframe, columns_to_ignore=None):
     """
-    Identify the categorical columns and return a dictionary mapping column names to a Pandas dataframe whose
-    index consists of categorical levels and whose values are the frequency at which a level occurs.
+    Calculate frequencies of levels in categorical columns.
+
+    Identify the categorical columns and return a dictionary mapping column
+    names to a Pandas dataframe whose index consists of categorical levels and
+    whose values are the frequency at which a level occurs.
 
     In other words, build a dictionary of frequencies_by_categorical_level
 
@@ -14,27 +18,44 @@ def get_categorical_levels(dataframe, columns_to_ignore=None):
         columns_to_ignore (list): Columns to exclude (like grain)
 
     Returns:
-        dict: a dictionary mapping categorical columns to Pandas dataframes containing the levels and their
-        relative frequencies
+        dict: a dictionary of dataframes containing level frequencies by column
     """
     validate_dataframe_input_for_method(dataframe)
 
-    # Filter out ignored columns using .difference() which is immune to
-    # None and non-existant columns
-    filtered_df = dataframe[dataframe.columns.difference([columns_to_ignore])]
-
-    # Identify the categorical columns
-    categorical_df = filtered_df.select_dtypes(
-        include=[object, 'category']).columns.copy()
+    categorical_columns = _get_categoricals(dataframe, columns_to_ignore)
 
     frequencies_by_level = {}
 
     # Get the distribution of values for each categorical column
-    for column in categorical_df:
-        frequencies_by_level[column] = _calculate_column_value_distribution_ratios(
+    for column in categorical_columns:
+        frequencies_by_level[
+            column] = _calculate_column_value_distribution_ratios(
             dataframe, column)
 
     return frequencies_by_level
+
+
+def _get_categoricals(dataframe, ignore=None):
+    """
+    Filter a dataframe to only categorical columns that are not ignored.
+
+    Args:
+        dataframe (pandas.core.frames.DataFrame): incoming dataframe to filter
+        ignore (str|list): name(s) of column(s) to ignore
+
+    Returns:
+        list: a list of categorical column names
+    """
+    # This uses .difference() which is immune to None and non-existant columns
+    if not isinstance(ignore, list):
+        ignore = [ignore]
+    filtered_df = dataframe[dataframe.columns.difference(ignore)]
+
+    # Identify the categorical columns
+    categorical_cols = filtered_df.select_dtypes(
+        include=[object, 'category']).columns.copy()
+
+    return list(categorical_cols)
 
 
 def _calculate_column_value_distribution_ratios(dataframe, column):

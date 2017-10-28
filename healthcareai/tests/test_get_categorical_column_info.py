@@ -1,8 +1,10 @@
 import unittest
 import pandas as pd
 
-from healthcareai.common.get_categorical_levels import get_categorical_levels, \
-    _calculate_column_value_distribution_ratios, _sort_value_counts_by_index
+from healthcareai.common.get_categorical_levels import \
+    calculate_categorical_frequencies, \
+    _calculate_column_value_distribution_ratios, _sort_value_counts_by_index, \
+    _get_categoricals
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -41,19 +43,21 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
             pd.testing.assert_series_equal(expected[column_name], distribution)
 
     def test_returns_dict_with_none_ignore_columns(self):
-        results = get_categorical_levels(self.df, None)
+        results = calculate_categorical_frequencies(self.df, None)
         self.assertIsInstance(results, dict)
 
     def test_returns_dict_with_ignore_columns(self):
-        results = get_categorical_levels(self.df, ['things', 'stuff'])
+        results = calculate_categorical_frequencies(self.df,
+                                                    ['things', 'stuff'])
         self.assertIsInstance(results, dict)
 
     def test_raises_error_with_non_dataframe(self):
-        self.assertRaises(HealthcareAIError, get_categorical_levels, 'foo', 1)
+        self.assertRaises(HealthcareAIError, calculate_categorical_frequencies,
+                          'foo', 1)
 
     def test_works_without_exclusions(self):
         """Note this uses pandas series equality & index testing methods."""
-        result = get_categorical_levels(self.df)
+        result = calculate_categorical_frequencies(self.df)
 
         expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
 
@@ -82,7 +86,8 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
 
     def test_works_with_single_exclusion(self):
         """Note this uses pandas series equality & index testing methods."""
-        result = get_categorical_levels(self.df, columns_to_ignore='abc')
+        result = calculate_categorical_frequencies(self.df,
+                                                   columns_to_ignore='abc')
 
         expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
 
@@ -106,7 +111,8 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
 
     def test_works_with_single_exclusion_in_list(self):
         """Note this uses pandas series equality & index testing methods."""
-        result = get_categorical_levels(self.df, columns_to_ignore=['abc'])
+        result = calculate_categorical_frequencies(self.df,
+                                                   columns_to_ignore=['abc'])
 
         expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
 
@@ -130,7 +136,7 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
 
     def test_works_with_multiple_exclusions(self):
         """Note this uses pandas series equality & index testing methods."""
-        result = get_categorical_levels(
+        result = calculate_categorical_frequencies(
             self.df,
             columns_to_ignore=['abc', 'all_a_category'])
 
@@ -151,6 +157,66 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
         self._assert_identical_value_distributions(expected, result)
 
 
+class TestNonIgnoredCategoricals(unittest.TestCase):
+    def setUp(self):
+        """Build a dataframe with different column dtypes."""
+        df = pd.DataFrame({
+            'numbers1': [1, 2, 3, 4, 5, 6],
+            'numbers2': [33, 42, 76, 92, 113, 154],
+            'abc': ['c', 'b', 'b', 'a', 'b', 'a'],
+            'all_a': ['a', 'a', 'a', 'a', 'a', 'a']
+        })
+        df['abc_category'] = df.abc.astype(
+            'category',
+            categories=['a', 'b', 'c'])
+
+        df['all_a_category'] = df.all_a.astype(
+            'category',
+            categories=['a', 'b', 'c'])
+
+        self.df = df
+
+    def test_returns_list_with_none_ignore_columns(self):
+        results = _get_categoricals(self.df, None)
+        self.assertIsInstance(results, list)
+
+    def test_returns_list_with_ignore_columns(self):
+        results = _get_categoricals(self.df, ['things', 'stuff'])
+        self.assertIsInstance(results, list)
+
+    def test_works_without_exclusions(self):
+        result = _get_categoricals(self.df)
+        expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+    def test_works_with_none_exclusion(self):
+        result = _get_categoricals(self.df, None)
+        expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+    def test_works_with_non_existant_exclusion(self):
+        result = _get_categoricals(self.df, 'foo')
+        expected = ['abc', 'abc_category', 'all_a', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+    def test_works_with_single_exclusion(self):
+        result = _get_categoricals(self.df, 'abc')
+        expected = ['abc_category', 'all_a', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+    def test_works_with_single_exclusion_in_list(self):
+        result = _get_categoricals(self.df, ['abc_category'])
+        expected = ['abc', 'all_a', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+    def test_works_with_multiple_exclusions(self):
+        result = _get_categoricals(
+            self.df,
+            ['abc_category', 'all_a'])
+        expected = ['abc', 'all_a_category']
+        self.assertListEqual(expected, result)
+
+
 class TestColumnValueDistribution(unittest.TestCase):
     def setUp(self):
         self.df = pd.DataFrame({
@@ -160,8 +226,11 @@ class TestColumnValueDistribution(unittest.TestCase):
         })
 
     def test_raises_error_with_non_dataframe(self):
-        self.assertRaises(HealthcareAIError,
-                          _calculate_column_value_distribution_ratios, 'foo', 1)
+        self.assertRaises(
+            HealthcareAIError,
+            _calculate_column_value_distribution_ratios,
+            'foo',
+            1)
 
     def test_raise_error_with_nonexistent_column(self):
         bad_columns = ['foo', None, 99, {'a': 33}]
