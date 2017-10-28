@@ -25,6 +25,21 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
 
         self.df = df
 
+    def _assert_identical_key_sets(self, expected, result):
+        """Assert that dictionaries have identical sets of keys."""
+        self.assertEqual(set(expected.keys()), set(result.keys()))
+
+    def _assert_identical_value_distributions(self, expected, result):
+        """Assert that a value distribution is identical."""
+        self._assert_identical_key_sets(expected, result)
+
+        for column_name, distribution in result.items():
+            pd.testing.assert_index_equal(
+                expected[column_name].index,
+                distribution.index)
+
+            pd.testing.assert_series_equal(expected[column_name], distribution)
+
     def test_returns_dict_with_none_ignore_columns(self):
         results = get_categorical_levels(self.df, None)
         self.assertIsInstance(results, dict)
@@ -63,25 +78,77 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
                 dtype='float64'),
         }
 
-        for column_name, distribution in result.items():
-            pd.testing.assert_index_equal(
-                expected[column_name].index,
-                distribution.index)
-
-            pd.testing.assert_series_equal(expected[column_name], distribution)
+        self._assert_identical_value_distributions(expected, result)
 
     def test_works_with_single_exclusion(self):
-        result = get_categorical_levels(self.df, 'abc')
-        expected = {'a': 33}
+        """Note this uses pandas series equality & index testing methods."""
+        result = get_categorical_levels(self.df, columns_to_ignore='abc')
 
-        self.assertEqual(result, expected)
+        expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
+
+        expected = {
+            'abc_category': pd.Series(
+                expected_abc_distribution,
+                index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+            'all_a': pd.Series(
+                [1.0], index=['a'],
+                name='counts',
+                dtype='float64'),
+            'all_a_category': pd.Series(
+                [1.0, 0, 0], index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+        }
+
+        self._assert_identical_value_distributions(expected, result)
+
+    def test_works_with_single_exclusion_in_list(self):
+        """Note this uses pandas series equality & index testing methods."""
+        result = get_categorical_levels(self.df, columns_to_ignore=['abc'])
+
+        expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
+
+        expected = {
+            'abc_category': pd.Series(
+                expected_abc_distribution,
+                index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+            'all_a': pd.Series(
+                [1.0], index=['a'],
+                name='counts',
+                dtype='float64'),
+            'all_a_category': pd.Series(
+                [1.0, 0, 0], index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+        }
+
+        self._assert_identical_value_distributions(expected, result)
 
     def test_works_with_multiple_exclusions(self):
-        result = get_categorical_levels(self.df,
-                                        ['numbers1', 'abc', 'all_a_category'])
-        expected = {'a': 33}
+        """Note this uses pandas series equality & index testing methods."""
+        result = get_categorical_levels(
+            self.df,
+            columns_to_ignore=['abc', 'all_a_category'])
 
-        self.assertEqual(result, expected)
+        expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
+
+        expected = {
+            'abc_category': pd.Series(
+                expected_abc_distribution,
+                index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+            'all_a': pd.Series(
+                [1.0], index=['a'],
+                name='counts',
+                dtype='float64'),
+        }
+
+        self._assert_identical_value_distributions(expected, result)
 
 
 class TestColumnValueDistribution(unittest.TestCase):
@@ -107,11 +174,15 @@ class TestColumnValueDistribution(unittest.TestCase):
                 bad)
 
     def test_returns_series_with_existing_column(self):
-        results = _calculate_column_value_distribution_ratios(self.df, 'numbers')
+        results = _calculate_column_value_distribution_ratios(
+            self.df,
+            'numbers')
         self.assertIsInstance(results, pd.Series)
 
     def test_returns_categorical_counts_mixed(self):
-        results = _calculate_column_value_distribution_ratios(self.df, 'categories')
+        results = _calculate_column_value_distribution_ratios(
+            self.df,
+            'categories')
         self.assertIsInstance(results, pd.Series)
 
         # a:2, b:3, c:1
@@ -127,7 +198,9 @@ class TestColumnValueDistribution(unittest.TestCase):
         self.assertListEqual(expected, list(results))
 
     def test_returns_categorical_counts_numbers(self):
-        results = _calculate_column_value_distribution_ratios(self.df, 'numbers')
+        results = _calculate_column_value_distribution_ratios(
+            self.df,
+            'numbers')
         self.assertIsInstance(results, pd.Series)
 
         expected = [1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6]
