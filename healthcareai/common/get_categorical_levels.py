@@ -19,23 +19,18 @@ def get_categorical_levels(dataframe, columns_to_ignore=None):
     """
     validate_dataframe_input_for_method(dataframe)
 
+    # Filter out ignored columns using .difference() which is immune to
+    # None and non-existant columns
+    filtered_df = dataframe[dataframe.columns.difference([columns_to_ignore])]
+
     # Identify the categorical columns
-    categorical_columns = dataframe.select_dtypes(
+    categorical_df = filtered_df.select_dtypes(
         include=[object, 'category']).columns.copy()
-
-    for column in categorical_columns:
-        if column in columns_to_ignore:
-            categorical_columns = categorical_columns.drop(column)
-
-    # if columns_to_ignore:
-    #     categorical_columns = [x if x not in columns_to_ignore else None for x
-    #                            in categorical_columns]
-    #
 
     frequencies_by_level = {}
 
     # Get the distribution of values for each categorical column
-    for column in categorical_columns:
+    for column in categorical_df:
         frequencies_by_level[column] = _calculate_column_value_distribution_ratios(
             dataframe, column)
 

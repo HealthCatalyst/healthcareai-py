@@ -1,5 +1,6 @@
 import unittest
 import pandas as pd
+
 from healthcareai.common.get_categorical_levels import get_categorical_levels, \
     _calculate_column_value_distribution_ratios, _sort_value_counts_by_index
 from healthcareai.common.healthcareai_error import HealthcareAIError
@@ -7,14 +8,20 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 class TestCatgoricalColumnInfo(unittest.TestCase):
     def setUp(self):
+        """Build a dataframe with different column dtypes."""
         df = pd.DataFrame({
             'numbers1': [1, 2, 3, 4, 5, 6],
             'numbers2': [33, 42, 76, 92, 113, 154],
             'abc': ['c', 'b', 'b', 'a', 'b', 'a'],
             'all_a': ['a', 'a', 'a', 'a', 'a', 'a']
         })
-        df['abc_category'] = df.abc.astype('category', categories=['a', 'b', 'c'])
-        df['all_a_category'] = df.all_a.astype('category', categories=['a', 'b', 'c'])
+        df['abc_category'] = df.abc.astype(
+            'category',
+            categories=['a', 'b', 'c'])
+
+        df['all_a_category'] = df.all_a.astype(
+            'category',
+            categories=['a', 'b', 'c'])
 
         self.df = df
 
@@ -30,10 +37,38 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
         self.assertRaises(HealthcareAIError, get_categorical_levels, 'foo', 1)
 
     def test_works_without_exclusions(self):
+        """Note this uses pandas series equality & index testing methods."""
         result = get_categorical_levels(self.df)
-        expected = {'a': 33}
 
-        self.assertEqual(result, expected)
+        expected_abc_distribution = [2 / 6, 3 / 6, 1 / 6]
+
+        expected = {
+            'abc': pd.Series(
+                expected_abc_distribution,
+                index=['a', 'b', 'c'],
+                name='counts',
+                dtype='float64'),
+            'abc_category': pd.Series(
+                expected_abc_distribution,
+                index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+            'all_a': pd.Series(
+                [1.0], index=['a'],
+                name='counts',
+                dtype='float64'),
+            'all_a_category': pd.Series(
+                [1.0, 0, 0], index=pd.CategoricalIndex(['a', 'b', 'c']),
+                name='counts',
+                dtype='float64'),
+        }
+
+        for column_name, distribution in result.items():
+            pd.testing.assert_index_equal(
+                expected[column_name].index,
+                distribution.index)
+
+            pd.testing.assert_series_equal(expected[column_name], distribution)
 
     def test_works_with_single_exclusion(self):
         result = get_categorical_levels(self.df, 'abc')
@@ -42,7 +77,8 @@ class TestCatgoricalColumnInfo(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_works_with_multiple_exclusions(self):
-        result = get_categorical_levels(self.df, ['numbers1', 'abc', 'all_a_category'])
+        result = get_categorical_levels(self.df,
+                                        ['numbers1', 'abc', 'all_a_category'])
         expected = {'a': 33}
 
         self.assertEqual(result, expected)
