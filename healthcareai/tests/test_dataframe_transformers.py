@@ -1,7 +1,60 @@
+import unittest
+import string
+import random
+
 import pandas as pd
 import numpy as np
-import unittest
+
 import healthcareai.common.transformers as transformers
+
+
+def _convert_all_columns_to_uint8(df, ignore=None):
+    # pandas.get_dummies() outputs uint8
+    if not isinstance(ignore, list):
+        ignore = [ignore]
+
+    # filtered_df = df[df.columns.difference(ignore)]
+    for col in df:
+        if col in ignore:
+            df[col] = df[col]
+        else:
+            df[col] = df[col].astype('uint8')
+
+    return df
+
+
+def _assert_dataframes_identical(expected, result):
+    """
+    Asserts dataframes are identical in many ways.
+
+    1. Sort each because column order matters for equality checks
+    2. Check that column names are identical
+    3. Check each series is identical
+    4. Check the entire dataframe
+    """
+    expected = expected.sort_index(axis=1)
+    result = result.sort_index(axis=1)
+
+    test_case = unittest.TestCase()
+
+    test_case.assertListEqual(list(expected.columns), list(result.columns))
+
+    for col in expected:
+        pd.testing.assert_series_equal(expected[col], result[col])
+
+    test_case.assertTrue(list(expected.dtypes) == list(result.dtypes))
+
+    pd.testing.assert_frame_equal(
+        expected, result,
+        check_dtype=True,
+        check_index_type=True,
+        check_column_type=True,
+        check_frame_type=True,
+        check_exact=True,
+        check_names=True,
+        check_datetimelike_compat=True,
+        check_categorical=True,
+        check_like=True)
 
 
 class TestDataframeImputer(unittest.TestCase):
@@ -22,9 +75,7 @@ class TestDataframeImputer(unittest.TestCase):
         result = transformers.DataFrameImputer(impute=False).fit_transform(df)
 
         self.assertEqual(len(result), 4)
-        # Assert column types remain identical
-        self.assertTrue(list(result.dtypes) == list(df.dtypes))
-        self.assertTrue(expected.equals(result))
+        _assert_dataframes_identical(expected, result)
 
     def test_imputation_removes_nans(self):
         df = pd.DataFrame([
@@ -45,9 +96,7 @@ class TestDataframeImputer(unittest.TestCase):
         self.assertEqual(len(result), 4)
         # Assert no NANs
         self.assertFalse(result.isnull().values.any())
-        # Assert column types remain identical
-        self.assertTrue(list(result.dtypes) == list(df.dtypes))
-        self.assertTrue(expected.equals(result))
+        _assert_dataframes_identical(expected, result)
 
     def test_imputation_removes_nones(self):
         df = pd.DataFrame([
@@ -66,9 +115,8 @@ class TestDataframeImputer(unittest.TestCase):
         result = transformers.DataFrameImputer().fit_transform(df)
         self.assertEqual(len(result), 4)
         self.assertFalse(result.isnull().values.any())
-        # Assert column types remain identical
-        self.assertTrue(list(result.dtypes) == list(df.dtypes))
-        self.assertTrue(expected.equals(result))
+
+        _assert_dataframes_identical(expected, result)
 
     def test_imputation_for_mean_of_numeric_and_mode_for_categorical(self):
         df = pd.DataFrame([
@@ -88,24 +136,22 @@ class TestDataframeImputer(unittest.TestCase):
         ])
 
         self.assertEqual(len(result), 4)
-        # Assert imputed values
-        self.assertTrue(expected.equals(result))
-        # Assert column types remain identical
-        self.assertTrue(list(result.dtypes) == list(df.dtypes))
+
+        _assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameConvertTargetToBinary(unittest.TestCase):
     def test_does_nothing_on_regression(self):
-        df = pd.DataFrame({
+        expected = pd.DataFrame({
             'category': ['a', 'b', 'c'],
             'gender': ['F', 'M', 'F'],
             'outcome': [1, 5, 4],
             'string_outcome': ['Y', 'N', 'Y']
         })
 
-        result = transformers.DataFrameConvertTargetToBinary('regression', 'string_outcome').fit_transform(df)
+        result = transformers.DataFrameConvertTargetToBinary('regression', 'string_outcome').fit_transform(expected)
 
-        self.assertTrue(df.equals(result))
+        _assert_dataframes_identical(expected, result)
 
     def test_converts_y_n_for_classification(self):
         df = pd.DataFrame({
@@ -124,53 +170,176 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 
         result = transformers.DataFrameConvertTargetToBinary('classification', 'string_outcome').fit_transform(df)
 
-        self.assertTrue(expected.equals(result))
+        _assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameCreateDummyVariables(unittest.TestCase):
-    def test_dummies_for_binary_categorical(self):
+    def setUp(self):
+        self.alphabet = list(string.ascii_lowercase)
+
+        self.train_df = pd.DataFrame({
+            'aa_outcome': range(26),
+            'binary': np.random.choice(['a', 'b', 'a'], 26),
+            'alphabet': self.alphabet,
+            'numeric': random.sample(range(1, 100), 26),
+        })
+
+        self.train_df['binary'] = self.train_df['binary'].astype(
+            'category',
+            categories=['a', 'b'])
+
+        self.dummifier = transformers.DataFrameCreateDummyVariables('aa_outcome').fit(self.train_df)
+
+    def test_binary_categorical(self):
         df = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category': ['a', 'b', 'a'],
+            'binary': ['a', 'b', 'a'],
             'numeric': [1, 2, 1],
         })
         expected = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category.b': [0, 1, 0],
+            'binary.b': [0, 1, 0],
             'numeric': [1, 2, 1],
         })
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary_category.b': 'uint8'})
+        expected = expected.astype({'binary.b': 'uint8'})
 
-        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        fit_dummifier = transformers.DataFrameCreateDummyVariables(
+            'aa_outcome').fit(df)
 
-        # Sort each because column order matters for equality checks
-        expected = expected.sort_index(axis=1)
-        result = result.sort_index(axis=1)
+        result = fit_dummifier.transform(df)
 
-        self.assertTrue(result.equals(expected))
+        _assert_dataframes_identical(expected, result)
 
-    def test_dummies_for_trinary_categorical(self):
+    def test_three_categorical(self):
         df = pd.DataFrame({
-            'binary_category': ['a', 'b', 'c'],
+            'trinary': ['a', 'b', 'c'],
             'aa_outcome': [1, 5, 4]
         })
         expected = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
-            'binary_category.b': [0, 1, 0],
-            'binary_category.c': [0, 0, 1]
+            'trinary.b': [0, 1, 0],
+            'trinary.c': [0, 0, 1]
         })
 
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary_category.b': 'uint8', 'binary_category.c': 'uint8'})
+        expected = expected.astype({'trinary.b': 'uint8', 'trinary.c': 'uint8'})
 
-        result = transformers.DataFrameCreateDummyVariables('aa_outcome').fit_transform(df)
+        result = transformers.DataFrameCreateDummyVariables(
+            'aa_outcome').fit_transform(df)
 
-        # Sort each because column order matters for equality checks
-        expected = expected.sort_index(axis=1)
-        result = result.sort_index(axis=1)
+        _assert_dataframes_identical(expected, result)
 
-        self.assertTrue(result.equals(expected))
+    def test_remembers_two_unrepresented_categories(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary.b': [0, 0, 0],
+            'numeric': [1, 2, 1],
+        })
+        # cast as uint8 which the pandas.get_dummies() outputs
+        expected = expected.astype({'binary.b': 'uint8'})
+
+        trained = transformers.DataFrameCreateDummyVariables('aa_outcome') \
+            .fit(self.train_df)
+        result = trained.transform(prediction_df)
+
+        _assert_dataframes_identical(expected, result)
+
+    def test_none_represented(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'alphabet': [None, None, None],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary.b': [0, 0, 0],
+            'alphabet.b': [0, 0, 0],
+            'alphabet.c': [0, 0, 0],
+            'alphabet.d': [0, 0, 0],
+            'alphabet.e': [0, 0, 0],
+            'alphabet.f': [0, 0, 0],
+            'alphabet.g': [0, 0, 0],
+            'alphabet.h': [0, 0, 0],
+            'alphabet.i': [0, 0, 0],
+            'alphabet.j': [0, 0, 0],
+            'alphabet.k': [0, 0, 0],
+            'alphabet.l': [0, 0, 0],
+            'alphabet.m': [0, 0, 0],
+            'alphabet.n': [0, 0, 0],
+            'alphabet.o': [0, 0, 0],
+            'alphabet.p': [0, 0, 0],
+            'alphabet.q': [0, 0, 0],
+            'alphabet.r': [0, 0, 0],
+            'alphabet.s': [0, 0, 0],
+            'alphabet.t': [0, 0, 0],
+            'alphabet.u': [0, 0, 0],
+            'alphabet.v': [0, 0, 0],
+            'alphabet.w': [0, 0, 0],
+            'alphabet.x': [0, 0, 0],
+            'alphabet.y': [0, 0, 0],
+            'alphabet.z': [0, 0, 0],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = _convert_all_columns_to_uint8(expected, ['aa_outcome', 'numeric'])
+
+        result = self.dummifier.transform(prediction_df)
+
+        _assert_dataframes_identical(expected, result)
+
+    def test_remembers_all_unrepresented_categories(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'alphabet': ['t', 'r', 'y'],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary.b': [0, 0, 0],
+            'alphabet.b': [0, 0, 0],
+            'alphabet.c': [0, 0, 0],
+            'alphabet.d': [0, 0, 0],
+            'alphabet.e': [0, 0, 0],
+            'alphabet.f': [0, 0, 0],
+            'alphabet.g': [0, 0, 0],
+            'alphabet.h': [0, 0, 0],
+            'alphabet.i': [0, 0, 0],
+            'alphabet.j': [0, 0, 0],
+            'alphabet.k': [0, 0, 0],
+            'alphabet.l': [0, 0, 0],
+            'alphabet.m': [0, 0, 0],
+            'alphabet.n': [0, 0, 0],
+            'alphabet.o': [0, 0, 0],
+            'alphabet.p': [0, 0, 0],
+            'alphabet.q': [0, 0, 0],
+            'alphabet.r': [0, 1, 0],
+            'alphabet.s': [0, 0, 0],
+            'alphabet.t': [1, 0, 0],
+            'alphabet.u': [0, 0, 0],
+            'alphabet.v': [0, 0, 0],
+            'alphabet.w': [0, 0, 0],
+            'alphabet.x': [0, 0, 0],
+            'alphabet.y': [0, 0, 1],
+            'alphabet.z': [0, 0, 0],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = _convert_all_columns_to_uint8(expected, ['aa_outcome', 'numeric'])
+
+        result = self.dummifier.transform(prediction_df)
+
+        _assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
@@ -187,12 +356,7 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
         })
 
         result = transformers.DataFrameConvertColumnToNumeric('integer_strings').fit_transform(df)
-
-        # Sort each because column order matters for equality checks
-        expected = expected.sort_index(axis=1)
-        result = result.sort_index(axis=1)
-
-        self.assertTrue(result.equals(expected))
+        _assert_dataframes_identical(expected, result)
 
     def test_integer(self):
         df = pd.DataFrame({
@@ -206,11 +370,7 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
 
         result = transformers.DataFrameConvertColumnToNumeric('numeric').fit_transform(df)
 
-        # Sort each because column order matters for equality checks
-        expected = expected.sort_index(axis=1)
-        result = result.sort_index(axis=1)
-
-        self.assertTrue(result.equals(expected))
+        _assert_dataframes_identical(expected, result)
 
 
 class TestDataframeUnderSampler(unittest.TestCase):
@@ -288,54 +448,57 @@ class TestDataframeOverSampler(unittest.TestCase):
 
 class TestRemovesNANs(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame({'a': [1, None, 2, 3, None],
-                                'b': ['m', 'f', None, 'f', None],
-                                'c': [3, 4, 5, None, None],
-                                'd': [None, 8, 1, 3, None],
-                                'e': [None, None, None, None, None],
-                                'label': ['Y', 'N', 'Y', 'N', None]})
+        self.df = pd.DataFrame({
+            'a': [1, None, 2, 3, None],
+            'b': ['m', 'f', None, 'f', None],
+            'c': [3, 4, 5, None, None],
+            'd': [None, 8, 1, 3, None],
+            'e': [None, None, None, None, None],
+            'label': ['Y', 'N', 'Y', 'N', None]})
 
-    def runTest(self):
-        df_final = transformers.DataFrameDropNaN().fit_transform(self.df)
-        self.assertTrue(df_final.equals(pd.DataFrame({'a': [1, None, 2, 3, None],
-                                                      'b': ['m', 'f', None, 'f', None],
-                                                      'c': [3, 4, 5, None, None],
-                                                      'd': [None, 8, 1, 3, None],
-                                                      'label': ['Y', 'N', 'Y', 'N', None]})))
-
-    def tearDown(self):
-        del self.df
+    def test_removes_nan_rows(self):
+        result = transformers.DataFrameDropNaN().fit_transform(self.df)
+        expected = pd.DataFrame(
+            {'a': [1, None, 2, 3, None],
+             'b': ['m', 'f', None, 'f', None],
+             'c': [3, 4, 5, None, None],
+             'd': [None, 8, 1, 3, None],
+             'label': ['Y', 'N', 'Y', 'N', None]})
+        _assert_dataframes_identical(expected, result)
 
 
 class TestFeatureScaling(unittest.TestCase):
     def setUp(self):
-        self.df = pd.DataFrame({'a': [1, 3, 2, 3],
-                                'b': ['m', 'f', 'b', 'f'],
-                                'c': [3, 4, 5, 5],
-                                'd': [6, 8, 1, 3],
-                                'label': ['Y', 'N', 'Y', 'N']})
+        self.df = pd.DataFrame({
+            'a': [1, 3, 2, 3],
+            'b': ['m', 'f', 'b', 'f'],
+            'c': [3, 4, 5, 5],
+            'd': [6, 8, 1, 3],
+            'label': ['Y', 'N', 'Y', 'N']})
 
-        self.df_repeat = pd.DataFrame({'a': [1, 3, 2, 3],
-                                       'b': ['m', 'f', 'b', 'f'],
-                                       'c': [3, 4, 5, 5],
-                                       'd': [6, 8, 1, 3],
-                                       'label': ['Y', 'N', 'Y', 'N']})
+        self.df_repeat = pd.DataFrame({
+            'a': [1, 3, 2, 3],
+            'b': ['m', 'f', 'b', 'f'],
+            'c': [3, 4, 5, 5],
+            'd': [6, 8, 1, 3],
+            'label': ['Y', 'N', 'Y', 'N']})
 
     def runTest(self):
+        expected = pd.DataFrame({
+            'a': [-1.507557, 0.904534, -0.301511, 0.904534],
+            'b': ['m', 'f', 'b', 'f'],
+            'c': [-1.507557, -0.301511, 0.904534, 0.904534],
+            'd': [0.557086, 1.299867, -1.299867, -0.557086],
+            'label': ['Y', 'N', 'Y', 'N']})
+
         feature_scaling = transformers.DataFrameFeatureScaling()
         df_final = feature_scaling.fit_transform(self.df).round(5)
-        self.assertTrue(df_final.equals(pd.DataFrame({'a': [-1.507557, 0.904534, -0.301511, 0.904534],
-                                                      'b': ['m', 'f', 'b', 'f'],
-                                                      'c': [-1.507557, -0.301511, 0.904534, 0.904534],
-                                                      'd': [0.557086, 1.299867, -1.299867, -0.557086],
-                                                      'label': ['Y', 'N', 'Y', 'N']}).round(5)))
+
+        _assert_dataframes_identical(expected.round(5), df_final)
 
         df_reused = transformers.DataFrameFeatureScaling(reuse=feature_scaling).fit_transform(self.df_repeat).round(5)
-        self.assertTrue(df_reused.equals(pd.DataFrame({'a': [-1.507557, 0.904534, -0.301511, 0.904534],
-                                                       'b': ['m', 'f', 'b', 'f'],
-                                                       'c': [-1.507557, -0.301511, 0.904534, 0.904534],
-                                                       'd': [0.557086, 1.299867, -1.299867, -0.557086],
-                                                       'label': ['Y', 'N', 'Y', 'N']}).round(5)))
+        _assert_dataframes_identical(expected.round(5), df_reused)
+
 
 if __name__ == '__main__':
     unittest.main()

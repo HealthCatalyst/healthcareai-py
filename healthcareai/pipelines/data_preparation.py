@@ -4,7 +4,7 @@ import healthcareai.common.transformers as hcai_transformers
 import healthcareai.common.filters as hcai_filters
 
 
-def full_pipeline(model_type, predicted_column, grain_column, impute=True):
+def full_pipeline(predicted_column, grain_column, impute=True):
     """
     Builds the data preparation pipeline.
 

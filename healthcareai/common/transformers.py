@@ -1,6 +1,7 @@
 """Transformers for dataframes.
 
-This module contains transformers for preprocessing data. Most operate on DataFrames and are named appropriately.
+This module contains transformers for preprocessing data. Most operate on
+DataFrames and are named appropriately.
 """
 import numpy as np
 import pandas as pd
@@ -10,12 +11,15 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler
 
+import healthcareai.common.categorical_levels as hcai_cats
+
 
 class DataFrameImputer(TransformerMixin):
     """
     Impute missing values in a dataframe.
 
-    Columns of dtype object or category (assumed categorical) are imputed with the mode (most frequent value in column).
+    Columns of dtype object or category (assumed categorical) are imputed with
+    the mode (most frequent value in column).
 
     Columns of other types (assumed continuous) are imputed with mean of column.
     """
@@ -105,29 +109,53 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
 
 
 class DataFrameCreateDummyVariables(TransformerMixin):
-    """Convert all categorical columns into dummy/indicator variables. Exclude given columns."""
+    """
+    Convert all categorical columns into dummy/indicator variables.
+
+    Exclude given columns.
+    """
 
     def __init__(self, excluded_columns=None):
-        """Instantiate the transformer."""
+        """Instantiate the transformer.
+
+        Args:
+            excluded_columns (list): Columns to exclude from dummification
+        """
         self.excluded_columns = excluded_columns
+        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
+
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(
+            X,
+            self.excluded_columns)
+
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
         """Transform the dataframe."""
-        # build a list of columns names
-        columns_to_dummify = list(X.select_dtypes(include=[object, 'category']).columns.values)
-
         # remove excluded columns (if they are still in the list)
+        columns_to_dummify = hcai_cats.get_categorical_column_names(
+            X,
+            self.excluded_columns)
+
+        # TODO try a select and apply here
         for column in columns_to_dummify:
-            if column in self.excluded_columns:
-                columns_to_dummify.remove(column)
+            if X[column].dtype == object:
+                # Convert to a category
+                # Note that the `==` works and `is` does not.
+
+                X[column] = X[column].astype(
+                    'category',
+                    categories=self.categorical_levels[column])
 
         # Create dummy variables
-        X = pd.get_dummies(X, columns=columns_to_dummify, drop_first=True, prefix_sep='.')
+        X = pd.get_dummies(
+            X,
+            columns=columns_to_dummify,
+            drop_first=True, prefix_sep='.')
 
         return X
 

@@ -1,8 +1,8 @@
 import unittest
 import pandas as pd
 
-import healthcareai.tests.helpers as helpers
 import healthcareai.trained_models.trained_supervised_model
+import healthcareai.trained_models.trained_supervised_model as tsm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.datasets as hcai_datasets
@@ -154,6 +154,101 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr)
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc_plot)
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
+
+    def test_add_missing_dummy_columns_full_of_zeros(self):
+        bad = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': [0, 1, 0, 1],
+        })
+
+        original = ['numeric', 'gender', 'foo']
+        result = tsm.fill_missing_dummy_columns(original, bad)
+
+        expected = {'numeric', 'gender', 'foo'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(expected, set(result.columns))
+        self.assertEqual(result.foo.unique(), 0)
+
+    def test_add_missing_dummy_columns_adds_none_if_all_exist(self):
+        bad = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': [0, 1, 0, 1],
+            'foo': [0, 1, 0, 0]
+        })
+
+        original = ['numeric', 'gender', 'foo']
+        result = tsm.fill_missing_dummy_columns(original, bad)
+
+        expected = {'numeric', 'gender', 'foo'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(expected, set(result.columns))
+        self.assertListEqual(list(result.foo.values), list(bad.foo.values))
+
+    def test_add_missing_prediction_column_exists(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': ['F', 'F', 'M', 'F'],
+            'ThirtyDayReadmitFLG': ['Y', 'N', 'Y', 'N']
+        })
+
+        result = self.trained_lr._add_prediction_column_if_missing(bad_df)
+        expected = {'numeric', 'gender', 'ThirtyDayReadmitFLG'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(set(result.columns), expected)
+        self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
+        self.assertListEqual(list(bad_df['gender']), list(result['gender']))
+        self.assertListEqual(list(bad_df['ThirtyDayReadmitFLG']), list(result['ThirtyDayReadmitFLG']))
+
+    def test_add_missing_prediction_column(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': ['F', 'F', 'M', 'F'],
+        })
+
+        result = self.trained_lr._add_prediction_column_if_missing(bad_df)
+        expected = {'numeric', 'gender', 'ThirtyDayReadmitFLG'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(set(result.columns), expected)
+        self.assertTrue(pd.isnull(result['ThirtyDayReadmitFLG']).all())
+        self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
+        self.assertListEqual(list(bad_df['gender']), list(result['gender']))
+
+    def test_missing_column_error(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender_female': ['F', 'F', 'M', 'F'],
+        })
+
+        # Assert real error is raised
+        self.assertRaises(
+            HealthcareAIError,
+            self.trained_lr._raise_missing_column_error,
+            bad_df)
+
+    def test_found_required_missing_columns(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender_female': ['F', 'F', 'M', 'F'],
+        })
+
+        expected_missing = set(self.prediction_df.columns) - set(bad_df.columns)
+
+        required, found, missing = self.trained_lr._found_required_and_missing_columns(
+            bad_df)
+
+        expected_found = {'numeric', 'gender_female'}
+        expected_required = {'A1CNBR', 'GenderFLG', 'LDLNBR',
+                             'PatientEncounterID',
+                             'ThirtyDayReadmitFLG', 'SystolicBPNBR'}
+
+        self.assertEqual(expected_found, found)
+        self.assertEqual(expected_required, required)
+        self.assertEqual(expected_missing, missing)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,21 +4,9 @@ This module contains filters for preprocessing data. Most operate on DataFrames 
 """
 
 from sklearn.base import TransformerMixin
-from pandas.core.frame import DataFrame
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-
-
-def validate_dataframe_input(possible_dataframe):
-    """Validate that input is a pandas dataframe and raise an error if it is not. Stays silent if it is."""
-    if is_dataframe(possible_dataframe) is False:
-        raise HealthcareAIError(
-            'This transformer requires a pandas dataframe and you passed in a {}'.format(type(possible_dataframe)))
-
-
-def is_dataframe(possible_dataframe):
-    """Return true if input is a pandas dataframe."""
-    return issubclass(DataFrame, type(possible_dataframe))
+from healthcareai.common.validators import validate_dataframe_input_for_transformer
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
@@ -34,7 +22,7 @@ class DataframeColumnSuffixFilter(TransformerMixin):
 
     def transform(self, x, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(x)
+        validate_dataframe_input_for_transformer(x)
 
         # Build a list that contains column names that do not end in 'DTS'
         filtered_column_names = [column for column in x.columns if not column.endswith('DTS')]
@@ -56,7 +44,7 @@ class DataFrameColumnDateTimeFilter(TransformerMixin):
 
     def transform(self, x, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(x)
+        validate_dataframe_input_for_transformer(x)
 
         # Select all data excluding datetime columns
         return x.select_dtypes(exclude=["datetime"])
@@ -75,7 +63,7 @@ class DataframeColumnRemover(TransformerMixin):
 
     def transform(self, X, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(X)
+        validate_dataframe_input_for_transformer(X)
         if self.columns_to_remove is None:
             # if there is no grain column, for example
             return X
@@ -101,7 +89,7 @@ class DataframeNullValueFilter(TransformerMixin):
 
     def transform(self, x, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(x)
+        validate_dataframe_input_for_transformer(x)
 
         subset = [c for c in x.columns if c not in self.excluded_columns]
 

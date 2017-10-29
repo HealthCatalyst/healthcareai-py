@@ -170,13 +170,20 @@ class AdvancedSupervisedModelTrainer(object):
         score_by_name = {}
 
         # Here is the default list of algorithms to try for the ensemble
-        # Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary
+        # Adding an ensemble method is as easy as adding a new key:value pair in
+        # the `model_by_name` dictionary
         if trained_model_by_name is None:
-            # TODO because these now all return TSMs it will be additionally slow by all the factor models.
-            # TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?
+            # TODO because these now all return TSMs it will be additionally
+            # TODO slow by all the factor models.
+            # TODO Could these be trained separately then after the best is
+            # TODO found, train the factor model and add to TSM?
             trained_model_by_name = {
-                'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
-                'Logistic Regression': self.logistic_regression(randomized_search=True),
+                'KNN': self.knn(
+                    randomized_search=True,
+                    scoring_metric=scoring_metric),
+                'Logistic Regression': self.logistic_regression(
+                    randomized_search=True,
+                    scoring_metric=scoring_metric),
                 'Random Forest Classifier': self.random_forest_classifier(
                     trees=200,
                     randomized_search=True,

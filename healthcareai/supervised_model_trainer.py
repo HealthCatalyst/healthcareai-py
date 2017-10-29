@@ -13,7 +13,7 @@ import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
 from healthcareai.advanced_supvervised_model_trainer import \
     AdvancedSupervisedModelTrainer
-from healthcareai.common.get_categorical_levels import get_categorical_levels
+from healthcareai.common.categorical_levels import calculate_categorical_frequencies
 
 
 class SupervisedModelTrainer(object):
@@ -76,10 +76,9 @@ class SupervisedModelTrainer(object):
         # Note: Missing numeric values are imputed in prediction. If we don't
         # impute, then some rows on the prediction
         # data frame will be removed, which results in missing predictions.
-        pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column,
-                                                grain_column, impute=impute)
-        prediction_pipeline = hcai_pipelines.full_pipeline(model_type,
-                                                           predicted_column,
+        pipeline = hcai_pipelines.full_pipeline(predicted_column, grain_column,
+                                                impute=impute)
+        prediction_pipeline = hcai_pipelines.full_pipeline(predicted_column,
                                                            grain_column,
                                                            impute=True)
 
@@ -90,7 +89,7 @@ class SupervisedModelTrainer(object):
 
         # Run the raw data through the data preparation pipeline
         clean_dataframe = pipeline.fit_transform(dataframe)
-        _ = prediction_pipeline.fit_transform(dataframe)
+        _ = prediction_pipeline.fit(dataframe)
 
         # Instantiate the advanced class
         self._advanced_trainer = AdvancedSupervisedModelTrainer(
@@ -108,7 +107,7 @@ class SupervisedModelTrainer(object):
         # Split the data into train and test
         self._advanced_trainer.train_test_split()
 
-        self._advanced_trainer.categorical_column_info = get_categorical_levels(
+        self._advanced_trainer.categorical_column_info = calculate_categorical_frequencies(
             dataframe=dataframe,
             columns_to_ignore=[grain_column, predicted_column])
 
