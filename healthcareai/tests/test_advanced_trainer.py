@@ -128,8 +128,10 @@ class TestLogisticRegression(unittest.TestCase):
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
 
-        self.classification_trainer.train_test_split(random_seed=0)
-        self.lr = self.classification_trainer.logistic_regression(randomized_search=False)
+        self.classification_trainer.train_test_split(random_seed=42)
+        self.lr = self.classification_trainer.logistic_regression(
+            scoring_metric='roc_auc',
+            randomized_search=False)
 
     def test_logistic_regression_no_tuning(self):
         self.assertIsInstance(self.lr, TrainedSupervisedModel)
