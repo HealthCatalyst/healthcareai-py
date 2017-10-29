@@ -30,16 +30,10 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
 
         np.random.seed(42)
         clean_regression_df = pipelines.full_pipeline(
-            REGRESSION,
-            REGRESION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(cls.df)
+            REGRESION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(cls.df)
 
         clean_classification_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(cls.df)
+            CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(cls.df)
 
         cls.regression_trainer = AdvancedSupervisedModelTrainer(
             clean_regression_df,
@@ -86,8 +80,8 @@ class TestRandomForestClassification(unittest.TestCase):
         df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
-                                           impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
+                                           GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
         self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
         self.trainer.train_test_split(random_seed=0)
 
@@ -109,11 +103,8 @@ class TestRandomForestClassification(unittest.TestCase):
         df = df_raw[['ThirtyDayReadmitFLG', 'SystolicBPNBR', 'LDLNBR']]
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
+                                           GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
         trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
 
         trainer.train_test_split()
@@ -129,11 +120,8 @@ class TestLogisticRegression(unittest.TestCase):
         df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
+                                           GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
 
         self.classification_trainer = AdvancedSupervisedModelTrainer(
             clean_df,
@@ -158,11 +146,8 @@ class TestBinaryClassificationMetricValidation(unittest.TestCase):
         self.df.drop(['PatientID'], axis=1, inplace=True)
 
         np.random.seed(42)
-        self.clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            CLASSIFICATION_PREDICTED_COLUMN,
-            GRAIN_COLUMN_NAME,
-            impute=True).fit_transform(self.df)
+        self.clean_df = pipelines.full_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
+                                                GRAIN_COLUMN_NAME, impute=True).fit_transform(self.df)
 
         self.classification_trainer = AdvancedSupervisedModelTrainer(
             self.clean_df,
@@ -210,11 +195,8 @@ class TestMulticlassMetricValidation(unittest.TestCase):
         # Drop uninformative columns
         df.drop(['target_str'], axis=1, inplace=True)
 
-        clean_df = pipelines.full_pipeline(
-            CLASSIFICATION,
-            'target_num',
-            'PatientID',
-            impute=True).fit_transform(df)
+        clean_df = pipelines.full_pipeline('target_num', 'PatientID',
+                                           impute=True).fit_transform(df)
 
         self.multiclass_trainer = AdvancedSupervisedModelTrainer(
             clean_df,

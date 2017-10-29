@@ -196,7 +196,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
         self.assertTrue(result.equals(expected))
 
-    def test_remembers_2_categories_multiple_rows_represent_single_class(self):
+    def test_remembers_two_unrepresented_categories(self):
         prediction_df = pd.DataFrame({
             'aa_outcome': [1, 5, 4],
             'binary': ['a', 'a', 'a'],
@@ -222,6 +222,74 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         print('expected\n\n', expected, '\n\nresult\n\n', result)
 
         self.assertTrue(result.equals(expected))
+
+    def test_none_represented(self):
+        pass
+        # self.assertTrue(False)
+
+    def test_remembers_all_unrepresented_categories(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'alphabet': ['t', 'r', 'y'],
+            'numeric': [1, 2, 1],
+        })
+
+        expected = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary.b': [0, 0, 0],
+            'alphabet.b': [0, 0, 0],
+            'alphabet.c': [0, 0, 0],
+            'alphabet.d': [0, 0, 0],
+            'alphabet.e': [0, 0, 0],
+            'alphabet.f': [0, 0, 0],
+            'alphabet.g': [0, 0, 0],
+            'alphabet.h': [0, 0, 0],
+            'alphabet.i': [0, 0, 0],
+            'alphabet.j': [0, 0, 0],
+            'alphabet.k': [0, 0, 0],
+            'alphabet.l': [0, 0, 0],
+            'alphabet.m': [0, 0, 0],
+            'alphabet.n': [0, 0, 0],
+            'alphabet.o': [0, 0, 0],
+            'alphabet.p': [0, 0, 0],
+            'alphabet.q': [0, 0, 0],
+            'alphabet.r': [0, 1, 0],
+            'alphabet.s': [0, 0, 0],
+            'alphabet.t': [1, 0, 0],
+            'alphabet.u': [0, 0, 0],
+            'alphabet.v': [0, 0, 0],
+            'alphabet.w': [0, 0, 0],
+            'alphabet.x': [0, 0, 0],
+            'alphabet.y': [0, 0, 1],
+            'alphabet.z': [0, 0, 0],
+            'numeric': [1, 2, 1],
+        })
+
+        for col in expected:
+            # pandas.get_dummies() outputs uint8
+            expected[col] = expected[col].astype('uint8')
+
+        # Then recast the oddballs back to int64
+        expected['aa_outcome'] = expected['aa_outcome'].astype('int64')
+        expected['numeric'] = expected['numeric'].astype('int64')
+
+        # TODO what about fit_transform?
+        dummifier = transformers.DataFrameCreateDummyVariables('aa_outcome').fit(self.train_df)
+        result = dummifier.transform(prediction_df)
+
+        # Sort each because column order matters for equality checks
+        expected = expected.sort_index(axis=1)
+        result = result.sort_index(axis=1)
+
+        self.assertListEqual(list(expected.columns), list(result.columns))
+
+        for col in expected:
+            # if not expected[col].equals(result[col]):
+            #     print('{} is not equivalent'.format(col))
+            pd.testing.assert_series_equal(expected[col], result[col])
+
+        pd.testing.assert_frame_equal(expected, result)
 
 
 class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
