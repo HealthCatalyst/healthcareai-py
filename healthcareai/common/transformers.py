@@ -164,7 +164,12 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         """Warn about unseen factors."""
         unseen = self._get_unseen_factors(X, col)
         if unseen:
-            print('Unseen: {}'.format(unseen))
+            print('Warning! The column "{}" contains a new category not seen '
+                  'in training data: "{}". Because this was not present in the '
+                  'training data, the model cannot use it so it will be '
+                  'replaced with the most common value (the mode).'.format(
+                col,
+                unseen))
 
     def _warn_about_unrepresented_factors(self, X, col):
         """Warn about unrepresented factors."""
@@ -173,7 +178,15 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             print('Unrepresented: {}'.format(unrepresented))
 
     def _get_unseen_factors(self, X, column):
-        """Categorical factors unseen in fit found in transform as a set."""
+        """
+        Categorical factors unseen in fit found in transform as a set.
+
+        During training, all known factors for each categorical column are
+        saved to help dummification. When new data flows into the model for
+        predictions, it is possible that new categories exist. Without
+        re-training the model, this additional information is not predictive
+        since the model has not seen the factors before.
+        """
         expected, found = self._calculate_found_and_expected_factors(X, column)
         return found - expected
 

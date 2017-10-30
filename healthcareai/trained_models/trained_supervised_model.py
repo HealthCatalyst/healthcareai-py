@@ -212,6 +212,8 @@ class TrainedSupervisedModel(object):
 
         Run the raw dataframe through the saved pipeline and return a dataframe
         that contains only the columns that were in the original model.
+
+        This also checks for and warns about unseen factors.
         
         This prevents any unexpected changes to incoming columns from
         interfering with the predictions.
@@ -231,16 +233,11 @@ class TrainedSupervisedModel(object):
             else:
                 subset_df = dataframe.copy()
         except KeyError as ke:
-            # Raise an error because required training columns are missing!
+            # Required training columns are missing!
             self._raise_missing_column_error(dataframe)
-
-        # TODO should this be in the data prep pipeline?
-        self._check_for_unseen_categorical_factors(dataframe, subset_df)
 
         # Run the saved data preparation pipeline
         result = self.fit_pipeline.transform(subset_df)
-
-        result = fill_missing_dummy_columns(self.column_names, result)
 
         # Subset the dataframe original columns present during training
         result = result[self.column_names]
@@ -309,41 +306,6 @@ class TrainedSupervisedModel(object):
             dataframe[self.prediction_column] = np.NaN
 
         return dataframe
-
-    def _check_for_unseen_categorical_factors(self, raw_df, df2):
-        """
-        Checks each known categorical column for unseen factors.
-
-        During training, all known factors for each categorical column are
-        saved to help dummification. When new data flows into the model for
-        predictions, it is possible that new categories exist. Without
-        re-training the model, this additional information is not predictive
-        since the model has not seen the factors before. Therefore, a warning
-        is printed to the console alerting the user.
-
-        Args:
-            raw_df:
-            df2:
-        """
-        if self.categorical_column_info:
-            for column in self.categorical_column_info:
-                col_categories = self.categorical_column_info[column].index
-                # Change the dtype of the categorical columns in the prediction
-                # dataframe to 'category' with levels determined by the training
-                # data before running the data preparation pipeline
-                df2[column] = df2[column].astype('category',
-                                                 categories=col_categories)
-                # Check whether the prediction data contains categories not
-                # present in the training set.
-                incoming_values = {v for v in raw_df[column].unique()}
-                model_value_set = {v for v in col_categories}
-                unseen_values = incoming_values - model_value_set
-
-                if unseen_values:
-                    # Warn that these new factors will be dropped and imputed
-                    category_message = """Column {} contains levels not seen in the training set. These levels have
-                        been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
-                    print(category_message.format(column, unseen_values))
 
     def make_factors(self, dataframe, number_top_features=3):
         """
@@ -907,27 +869,3 @@ def _confusion_matrix_text_color(normalize, value, threshold):
         return 'black'
 
     return 'white' if value > threshold else 'black'
-
-
-def fill_missing_dummy_columns(dummy_columns, dataframe, fill=0):
-    """
-    Create missing dummy columns and initialize with zeros.
-
-    Args:
-        dummy_columns (list):
-        dataframe (pandas.core.frame.DataFrame):
-        fill:
-
-    Returns:
-
-    """
-    original = set(dummy_columns)
-    incoming = set(dataframe.columns)
-    missing = original - incoming
-
-    result = dataframe.copy()
-
-    for x in missing:
-        result[x] = fill
-
-    return result

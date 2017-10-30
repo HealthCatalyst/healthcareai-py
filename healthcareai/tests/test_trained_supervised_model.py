@@ -155,36 +155,31 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc_plot)
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
 
-    def test_add_missing_dummy_columns_full_of_zeros(self):
-        bad = pd.DataFrame({
-            'numeric': [0, 1, 2, 3],
-            'gender': [0, 1, 0, 1],
+    def test_predictions_work_with_unseen_factors(self):
+        """Note this relies on the current mode as missing value imputation."""
+        bad_data = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'A1CNBR': [8.9, 8.9, 6],
+            'LDLNBR': [110, 110, 250],
+            'SystolicBPNBR': [85, 85, 122],
+            'GenderFLG': ['Nonbinary', 'Other', 'M']
         })
 
-        original = ['numeric', 'gender', 'foo']
-        result = tsm.fill_missing_dummy_columns(original, bad)
-
-        expected = {'numeric', 'gender', 'foo'}
-
-        self.assertIsInstance(result, pd.core.frame.DataFrame)
-        self.assertEqual(expected, set(result.columns))
-        self.assertEqual(result.foo.unique(), 0)
-
-    def test_add_missing_dummy_columns_adds_none_if_all_exist(self):
-        bad = pd.DataFrame({
-            'numeric': [0, 1, 2, 3],
-            'gender': [0, 1, 0, 1],
-            'foo': [0, 1, 0, 0]
+        good_data = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'A1CNBR': [8.9, 8.9, 6],
+            'LDLNBR': [110, 110, 250],
+            'SystolicBPNBR': [85, 85, 122],
+            'GenderFLG': ['F', 'F', 'M']
         })
 
-        original = ['numeric', 'gender', 'foo']
-        result = tsm.fill_missing_dummy_columns(original, bad)
+        preds_bad = self.trained_lr.make_predictions(bad_data)
+        preds_good = self.trained_lr.make_predictions(good_data)
 
-        expected = {'numeric', 'gender', 'foo'}
+        print(preds_bad)
+        print(preds_good)
 
-        self.assertIsInstance(result, pd.core.frame.DataFrame)
-        self.assertEqual(expected, set(result.columns))
-        self.assertListEqual(list(result.foo.values), list(bad.foo.values))
+        pd.testing.assert_frame_equal(preds_bad, preds_good)
 
     def test_add_missing_prediction_column_exists(self):
         bad_df = pd.DataFrame({
