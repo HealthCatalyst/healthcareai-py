@@ -19,6 +19,9 @@ def calculate_categorical_frequencies(dataframe, columns_to_ignore=None):
 
     Returns:
         dict: a dictionary of dataframes containing level frequencies by column
+
+    Raises:
+        HealthcareAIError: input not a dataframe
     """
     validate_dataframe_input_for_method(dataframe)
 
@@ -47,6 +50,9 @@ def get_categorical_column_names(dataframe, ignore=None):
 
     Returns:
         list: a list of categorical column names
+
+    Raises:
+        HealthcareAIError: input not a dataframe
     """
     validate_dataframe_input_for_method(dataframe)
 
@@ -74,7 +80,7 @@ def get_categorical_levels_by_column(dataframe, ignore=None):
         dict: a list of category levels by column name key
 
     Raises:
-        HealthcareAIError
+        HealthcareAIError: input not a dataframe
     """
     validate_dataframe_input_for_method(dataframe)
 
@@ -87,6 +93,29 @@ def get_categorical_levels_by_column(dataframe, ignore=None):
         levels_by_column[col] = list(dataframe[col].cat.categories)
 
     return levels_by_column
+
+
+def get_categorical_mode_by_column(dataframe):
+    """
+    Get mode of each categorical column in a dataframe.
+
+    Args:
+        dataframe (pandas.core.frames.DataFrame): input dataframe
+
+    Returns:
+        dict: modes by column name
+
+    Raises:
+        HealthcareAIError: input not a dataframe
+    """
+    validate_dataframe_input_for_method(dataframe)
+
+    mode_by_column = {}
+
+    for column in dataframe.select_dtypes(include=['category', object]):
+        mode_by_column[column] = dataframe[column].value_counts().index[0]
+
+    return mode_by_column
 
 
 def _calculate_column_value_distribution_ratios(dataframe, column):

@@ -1,12 +1,13 @@
 import string
 import unittest
+
 import pandas as pd
 import random
 
 from healthcareai.common.categorical_levels import \
-    calculate_categorical_frequencies, \
     _calculate_column_value_distribution_ratios, _sort_value_counts_by_index, \
-    get_categorical_column_names, get_categorical_levels_by_column
+    calculate_categorical_frequencies, get_categorical_column_names, \
+    get_categorical_levels_by_column, get_categorical_mode_by_column
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -385,6 +386,44 @@ class TestColumnValueDistribution(unittest.TestCase):
 
         expected = [1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6]
         self.assertListEqual(expected, list(results))
+
+
+class TestCategoricalModesByColumn(unittest.TestCase):
+    def test_raise_error_on_bad_inputs(self):
+        for foo in ['bar', None, [1, 2], {'stuff': 33}]:
+            self.assertRaises(
+                HealthcareAIError,
+                get_categorical_mode_by_column,
+                foo)
+
+    def test_get_categorical_mode_by_column(self):
+        foo = pd.DataFrame({
+            'mostly_a': ['a', 'a', 'b', 'a', 'a', 'b'],
+            'foo': [None, 'x', 'y', 'x', 'z', 'x'],
+            'a_first': ['a', 'a', 'a', 'b', 'b', 'b'],
+            'b_first': ['b', 'b', 'b', 'a', 'a', 'a'],
+            'location': ['ICU', 'ICU', 'PACU', 'MEDSURGE', 'MEDSURGE', 'ICU']
+        })
+
+        expected = {
+            'mostly_a': 'a',
+            'foo': 'x',
+            'a_first': ['a', 'b'],
+            'b_first': ['a', 'b'],
+            'location': 'ICU'
+        }
+
+        result = get_categorical_mode_by_column(foo)
+        self.assertIsInstance(result, dict)
+
+        for k in ['a_first', 'b_first']:
+            self.assertTrue(result[k] in expected[k])
+            # Delete these keys: modes of equal counts order indeterminately
+            del result[k]
+            del expected[k]
+
+        # ...then compare the entire dict
+        self.assertDictEqual(expected, result)
 
 
 class TestSortByValue(unittest.TestCase):
