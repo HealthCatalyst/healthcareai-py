@@ -175,13 +175,17 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 
 class TestDataFrameCreateDummyVariables(unittest.TestCase):
     def setUp(self):
-        self.alphabet = list(string.ascii_lowercase)
+        row_count = 100
+
+        # Build an array of the alphabet repeated up to n elements
+        self.alphabet = list(list(string.ascii_lowercase) * 100)
+        del self.alphabet[row_count:]
 
         self.train_df = pd.DataFrame({
-            'aa_outcome': range(26),
-            'binary': np.random.choice(['a', 'b', 'a'], 26),
+            'aa_outcome': range(row_count),
+            'binary': np.random.choice(['a', 'b', 'a'], row_count),
             'alphabet': self.alphabet,
-            'numeric': random.sample(range(1, 100), 26),
+            'numeric': random.sample(range(0, row_count), row_count),
         })
 
         self.train_df['binary'] = self.train_df['binary'].astype(
@@ -291,10 +295,91 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         })
 
         expected = _convert_all_columns_to_uint8(expected, ['aa_outcome', 'numeric'])
-
         result = self.dummifier.transform(prediction_df)
 
         _assert_dataframes_identical(expected, result)
+
+    def test_get_unseen_factors(self):
+        """binary column is as expected and alphabet column has new levels."""
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'b', 'a'],
+            'alphabet': ['Zebra', 'r', 'Automaton'],
+            'numeric': [1, 2, 1],
+        })
+
+        unseen_by_column = {
+            'binary': set(),
+            'alphabet': {'Zebra', 'Automaton'}}
+
+        for col, expected in unseen_by_column.items():
+            result = self.dummifier._get_unseen_factors(prediction_df, col)
+            self.assertIsInstance(result, set)
+            self.assertEqual(expected, result)
+
+    def test_get_unrepresented_factors(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4],
+            'binary': ['a', 'a', 'a'],
+            'alphabet': ['a', 'b', 'c'],
+            'numeric': [1, 2, 1],
+        })
+
+        partial_alphabet = set(string.ascii_lowercase) - {'a', 'b', 'c'}
+
+        unrepresented_by_column = {
+            'binary': {'b'},
+            'alphabet': partial_alphabet}
+
+        for col, expected in unrepresented_by_column.items():
+            result = self.dummifier._get_unrepresented_factors(prediction_df, col)
+            self.assertIsInstance(result, set)
+            self.assertEqual(expected, result)
+
+    def test_get_expected_factors_set(self):
+        expected = {
+            'binary': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase))
+        }
+
+        for col in self.train_df.select_dtypes(['category', object]):
+            result = self.dummifier._get_expected_factors_set(col)
+            self.assertIsInstance(result, set)
+            self.assertEqual(expected[col], result)
+
+    def test_get_unique_factors_set(self):
+        expected = {
+            'binary': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase))
+        }
+
+        for col in self.train_df.select_dtypes(['category', object]):
+            result = self.dummifier._get_unique_factors_set(self.train_df, col)
+            self.assertIsInstance(result, set)
+            self.assertEqual(expected[col], result)
+
+    def test_calculate_found_and_expected_factors(self):
+        prediction_df = pd.DataFrame({
+            'aa_outcome': [1, 5, 4, 99],
+            'binary': ['a', 'a', 'a', 'UNSEEN'],
+            'alphabet': ['a', 'b', 'c', 'Zebra'],
+            'numeric': [1, 2, 1, 3],
+        })
+
+        expected_expected_by_column = {
+            'binary': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase))}
+
+        expected_found_by_column = {
+            'binary': {'a', 'UNSEEN'},
+            'alphabet': {'a', 'b', 'c', 'Zebra'}}
+
+        for col in self.train_df.select_dtypes(['category', object]):
+            result_expected, result_found = self.dummifier._calculate_found_and_expected_factors(prediction_df, col)
+            self.assertIsInstance(result_expected, set)
+            self.assertIsInstance(result_found, set)
+            self.assertEqual(expected_expected_by_column[col], result_expected)
+            self.assertEqual(expected_found_by_column[col], result_found)
 
     def test_remembers_all_unrepresented_categories(self):
         prediction_df = pd.DataFrame({

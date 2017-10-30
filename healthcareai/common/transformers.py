@@ -142,14 +142,15 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             self.excluded_columns)
 
         # TODO try a select and apply here
-        for column in columns_to_dummify:
-            if X[column].dtype == object:
-                # Convert to a category
+        for col in columns_to_dummify:
+            if X[col].dtype == object:
                 # Note that the `==` works and `is` does not.
-
-                X[column] = X[column].astype(
+                # Convert to a category
+                X[col] = X[col].astype(
                     'category',
-                    categories=self.categorical_levels[column])
+                    categories=self.categorical_levels[col])
+
+                self._warn_about_unseen_factors(X, col)
 
         # Create dummy variables
         X = pd.get_dummies(
@@ -158,6 +159,44 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             drop_first=True, prefix_sep='.')
 
         return X
+
+    def _warn_about_unseen_factors(self, X, col):
+        """Warn about unseen factors."""
+        unseen = self._get_unseen_factors(X, col)
+        if unseen:
+            print('Unseen: {}'.format(unseen))
+
+    def _warn_about_unrepresented_factors(self, X, col):
+        """Warn about unrepresented factors."""
+        unrepresented = self._get_unrepresented_factors(X, col)
+        if unrepresented:
+            print('Unrepresented: {}'.format(unrepresented))
+
+    def _get_unseen_factors(self, X, column):
+        """Categorical factors unseen in fit found in transform as a set."""
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return found - expected
+
+    def _get_unrepresented_factors(self, X, column):
+        """Categorical factors present in fit and not in transform as a set."""
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return expected - found
+
+    def _calculate_found_and_expected_factors(self, X, column):
+        """Expected (fit) and found (transform) categorical factors as a set."""
+        expected = self._get_expected_factors_set(column)
+        found = self._get_unique_factors_set(X, column)
+
+        return expected, found
+
+    def _get_expected_factors_set(self, column):
+        """Expected (found when fit) categorical factors as a set."""
+        return set(self.categorical_levels[column])
+
+    @staticmethod
+    def _get_unique_factors_set(X, column):
+        """Factors in a column as a set."""
+        return set(X[column].unique())
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
