@@ -224,6 +224,9 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
             columns the model expects.
+
+        Raises:
+            HealthcareAIError: required training columns are missing.
         """
         dataframe = self._add_prediction_column_if_missing(dataframe)
 

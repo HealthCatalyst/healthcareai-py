@@ -135,22 +135,33 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        """Transform the dataframe."""
-        # remove excluded columns (if they are still in the list)
+        """
+        Convert categorical columns to dummy/indicator columns.
+
+        Check all object and non-excluded categorical columns for unseen
+        factors. Convert all of these to category with the categories found in
+        the `.fit()` phase.
+
+        Categories found in the `.transform()` phase that did not exist in the
+        data used to `.fit()` this transformer will be removed, and replaced
+        with the most common category (the mode).
+        """
         columns_to_dummify = hcai_cats.get_categorical_column_names(
             X,
             self.excluded_columns)
 
-        # TODO try a select and apply here
         for col in columns_to_dummify:
-            if X[col].dtype == object:
-                # Note that the `==` works and `is` does not.
-                # Convert to a category
-                X[col] = X[col].astype(
-                    'category',
-                    categories=self.categorical_levels[col])
+            self._warn_about_unseen_factors(X, col)
 
-                self._warn_about_unseen_factors(X, col)
+            # Convert both object and category to object then category to force
+            # unseen levels out of category type columns. Low tech hack.
+            # There's probably a more elegant pandas way of doing this.
+            temp_object = X[col].astype(object)
+
+            # TODO nans are being inserted for categories that are unseen. Mode!
+            X[col] = temp_object.astype(
+                'category',
+                categories=self.categorical_levels[col])
 
         # Create dummy variables
         X = pd.get_dummies(

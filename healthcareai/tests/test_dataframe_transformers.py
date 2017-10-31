@@ -58,7 +58,7 @@ def _assert_dataframes_identical(expected, result):
 
 
 class TestDataframeImputer(unittest.TestCase):
-    def test_imputation_false_returns_unmodified(self):
+    def test_false_returns_unmodified(self):
         df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
@@ -77,7 +77,7 @@ class TestDataframeImputer(unittest.TestCase):
         self.assertEqual(len(result), 4)
         _assert_dataframes_identical(expected, result)
 
-    def test_imputation_removes_nans(self):
+    def test_removes_nans(self):
         df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
@@ -98,7 +98,7 @@ class TestDataframeImputer(unittest.TestCase):
         self.assertFalse(result.isnull().values.any())
         _assert_dataframes_identical(expected, result)
 
-    def test_imputation_removes_nones(self):
+    def test_removes_nones(self):
         df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
@@ -118,7 +118,7 @@ class TestDataframeImputer(unittest.TestCase):
 
         _assert_dataframes_identical(expected, result)
 
-    def test_imputation_for_mean_of_numeric_and_mode_for_categorical(self):
+    def test_for_mean_of_numeric_and_mode_for_object(self):
         df = pd.DataFrame([
             ['a', 1, 2],
             ['b', 1, 1],
@@ -181,90 +181,122 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         self.alphabet = list(list(string.ascii_lowercase) * 100)
         del self.alphabet[row_count:]
 
+        # build a dataframe with a object and category types
         self.train_df = pd.DataFrame({
-            'aa_outcome': range(row_count),
-            'binary': np.random.choice(['a', 'b', 'a'], row_count),
+            'id': range(row_count),
+            'binary': np.random.choice(['a', 'b'], row_count, p=[.75, .25]),
             'alphabet': self.alphabet,
             'numeric': random.sample(range(0, row_count), row_count),
+            'color': np.random.choice(
+                ['red', 'green', 'blue'],
+                row_count,
+                p=[.1, .6, .3])
         })
 
+        # Create a few categorical columns from object columns to ensure that
+        # both types work
+        self.train_df['binary_cat'] = self.train_df['binary'].astype('category')
         self.train_df['binary'] = self.train_df['binary'].astype(
             'category',
             categories=['a', 'b'])
+        self.train_df['color_cat'] = self.train_df['color'].astype(
+            'category',
+            categories=['red', 'green', 'blue'])
 
-        self.dummifier = transformers.DataFrameCreateDummyVariables('aa_outcome').fit(self.train_df)
+        # sanity check that 'green' is the most common color
+        self.assertEqual(self.train_df['color_cat'].value_counts().index[0], 'green')
 
-    def test_binary_categorical(self):
+        self.dummifier = transformers.DataFrameCreateDummyVariables('id').fit(self.train_df)
+
+    def test_binary_object_and_category(self):
         df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'b', 'a'],
+            'binary_cat': ['a', 'b', 'a'],
             'numeric': [1, 2, 1],
         })
+        df['binary_cat'] = df['binary_cat'].astype('category')
+
         expected = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary.b': [0, 1, 0],
+            'binary_cat.b': [0, 1, 0],
             'numeric': [1, 2, 1],
         })
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary.b': 'uint8'})
+        expected = expected.astype({
+            'binary.b': 'uint8',
+            'binary_cat.b': 'uint8',
+        })
 
         fit_dummifier = transformers.DataFrameCreateDummyVariables(
-            'aa_outcome').fit(df)
+            'id').fit(df)
 
         result = fit_dummifier.transform(df)
 
         _assert_dataframes_identical(expected, result)
 
-    def test_three_categorical(self):
+    def test_three_object_and_category(self):
         df = pd.DataFrame({
             'trinary': ['a', 'b', 'c'],
-            'aa_outcome': [1, 5, 4]
-        })
+            'trinary_cat': ['a', 'b', 'c'],
+            'id': [1, 5, 4]})
+        df.trinary_cat = df.trinary_cat.astype('category')
+
         expected = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'trinary.b': [0, 1, 0],
-            'trinary.c': [0, 0, 1]
-        })
+            'trinary.c': [0, 0, 1],
+            'trinary_cat.b': [0, 1, 0],
+            'trinary_cat.c': [0, 0, 1]})
 
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'trinary.b': 'uint8', 'trinary.c': 'uint8'})
+        expected = expected.astype({
+            'trinary.b': 'uint8',
+            'trinary.c': 'uint8',
+            'trinary_cat.b': 'uint8',
+            'trinary_cat.c': 'uint8'})
 
         result = transformers.DataFrameCreateDummyVariables(
-            'aa_outcome').fit_transform(df)
+            'id').fit_transform(df)
 
         _assert_dataframes_identical(expected, result)
 
-    def test_remembers_two_unrepresented_categories(self):
+    def test_remembers_unrepresented_categories(self):
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'a', 'a'],
+            'binary_cat': ['a', 'a', 'a'],
             'numeric': [1, 2, 1],
         })
+        prediction_df['binary_cat'] = prediction_df['binary_cat'].astype('category')
 
         expected = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary.b': [0, 0, 0],
+            'binary_cat.b': [0, 0, 0],
             'numeric': [1, 2, 1],
         })
         # cast as uint8 which the pandas.get_dummies() outputs
-        expected = expected.astype({'binary.b': 'uint8'})
+        expected = expected.astype({
+            'binary.b': 'uint8',
+            'binary_cat.b': 'uint8'})
 
-        trained = transformers.DataFrameCreateDummyVariables('aa_outcome') \
-            .fit(self.train_df)
+        trained = transformers.DataFrameCreateDummyVariables('id').fit(self.train_df)
         result = trained.transform(prediction_df)
 
         _assert_dataframes_identical(expected, result)
 
     def test_none_represented(self):
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'a', 'a'],
             'alphabet': [None, None, None],
             'numeric': [1, 2, 1],
         })
 
         expected = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary.b': [0, 0, 0],
             'alphabet.b': [0, 0, 0],
             'alphabet.c': [0, 0, 0],
@@ -294,7 +326,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
             'numeric': [1, 2, 1],
         })
 
-        expected = _convert_all_columns_to_uint8(expected, ['aa_outcome', 'numeric'])
+        expected = _convert_all_columns_to_uint8(expected, ['id', 'numeric'])
         result = self.dummifier.transform(prediction_df)
 
         _assert_dataframes_identical(expected, result)
@@ -302,7 +334,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
     def test_get_unseen_factors(self):
         """binary column is as expected and alphabet column has new levels."""
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'b', 'a'],
             'alphabet': ['Zebra', 'r', 'Automaton'],
             'numeric': [1, 2, 1],
@@ -319,7 +351,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
     def test_get_unrepresented_factors(self):
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'a', 'a'],
             'alphabet': ['a', 'b', 'c'],
             'numeric': [1, 2, 1],
@@ -339,7 +371,10 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
     def test_get_expected_factors_set(self):
         expected = {
             'binary': {'a', 'b'},
-            'alphabet': set(list(string.ascii_lowercase))
+            'binary_cat': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase)),
+            'color': {'red', 'green', 'blue'},
+            'color_cat': {'red', 'green', 'blue'},
         }
 
         for col in self.train_df.select_dtypes(['category', object]):
@@ -350,7 +385,10 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
     def test_get_unique_factors_set(self):
         expected = {
             'binary': {'a', 'b'},
-            'alphabet': set(list(string.ascii_lowercase))
+            'binary_cat': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase)),
+            'color': {'red', 'green', 'blue'},
+            'color_cat': {'red', 'green', 'blue'},
         }
 
         for col in self.train_df.select_dtypes(['category', object]):
@@ -360,19 +398,34 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
     def test_calculate_found_and_expected_factors(self):
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4, 99],
+            'id': [1, 5, 4, 99],
             'binary': ['a', 'a', 'a', 'UNSEEN'],
+            'binary_cat': ['a', 'a', 'a', 'UNSEEN'],
             'alphabet': ['a', 'b', 'c', 'Zebra'],
             'numeric': [1, 2, 1, 3],
+            'color': ['red', 'red', 'blue', 'SILVER_UNSEEN'],
+            'color_cat': ['red', 'red', 'blue', 'SILVER_UNSEEN'],
+        })
+        prediction_df = prediction_df.astype({
+            'binary_cat': 'category',
+            'color_cat': 'category',
         })
 
         expected_expected_by_column = {
             'binary': {'a', 'b'},
-            'alphabet': set(list(string.ascii_lowercase))}
+            'binary_cat': {'a', 'b'},
+            'alphabet': set(list(string.ascii_lowercase)),
+            'color': {'red', 'green', 'blue'},
+            'color_cat': {'red', 'green', 'blue'},
+        }
 
         expected_found_by_column = {
             'binary': {'a', 'UNSEEN'},
-            'alphabet': {'a', 'b', 'c', 'Zebra'}}
+            'binary_cat': {'a', 'UNSEEN'},
+            'alphabet': {'a', 'b', 'c', 'Zebra'},
+            'color': {'red', 'blue', 'SILVER_UNSEEN'},
+            'color_cat': {'red', 'blue', 'SILVER_UNSEEN'},
+        }
 
         for col in self.train_df.select_dtypes(['category', object]):
             result_expected, result_found = self.dummifier._calculate_found_and_expected_factors(prediction_df, col)
@@ -383,14 +436,14 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
     def test_remembers_all_unrepresented_categories(self):
         prediction_df = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary': ['a', 'a', 'a'],
             'alphabet': ['t', 'r', 'y'],
             'numeric': [1, 2, 1],
         })
 
         expected = pd.DataFrame({
-            'aa_outcome': [1, 5, 4],
+            'id': [1, 5, 4],
             'binary.b': [0, 0, 0],
             'alphabet.b': [0, 0, 0],
             'alphabet.c': [0, 0, 0],
@@ -420,7 +473,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
             'numeric': [1, 2, 1],
         })
 
-        expected = _convert_all_columns_to_uint8(expected, ['aa_outcome', 'numeric'])
+        expected = _convert_all_columns_to_uint8(expected, ['id', 'numeric'])
 
         result = self.dummifier.transform(prediction_df)
 
@@ -469,7 +522,6 @@ class TestDataframeUnderSampler(unittest.TestCase):
                                 })
 
         self.result = transformers.DataFrameUnderSampling('at_risk', random_seed=42).fit_transform(self.df)
-        print(self.result.head())
 
     def test_returns_dataframe(self):
         self.assertTrue(isinstance(self.result, pd.DataFrame))
@@ -504,8 +556,6 @@ class TestDataframeOverSampler(unittest.TestCase):
                                 })
 
         self.result = transformers.DataFrameOverSampling('at_risk', random_seed=42).fit_transform(self.df)
-        # print(self.df.head(10))
-        # print(self.result.head(12))
 
     def test_returns_dataframe(self):
         self.assertTrue(isinstance(self.result, pd.DataFrame))
@@ -526,8 +576,6 @@ class TestDataframeOverSampler(unittest.TestCase):
         true_count = value_counts[1]
         false_count = value_counts[0]
 
-        # print('True Counts: {} --> {}, False Counts: {} --> {}'.format(original_true_count, true_count,
-        #                                                                original_false_count, false_count))
         self.assertEqual(true_count, false_count)
 
 
