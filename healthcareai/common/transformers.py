@@ -27,24 +27,21 @@ class DataFrameImputer(TransformerMixin):
     def __init__(self, impute=True):
         """Instantiate the transformer."""
         self.impute = impute
-        self.object_columns = None
         self.fill = None
+        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
-        # Return if not imputing
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(X)
+
         if self.impute is False:
+            # Return if not imputing
             return self
 
-        # Grab list of object column names before doing imputation
-        self.object_columns = X.select_dtypes(include=['object']).columns.values
+        self.fill = self._calculate_imputed_filler_row(X)
 
-        self.fill = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
-                               else X[c].mean() for c in X], index=X.columns)
-
-        num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
-        num_total = sum(X.select_dtypes(include=[np.number]).count())
+        num_nans = sum(X.select_dtypes(include=[np.number, 'category', object]).isnull().sum())
+        num_total = sum(X.select_dtypes(include=[np.number, 'category', object]).count())
         percentage_imputed = num_nans / num_total * 100
 
         print("Percentage Imputed: {}%".format(percentage_imputed))
@@ -53,20 +50,83 @@ class DataFrameImputer(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        """Transform the dataframe."""
-        # Return if not imputing
+        """Fill in missing values."""
+
         if self.impute is False:
+            # Return if not imputing
             return X
+
+        # for col in X:
+        #     self._warn_about_unseen_factors(X, col)
 
         result = X.fillna(self.fill)
 
-        for i in self.object_columns:
-            # NOte numpy is not aware of dtype 'category' so you need to use
-            # np.str_
-            if result[i].dtype not in ['object', np.str_]:
-                result[i] = result[i].astype('object')
+        return result
+
+    @staticmethod
+    def _calculate_imputed_filler_row(X):
+        """
+        Create a filler row numeric column means and categorical modes.
+
+        Returns:
+            pd.core.series.Series: A row to be used as filler.
+        """
+        result = pd.Series([X[c].value_counts().index[0]
+                               if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
+                               else X[c].mean() for c in X], index=X.columns)
 
         return result
+
+    def _warn_about_unseen_factors(self, X, col):
+        """Warn about unseen factors."""
+        unseen = self._get_unseen_factors(X, col)
+        if unseen:
+            print('Warning! The column "{}" contains a new category not seen '
+                  'in training data: "{}". Because this was not present in the '
+                  'training data, the model cannot use it so it will be '
+                  'replaced with the most common value (the mode).'.format(
+                col,
+                unseen))
+
+    def _warn_about_unrepresented_factors(self, X, col):
+        """Warn about unrepresented factors."""
+        unrepresented = self._get_unrepresented_factors(X, col)
+        if unrepresented:
+            print('Unrepresented: {}'.format(unrepresented))
+
+    def _get_unseen_factors(self, X, column):
+        """
+        Categorical factors unseen in fit found in transform as a set.
+
+        During training, all known factors for each categorical column are
+        saved to help dummification. When new data flows into the model for
+        predictions, it is possible that new categories exist. Without
+        re-training the model, this additional information is not predictive
+        since the model has not seen the factors before.
+        """
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return found - expected
+
+    def _get_unrepresented_factors(self, X, column):
+        """Categorical factors present in fit and not in transform as a set."""
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return expected - found
+
+    def _calculate_found_and_expected_factors(self, X, column):
+        """Expected (fit) and found (transform) categorical factors as a set."""
+        expected = self._get_expected_factors_set(column)
+        found = self._get_unique_factors_set(X, column)
+
+        return expected, found
+
+    def _get_expected_factors_set(self, column):
+        """Expected (found when fit) categorical factors as a set."""
+        return set(self.categorical_levels[column])
+
+    @staticmethod
+    def _get_unique_factors_set(X, column):
+        """Factors in a column as a set."""
+        return set(X[column].unique())
 
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
@@ -122,15 +182,9 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             excluded_columns (list): Columns to exclude from dummification
         """
         self.excluded_columns = excluded_columns
-        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
-
-        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(
-            X,
-            self.excluded_columns)
-
         # return self for scikit compatibility
         return self
 
@@ -171,56 +225,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
 
         return X
 
-    def _warn_about_unseen_factors(self, X, col):
-        """Warn about unseen factors."""
-        unseen = self._get_unseen_factors(X, col)
-        if unseen:
-            print('Warning! The column "{}" contains a new category not seen '
-                  'in training data: "{}". Because this was not present in the '
-                  'training data, the model cannot use it so it will be '
-                  'replaced with the most common value (the mode).'.format(
-                col,
-                unseen))
 
-    def _warn_about_unrepresented_factors(self, X, col):
-        """Warn about unrepresented factors."""
-        unrepresented = self._get_unrepresented_factors(X, col)
-        if unrepresented:
-            print('Unrepresented: {}'.format(unrepresented))
-
-    def _get_unseen_factors(self, X, column):
-        """
-        Categorical factors unseen in fit found in transform as a set.
-
-        During training, all known factors for each categorical column are
-        saved to help dummification. When new data flows into the model for
-        predictions, it is possible that new categories exist. Without
-        re-training the model, this additional information is not predictive
-        since the model has not seen the factors before.
-        """
-        expected, found = self._calculate_found_and_expected_factors(X, column)
-        return found - expected
-
-    def _get_unrepresented_factors(self, X, column):
-        """Categorical factors present in fit and not in transform as a set."""
-        expected, found = self._calculate_found_and_expected_factors(X, column)
-        return expected - found
-
-    def _calculate_found_and_expected_factors(self, X, column):
-        """Expected (fit) and found (transform) categorical factors as a set."""
-        expected = self._get_expected_factors_set(column)
-        found = self._get_unique_factors_set(X, column)
-
-        return expected, found
-
-    def _get_expected_factors_set(self, column):
-        """Expected (found when fit) categorical factors as a set."""
-        return set(self.categorical_levels[column])
-
-    @staticmethod
-    def _get_unique_factors_set(X, column):
-        """Factors in a column as a set."""
-        return set(X[column].unique())
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
