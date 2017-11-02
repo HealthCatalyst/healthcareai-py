@@ -88,29 +88,39 @@ class DataframeNullValueFilter(TransformerMixin):
         return self
 
     def transform(self, x, y=None):
-        """Transform the dataframe."""
+        """
+        Transform the dataframe.
+
+        Raises:
+            HealthcareAIError: Help the user out on training if they left all
+            null columns in by telling them which to remove.
+        """
         validate_dataframe_input_for_transformer(x)
 
         subset = [c for c in x.columns if c not in self.excluded_columns]
 
-        # Help the user out on training if they left all null columns in by telling them which to remove
-        all_null_columns = []
-        for column in x.columns:
-            if x[column].isnull().all():
-                all_null_columns.append(column)
+        entirely_null_columns = []
+        for col in subset:
+            if x[col].isnull().all():
+                entirely_null_columns.append(col)
 
-        if all_null_columns:
+        if entirely_null_columns:
             raise HealthcareAIError(
-                'Warning! You are about to drop any rows that contain '
-                'any null values, you have {} column(s) that are entirely null. '
-                'Please consider removing the following columns: {}'.format(len(all_null_columns), all_null_columns))
+                'Warning! You are about to drop any rows that contain any '
+                'null values, you have {} column(s) that are entirely null. '
+                'Please consider removing the following columns: {}'.format(
+                    len(entirely_null_columns),
+                    entirely_null_columns))
 
         x.dropna(axis=0, how='any', inplace=True, subset=subset)
+        x.reset_index(drop=True, inplace=True)
 
         if x.empty:
             raise HealthcareAIError(
-                "Because imputation is set to False, rows with missing or null/NaN values are being dropped. "
-                "In this case, all rows contain null values and therefore were ALL dropped. "
-                "Please consider using imputation or assessing the data quality and availability")
+                "Because imputation is set to False, rows with missing or "
+                "null/NaN values are being dropped. In this case, all rows "
+                "contain null values and therefore were ALL dropped. Please "\
+                "consider using imputation or assessing the data quality and "
+                "availability.")
 
         return x

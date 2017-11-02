@@ -32,7 +32,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
 
         np.random.seed(42)
 
-        clean_classification_df = pipelines.full_pipeline(
+        clean_classification_df = pipelines.training_pipeline(
             CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME, impute=True).fit_transform(cls.df)
 
         cls.classification_trainer = AdvancedSupervisedModelTrainer(
@@ -63,8 +63,8 @@ class TestRandomForestClassification(unittest.TestCase):
         df.drop([COLUMNS_TO_REMOVE], axis=1, inplace=True)
 
         np.random.seed(42)
-        clean_df = pipelines.full_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
-                                           GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
+        clean_df = pipelines.training_pipeline(CLASSIFICATION_PREDICTED_COLUMN,
+                                               GRAIN_COLUMN_NAME, impute=True).fit_transform(df)
         self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
         self.trainer.train_test_split(random_seed=0)
 

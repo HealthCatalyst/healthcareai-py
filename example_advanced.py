@@ -48,7 +48,7 @@ def main():
     # Step 1: Prepare the data using optional imputation. There are two options for this:
 
     # ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
-    clean_training_dataframe = hcai_pipelines.full_pipeline(
+    clean_training_dataframe = hcai_pipelines.training_pipeline(
         'ThirtyDayReadmitFLG', 'PatientEncounterID', impute=True).fit_transform(dataframe)
 
     # ## Option 2: Build your own pipeline using healthcare.ai methods, your own, or a combination of either.

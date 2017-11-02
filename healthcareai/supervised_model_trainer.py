@@ -11,6 +11,7 @@ from contextlib import contextmanager
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
+import healthcareai.common.missing_target_check as hcai_target_check
 from healthcareai.advanced_supvervised_model_trainer import \
     AdvancedSupervisedModelTrainer
 from healthcareai.common.categorical_levels import calculate_categorical_frequencies
@@ -67,28 +68,33 @@ class SupervisedModelTrainer(object):
             grain_column (str): The name of the grain column
             binary_positive_label (str|int): Optional positive class label for binary classification tasks.
             verbose (bool): Set to true for verbose output. Defaults to False.
+
+        Raises:
+            HealthcareAIError: Target column contains missing data.
         """
         self.predicted_column = predicted_column
         self.grain_column = grain_column
         self.binary_positive_label = binary_positive_label
 
-        # Build the pipeline
-        # Note: Missing numeric values are imputed in prediction. If we don't
-        # impute, then some rows on the prediction
-        # data frame will be removed, which results in missing predictions.
-        pipeline = hcai_pipelines.full_pipeline(predicted_column, grain_column,
-                                                impute=impute)
-        prediction_pipeline = hcai_pipelines.full_pipeline(predicted_column,
-                                                           grain_column,
-                                                           impute=True)
+        hcai_target_check.missing_target_check(dataframe, predicted_column)
 
-        # Run a low and high cardinality check. Warn the user, and allow
-        # them to proceed.
+        # Low/high cardinality checks. Warn the user and allow them to proceed.
         hcai_ordinality.check_high_cardinality(dataframe, self.grain_column)
         hcai_ordinality.check_one_cardinality(dataframe)
 
-        # Run the raw data through the data preparation pipeline
-        clean_dataframe = pipeline.fit_transform(dataframe)
+        # Build the pipelines
+        # Note: Missing numeric values are imputed in prediction. If we didnt't
+        # impute, those rows would be dropped, resulting in missing predictions.
+        train_pipeline = hcai_pipelines.training_pipeline(
+            predicted_column,
+            grain_column,
+            impute=impute)
+        prediction_pipeline = hcai_pipelines.prediction_pipeline(
+            predicted_column,
+            grain_column)
+
+        # Fit both pipelines with the same raw data.
+        clean_dataframe = train_pipeline.fit_transform(dataframe)
         _ = prediction_pipeline.fit(dataframe)
 
         # Instantiate the advanced class
@@ -101,7 +107,7 @@ class SupervisedModelTrainer(object):
             binary_positive_label=self.binary_positive_label,
             verbose=verbose)
 
-        # Save the pipeline to the parent class
+        # Save the pipeline to the underlying advanced trainer
         self._advanced_trainer.pipeline = prediction_pipeline
 
         # Split the data into train and test

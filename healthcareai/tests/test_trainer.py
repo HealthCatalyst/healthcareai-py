@@ -143,6 +143,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         # Assert that the number of rows of prediction should be equal between df and model predictions
         self.assertEqual(len(trained_linear_model.make_predictions(prediction_df)), len(prediction_df))
 
+
 @contextmanager
 def captured_output():
     """

@@ -16,16 +16,21 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID'], axis=1, inplace=True)
+        reg_df = training_df.copy()
+        reg_df['SystolicBPNBR'].fillna(149, inplace=True)
 
         regression_trainer = SupervisedModelTrainer(
-            training_df,
+            reg_df,
             'SystolicBPNBR',
             'regression',
             impute=True,
             grain_column='PatientEncounterID')
 
+        cls_df = training_df.copy()
+        cls_df['ThirtyDayReadmitFLG'].fillna('N', inplace=True)
+
         classification_trainer = SupervisedModelTrainer(
-            training_df,
+            cls_df,
             'ThirtyDayReadmitFLG',
             'classification',
             impute=True,
@@ -64,6 +69,20 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             verbose=False)
 
         cls.multiclass_logistic_regression = cls.multiclass_trainer.logistic_regression()
+
+    def test_raise_error_on_missing_target_data(self):
+        df = hcai_datasets.load_diabetes()
+        # df.SystolicBPNBR.fillna(149, inplace=True)
+
+        self.assertRaises(
+            HealthcareAIError,
+            SupervisedModelTrainer,
+            df,
+            'SystolicBPNBR',
+            'regression',
+            impute=True,
+            grain_column='PatientEncounterID'
+        )
 
     def test_is_classification(self):
         self.assertTrue(self.trained_lr.is_classification)
@@ -156,30 +175,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
 
     def test_predictions_work_with_unseen_factors(self):
-        """Note this relies on the current mode as missing value imputation."""
+        """
+        This is awkward to test since it is unknown how NaNs will be predicted.
+
+        All we can really test is that a prediction came back.
+        """
         bad_data = pd.DataFrame({
             'PatientEncounterID': [555, 556, 557],
             'A1CNBR': [8.9, 8.9, 6],
             'LDLNBR': [110, 110, 250],
             'SystolicBPNBR': [85, 85, 122],
-            'GenderFLG': ['Nonbinary', 'Other', 'M']
-        })
-
-        good_data = pd.DataFrame({
-            'PatientEncounterID': [555, 556, 557],
-            'A1CNBR': [8.9, 8.9, 6],
-            'LDLNBR': [110, 110, 250],
-            'SystolicBPNBR': [85, 85, 122],
-            'GenderFLG': ['F', 'F', 'M']
+            'GenderFLG': ['Nonbinary', 'Other', 'M'],
+            'ThirtyDayReadmitFLG': [None, None, None]
         })
 
         preds_bad = self.trained_lr.make_predictions(bad_data)
-        preds_good = self.trained_lr.make_predictions(good_data)
 
-        print(preds_bad)
-        print(preds_good)
-
-        pd.testing.assert_frame_equal(preds_bad, preds_good)
+        self.assertIsInstance(preds_bad, pd.DataFrame)
 
     def test_add_missing_prediction_column_exists(self):
         bad_df = pd.DataFrame({
