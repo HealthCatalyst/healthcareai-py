@@ -1,7 +1,9 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
+from healthcareai.advanced_supvervised_model_trainer import _remove_nas_from_labels
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 import healthcareai.datasets as hcai_datasets
 
@@ -43,6 +45,34 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
         cls.classification_trainer = AdvancedSupervisedModelTrainer(
             clean_classification_df, CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
+
+    def test_remove_nones_from_series(self):
+        ser = pd.Series(['Y', 'N', 'Y', np.NaN, None])
+        expected = pd.Series(['Y', 'N', 'Y'])
+
+        result = _remove_nas_from_labels(ser)
+
+        self.assertIsInstance(result, pd.Series)
+        pd.testing.assert_series_equal(expected, result)
+
+    def test_remove_nones_from_numpy_array(self):
+        arr = np.array([1, 2, 3, np.NaN, None])
+        expected = np.array([1, 2, 3])
+
+        result = _remove_nas_from_labels(arr)
+
+        self.assertIsInstance(result, np.ndarray)
+        self.assertTrue(np.array_equal(expected, result))
+
+    def test_remove_nones_from_categorical(self):
+        """Assert return is an index"""
+        index = pd.Categorical(['Y', 'N', 'Maybe', np.NaN, None])
+        expected = pd.Index(['Maybe', 'N', 'Y'])
+
+        result = _remove_nas_from_labels(index)
+
+        self.assertIsInstance(result, pd.Index)
+        pd.testing.assert_index_equal(expected, result)
 
     def test_raises_error_on_unsupported_model_type(self):
         bad_type = 'foo'

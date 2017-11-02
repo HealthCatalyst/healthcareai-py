@@ -76,7 +76,7 @@ class DataframeColumnRemover(TransformerMixin):
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    """Remove rows that contain null values in any column except the excluded."""
+    """Remove any row containing null values not in the excluded columns."""
 
     def __init__(self, excluded_columns=None):
         """Instantiate the filter."""

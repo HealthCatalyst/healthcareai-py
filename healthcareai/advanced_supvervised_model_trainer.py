@@ -5,7 +5,7 @@ Provides users an advanced interface for machine learning.
 
 Less advanced users may use `SupervisedModelTrainer`
 """
-
+import pandas as pd
 import sklearn
 import numpy as np
 import time
@@ -23,6 +23,21 @@ from healthcareai.common.randomized_search import get_algorithm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
+
+
+def _remove_nas_from_labels(class_labels):
+    """Remove nans/nulls/Nones from class labels, regardless of type."""
+    if isinstance(class_labels, pd.core.series.Series):
+        class_labels = class_labels.dropna()
+    elif isinstance(class_labels, np.ndarray):
+        # np.isnan barfs on Nones. Change to NaNs
+        class_labels = np.array([np.nan if x is None else x for x in class_labels])
+        class_labels = class_labels[~np.isnan(class_labels)]
+    elif isinstance(class_labels, pd.Categorical):
+        # TODO this might reorder class labels and screw things up...
+        class_labels = class_labels.categories
+
+    return class_labels
 
 
 class AdvancedSupervisedModelTrainer(object):
@@ -106,6 +121,10 @@ class AdvancedSupervisedModelTrainer(object):
         """Get the class labels sorted alphabetically or numerically."""
         self.validate_classification()
         uniques = self.dataframe[self.predicted_column].unique()
+
+        # Guard against nulls in target column showing up here
+        uniques = _remove_nas_from_labels(uniques)
+
         return np.sort(uniques)
 
     @property

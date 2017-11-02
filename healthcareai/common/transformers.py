@@ -56,8 +56,8 @@ class DataFrameImputer(TransformerMixin):
             # Return if not imputing
             return X
 
-        # for col in X:
-        #     self._warn_about_unseen_factors(X, col)
+        for col in self.categorical_levels:
+            self._warn_about_unseen_factors(X, col)
 
         result = X.fillna(self.fill)
 
@@ -68,12 +68,15 @@ class DataFrameImputer(TransformerMixin):
         """
         Create a filler row numeric column means and categorical modes.
 
+        Numeric fields should be filled with the mean.
+
+        Categorical fields should be filled with NaN.
+
         Returns:
             pd.core.series.Series: A row to be used as filler.
         """
-        result = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
-                               else X[c].mean() for c in X], index=X.columns)
+        result = pd.Series([np.NaN if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
+                           else X[c].mean() for c in X], index=X.columns)
 
         return result
 
@@ -84,7 +87,7 @@ class DataFrameImputer(TransformerMixin):
             print('Warning! The column "{}" contains a new category not seen '
                   'in training data: "{}". Because this was not present in the '
                   'training data, the model cannot use it so it will be '
-                  'replaced with the most common value (the mode).'.format(
+                  'removed and encoded as unknown.'.format(
                 col,
                 unseen))
 
@@ -182,9 +185,14 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             excluded_columns (list): Columns to exclude from dummification
         """
         self.excluded_columns = excluded_columns
+        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(
+            X,
+            self.excluded_columns)
+
         # return self for scikit compatibility
         return self
 
@@ -205,8 +213,6 @@ class DataFrameCreateDummyVariables(TransformerMixin):
             self.excluded_columns)
 
         for col in columns_to_dummify:
-            self._warn_about_unseen_factors(X, col)
-
             # Convert both object and category to object then category to force
             # unseen levels out of category type columns. Low tech hack.
             # There's probably a more elegant pandas way of doing this.
@@ -221,11 +227,9 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         X = pd.get_dummies(
             X,
             columns=columns_to_dummify,
-            drop_first=True, prefix_sep='.')
+            drop_first=False, prefix_sep='.')
 
         return X
-
-
 
 
 class DataFrameConvertColumnToNumeric(TransformerMixin):
