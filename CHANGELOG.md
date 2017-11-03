@@ -18,7 +18,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     or plots `TrainedSupervisedModel.confusion_matrix_plot()`
 - `DataframeNullValueFilter` now raises a helpful error that identifies columns that are entirely null.
 - `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
+- 9 new sample healthcare data sets from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html).
 - Optional `binary_positive_label` argument for binary classification tasks
+- new categorical levels module saved during training for prediction pipelines
+- Prediction target column is checked for missing rows when creating a trainer.
+- New missing target module with tests.
+- Imputation transformer now warns users about unseen factors during prediction use.
+- `SupervisedModelTrainer` now has additional properties: `class_labels` and `number_of_classes`
+- new test helpers for robust dataframe and series equality assertions
 
 ### Changed
 
@@ -33,13 +40,20 @@ eliminated the need for .mdf fixtures on appveyor.
 prediction column. This can now be anything, and healthcareai tries to guess
 which is the positive class if it is not specified. Positive class is displayed
 in console output and on ROC/PR plots.
+- New imputation strategy around categorical variables with updated pipelines.
+- Removed categorical imputation, as we felt it inappropriate.
+- Consolidated validator functions into a module.
+- More robust transformers and filters with augmented testing.
+- Accuracy is default scoring metric for all classification tasks.
+- Decorators for `supervised_model_trainer` is now simplified, and debug option is no longer an option.
 
 ### Fixed
 
 - Feature importance plots now have a configurable limit to the amount of features they show with a default of 15.
 - Dataframe column filter handles None gracefully. For example, if no grain column is specified.
 - Getting started section of README vastly improved
-
+- Bug that was imputing prediction target data during trainig.
+- Predictions no longer fail when categorical factors present during training were missing in prediction.
 
 ### Deprecated
 

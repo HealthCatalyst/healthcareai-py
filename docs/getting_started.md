@@ -20,8 +20,7 @@
 - Run `conda install scipy`
 - Run `conda install scikit-learn`
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
-     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
-     2. Install the latest release with pip run `pip install healthcareai`
+     1. **Recommended:** Install the latest release with pip run `pip install healthcareai`
      3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 #### Why Anaconda?
@@ -39,15 +38,13 @@ You may need to install the following dependencies:
     - Note you'll might run into trouble with the `pyodbc` dependency. You may first need to run `sudo apt-get install unixodbc-dev` then retry `sudo pip install pyodbc`. Credit [stackoverflow](http://stackoverflow.com/questions/2960339/unable-to-install-pyodbc-on-linux)
 
 - Once you have the dependencies satisfied install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
-     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
-     2. Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
+     1. **Recommended:** Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
      3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 ### macOS
 
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
-     1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
-     2. Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
+     1. **Recommended:** Install the latest release with pip run `pip install healthcareai` or or `sudo pip install healthcareai`
      3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 #### macOS matplot issues

@@ -17,7 +17,7 @@ pages:
     - Working With Other Databases: databases.md
     - Compiling Python Files To An Executable: compile.md
     - Utilities: utilities.md
-    - Woking With Healthcare.ai in a Health Catalyst EDW: catalyst_edw_instructions.md
+    - Working With Healthcare.ai in a Health Catalyst EDW: catalyst_edw_instructions.md
     - Hints and Tips: hints.md
     - FAQ: FAQ.md
     - Architecture Overview For Developers: architecture_overview_for_developers.md

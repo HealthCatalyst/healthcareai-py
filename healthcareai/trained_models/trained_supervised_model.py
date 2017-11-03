@@ -163,7 +163,7 @@ class TrainedSupervisedModel(object):
 
     def make_predictions(self, dataframe):
         """
-        Given a new dataframe, apply data transformations and return a dataframe of predictions.
+        Apply data transformations and return a dataframe of predictions.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -174,10 +174,24 @@ class TrainedSupervisedModel(object):
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
+        y_predictions = None
+        y_probability = None
+        all_probabilities = None
+
         # make predictions returning probabity of a class or value of regression
-        if self.is_classification:
+        if self.is_binary_classification():
             # Only save the prediction of one of the two classes
             y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
+        elif self.is_classification:
+            # TODO This needs further thought. Should the prediction column
+            # TODO stay numeric and add an additional class object column?
+            # TODO fix all the tests
+            y_predictions = self.model.predict(prepared_dataframe)
+            all_probabilities = self.model.predict_proba(prepared_dataframe)
+
+            # retrieve the probability of the single predicted class label
+            all_probabilities = {k: v for k, v in zip(self.model.classes_, np.squeeze(all_probabilities))}
+            y_probability = all_probabilities[y_predictions[0]]
         elif self.is_regression:
             y_predictions = self.model.predict(prepared_dataframe)
         else:
@@ -187,17 +201,22 @@ class TrainedSupervisedModel(object):
         results = pd.DataFrame()
         results[self.grain_column] = dataframe[self.grain_column].values
         results['Prediction'] = y_predictions
+        results['Probability'] = y_probability
+        results['All Probabilities'] = str(all_probabilities)
 
         return results
 
     def prepare_and_subset(self, dataframe):
         """
-        Prepare and subset the raw data using the pipeline saved during training.
+        Prepare and subset the raw data using the saved pipeline.
 
-        Run the raw dataframe through the saved pipeline and return a dataframe that contains only the columns that were
-        in the original model.
+        Run the raw dataframe through the saved pipeline and return a dataframe
+        that contains only the columns that were in the original model.
+
+        This also checks for and warns about unseen factors.
         
-        This prevents any unexpected changes to incoming columns from interfering with the predictions.
+        This prevents any unexpected changes to incoming columns from
+        interfering with the predictions.
 
         Args:
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
@@ -205,46 +224,34 @@ class TrainedSupervisedModel(object):
         Returns:
             pandas.core.frame.DataFrame: A dataframe that has been run through the pipeline and subsetted to only the
             columns the model expects.
+
+        Raises:
+            HealthcareAIError: required training columns are missing.
         """
-        # We want to be able to make predictions on new data (without labels) so don't want to insist that the
-        # prediction column be present in the new data.  To get around this, add the prediction columns filled with
-        # NaNs.  This column should be dropped when the dataframe is run through the pipeline.
-        if self.prediction_column not in dataframe.columns.values \
-                and self.prediction_column in self.original_column_names:
-            dataframe[self.prediction_column] = np.NaN
+        dataframe = self._add_prediction_column_if_missing(dataframe)
 
         try:
-            # Raise an error here if any of the columns the model expects are not in the prediction dataframe
-            df2 = dataframe.copy()
             if self.original_column_names is not None:
-                df2 = df2[self.original_column_names]
-
-            # Change the dtype of the categorical columns in the prediction dataframe to 'category' with levels
-            # determined by the training data before running the data preparation pipeline
-            if self.categorical_column_info is not None:
-                for column in self.categorical_column_info:
-                    col_categories = self.categorical_column_info[column].index
-                    df2[column] = df2[column].astype('category', categories=col_categories)
-                    # Check whether the prediction data contains categories not present in the training set and print
-                    # a message warning that these new values will be dropped and imputed
-                    new_values = {v for v in dataframe[column].unique() if not (v in col_categories or pd.isnull(v))}
-                    if len(new_values) > 0:
-                        category_message = """Column {} contains levels not seen in the training set. These levels have
-                        been removed and will be imputed or the corresponding rows dropped.\nNew levels: {}"""
-                        print(category_message.format(column, new_values))
-
-            # Run the saved data preparation pipeline
-            prepared_dataframe = self.fit_pipeline.transform(df2)
-
-            # Subset the dataframe to only columns that were saved from the original model training
-            prepared_dataframe = prepared_dataframe[self.column_names]
+                subset_df = dataframe[self.original_column_names]
+            else:
+                subset_df = dataframe.copy()
         except KeyError as ke:
-            required_columns = self.column_names
-            found_columns = list(dataframe.columns)
-            # If a pre-dummified dataset is expected as the input, list the pre-dummified columns instead of the dummies
-            if not self.original_column_names is None:
-                required_columns = self.original_column_names
-            error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
+            # Required training columns are missing!
+            self._raise_missing_column_error(dataframe)
+
+        # Run the saved data preparation pipeline
+        result = self.fit_pipeline.transform(subset_df)
+
+        # Subset the dataframe original columns present during training
+        result = result[self.column_names]
+
+        return result
+
+    def _raise_missing_column_error(self, dataframe):
+        required, found, missing = self._found_required_and_missing_columns(
+            dataframe)
+
+        error_message = """One or more of the columns that the saved trained model needs is not in the dataframe.\n
             Please compare these lists to see which field(s) is/are missing. Note that you can pass in extra fields,\n
             which will be ignored, but you must pass in all the required fields.\n
             
@@ -252,11 +259,56 @@ class TrainedSupervisedModel(object):
             
             Given fields: {}
             
-            Likely missing field(s): {}
-            """.format(required_columns, found_columns, ke)
-            raise HealthcareAIError(error_message)
+            Missing field(s): {}
+            """.format(required, found, missing)
 
-        return prepared_dataframe
+        raise HealthcareAIError(error_message)
+
+    def _found_required_and_missing_columns(self, dataframe):
+        """
+        Calculates the found, required, and missing columns a model needs.
+
+        Args:
+            dataframe:
+
+        Returns:
+
+        """
+        if self.original_column_names is not None:
+            # If a pre-dummified dataset is expected, use original names.
+            required = set(self.original_column_names)
+        else:
+            # otherwise, use the dummified column names
+            required = set(self.column_names)
+
+        found = set(dataframe.columns)
+        missing = required - found
+
+        return required, found, missing
+
+    def _add_prediction_column_if_missing(self, dataframe):
+        """
+        Add prediction column if it is missing and fill with NaNs.
+
+        We want to be able to make predictions on new data (without labels) and
+        don't want to insist that the prediction column be present in the
+        new data. If it is not, add the prediction column filled with NaNs.
+        This column should be dropped later when the dataframe is run through
+        the pipeline.
+
+        Args:
+            dataframe (pandas.core.frame.DataFrames): raw prediction dataframe
+
+        Returns:
+            pandas.core.frame.DataFrame: A dataframe
+        """
+        missing = self.prediction_column not in dataframe.columns.values
+        existed = self.prediction_column in self.original_column_names
+
+        if missing and existed:
+            dataframe[self.prediction_column] = np.NaN
+
+        return dataframe
 
     def make_factors(self, dataframe, number_top_features=3):
         """
@@ -666,12 +718,11 @@ class TrainedSupervisedModel(object):
 
     def is_binary_classification(self):
         """
-        Check if a classification is binary.
+        Check if an instance is a binary classifier.
         """
-        self._validate_classification()
         num_classes = len(list(set(self.test_set_actual)))
 
-        return num_classes == 2
+        return self.is_classification and num_classes == 2
 
     def print_training_results(self):
         """

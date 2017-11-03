@@ -1,8 +1,8 @@
 import unittest
 import pandas as pd
 
-import healthcareai.tests.helpers as helpers
 import healthcareai.trained_models.trained_supervised_model
+import healthcareai.trained_models.trained_supervised_model as tsm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.datasets as hcai_datasets
@@ -16,16 +16,21 @@ class TestTrainedSupervisedModel(unittest.TestCase):
 
         # Drop columns that won't help machine learning
         training_df.drop(['PatientID'], axis=1, inplace=True)
+        reg_df = training_df.copy()
+        reg_df['SystolicBPNBR'].fillna(149, inplace=True)
 
         regression_trainer = SupervisedModelTrainer(
-            training_df,
+            reg_df,
             'SystolicBPNBR',
             'regression',
             impute=True,
             grain_column='PatientEncounterID')
 
+        cls_df = training_df.copy()
+        cls_df['ThirtyDayReadmitFLG'].fillna('N', inplace=True)
+
         classification_trainer = SupervisedModelTrainer(
-            training_df,
+            cls_df,
             'ThirtyDayReadmitFLG',
             'classification',
             impute=True,
@@ -64,6 +69,20 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             verbose=False)
 
         cls.multiclass_logistic_regression = cls.multiclass_trainer.logistic_regression()
+
+    def test_raise_error_on_missing_target_data(self):
+        df = hcai_datasets.load_diabetes()
+        # df.SystolicBPNBR.fillna(149, inplace=True)
+
+        self.assertRaises(
+            HealthcareAIError,
+            SupervisedModelTrainer,
+            df,
+            'SystolicBPNBR',
+            'regression',
+            impute=True,
+            grain_column='PatientEncounterID'
+        )
 
     def test_is_classification(self):
         self.assertTrue(self.trained_lr.is_classification)
@@ -154,6 +173,89 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr)
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc_plot)
         self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
+
+    def test_predictions_work_with_unseen_factors(self):
+        """
+        This is awkward to test since it is unknown how NaNs will be predicted.
+
+        All we can really test is that a prediction came back.
+        """
+        bad_data = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'A1CNBR': [8.9, 8.9, 6],
+            'LDLNBR': [110, 110, 250],
+            'SystolicBPNBR': [85, 85, 122],
+            'GenderFLG': ['Nonbinary', 'Other', 'M'],
+            'ThirtyDayReadmitFLG': [None, None, None]
+        })
+
+        preds_bad = self.trained_lr.make_predictions(bad_data)
+
+        self.assertIsInstance(preds_bad, pd.DataFrame)
+
+    def test_add_missing_prediction_column_exists(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': ['F', 'F', 'M', 'F'],
+            'ThirtyDayReadmitFLG': ['Y', 'N', 'Y', 'N']
+        })
+
+        result = self.trained_lr._add_prediction_column_if_missing(bad_df)
+        expected = {'numeric', 'gender', 'ThirtyDayReadmitFLG'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(set(result.columns), expected)
+        self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
+        self.assertListEqual(list(bad_df['gender']), list(result['gender']))
+        self.assertListEqual(list(bad_df['ThirtyDayReadmitFLG']), list(result['ThirtyDayReadmitFLG']))
+
+    def test_add_missing_prediction_column(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender': ['F', 'F', 'M', 'F'],
+        })
+
+        result = self.trained_lr._add_prediction_column_if_missing(bad_df)
+        expected = {'numeric', 'gender', 'ThirtyDayReadmitFLG'}
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertEqual(set(result.columns), expected)
+        self.assertTrue(pd.isnull(result['ThirtyDayReadmitFLG']).all())
+        self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
+        self.assertListEqual(list(bad_df['gender']), list(result['gender']))
+
+    def test_missing_column_error(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender_female': ['F', 'F', 'M', 'F'],
+        })
+
+        # Assert real error is raised
+        self.assertRaises(
+            HealthcareAIError,
+            self.trained_lr._raise_missing_column_error,
+            bad_df)
+
+    def test_found_required_missing_columns(self):
+        bad_df = pd.DataFrame({
+            'numeric': [0, 1, 2, 3],
+            'gender_female': ['F', 'F', 'M', 'F'],
+        })
+
+        expected_missing = set(self.prediction_df.columns) - set(bad_df.columns)
+
+        required, found, missing = self.trained_lr._found_required_and_missing_columns(
+            bad_df)
+
+        expected_found = {'numeric', 'gender_female'}
+        expected_required = {'A1CNBR', 'GenderFLG', 'LDLNBR',
+                             'PatientEncounterID',
+                             'ThirtyDayReadmitFLG', 'SystolicBPNBR'}
+
+        self.assertEqual(expected_found, found)
+        self.assertEqual(expected_required, required)
+        self.assertEqual(expected_missing, missing)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -8,7 +8,7 @@ def get_algorithm(estimator,
                   number_iteration_samples=10,
                   **non_randomized_estimator_kwargs):
     """
-    Given an estimator and various params, initialize an algorithm with optional randomized search.
+    Initialize an algorithm with optional randomized search.
 
     Args:
         estimator (sklearn.base.BaseEstimator): a scikit-learn estimator (for example: KNeighborsClassifier)

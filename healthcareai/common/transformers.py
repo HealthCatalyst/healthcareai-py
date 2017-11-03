@@ -1,6 +1,7 @@
 """Transformers for dataframes.
 
-This module contains transformers for preprocessing data. Most operate on DataFrames and are named appropriately.
+This module contains transformers for preprocessing data. Most operate on
+DataFrames and are named appropriately.
 """
 import numpy as np
 import pandas as pd
@@ -10,67 +11,144 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler
 
+import healthcareai.common.categorical_levels as hcai_cats
+
 
 class DataFrameImputer(TransformerMixin):
     """
     Impute missing values in a dataframe.
 
-    Columns of dtype object or category (assumed categorical) are imputed with the mode (most frequent value in column).
+    Columns of dtype object or category (assumed categorical) are imputed with
+    the mode (most frequent value in column).
 
     Columns of other types (assumed continuous) are imputed with mean of column.
+
+    Note this converts all object types to category types.
     """
 
-    def __init__(self, impute=True):
+    def __init__(self, impute=True, verbose=True):
         """Instantiate the transformer."""
         self.impute = impute
-        self.object_columns = None
         self.fill = None
+        self.verbose = verbose
+        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
-        # Return if not imputing
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(X)
+
         if self.impute is False:
+            # Return if not imputing
             return self
 
-        # Grab list of object column names before doing imputation
-        self.object_columns = X.select_dtypes(include=['object']).columns.values
+        self.fill = self._calculate_imputed_filler_row(X)
 
-        self.fill = pd.Series([X[c].value_counts().index[0]
-                               if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
-                               else X[c].mean() for c in X], index=X.columns)
-
-        num_nans = sum(X.select_dtypes(include=[np.number]).isnull().sum())
-        num_total = sum(X.select_dtypes(include=[np.number]).count())
-        percentage_imputed = num_nans / num_total * 100
-
-        print("Percentage Imputed: {}%".format(percentage_imputed))
+        if self.verbose:
+            num_nans = sum(X.select_dtypes(
+                include=[np.number, 'category', object]).isnull().sum())
+            num_total = sum(X.select_dtypes(
+                include=[np.number, 'category', object]).count())
+            percentage_imputed = num_nans / num_total * 100
+            print('Percentage Imputed: {:.2%}'.format(percentage_imputed))
+            print('Note: Numeric imputation will always occur when making'
+                  'predictions on new data - otherwise rows would be dropped, '
+                  'which would lead to missing predictions.')
 
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
-        """Transform the dataframe."""
-        # Return if not imputing
+        """Fill in missing values."""
+
         if self.impute is False:
+            # Return if not imputing
             return X
+
+        for col in self.categorical_levels:
+            self._warn_about_unseen_factors(X, col)
 
         result = X.fillna(self.fill)
 
-        for i in self.object_columns:
-            # NOte numpy is not aware of dtype 'category' so you need to use
-            # np.str_
-            if result[i].dtype not in ['object', np.str_]:
-                result[i] = result[i].astype('object')
+        return result
+
+    @staticmethod
+    def _calculate_imputed_filler_row(X):
+        """
+        Create a filler row numeric column means and categorical modes.
+
+        Numeric fields should be filled with the mean.
+
+        Categorical fields should be filled with NaN.
+
+        Returns:
+            pd.core.series.Series: A row to be used as filler.
+        """
+        result = pd.Series(
+            [np.NaN if X[c].dtype == np.dtype(
+                'O') or pd.core.common.is_categorical_dtype(X[c])
+             else X[c].mean() for c in X], index=X.columns)
 
         return result
+
+    def _warn_about_unseen_factors(self, X, col):
+        """Warn about unseen factors."""
+        unseen = self._get_unseen_factors(X, col)
+        if unseen:
+            print('Warning! The column "{}" contains a new category not seen '
+                  'in training data: "{}". Because this was not present in the '
+                  'training data, the model cannot use it so it will be '
+                  'removed and encoded as unknown.'.format(col, unseen))
+
+    def _warn_about_unrepresented_factors(self, X, col):
+        """Warn about unrepresented factors."""
+        unrepresented = self._get_unrepresented_factors(X, col)
+        if unrepresented:
+            print('Unrepresented: {}'.format(unrepresented))
+
+    def _get_unseen_factors(self, X, column):
+        """
+        Categorical factors unseen in fit found in transform as a set.
+
+        During training, all known factors for each categorical column are
+        saved to help dummification. When new data flows into the model for
+        predictions, it is possible that new categories exist. Without
+        re-training the model, this additional information is not predictive
+        since the model has not seen the factors before.
+        """
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return found - expected
+
+    def _get_unrepresented_factors(self, X, column):
+        """Categorical factors present in fit and not in transform as a set."""
+        expected, found = self._calculate_found_and_expected_factors(X, column)
+        return expected - found
+
+    def _calculate_found_and_expected_factors(self, X, column):
+        """Expected (fit) and found (transform) categorical factors as a set."""
+        expected = self._get_expected_factors_set(column)
+        found = self._get_unique_factors_set(X, column)
+
+        return expected, found
+
+    def _get_expected_factors_set(self, column):
+        """Expected (found when fit) categorical factors as a set."""
+        return set(self.categorical_levels[column])
+
+    @staticmethod
+    def _get_unique_factors_set(X, column):
+        """Factors in a column as a set."""
+        return set(X[column].unique())
 
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
     """
-    Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV).
+    Convert classification model's predicted col to 0/1.
+
+    Otherwise won't work with GridSearchCV.
 
     Passes through data for regression models unchanged.
-    This is to simplify the data pipeline logic. (Though that may be a more appropriate place for the logic...)
+    This is to simplify the data pipeline logic, though that may be a more
+    appropriate place for the logic...)
 
     Note that this makes healthcareai only handle N/Y in pred column
     """
@@ -95,8 +173,10 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
             # Turn off warning around replace
             pd.options.mode.chained_assignment = None  # default='warn'
             # Replace 'Y'/'N' with 1/0
-            # The target variable can either be coded with 'Y/N' or numbers 0, 1, 2, 3, ...
-            if X[self.target_column].dtype == np.int64:  # Added for number labeled target variable.
+            # The target variable can either be coded with 'Y/N' or
+            # numbers 0, 1, 2, 3, ...
+            # Added for number labeled target variable.
+            if X[self.target_column].dtype == np.int64:
                 return X
             else:
                 X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
@@ -105,29 +185,62 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
 
 
 class DataFrameCreateDummyVariables(TransformerMixin):
-    """Convert all categorical columns into dummy/indicator variables. Exclude given columns."""
+    """
+    Convert all categorical columns into dummy/indicator variables.
+
+    Exclude given columns.
+    """
 
     def __init__(self, excluded_columns=None):
-        """Instantiate the transformer."""
+        """Instantiate the transformer.
+
+        Args:
+            excluded_columns (list): Columns to exclude from dummification
+        """
         self.excluded_columns = excluded_columns
+        self.categorical_levels = None
 
     def fit(self, X, y=None):
         """Fit the transformer."""
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(
+            X,
+            self.excluded_columns)
+
         # return self for scikit compatibility
         return self
 
     def transform(self, X, y=None):
-        """Transform the dataframe."""
-        # build a list of columns names
-        columns_to_dummify = list(X.select_dtypes(include=[object, 'category']).columns.values)
+        """
+        Convert categorical columns to dummy/indicator columns.
 
-        # remove excluded columns (if they are still in the list)
-        for column in columns_to_dummify:
-            if column in self.excluded_columns:
-                columns_to_dummify.remove(column)
+        Check all object and non-excluded categorical columns for unseen
+        factors. Convert all of these to category with the categories found in
+        the `.fit()` phase.
+
+        Categories found in the `.transform()` phase that did not exist in the
+        data used to `.fit()` this transformer will be removed, and replaced
+        with the most common category (the mode).
+        """
+        columns_to_dummify = hcai_cats.get_categorical_column_names(
+            X,
+            self.excluded_columns)
+
+        for col in columns_to_dummify:
+            # Convert both object and category to object then category to force
+            # unseen levels out of category type columns. Low tech hack.
+            # There's probably a more elegant pandas way of doing this.
+            temp_object = X[col].astype(object)
+
+            # TODO nans are being inserted for categories that are unseen. Mode!
+            X[col] = temp_object.astype(
+                'category',
+                categories=self.categorical_levels[col])
 
         # Create dummy variables
-        X = pd.get_dummies(X, columns=columns_to_dummify, drop_first=True, prefix_sep='.')
+        X = pd.get_dummies(
+            X,
+            columns=columns_to_dummify,
+            drop_first=False, prefix_sep='.')
 
         return X
 
@@ -155,9 +268,11 @@ class DataFrameUnderSampling(TransformerMixin):
     """
     Performs undersampling on a dataframe.
 
-    Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
+    Must be done BEFORE train/test split so that when we split the under/over
+    sampled dataset.
 
-    Must be done AFTER imputation, since under/over sampling will not work with missing values (imblearn requires target
+    Must be done AFTER imputation, since under/over sampling will not work with
+    missing values (imblearn requires target
      column to be converted to numerical values)
     """
 

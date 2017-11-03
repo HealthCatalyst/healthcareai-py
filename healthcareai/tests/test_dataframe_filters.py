@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import unittest
 import healthcareai.common.filters as filters
+import healthcareai.common.validators
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -13,7 +14,7 @@ class TestIsDataframe(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertTrue(filters.is_dataframe(df))
+        self.assertTrue(healthcareai.common.validators.is_dataframe(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -21,11 +22,12 @@ class TestIsDataframe(unittest.TestCase):
             42,
             [1, 2, 3],
             [[1, 2, 3], [1, 2, 3], [1, 2, 3], ],
-            {'a': 1}
+            {'a': 1},
+            None
         ]
 
         for junk in junk_inputs:
-            self.assertFalse(filters.is_dataframe(junk))
+            self.assertFalse(healthcareai.common.validators.is_dataframe(junk))
 
 
 class TestValidationError(unittest.TestCase):
@@ -36,7 +38,8 @@ class TestValidationError(unittest.TestCase):
             'age': [1, 5, 4]
         })
 
-        self.assertIsNone(filters.validate_dataframe_input(df))
+        self.assertIsNone(
+            healthcareai.common.validators.validate_dataframe_input_for_transformer(df))
 
     def test_is_not_dataframe(self):
         junk_inputs = [
@@ -48,7 +51,8 @@ class TestValidationError(unittest.TestCase):
         ]
 
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.validate_dataframe_input, junk)
+            self.assertRaises(HealthcareAIError,
+                              healthcareai.common.validators.validate_dataframe_input_for_transformer, junk)
 
 
 class TestDataframeColumnSuffixFilter(unittest.TestCase):
@@ -215,8 +219,12 @@ class TestDataframeNullValueFilter(unittest.TestCase):
             {'a': 1}
         ]
 
+        remover = filters.DataframeNullValueFilter(None)
         for junk in junk_inputs:
-            self.assertRaises(HealthcareAIError, filters.DataframeColumnRemover(None).fit_transform, junk)
+            self.assertRaises(
+                HealthcareAIError,
+                remover.fit_transform,
+                junk)
 
     def test_removes_nothing_when_no_nulls_exist(self):
         df = pd.DataFrame({
@@ -248,7 +256,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
         result = filters.DataframeNullValueFilter().fit_transform(df)
         self.assertEqual(len(result), 1)
 
-    def test_removes_row_all_nulls_exception(self):
+    def test_raise_exception_all_rows_contain_null_somewhere(self):
         df = pd.DataFrame({'a': [1, None, 2, 3],
                            'b': ['m', 'f', None, 'f'],
                            'c': [3, 4, 5, None],
@@ -257,7 +265,7 @@ class TestDataframeNullValueFilter(unittest.TestCase):
 
         self.assertRaises(HealthcareAIError, filters.DataframeNullValueFilter().fit_transform, df)
 
-    def test_removes_null_column_exception(self):
+    def test_raise_exception_on_null_column(self):
         df = pd.DataFrame({'a': [1, 2, 3, 4],
                            'b': [None, None, None, None],
                            'c': [3, 4, 5, 6],
@@ -266,6 +274,26 @@ class TestDataframeNullValueFilter(unittest.TestCase):
 
         self.assertTrue(df.b.isnull().all())
         self.assertRaises(HealthcareAIError, filters.DataframeNullValueFilter().fit_transform, df)
+
+    def test_excluded_columns(self):
+        df = pd.DataFrame({
+            'id': [8, 2, 5, 4],
+            'gender': ['m', 'f', 'm', 'f'],
+            'c': [None, 4.1, 5, 6],
+            'd': [10, 8, 1, 3],
+            'label': [None, None, None, None]})
+
+        expected = pd.DataFrame({
+            'id': [2, 5, 4],
+            'gender': ['f', 'm', 'f'],
+            'c': [4.1, 5, 6],
+            'd': [8, 1, 3],
+            'label': [None, None, None]})
+
+        null_filter = filters.DataframeNullValueFilter(excluded_columns='label')
+        result = null_filter.fit_transform(df)
+
+        pd.testing.assert_frame_equal(expected, result)
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,7 +5,7 @@ Provides users an advanced interface for machine learning.
 
 Less advanced users may use `SupervisedModelTrainer`
 """
-
+import pandas as pd
 import sklearn
 import numpy as np
 import time
@@ -23,6 +23,21 @@ from healthcareai.common.randomized_search import get_algorithm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
+
+
+def _remove_nas_from_labels(class_labels):
+    """Remove nans/nulls/Nones from class labels, regardless of type."""
+    if isinstance(class_labels, pd.core.series.Series):
+        class_labels = class_labels.dropna()
+    elif isinstance(class_labels, np.ndarray):
+        # np.isnan barfs on Nones. Change to NaNs
+        class_labels = np.array([np.nan if x is None else x for x in class_labels])
+        class_labels = class_labels[~np.isnan(class_labels)]
+    elif isinstance(class_labels, pd.Categorical):
+        # TODO this might reorder class labels and screw things up...
+        class_labels = class_labels.categories
+
+    return class_labels
 
 
 class AdvancedSupervisedModelTrainer(object):
@@ -67,7 +82,7 @@ class AdvancedSupervisedModelTrainer(object):
         self.verbose = verbose
         if binary_positive_label and binary_positive_label not in self.class_labels:
             raise HealthcareAIError(
-                'The binary positive label specified ({}) was not found in '\
+                'The binary positive label specified ({}) was not found in '
                 'the training data, which contains these labels: {}'.format(binary_positive_label, self.class_labels))
         self.binary_positive_label = binary_positive_label
 
@@ -106,6 +121,10 @@ class AdvancedSupervisedModelTrainer(object):
         """Get the class labels sorted alphabetically or numerically."""
         self.validate_classification()
         uniques = self.dataframe[self.predicted_column].unique()
+
+        # Guard against nulls in target column showing up here
+        uniques = _remove_nas_from_labels(uniques)
+
         return np.sort(uniques)
 
     @property
@@ -170,13 +189,20 @@ class AdvancedSupervisedModelTrainer(object):
         score_by_name = {}
 
         # Here is the default list of algorithms to try for the ensemble
-        # Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary
+        # Adding an ensemble method is as easy as adding a new key:value pair in
+        # the `model_by_name` dictionary
         if trained_model_by_name is None:
-            # TODO because these now all return TSMs it will be additionally slow by all the factor models.
-            # TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?
+            # TODO because these now all return TSMs it will be additionally
+            # TODO slow by all the factor models.
+            # TODO Could these be trained separately then after the best is
+            # TODO found, train the factor model and add to TSM?
             trained_model_by_name = {
-                'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
-                'Logistic Regression': self.logistic_regression(randomized_search=True),
+                'KNN': self.knn(
+                    randomized_search=True,
+                    scoring_metric=scoring_metric),
+                'Logistic Regression': self.logistic_regression(
+                    randomized_search=True,
+                    scoring_metric=scoring_metric),
                 'Random Forest Classifier': self.random_forest_classifier(
                     trees=200,
                     randomized_search=True,
@@ -272,11 +298,12 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'C': [0.01, 0.1, 1, 10, 100], 'class_weight': [None, 'balanced']}
             number_iteration_samples = 10
 
-        algorithm = get_algorithm(LogisticRegression,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(
+            LogisticRegression,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
@@ -308,11 +335,12 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {"fit_intercept": [True, False]}
             number_iteration_samples = 2
 
-        algorithm = get_algorithm(LinearRegression,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(
+            LinearRegression,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
@@ -325,8 +353,8 @@ class AdvancedSupervisedModelTrainer(object):
         """
         Train a Lasso regressor.
 
-        A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
-        hyperparameter grid.
+        A light wrapper for Sklearn's lasso regression that performs randomized
+        search over an overridable default hyperparameter grid.
 
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
@@ -343,11 +371,12 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {"fit_intercept": [True, False]}
             number_iteration_samples = 2
 
-        algorithm = get_algorithm(Lasso,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(
+            Lasso,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
@@ -357,12 +386,12 @@ class AdvancedSupervisedModelTrainer(object):
             scoring_metric='accuracy',
             hyperparameter_grid=None,
             randomized_search=True,
-            number_iteration_samples=10):
+            number_iteration_samples=5):
         """
         Train a KNN classifier.
 
-        A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
-        hyperparameter grid.
+        A light wrapper for Sklearn's knn classifier that performs randomized
+        search over an overridable default hyperparameter grid.
 
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for classification
@@ -376,16 +405,19 @@ class AdvancedSupervisedModelTrainer(object):
         """
         self.validate_classification('KNN')
         if hyperparameter_grid is None:
-            neighbors = list(range(5, 26))
-            hyperparameter_grid = {'n_neighbors': neighbors, 'weights': ['uniform', 'distance']}
-            number_iteration_samples = 10
+            neighbors = list(range(5, 26, 3))
+            hyperparameter_grid = {
+                'n_neighbors': neighbors,
+                'weights': ['uniform', 'distance']}
+            number_iteration_samples = 5
 
             print('KNN Grid: {}'.format(hyperparameter_grid))
-        algorithm = get_algorithm(KNeighborsClassifier,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples)
+        algorithm = get_algorithm(
+            KNeighborsClassifier,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
@@ -422,12 +454,13 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'n_estimators': [100, 200, 300], 'max_features': max_features}
             number_iteration_samples = 5
 
-        algorithm = get_algorithm(RandomForestClassifier,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples,
-                                  n_estimators=trees)
+        algorithm = get_algorithm(
+            RandomForestClassifier,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples,
+            n_estimators=trees)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 
@@ -464,12 +497,13 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid = {'n_estimators': [10, 50, 200], 'max_features': max_features}
             number_iteration_samples = 5
 
-        algorithm = get_algorithm(RandomForestRegressor,
-                                  scoring_metric,
-                                  hyperparameter_grid,
-                                  randomized_search,
-                                  number_iteration_samples=number_iteration_samples,
-                                  n_estimators=trees)
+        algorithm = get_algorithm(
+            RandomForestRegressor,
+            scoring_metric,
+            hyperparameter_grid,
+            randomized_search,
+            number_iteration_samples=number_iteration_samples,
+            n_estimators=trees)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
 

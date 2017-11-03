@@ -1,24 +1,14 @@
 """Filters for dataframes.
 
-This module contains filters for preprocessing data. Most operate on DataFrames and are named appropriately.
+This module contains filters for preprocessing data. Most operate on DataFrames
+and are named appropriately.
 """
 
 from sklearn.base import TransformerMixin
-from pandas.core.frame import DataFrame
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-
-
-def validate_dataframe_input(possible_dataframe):
-    """Validate that input is a pandas dataframe and raise an error if it is not. Stays silent if it is."""
-    if is_dataframe(possible_dataframe) is False:
-        raise HealthcareAIError(
-            'This transformer requires a pandas dataframe and you passed in a {}'.format(type(possible_dataframe)))
-
-
-def is_dataframe(possible_dataframe):
-    """Return true if input is a pandas dataframe."""
-    return issubclass(DataFrame, type(possible_dataframe))
+from healthcareai.common.validators import \
+    validate_dataframe_input_for_transformer
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
@@ -34,10 +24,11 @@ class DataframeColumnSuffixFilter(TransformerMixin):
 
     def transform(self, x, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(x)
+        validate_dataframe_input_for_transformer(x)
 
         # Build a list that contains column names that do not end in 'DTS'
-        filtered_column_names = [column for column in x.columns if not column.endswith('DTS')]
+        filtered_column_names = [column for column in x.columns if
+                                 not column.endswith('DTS')]
 
         # Select all data excluding datetime columns
         return x[filtered_column_names]
@@ -56,7 +47,7 @@ class DataFrameColumnDateTimeFilter(TransformerMixin):
 
     def transform(self, x, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(x)
+        validate_dataframe_input_for_transformer(x)
 
         # Select all data excluding datetime columns
         return x.select_dtypes(exclude=["datetime"])
@@ -75,20 +66,21 @@ class DataframeColumnRemover(TransformerMixin):
 
     def transform(self, X, y=None):
         """Transform the dataframe."""
-        validate_dataframe_input(X)
+        validate_dataframe_input_for_transformer(X)
         if self.columns_to_remove is None:
             # if there is no grain column, for example
             return X
 
         # Build a list of all columns except for the grain column'
-        filtered_column_names = [c for c in X.columns if c not in self.columns_to_remove]
+        filtered_column_names = [c for c in X.columns if
+                                 c not in self.columns_to_remove]
 
         # return the filtered dataframe
         return X[filtered_column_names]
 
 
 class DataframeNullValueFilter(TransformerMixin):
-    """Remove rows that contain null values in any column except the excluded."""
+    """Remove any row containing null values not in the excluded columns."""
 
     def __init__(self, excluded_columns=None):
         """Instantiate the filter."""
@@ -100,29 +92,39 @@ class DataframeNullValueFilter(TransformerMixin):
         return self
 
     def transform(self, x, y=None):
-        """Transform the dataframe."""
-        validate_dataframe_input(x)
+        """
+        Transform the dataframe.
+
+        Raises:
+            HealthcareAIError: Help the user out on training if they left all
+            null columns in by telling them which to remove.
+        """
+        validate_dataframe_input_for_transformer(x)
 
         subset = [c for c in x.columns if c not in self.excluded_columns]
 
-        # Help the user out on training if they left all null columns in by telling them which to remove
-        all_null_columns = []
-        for column in x.columns:
-            if x[column].isnull().all():
-                all_null_columns.append(column)
+        entirely_null_columns = []
+        for col in subset:
+            if x[col].isnull().all():
+                entirely_null_columns.append(col)
 
-        if all_null_columns:
+        if entirely_null_columns:
             raise HealthcareAIError(
-                'Warning! You are about to drop any rows that contain '
-                'any null values, you have {} column(s) that are entirely null. '
-                'Please consider removing the following columns: {}'.format(len(all_null_columns), all_null_columns))
+                'Warning! You are about to drop any rows that contain any '
+                'null values, you have {} column(s) that are entirely null. '
+                'Please consider removing the following columns: {}'.format(
+                    len(entirely_null_columns),
+                    entirely_null_columns))
 
         x.dropna(axis=0, how='any', inplace=True, subset=subset)
+        x.reset_index(drop=True, inplace=True)
 
         if x.empty:
             raise HealthcareAIError(
-                "Because imputation is set to False, rows with missing or null/NaN values are being dropped. "
-                "In this case, all rows contain null values and therefore were ALL dropped. "
-                "Please consider using imputation or assessing the data quality and availability")
+                'Because imputation is set to False, rows with missing or '
+                'null/NaN values are being dropped. In this case, all rows '
+                'contain null values and therefore were ALL dropped. Please '
+                'consider using imputation or assessing the data quality and '
+                'availability.')
 
         return x
