@@ -3,8 +3,8 @@
 [![Code Health](https://landscape.io/github/HealthCatalyst/healthcareai-py/master/landscape.svg?style=flat)](https://landscape.io/github/HealthCatalyst/healthcareai-py/master)
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/HealthCatalyst/healthcareai-py?branch=master&svg=true)](https://ci.appveyor.com/project/CatalystAdmin/healthcareai-py/branch/master)
 [![Build Status](https://travis-ci.org/HealthCatalyst/healthcareai-py.svg?branch=master)](https://travis-ci.org/HealthCatalyst/healthcareai-py)
-[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
-[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)
+<!--[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/version.svg)](https://anaconda.org/catalyst/healthcareai)
+[![Anaconda-Server Badge](https://anaconda.org/catalyst/healthcareai/badges/installer/conda.svg)](https://conda.anaconda.org/catalyst)-->
 [![PyPI version](https://badge.fury.io/py/healthcareai.svg)](https://badge.fury.io/py/healthcareai)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.999010.svg)](https://doi.org/10.5281/zenodo.999010)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HealthCatalyst/healthcareai-py/master/LICENSE)
@@ -27,8 +27,8 @@ The aim of **healthcareai** is to streamline machine learning in healthcare. The
 - Run `conda install scipy`
 - Run `conda install scikit-learn`
 - Install healthcareai using **one and only one** of these three methods (ordered from easiest to hardest).
-    1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`
-    2. Install the latest release with pip run `pip install healthcareai`
+    <!--1. **Recommended:** Install the latest release with conda by running `conda install -c catalyst healthcareai`-->
+    2. **Recommended:** Install the latest release with pip run `pip install healthcareai`
     3. If you know what you're doing, and instead want the bleeding-edge version direct from our github repo, run `pip install https://github.com/HealthCatalyst/healthcareai-py/zipball/master`
 
 #### Why Anaconda?

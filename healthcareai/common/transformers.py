@@ -26,10 +26,11 @@ class DataFrameImputer(TransformerMixin):
     Note this converts all object types to category types.
     """
 
-    def __init__(self, impute=True):
+    def __init__(self, impute=True, verbose=True):
         """Instantiate the transformer."""
         self.impute = impute
         self.fill = None
+        self.verbose = verbose
         self.categorical_levels = None
 
     def fit(self, X, y=None):
@@ -42,11 +43,16 @@ class DataFrameImputer(TransformerMixin):
 
         self.fill = self._calculate_imputed_filler_row(X)
 
-        num_nans = sum(X.select_dtypes(include=[np.number, 'category', object]).isnull().sum())
-        num_total = sum(X.select_dtypes(include=[np.number, 'category', object]).count())
-        percentage_imputed = num_nans / num_total * 100
-
-        print("Percentage Imputed: {}%".format(percentage_imputed))
+        if self.verbose:
+            num_nans = sum(X.select_dtypes(
+                include=[np.number, 'category', object]).isnull().sum())
+            num_total = sum(X.select_dtypes(
+                include=[np.number, 'category', object]).count())
+            percentage_imputed = num_nans / num_total * 100
+            print('Percentage Imputed: {:.2%}'.format(percentage_imputed))
+            print('Note: Numeric imputation will always occur when making'
+                  'predictions on new data - otherwise rows would be dropped, '
+                  'which would lead to missing predictions.')
 
         # return self for scikit compatibility
         return self
@@ -77,8 +83,10 @@ class DataFrameImputer(TransformerMixin):
         Returns:
             pd.core.series.Series: A row to be used as filler.
         """
-        result = pd.Series([np.NaN if X[c].dtype == np.dtype('O') or pd.core.common.is_categorical_dtype(X[c])
-                           else X[c].mean() for c in X], index=X.columns)
+        result = pd.Series(
+            [np.NaN if X[c].dtype == np.dtype(
+                'O') or pd.core.common.is_categorical_dtype(X[c])
+             else X[c].mean() for c in X], index=X.columns)
 
         return result
 
@@ -89,9 +97,7 @@ class DataFrameImputer(TransformerMixin):
             print('Warning! The column "{}" contains a new category not seen '
                   'in training data: "{}". Because this was not present in the '
                   'training data, the model cannot use it so it will be '
-                  'removed and encoded as unknown.'.format(
-                col,
-                unseen))
+                  'removed and encoded as unknown.'.format(col, unseen))
 
     def _warn_about_unrepresented_factors(self, X, col):
         """Warn about unrepresented factors."""
@@ -136,10 +142,13 @@ class DataFrameImputer(TransformerMixin):
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
     """
-    Convert classification model's predicted col to 0/1 (otherwise won't work with GridSearchCV).
+    Convert classification model's predicted col to 0/1.
+
+    Otherwise won't work with GridSearchCV.
 
     Passes through data for regression models unchanged.
-    This is to simplify the data pipeline logic. (Though that may be a more appropriate place for the logic...)
+    This is to simplify the data pipeline logic, though that may be a more
+    appropriate place for the logic...)
 
     Note that this makes healthcareai only handle N/Y in pred column
     """
@@ -164,8 +173,10 @@ class DataFrameConvertTargetToBinary(TransformerMixin):
             # Turn off warning around replace
             pd.options.mode.chained_assignment = None  # default='warn'
             # Replace 'Y'/'N' with 1/0
-            # The target variable can either be coded with 'Y/N' or numbers 0, 1, 2, 3, ...
-            if X[self.target_column].dtype == np.int64:  # Added for number labeled target variable.
+            # The target variable can either be coded with 'Y/N' or
+            # numbers 0, 1, 2, 3, ...
+            # Added for number labeled target variable.
+            if X[self.target_column].dtype == np.int64:
                 return X
             else:
                 X[self.target_column].replace(['Y', 'N'], [1, 0], inplace=True)
@@ -257,9 +268,11 @@ class DataFrameUnderSampling(TransformerMixin):
     """
     Performs undersampling on a dataframe.
 
-    Must be done BEFORE train/test split so that when we split the under/over sampled dataset.
+    Must be done BEFORE train/test split so that when we split the under/over
+    sampled dataset.
 
-    Must be done AFTER imputation, since under/over sampling will not work with missing values (imblearn requires target
+    Must be done AFTER imputation, since under/over sampling will not work with
+    missing values (imblearn requires target
      column to be converted to numerical values)
     """
 

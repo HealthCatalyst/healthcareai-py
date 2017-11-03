@@ -6,22 +6,20 @@ Provides users a simple interface for machine learning.
 More advanced users may use `AdvancedSupervisedModelTrainer`
 """
 
-from contextlib import contextmanager
-
 import healthcareai.pipelines.data_preparation as hcai_pipelines
 import healthcareai.trained_models.trained_supervised_model as hcai_tsm
 import healthcareai.common.cardinality_checks as hcai_ordinality
 import healthcareai.common.missing_target_check as hcai_target_check
-from healthcareai.advanced_supvervised_model_trainer import \
-    AdvancedSupervisedModelTrainer
 from healthcareai.common.categorical_levels import calculate_categorical_frequencies
+from healthcareai.advanced_supvervised_model_trainer import AdvancedSupervisedModelTrainer
+from healthcareai.common.trainer_output import trainer_output
 
 
 class SupervisedModelTrainer(object):
     """Train supervised models.
 
-    This class trains models using several common classifiers and regressors and
-    reports appropriate metrics.
+    This class trains models using several common classifiers and regressors
+    and reports appropriate metrics.
     """
 
     def __init__(
@@ -32,7 +30,7 @@ class SupervisedModelTrainer(object):
             impute=True,
             grain_column=None,
             binary_positive_label=None,
-            verbose=False):
+            verbose=True):
         """
         Set up a SupervisedModelTrainer.
 
@@ -63,11 +61,12 @@ class SupervisedModelTrainer(object):
         Args:
             dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
             predicted_column (str): The name of the prediction column
-            model_type (str): the trainer type ('classification' or 'regression')
-            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows that contain any null values.
+            model_type (str): trainer type ('classification' or 'regression')
+            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop rows
+                that contain any null values.
             grain_column (str): The name of the grain column
             binary_positive_label (str|int): Optional positive class label for binary classification tasks.
-            verbose (bool): Set to true for verbose output. Defaults to False.
+            verbose (bool): Set to true for verbose output. Defaults to True.
 
         Raises:
             HealthcareAIError: Target column contains missing data.
@@ -153,120 +152,107 @@ class SupervisedModelTrainer(object):
         elif self._advanced_trainer.model_type is 'regression':
             return self.random_forest_regression()
 
+    @trainer_output
     def knn(self):
         """Train a knn model and print model performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('KNN') as model:
-            model.trained_model = self._advanced_trainer.knn(
-                scoring_metric='accuracy',
-                hyperparameter_grid=None,
-                randomized_search=True)
+        return self._advanced_trainer.knn(
+            scoring_metric='accuracy',
+            hyperparameter_grid=None,
+            randomized_search=True)
 
-            return model.trained_model
-
+    @trainer_output
     def random_forest_regression(self):
         """Train a random forest regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('Random Forest Regression') as model:
-            model.trained_model = self._advanced_trainer.random_forest_regressor(
-                trees=200,
-                scoring_metric='neg_mean_squared_error',
-                randomized_search=True)
+        return self._advanced_trainer.random_forest_regressor(
+            trees=200,
+            scoring_metric='neg_mean_squared_error',
+            randomized_search=True)
 
-            return model.trained_model
-
+    @trainer_output
     def random_forest_classification(self, feature_importance_limit=15,
                                      save_plot=False):
-        """Train a random forest classification model, print metrics and show a feature importance plot.
+        """Train random forest classification and show feature importance plot.
 
         Args:
-            feature_importance_limit (int): The maximum number of features to show in the feature importance plot
-            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
-                display.
+            feature_importance_limit (int): The maximum number of features to
+                show in the feature importance plot
+            save_plot (bool): For the feature importance plot, True to save
+                plot (will not display). False by default to display.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('Random Forest Classification') as model:
-            model.trained_model = self._advanced_trainer.random_forest_classifier(
-                trees=200,
-                scoring_metric='accuracy',
-                randomized_search=True)
+        model = self._advanced_trainer.random_forest_classifier(
+            trees=200,
+            scoring_metric='accuracy',
+            randomized_search=True)
 
-            # Save or show the feature importance graph
-            hcai_tsm.plot_rf_features_from_tsm(
-                model.trained_model,
-                self._advanced_trainer.x_train,
-                feature_limit=feature_importance_limit,
-                save=save_plot)
+        # Save or show the feature importance graph
+        hcai_tsm.plot_rf_features_from_tsm(
+            model,
+            self._advanced_trainer.x_train,
+            feature_limit=feature_importance_limit,
+            save=save_plot)
 
-            return model.trained_model
+        return model
 
+    @trainer_output
     def logistic_regression(self):
         """Train a logistic regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('Logistic Regression') as model:
-            model.trained_model = self._advanced_trainer.logistic_regression(
-                randomized_search=False)
-            return model.trained_model
+        return self._advanced_trainer.logistic_regression(
+            randomized_search=False)
 
+    @trainer_output
     def linear_regression(self):
         """Train a linear regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('Linear Regression') as model:
-            model.trained_model = self._advanced_trainer.linear_regression(
-                randomized_search=False)
-            return model.trained_model
+        return self._advanced_trainer.linear_regression(randomized_search=False)
 
+    @trainer_output
     def lasso_regression(self):
         """Train a lasso regression model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        with self.nice_training_output('Lasso Regression') as model:
-            model.trained_model = self._advanced_trainer.lasso_regression(
-                randomized_search=False)
-            return model.trained_model
+        return self._advanced_trainer.lasso_regression(randomized_search=False)
 
+    @trainer_output
     def ensemble(self):
         """Train a ensemble model and print performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
         """
-        # TODO consider making a scoring parameter-which will require more logic
-        with self.nice_training_output('ensemble {}'.format(
-                self._advanced_trainer.model_type)) as model:
-            # Train the appropriate ensemble of models
-            if self._advanced_trainer.model_type is 'classification':
-                metric = 'accuracy'
-                model.trained_model = self._advanced_trainer.ensemble_classification(
-                    scoring_metric=metric)
-            elif self._advanced_trainer.model_type is 'regression':
-                # TODO stub
-                metric = 'neg_mean_squared_error'
-                model.trained_model = self._advanced_trainer.ensemble_regression(
-                    scoring_metric=metric)
+        # TODO consider making a scoring parameter (which will need more logic
+        if self._advanced_trainer.model_type is 'classification':
+            metric = 'accuracy'
+            model = self._advanced_trainer.ensemble_classification(
+                scoring_metric=metric)
+        elif self._advanced_trainer.model_type is 'regression':
+            metric = 'neg_mean_squared_error'
+            model = self._advanced_trainer.ensemble_regression(
+                scoring_metric=metric)
 
-            print(
-                'Based on the scoring metric {}, the best algorithm found is: {}'.format(
-                    metric,
-                    model.trained_model.algorithm_name))
+            print('Based on the scoring metric {}, the best algorithm found '
+                  'is: {}'.format(metric, model.algorithm_name))
 
-            return model.trained_model
+        return model
 
     @property
     def advanced_features(self):
@@ -276,41 +262,3 @@ class SupervisedModelTrainer(object):
         For advanced users only.
         """
         return self._advanced_trainer
-
-    @contextmanager
-    def nice_training_output(self, model_name):
-        """
-        Wrap model training with nice console output before and after training.
-
-        This allows all algorithms to have consistent console output while
-        having custom training (or other) code.
-
-        Args:
-            model_name (str): The name of the model used for pretty printing.
-        """
-        # Instantiate a temporary Model object to facilitate the unique code in
-        # the context manager
-        temp_model = ContextManagerModel(model_name)
-
-        if self._advanced_trainer.is_classification:
-            print('\nTraining {} model on {} classes: {}\n'.format(
-                model_name,
-                self.number_of_classes,
-                self.class_labels))
-        else:
-            print('\nTraining {}\n'.format(temp_model.model_name))
-
-        # Give the model back to the context to allow for unique training code
-        yield temp_model
-
-        # Display the trained model metrics
-        temp_model.trained_model.print_training_results()
-
-
-class ContextManagerModel(object):
-    """A tiny class used by the `model_training` context manager."""
-
-    def __init__(self, model_name, trained_model=None):
-        """Create a new instance."""
-        self.model_name = model_name
-        self.trained_model = trained_model

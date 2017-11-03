@@ -1,12 +1,14 @@
 """Filters for dataframes.
 
-This module contains filters for preprocessing data. Most operate on DataFrames and are named appropriately.
+This module contains filters for preprocessing data. Most operate on DataFrames
+and are named appropriately.
 """
 
 from sklearn.base import TransformerMixin
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
-from healthcareai.common.validators import validate_dataframe_input_for_transformer
+from healthcareai.common.validators import \
+    validate_dataframe_input_for_transformer
 
 
 class DataframeColumnSuffixFilter(TransformerMixin):
@@ -25,7 +27,8 @@ class DataframeColumnSuffixFilter(TransformerMixin):
         validate_dataframe_input_for_transformer(x)
 
         # Build a list that contains column names that do not end in 'DTS'
-        filtered_column_names = [column for column in x.columns if not column.endswith('DTS')]
+        filtered_column_names = [column for column in x.columns if
+                                 not column.endswith('DTS')]
 
         # Select all data excluding datetime columns
         return x[filtered_column_names]
@@ -69,7 +72,8 @@ class DataframeColumnRemover(TransformerMixin):
             return X
 
         # Build a list of all columns except for the grain column'
-        filtered_column_names = [c for c in X.columns if c not in self.columns_to_remove]
+        filtered_column_names = [c for c in X.columns if
+                                 c not in self.columns_to_remove]
 
         # return the filtered dataframe
         return X[filtered_column_names]
@@ -117,10 +121,10 @@ class DataframeNullValueFilter(TransformerMixin):
 
         if x.empty:
             raise HealthcareAIError(
-                "Because imputation is set to False, rows with missing or "
-                "null/NaN values are being dropped. In this case, all rows "
-                "contain null values and therefore were ALL dropped. Please "\
-                "consider using imputation or assessing the data quality and "
-                "availability.")
+                'Because imputation is set to False, rows with missing or '
+                'null/NaN values are being dropped. In this case, all rows '
+                'contain null values and therefore were ALL dropped. Please '
+                'consider using imputation or assessing the data quality and '
+                'availability.')
 
         return x

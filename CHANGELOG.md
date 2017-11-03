@@ -44,6 +44,7 @@ in console output and on ROC/PR plots.
 - Consolidated validator functions into a module.
 - More robust transformers and filters with augmented testing.
 - Accuracy is default scoring metric for all classification tasks.
+- Decorators for `supervised_model_trainer` is now simplified, and debug option is no longer an option.
 
 ### Fixed
 
