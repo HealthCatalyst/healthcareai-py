@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
     or plots `TrainedSupervisedModel.confusion_matrix_plot()`
 - `DataframeNullValueFilter` now raises a helpful error that identifies columns that are entirely null.
 - `SupervisedModelTrainer` now warns users about columns/features with high and low cardinality.
+- 9 new sample healthcare data sets from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets.html).
 - Optional `binary_positive_label` argument for binary classification tasks
 - new categorical levels module saved during training for prediction pipelines
 - Prediction target column is checked for missing rows when creating a trainer.
