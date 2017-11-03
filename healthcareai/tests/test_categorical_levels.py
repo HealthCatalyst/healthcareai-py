@@ -10,15 +10,22 @@ from healthcareai.common.categorical_levels import calculate_categorical_frequen
 class TestTopFactors(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        """ Load a dataframe, train a linear model and prepare prediction data frames for assertions """
+        """
+        Prepare for tests.
+
+        Create a dataframe, train a linear model and prepare prediction data
+        frames for assertions
+        """
         rows = 200
         np.random.seed(112358)
-        train_df = pd.DataFrame({'id': range(rows),
-                                 'x': np.random.uniform(low=-5, high=5, size=rows),
-                                 'y': np.random.normal(loc=0, scale=1, size=rows),
-                                 'color': np.random.choice(['red', 'blue', 'green'], size=rows),
-                                 'gender': np.random.choice(['male', 'female'], size=rows)},
-                                columns=['id', 'x', 'y', 'color', 'gender'])
+
+        train_df = pd.DataFrame({
+            'id': range(rows),
+            'x': np.random.uniform(low=-5, high=5, size=rows),
+            'y': np.random.normal(loc=0, scale=1, size=rows),
+            'color': np.random.choice(['red', 'blue', 'green'], size=rows),
+            'gender': np.random.choice(['male', 'female'], size=rows)},
+            columns=['id', 'x', 'y', 'color', 'gender'])
         # Assign labels
         # build true decision boundary using temp variable
         train_df['temp'] = 2 * train_df['x'] - train_df['y']
@@ -74,22 +81,6 @@ class TestTopFactors(unittest.TestCase):
                                           'gender': np.random.choice(['male', 'female'], size=50)},
                                          columns=['id', 'x', 'y', 'gender'])
 
-        # dataframe with new category level in one column
-        cls.new_color = pd.DataFrame({'id': [1728, 1729],
-                                      'x': [1.2, 1.2],
-                                      'y': [-0.3, -0.3],
-                                      'color': ['purple', np.NaN],
-                                      'gender': ['female', 'female']},
-                                     columns=['id', 'x', 'y', 'color', 'gender'])
-
-        # dataframe with new category levels in two columns
-        cls.new_color_and_gender = pd.DataFrame({'id': [1728, 1729],
-                                                 'x': [1.2, 1.2],
-                                                 'y': [-0.3, -0.3],
-                                                 'color': ['purple', np.NaN],
-                                                 'gender': ['other', np.NaN]},
-                                                columns=['id', 'x', 'y', 'color', 'gender'])
-
         # dataframe with known distribution of cagegory levels
         cls.get_levels_df = pd.DataFrame({'grain': range(10),
                                           'letters': ['A', 'A', 'A', 'A', 'B', 'B', 'B', 'C', 'C', 'D'],
@@ -119,8 +110,8 @@ class TestTopFactors(unittest.TestCase):
         row1_predictions = self.trained_lr.make_predictions(self.one_row1)
         row2_predictions = self.trained_lr.make_predictions(self.one_row2)
         # Compare predictions to fixed values
-        self.assertEqual(np.round(row1_predictions.iloc[0, 1], decimals=6), 0.921645)
-        self.assertEqual(np.round(row2_predictions.iloc[0, 1], decimals=6), 0.935244)
+        self.assertEqual(np.round(row1_predictions.iloc[0, 1], decimals=3), 0.898)
+        self.assertEqual(np.round(row2_predictions.iloc[0, 1], decimals=4), 0.9465)
         # As a futher sanity check, note that using the "true" decision boundary, we would have
         # sigmoid(2.4 - 0.7 + 1) = sigmoid(2.7) ~ 0.937 in the first case and
         # sigmoid(0 + 1 + 0 + 2) = sigmoid(3) ~ 0.953 in the second case
@@ -140,10 +131,28 @@ class TestTopFactors(unittest.TestCase):
         self.assertRaises(HealthcareAIError, self.trained_lr.make_predictions, dataframe=self.missing_color)
 
     def test_impute_new_categorical_levels(self):
-        # This test checks that new factor levels are being imputed correctly by comparing the prediction on a row with
-        # new factor levels to a row with the same data and the new levels replaced with NaNs
-        new_factor_predictions1 = self.trained_lr.make_predictions(self.new_color)
-        new_factor_predictions2 = self.trained_lr.make_predictions(self.new_color_and_gender)
+        # This test checks that new factor levels are being imputed correctly
+        # by comparing the prediction on a row with new factor levels to a row
+        # with the same data and the new levels replaced with NaNs
+        new_color = pd.DataFrame({
+            'id': [1728, 1729],
+            'x': [1.2, 1.2],
+            'y': [-0.3, -0.3],
+            'color': ['purple', np.NaN],
+            'gender': ['female', 'female']},
+            columns=['id', 'x', 'y', 'color', 'gender'])
+
+        # dataframe with new category levels in two columns
+        new_color_and_gender = pd.DataFrame({
+            'id': [1728, 1729],
+            'x': [1.2, 1.2],
+            'y': [-0.3, -0.3],
+            'color': ['purple', np.NaN],
+            'gender': ['other', np.NaN]},
+            columns=['id', 'x', 'y', 'color', 'gender'])
+
+        new_factor_predictions1 = self.trained_lr.make_predictions(new_color)
+        new_factor_predictions2 = self.trained_lr.make_predictions(new_color_and_gender)
         self.assertEqual(new_factor_predictions1.iloc[0, 1], new_factor_predictions1.iloc[1, 1])
         self.assertEqual(new_factor_predictions2.iloc[0, 1], new_factor_predictions2.iloc[1, 1])
 

@@ -15,30 +15,53 @@ class TestSupervisedModelTrainer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         df = hcai_datasets.load_diabetes()
+        df.drop(['PatientID'], axis=1, inplace=True)
 
-        # Drop columns that won't help machine learning
-        columns_to_remove = ['PatientID']
-        df.drop(columns_to_remove, axis=1, inplace=True)
+        cls_df = df.copy()
+        cls_df['ThirtyDayReadmitFLG'].fillna('N', inplace=True)
 
-        cls.classification_trainer = SupervisedModelTrainer(dataframe=df,
-                                                            predicted_column='ThirtyDayReadmitFLG',
-                                                            model_type='classification',
-                                                            impute=True,
-                                                            grain_column='PatientEncounterID',
-                                                            verbose=False)
-        cls.regression_trainer = SupervisedModelTrainer(df,
-                                                        'SystolicBPNBR',
-                                                        'regression',
-                                                        grain_column='PatientEncounterID',
-                                                        impute=True,
-                                                        verbose=False)
+        reg_df = df.copy()
+        reg_df['SystolicBPNBR'].fillna(149, inplace=True)
 
-        cls.regression_trainer_impute_false = SupervisedModelTrainer(df,
-                                                                     'SystolicBPNBR',
-                                                                     'regression',
-                                                                     grain_column='PatientEncounterID',
-                                                                     impute=False,
-                                                                     verbose=False)
+        cls.classification_trainer = SupervisedModelTrainer(
+            dataframe=cls_df,
+            predicted_column='ThirtyDayReadmitFLG',
+            model_type='classification',
+            impute=True,
+            grain_column='PatientEncounterID',
+            verbose=False)
+
+        cls.regression_trainer = SupervisedModelTrainer(
+            reg_df,
+            'SystolicBPNBR',
+            'regression',
+            grain_column='PatientEncounterID',
+            impute=True,
+            verbose=False)
+
+        cls.regression_trainer_impute_false = SupervisedModelTrainer(
+            reg_df,
+            'SystolicBPNBR',
+            'regression',
+            grain_column='PatientEncounterID',
+            impute=False,
+            verbose=False)
+
+    def test_raise_error_on_missing_target_data(self):
+        """Insert nulls in target data and verify an error is raised."""
+        df = hcai_datasets.load_diabetes()
+        df['ThirtyDayReadmitFLG'] = [None for _ in df['ThirtyDayReadmitFLG']]
+
+        self.assertRaises(
+            HealthcareAIError,
+            SupervisedModelTrainer,
+            dataframe=df,
+            predicted_column='ThirtyDayReadmitFLG',
+            model_type='classification',
+            impute=True,
+            grain_column='PatientEncounterID',
+            verbose=False
+        )
 
     def test_knn(self):
         trained_knn = self.classification_trainer.knn()
@@ -134,6 +157,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         self.assertRaises(HealthcareAIError, trained_linear_model.roc_plot)
 
     def test_impute_false_nan_data(self):
+        # TODO Uncertain with new imputation scheme if this is relevant
         # Train the linear regression model with impute = False
         trained_linear_model = self.regression_trainer_impute_false.linear_regression()
 

@@ -22,6 +22,8 @@ class DataFrameImputer(TransformerMixin):
     the mode (most frequent value in column).
 
     Columns of other types (assumed continuous) are imputed with mean of column.
+
+    Note this converts all object types to category types.
     """
 
     def __init__(self, impute=True):

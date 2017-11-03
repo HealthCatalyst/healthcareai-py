@@ -96,7 +96,7 @@ class TestTopFactors(unittest.TestCase):
             'id': [1001, 1002, 1003],
             'Factor1TXT': ['positive_corr', 'categorical.Rare', 'positive_corr'],
             'Factor2TXT': ['negative_corr', 'negative_corr', 'categorical.Medium'],
-            'Factor3TXT': ['useless_pred_2.Y', 'positive_corr', 'useless_pred_2.Y']})
+            'Factor3TXT': ['categorical.Common', 'positive_corr', 'useless_pred_2.Y']})
 
         results = self.trained_lr.make_factors(new_data)
 
