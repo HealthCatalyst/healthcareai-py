@@ -48,8 +48,7 @@ def main():
     # Step 1: Prepare the data using optional imputation. There are two options for this:
 
     # ## Option 1: Use built in data prep pipeline that does enocding, imputation, null filtering, dummification
-    clean_training_dataframe = hcai_pipelines.full_pipeline(
-        model_type='classification',
+    clean_training_dataframe = hcai_pipelines.training_pipeline(
         predicted_column='target_str',
         grain_column='PatientID',
         impute=True).fit_transform(dataframe)
@@ -92,7 +91,7 @@ def main():
         randomized_search=False,
         # Set this relative to the size of your hyperparameter space. Higher will train more models and be slower
         # Lower will be faster and possibly less performant
-        number_iteration_samples=2
+        number_iteration_samples=5
     )
 
     trained_random_forest.print_confusion_matrix()
