@@ -139,7 +139,7 @@ def _print_imputation_warning(df):
 
     if (nulls != 0).any():
         # Show warning if any nulls are found
-        print('\nNote: Numeric imputation will always occur when making'
+        print('\nNote: Numeric imputation will always occur when making '
               'predictions on new data - otherwise rows would be dropped, '
               'which would lead to missing predictions.')
 
