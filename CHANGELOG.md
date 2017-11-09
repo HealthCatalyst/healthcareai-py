@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Imputation transformer now warns users about unseen factors during prediction use.
 - `SupervisedModelTrainer` now has additional properties: `class_labels` and `number_of_classes`
 - new test helpers for robust dataframe and series equality assertions
+- DataFrameImputer can now exclude columns.
 
 ### Changed
 
