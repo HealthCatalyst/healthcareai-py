@@ -54,6 +54,7 @@ in console output and on ROC/PR plots.
 - Getting started section of README vastly improved
 - Bug that was imputing prediction target data during trainig.
 - Predictions no longer fail when categorical factors present during training were missing in prediction.
+- Nulls in prediction column are now removed
 
 ### Deprecated
 

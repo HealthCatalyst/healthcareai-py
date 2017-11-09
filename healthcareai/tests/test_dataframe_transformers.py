@@ -194,6 +194,68 @@ class TestDataframeImputer(unittest.TestCase):
 
         _assert_dataframes_identical(expected, result)
 
+    def test_columns_to_impute(self):
+        result = self.imputer._columns_to_impute(self.train_df)
+        expected = {'id', 'numeric', 'known_numeric'}
+
+        self.assertSetEqual(expected, result)
+
+    def test_columns_to_impute_all_excluded(self):
+        df = pd.DataFrame({
+            'letter': ['a', 'b', 'b', np.NaN],
+            'num1': [1, 1, 2, np.NaN],
+            'num2': [2, 1, 2, np.NaN],
+        })
+
+        imputer = transformers.DataFrameImputer(
+            excluded_columns=['letter', 'num1', 'num2']).fit(df)
+
+        result = imputer._columns_to_impute(df)
+
+        self.assertTrue(result == set())
+
+    def test_single_exclusion_as_string(self):
+        df = pd.DataFrame({
+            'letter': ['a', 'b', 'b', np.NaN],
+            'num1': [1, 1, 2, np.NaN],
+            'num2': [2, 1, 2, np.NaN],
+        })
+        df['letter'] = df['letter'].astype('category')
+
+        expected = pd.DataFrame({
+            'letter': ['a', 'b', 'b', np.NaN],
+            'num1': [1, 1, 2, 4 / 3.0],
+            'num2': [2, 1, 2, np.NaN],
+        })
+        expected['letter'] = expected['letter'].astype('category')
+
+        imputer = transformers.DataFrameImputer(excluded_columns='num2')
+        result = imputer.fit_transform(df)
+
+        self.assertFalse(result['num1'].isnull().values.any())
+        _assert_dataframes_identical(expected, result)
+
+    def test_single_exclusion_as_list(self):
+        df = pd.DataFrame({
+            'letter': ['a', 'b', 'b', np.NaN],
+            'num1': [1, 1, 2, np.NaN],
+            'num2': [2, 1, 2, np.NaN],
+        })
+        df['letter'] = df['letter'].astype('category')
+
+        expected = pd.DataFrame({
+            'letter': ['a', 'b', 'b', np.NaN],
+            'num1': [1, 1, 2, 4 / 3.0],
+            'num2': [2, 1, 2, np.NaN],
+        })
+        expected['letter'] = expected['letter'].astype('category')
+
+        imputer = transformers.DataFrameImputer(excluded_columns=['num2'])
+        result = imputer.fit_transform(df)
+
+        self.assertFalse(result['num1'].isnull().values.any())
+        _assert_dataframes_identical(expected, result)
+
     def test_removes_nans(self):
         """This should remove numeric NaNs, and not categoricals ones."""
         df = pd.DataFrame({
@@ -349,6 +411,7 @@ class TestDataframeImputer(unittest.TestCase):
             'binary_cat': [None, 'a', 'a'],  # mode = 'a'
             'alphabet': ['t', 'r', 'y'],
             'numeric': [1, 2, 1],
+            'known_numeric': [None, None, None],
             'color': ['blue', None, None],  # mode = 'green'
             'color_cat': ['blue', None, None],  # mode = 'green'
         })
@@ -364,6 +427,7 @@ class TestDataframeImputer(unittest.TestCase):
             'binary': [np.NaN, 'a', 'a'],
             'alphabet': ['t', 'r', 'y'],
             'numeric': [1, 2, 1],
+            'known_numeric': [1.25, 1.25, 1.25],
             'color': ['blue', np.NaN, np.NaN],
             'color_cat': ['blue', np.NaN, np.NaN],
         })
@@ -374,6 +438,7 @@ class TestDataframeImputer(unittest.TestCase):
             'category',
             categories=['red', 'green', 'blue'])
 
+        # imputer = transformers.DataFrameImputer().fit(prediction_df)
         result = self.imputer.transform(prediction_df)
 
         _assert_dataframes_identical(expected, result)

@@ -26,22 +26,31 @@ class DataFrameImputer(TransformerMixin):
     Note this converts all object types to category types.
     """
 
-    def __init__(self, impute=True, verbose=True):
+    def __init__(self, impute=True, excluded_columns=None, verbose=True):
         """Instantiate the transformer."""
         self.impute = impute
+        self.included = None
         self.fill = None
         self.verbose = verbose
         self.categorical_levels = None
 
+        if not isinstance(excluded_columns, list):
+            excluded_columns = [excluded_columns]
+        self.excluded_columns = excluded_columns
+
     def fit(self, X, y=None):
         """Fit the transformer."""
-        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(X)
+        self.categorical_levels = hcai_cats.get_categorical_levels_by_column(
+            X,
+            self.excluded_columns)
 
         if self.impute is False:
             # Return if not imputing
             return self
 
         self.fill = self._calculate_imputed_filler_row(X)
+
+        self.included = self._columns_to_impute(X)
 
         if self.verbose:
             num_nans = sum(X.select_dtypes(
@@ -57,6 +66,23 @@ class DataFrameImputer(TransformerMixin):
         # return self for scikit compatibility
         return self
 
+    def _columns_to_impute(self, X):
+        """
+        Return a set of column names to impute on.
+
+        Ignores categorical and excluded columns.
+        """
+        included = set(X.columns)
+        categoricals = self.categorical_levels.keys()
+
+        if categoricals:
+            included = included - set(categoricals)
+
+        if self.excluded_columns:
+            included = included - set(self.excluded_columns)
+
+        return included
+
     def transform(self, X, y=None):
         """Fill in missing values."""
 
@@ -67,7 +93,8 @@ class DataFrameImputer(TransformerMixin):
         for col in self.categorical_levels:
             self._warn_about_unseen_factors(X, col)
 
-        result = X.fillna(self.fill)
+        result = X.copy()
+        result[list(self.included)] = X[list(self.included)].fillna(self.fill)
 
         return result
 

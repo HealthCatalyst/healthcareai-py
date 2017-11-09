@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from healthcareai.advanced_supvervised_model_trainer import _remove_nas_from_labels
+from healthcareai.advanced_supvervised_model_trainer import _remove_nulls_from_labels
 from healthcareai.trained_models.trained_supervised_model import TrainedSupervisedModel
 import healthcareai.datasets as hcai_datasets
 
@@ -46,20 +46,29 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
             clean_classification_df, CLASSIFICATION,
             CLS_PRED_COL)
 
-    def test_remove_nones_from_series(self):
+    def test_remove_nones_and_nans_from_object_series(self):
         ser = pd.Series(['Y', 'N', 'Y', np.NaN, None])
         expected = pd.Series(['Y', 'N', 'Y'])
 
-        result = _remove_nas_from_labels(ser)
+        result = _remove_nulls_from_labels(ser)
 
         self.assertIsInstance(result, pd.Series)
         pd.testing.assert_series_equal(expected, result)
+
+    def test_remove_nones_from_object_series(self):
+        junkpile = pd.Series(['Y', 'N', 'Y', None, None]).as_matrix()
+        expected = pd.Series(['Y', 'N', 'Y']).as_matrix()
+
+        result = _remove_nulls_from_labels(junkpile)
+
+        self.assertIsInstance(result, np.ndarray)
+        self.assertTrue(np.array_equal(expected, result))
 
     def test_remove_nones_from_numpy_array(self):
         arr = np.array([1, 2, 3, np.NaN, None])
         expected = np.array([1, 2, 3])
 
-        result = _remove_nas_from_labels(arr)
+        result = _remove_nulls_from_labels(arr)
 
         self.assertIsInstance(result, np.ndarray)
         self.assertTrue(np.array_equal(expected, result))
@@ -69,7 +78,7 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
         index = pd.Categorical(['Y', 'N', 'Maybe', np.NaN, None])
         expected = pd.Index(['Maybe', 'N', 'Y'])
 
-        result = _remove_nas_from_labels(index)
+        result = _remove_nulls_from_labels(index)
 
         self.assertIsInstance(result, pd.Index)
         pd.testing.assert_index_equal(expected, result)
@@ -218,7 +227,7 @@ class TestBinaryClassificationMetricValidation(unittest.TestCase):
     def test_is_binary_classifier_true(self):
         self.assertTrue(self.classification_trainer.is_binary_classification)
 
-    def test_class_labels_property(self):
+    def test_class_labels_strings(self):
         # set literal saves a function call to set()
         self.assertEqual({'Y', 'N'}, set(self.classification_trainer.class_labels))
 

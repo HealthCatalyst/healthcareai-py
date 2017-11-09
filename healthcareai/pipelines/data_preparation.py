@@ -42,7 +42,7 @@ def training_pipeline(predicted_column, grain_column, impute=True):
         # TODO of rare and very predictive values
         # Perform one of two basic imputation methods
         # TODO we need to think about making this optional to solve the problem of rare and very predictive values
-        ('imputation', DataFrameImputer(impute=impute, verbose=True)),
+        ('imputation', DataFrameImputer(impute=impute, excluded_columns=predicted_column, verbose=True)),
         ('create_dummy_variables', DataFrameCreateDummyVariables(excluded_columns=[predicted_column])),
         ('null_row_filter', DataframeNullValueFilter(excluded_columns=None)),
     ])
@@ -79,7 +79,7 @@ def prediction_pipeline(predicted_column, grain_column):
         ('remove_grain_column', DataframeColumnRemover(grain_column)),
         # TODO we need to think about making this optional to solve the problem
         # TODO of rare and very predictive values
-        ('imputation', DataFrameImputer(impute=True)),
+        ('imputation', DataFrameImputer(impute=True, excluded_columns=predicted_column)),
         ('create_dummy_variables', DataFrameCreateDummyVariables(excluded_columns=[predicted_column])),
         ('null_row_filter', DataframeNullValueFilter(excluded_columns=[predicted_column])),
     ])
