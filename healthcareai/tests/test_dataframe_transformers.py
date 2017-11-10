@@ -1,87 +1,12 @@
-import unittest
 import string
+import unittest
+
+import numpy as np
+import pandas as pd
 import random
 
-import pandas as pd
-import numpy as np
-
 import healthcareai.common.transformers as transformers
-
-
-def _convert_all_columns_to_uint8(df, ignore=None):
-    # pandas.get_dummies() outputs uint8
-    if not isinstance(ignore, list):
-        ignore = [ignore]
-
-    # filtered_df = df[df.columns.difference(ignore)]
-    for col in df:
-        if col in ignore:
-            df[col] = df[col]
-        else:
-            df[col] = df[col].astype('uint8')
-
-    return df
-
-
-def _assert_dataframes_identical(expected, result, verbose=False):
-    """
-    Asserts dataframes are identical in many ways.
-
-    1. Sort each because column order matters for equality checks
-    2. Check that column names are identical
-    3. Check each series is identical
-    4. Check the entire dataframe
-    """
-    expected = expected.sort_index(axis=1)
-    result = result.sort_index(axis=1)
-
-    test_case = unittest.TestCase()
-
-    if verbose:
-        _print_comparison(expected, result)
-
-    test_case.assertListEqual(list(expected.columns), list(result.columns))
-
-    for col in expected:
-        pd.testing.assert_series_equal(expected[col], result[col])
-
-    test_case.assertTrue(list(expected.dtypes) == list(result.dtypes))
-
-    pd.testing.assert_frame_equal(
-        expected, result,
-        check_dtype=True,
-        check_index_type=True,
-        check_column_type=True,
-        check_frame_type=True,
-        check_exact=True,
-        check_names=True,
-        check_datetimelike_compat=True,
-        check_categorical=True,
-        check_like=True)
-
-
-def _print_comparison(expected, result):
-    print('\n\n\nresult\n\n', result, '\n\nexpected\n\n', expected)
-    print('\n\n\nresult\n\n', result.dtypes, '\n\nexpected\n\n', expected.dtypes)
-
-
-def _assert_series_equal(expected, result, verbose=False):
-    """
-    Prepare for and run equality assertion.
-
-    1. Sort index
-    2. convert to object (because these can be mixed series and sometimes
-    pandas interprets them as numeric)
-    3. run assertion
-    """
-    expected.sort_index(axis=0, inplace=True)
-    result.sort_index(axis=0, inplace=True)
-    expected = expected.astype(object)
-    result = result.astype(object)
-
-    if verbose:
-        _print_comparison(expected, result)
-    pd.testing.assert_series_equal(expected, result)
+import healthcareai.tests.helpers as hcaihelpers
 
 
 class TestDataframeImputer(unittest.TestCase):
@@ -99,7 +24,7 @@ class TestDataframeImputer(unittest.TestCase):
             'binary': np.random.choice(['a', 'b'], row_count, p=[.90, .1]),
             'alphabet': self.alphabet,
             'numeric': random.sample(range(0, row_count), row_count),
-            'known_numeric': self.generate_known_numeric(row_count),
+            'known_numeric': hcaihelpers.generate_known_numeric(row_count),
             'color': self.generate_known_color(row_count)
         })
         self.numeric_mean = self.train_df['numeric'].mean()
@@ -114,15 +39,6 @@ class TestDataframeImputer(unittest.TestCase):
             categories=['red', 'green', 'blue'])
 
         self.imputer = transformers.DataFrameImputer().fit(self.train_df)
-
-    @staticmethod
-    def generate_known_numeric(length):
-        result = np.array([1 for x in range(length)])
-
-        for i in range(int(length / 4)):
-            result[i] = 2
-
-        return result
 
     @staticmethod
     def generate_known_color(length):
@@ -157,7 +73,7 @@ class TestDataframeImputer(unittest.TestCase):
         # Drop columns with unknown distributions
         result.drop(['id', 'alphabet'], inplace=True)
 
-        _assert_series_equal(expected, result, verbose=True)
+        hcaihelpers.assert_series_equal(expected, result)
 
     def test_false_returns_unmodified(self):
         """Assure that no imputation occurs."""
@@ -178,7 +94,7 @@ class TestDataframeImputer(unittest.TestCase):
         imputer = transformers.DataFrameImputer(impute=False).fit(df)
         result = imputer.transform(df)
 
-        _assert_dataframes_identical(expected, result, verbose=True)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_converts_object_to_category(self):
         df = pd.DataFrame({
@@ -192,7 +108,7 @@ class TestDataframeImputer(unittest.TestCase):
 
         result = transformers.DataFrameImputer().fit_transform(df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_columns_to_impute(self):
         result = self.imputer._columns_to_impute(self.train_df)
@@ -276,7 +192,7 @@ class TestDataframeImputer(unittest.TestCase):
         self.assertFalse(result['num1'].isnull().values.any())
         self.assertFalse(result['num2'].isnull().values.any())
 
-        _assert_dataframes_identical(expected, result, verbose=True)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_removes_nones(self):
         """This should remove numeric Nones, and not categorical ones."""
@@ -299,7 +215,7 @@ class TestDataframeImputer(unittest.TestCase):
         self.assertFalse(result['num1'].isnull().values.any())
         self.assertFalse(result['num2'].isnull().values.any())
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_get_unseen_factors(self):
         """binary column is as expected and alphabet column has new levels."""
@@ -441,7 +357,7 @@ class TestDataframeImputer(unittest.TestCase):
         # imputer = transformers.DataFrameImputer().fit(prediction_df)
         result = self.imputer.transform(prediction_df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameConvertTargetToBinary(unittest.TestCase):
@@ -455,7 +371,7 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 
         result = transformers.DataFrameConvertTargetToBinary('regression', 'string_outcome').fit_transform(expected)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_converts_y_n_for_classification(self):
         df = pd.DataFrame({
@@ -474,7 +390,7 @@ class TestDataFrameConvertTargetToBinary(unittest.TestCase):
 
         result = transformers.DataFrameConvertTargetToBinary('classification', 'string_outcome').fit_transform(df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameCreateDummyVariables(unittest.TestCase):
@@ -543,7 +459,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
 
         result = dummifier.transform(df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_trinary_object_and_category(self):
         df = pd.DataFrame({
@@ -575,7 +491,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         result = transformers.DataFrameCreateDummyVariables(
             'id').fit_transform(df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_remembers_unrepresented_categories(self):
         # TODO this is broken due to a pandas bug
@@ -613,7 +529,7 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
         # trained = transformers.DataFrameCreateDummyVariables('id').fit(self.train_df)
         # result = trained.transform(prediction_df)
         #
-        # _assert_dataframes_identical(expected, result)
+        # hcaihelpers._assert_dataframes_identical(expected, result)
 
     def test_none_represented(self):
         prediction_df = pd.DataFrame({
@@ -656,12 +572,10 @@ class TestDataFrameCreateDummyVariables(unittest.TestCase):
             'numeric': [1, 2, 1],
         })
 
-        expected = _convert_all_columns_to_uint8(expected, ['id', 'numeric'])
+        expected = hcaihelpers.convert_all_columns_to_uint8(expected, ['id', 'numeric'])
         result = self.dummifier.transform(prediction_df)
 
-        _assert_dataframes_identical(expected, result)
-
-
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
 
 class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
@@ -678,7 +592,7 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
         })
 
         result = transformers.DataFrameConvertColumnToNumeric('integer_strings').fit_transform(df)
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
     def test_integer(self):
         df = pd.DataFrame({
@@ -692,7 +606,7 @@ class TestDataFrameConvertColumnToNumeric(unittest.TestCase):
 
         result = transformers.DataFrameConvertColumnToNumeric('numeric').fit_transform(df)
 
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
 
 class TestDataframeUnderSampler(unittest.TestCase):
@@ -781,7 +695,7 @@ class TestRemovesNANs(unittest.TestCase):
              'c': [3, 4, 5, None, None],
              'd': [None, 8, 1, 3, None],
              'label': ['Y', 'N', 'Y', 'N', None]})
-        _assert_dataframes_identical(expected, result)
+        hcaihelpers.assert_dataframes_identical(expected, result)
 
 
 class TestFeatureScaling(unittest.TestCase):
@@ -811,10 +725,10 @@ class TestFeatureScaling(unittest.TestCase):
         feature_scaling = transformers.DataFrameFeatureScaling()
         df_final = feature_scaling.fit_transform(self.df).round(5)
 
-        _assert_dataframes_identical(expected.round(5), df_final)
+        hcaihelpers.assert_dataframes_identical(expected.round(5), df_final)
 
         df_reused = transformers.DataFrameFeatureScaling(reuse=feature_scaling).fit_transform(self.df_repeat).round(5)
-        _assert_dataframes_identical(expected.round(5), df_reused)
+        hcaihelpers.assert_dataframes_identical(expected.round(5), df_reused)
 
 
 if __name__ == '__main__':

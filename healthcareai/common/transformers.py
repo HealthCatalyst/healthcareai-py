@@ -12,6 +12,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler
 
 import healthcareai.common.categorical_levels as hcai_cats
+import healthcareai.common.null_profiling as hcai_nulls
 
 
 class DataFrameImputer(TransformerMixin):
@@ -53,15 +54,7 @@ class DataFrameImputer(TransformerMixin):
         self.included = self._columns_to_impute(X)
 
         if self.verbose:
-            num_nans = sum(X.select_dtypes(
-                include=[np.number, 'category', object]).isnull().sum())
-            num_total = sum(X.select_dtypes(
-                include=[np.number, 'category', object]).count())
-            percentage_imputed = num_nans / num_total * 100
-            print('Percentage Imputed: {:.2%}'.format(percentage_imputed))
-            print('Note: Numeric imputation will always occur when making'
-                  'predictions on new data - otherwise rows would be dropped, '
-                  'which would lead to missing predictions.')
+            _print_imputation_warning(X)
 
         # return self for scikit compatibility
         return self
@@ -165,6 +158,23 @@ class DataFrameImputer(TransformerMixin):
     def _get_unique_factors_set(X, column):
         """Factors in a column as a set."""
         return set(X[column].unique())
+
+
+def _print_imputation_warning(df):
+    """Print a warning about imputed numeric columns if there are any."""
+    nulls = hcai_nulls.calculate_numeric_column_null_percentages(df)
+
+    if (nulls != 0).any():
+        # Show warning if any nulls are found
+        print('\nNote: Numeric imputation will always occur when making '
+              'predictions on new data - otherwise rows would be dropped, '
+              'which would lead to missing predictions.')
+
+        print('\nImputed values for numeric columns:')
+        hcai_nulls.print_numeric_null_percentages(
+            df,
+            null_header='Percent Imputed')
+        print('\n\n')
 
 
 class DataFrameConvertTargetToBinary(TransformerMixin):
