@@ -34,8 +34,8 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
                                                plot_flag=False,
                                                list_flag=False)
 
-        self.assertTrue(df_out.iloc[-1, 1] > 65 and df_out.iloc[-1, 1] < 85)
-        self.assertTrue(df_out.iloc[-1, 0] > 40 and df_out.iloc[-1, 0] < 60)
+        self.assertTrue(65 < df_out.iloc[-1, 1] < 85)
+        self.assertTrue(40 < df_out.iloc[-1, 0] < 60)
 
     def tearDown(self):
         del self.df
@@ -54,7 +54,7 @@ class TestFeatureAvailabilityProfilerError1(unittest.TestCase):
                                                   last_load_col_name='LastLoadDTS',
                                                   plot_flag=False,
                                                   list_flag=False)
-        self.assertEqual('Admit Date column is not a date type', error.exception.message)
+        self.assertEqual('Admit Date column is not a date type.', error.exception.message)
 
 
 class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
@@ -72,7 +72,7 @@ class TestFeatureAvailabilityProfilerError2(unittest.TestCase):
                                                    last_load_col_name='LastLoadDTS',
                                                    plot_flag=False,
                                                    list_flag=False)
-        self.assertEqual('Last Load Date column is not a date type',
+        self.assertEqual('Last Load Date column is not a date type.',
                          error.exception.message)
 
 
@@ -100,7 +100,7 @@ class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
                                                    last_load_col_name='LastLoadDTS',
                                                    plot_flag=False,
                                                    list_flag=False)
-        self.assertEqual('Dataframe must be at least 3 columns',
+        self.assertEqual('Dataframe must be at least 3 columns.',
                          error.exception.message)
 
     def tearDown(self):
