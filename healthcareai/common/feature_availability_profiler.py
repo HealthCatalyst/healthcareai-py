@@ -13,8 +13,7 @@ def feature_availability_profiler(
         plot_flag=True,
         list_flag=False):
     """
-    This function counts the number of populated data values over time for a
-    given dataframe.
+    Count the number of populated data values over time.
 
     Args:
         data_frame (pandas.core.dataframe.DataFrame): dataframe of features to count populated data in. This
@@ -23,22 +22,19 @@ def feature_availability_profiler(
         admit_col_name (str): name of column containing patient admission date
         last_load_col_name (str): name of column containing today's date or when the
             table was last loaded.
-        plotFlag (bool): True will return a plot of the data availability.
+        plot_flag (bool): True will return a plot of the data availability.
         list_flag (bool): True will return a matrix of populated fields vs. time.
 
     Returns:
-        (pandas.core.dataframe.DataFrame): a dataframe of populated fields vs. time.
+        (pandas.core.frame.DataFrame): a dataframe of populated fields vs. time.
     """
 
     df = data_frame
 
     # Error checks
-    if df[admit_col_name].dtype != 'datetime64[ns]':
-        raise HealthcareAIError('Admit Date column is not a date type')
-    if df[last_load_col_name].dtype != 'datetime64[ns]':
-        raise HealthcareAIError('Last Load Date column is not a date type')
-    if df.shape[1] < 3:
-        raise HealthcareAIError('Dataframe must be at least 3 columns')
+    _validate_admit_is_date(df[admit_col_name])
+    _validate_last_load_is_date(df[last_load_col_name])
+    _validate_at_least_three_columns(df)
 
     # Look at data that's been pulled in
     print(df.head())
@@ -106,3 +102,22 @@ def count_nulls_in_date_range(df, start, end, admit_col_name):
     num_data = 100 - np.round(100 * df.isnull().sum() / df.shape[0])
 
     return num_data
+
+
+def _validate_at_least_three_columns(df):
+    if df.shape[1] < 3:
+        raise HealthcareAIError('Dataframe must be at least 3 columns.')
+
+
+def _validate_last_load_is_date(last_load):
+    if not _is_date(last_load):
+        raise HealthcareAIError('Last Load Date column is not a date type.')
+
+
+def _validate_admit_is_date(admit):
+    if not _is_date(admit):
+        raise HealthcareAIError('Admit Date column is not a date type.')
+
+
+def _is_date(series):
+    return np.issubdtype(series.dtype, np.datetime64)
