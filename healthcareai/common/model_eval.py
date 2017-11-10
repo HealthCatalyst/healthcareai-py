@@ -27,11 +27,14 @@ def compute_confusion_matrix(y_test, class_predictions):
     Returns:
         confusion_matrix: a confusion matrix
         class_names: names of the classes from the true label
+
+    Raises:
+        HealthcareAIError: Unequal number of predictions and true labels
     """
     _validate_predictions_and_labels_are_equal_length(class_predictions, y_test)
 
     # Get a list of classes in the test dataset
-    class_names = list(set(y_test))
+    class_names = sorted(set(y_test))
 
     # Compute confusion matrix
     confusion_matrix = skmetrics.confusion_matrix(

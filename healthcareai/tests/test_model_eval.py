@@ -9,6 +9,41 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 import healthcareai.tests.helpers as test_helpers
 
 
+class TestConfusionMatrix(unittest.TestCase):
+    def test_raise_error_on_unequal_length(self):
+        truth = ['y', 'n', 'n', 'y', 'n']
+        preds = ['y', 'n', 'n', 'y']
+
+        self.assertRaises(
+            HealthcareAIError,
+            hcai_eval.compute_confusion_matrix,
+            truth,
+            preds)
+
+    def test_returns_correct_types(self):
+        truth = ['y', 'n', 'n', 'y']
+        preds = ['y', 'n', 'n', 'y']
+
+        cm, labels = hcai_eval.compute_confusion_matrix(truth, preds)
+
+        self.assertIsInstance(labels, list)
+        self.assertIsInstance(cm, np.ndarray)
+
+    def test_class_labels_sort(self):
+        truth_1 = ['y', 'y', 'n', 'y']
+        preds_1 = ['n', 'n', 'n', 'y']
+
+        truth_2 = ['n', 'n', 'n', 'y']
+        preds_2 = ['y', 'y', 'n', 'y']
+
+        _, obs_labels_1 = hcai_eval.compute_confusion_matrix(truth_1, preds_1)
+        _, obs_labels_2 = hcai_eval.compute_confusion_matrix(truth_2, preds_2)
+
+        print(obs_labels_1, '\n', obs_labels_2)
+
+        self.assertListEqual(obs_labels_1, obs_labels_2)
+
+
 class TestROC(unittest.TestCase):
     def test_roc(self):
         df = pd.DataFrame({'a': np.repeat(np.arange(.1, 1.1, .1), 10)})
