@@ -30,8 +30,10 @@ def fixture(file):
 
 def assertBetween(self, minimum, maximum, value):
     """Fail if value is not between min and max (inclusive)."""
-    self.assertGreaterEqual(value, minimum)
-    self.assertLessEqual(value, maximum)
+    test_case = unittest.TestCase()
+
+    test_case.assertGreaterEqual(value, minimum)
+    test_case.assertLessEqual(value, maximum)
 
 
 def generate_known_numeric(length):
