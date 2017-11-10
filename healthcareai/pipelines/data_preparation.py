@@ -79,7 +79,7 @@ def prediction_pipeline(predicted_column, grain_column):
         ('remove_grain_column', DataframeColumnRemover(grain_column)),
         # TODO we need to think about making this optional to solve the problem
         # TODO of rare and very predictive values
-        ('imputation', DataFrameImputer(impute=True)),
+        ('imputation', DataFrameImputer(impute=True, verbose=False)),
         ('create_dummy_variables', DataFrameCreateDummyVariables(excluded_columns=[predicted_column])),
         ('null_row_filter', DataframeNullValueFilter(excluded_columns=[predicted_column])),
     ])
