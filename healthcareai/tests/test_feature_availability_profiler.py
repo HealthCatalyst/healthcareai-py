@@ -20,7 +20,7 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
         for i in range(1000):
             random_second = randrange(int_delta)
             admit[i] = pd.datetime(2015, 5, 1) + timedelta(seconds=random_second)
-        self.df['AdmitDTS'] = admit
+        self.df['AdmitDTS'] = admit.astype(np.datetime64)
         # add nulls
         a = np.random.rand(1000) > .5
         self.df.loc[a, ['A']] = np.nan
@@ -91,7 +91,7 @@ class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
             random_second = randrange(int_delta)
             admit[i] = pd.datetime(2015, 5, 1) + timedelta(
                 seconds=random_second)
-        self.df['AdmitDTS'] = admit
+        self.df['AdmitDTS'] = admit.astype(np.datetime64)
 
     def runTest(self):
         with self.assertRaises(HealthcareAIError) as error:
