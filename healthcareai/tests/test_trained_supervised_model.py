@@ -65,32 +65,6 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.catalyst_dataframe = cls.trained_linear.create_catalyst_dataframe(
             cls.prediction_df)
 
-        # Multi class for testing
-        dermatology = healthcareai.load_dermatology()
-        cls.multiclass_trainer = SupervisedModelTrainer(
-            dermatology,
-            'target_num',
-            'classification',
-            impute=True,
-            grain_column='PatientID',
-            verbose=False)
-
-        cls.multiclass_logistic_regression = cls.multiclass_trainer.logistic_regression()
-
-    def test_raise_error_on_missing_target_data(self):
-        df = hcai_datasets.load_diabetes()
-        # df.SystolicBPNBR.fillna(149, inplace=True)
-
-        self.assertRaises(
-            HealthcareAIError,
-            SupervisedModelTrainer,
-            df,
-            'SystolicBPNBR',
-            'regression',
-            impute=True,
-            grain_column='PatientEncounterID'
-        )
-
     def test_is_classification(self):
         self.assertTrue(self.trained_lr.is_classification)
         self.assertFalse(self.trained_lr.is_regression)
@@ -98,6 +72,10 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     def test_is_regression(self):
         self.assertTrue(self.trained_linear.is_regression)
         self.assertFalse(self.trained_linear.is_classification)
+
+    def test_is_binary_classification(self):
+        self.assertTrue(self.trained_lr.is_binary_classification)
+        self.assertFalse(self.trained_linear.is_binary_classification)
 
     def test_predictions_is_dataframe(self):
         self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
@@ -172,8 +150,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     def test_comparison_plotter_raises_error_on_single_non_tsm(self):
         self.assertRaises(
             HealthcareAIError,
-                          tsm.tsm_classification_comparison_plots,
-                          'foo')
+            tsm.tsm_classification_comparison_plots,
+            'foo')
 
     def test_comparison_plotter_raises_error_on_list_with_non_tsm(self):
         bad_list = ['foo']
@@ -181,31 +159,6 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             HealthcareAIError,
             tsm.tsm_classification_comparison_plots,
             bad_list)
-
-    def test_multiclass_class_number(self):
-        self.assertEqual(6, self.multiclass_trainer.number_of_classes)
-
-    def test_multiclass_class_labels(self):
-        self.assertEqual(
-            set([1, 2, 3, 4, 5, 6]),
-            set(self.multiclass_trainer.class_labels))
-
-    def test_multiclass_raises_errors_on_binary_metrics(self):
-        self.assertRaises(
-            HealthcareAIError,
-            self.multiclass_logistic_regression.roc)
-
-        self.assertRaises(
-            HealthcareAIError,
-            self.multiclass_logistic_regression.pr)
-
-        self.assertRaises(
-            HealthcareAIError,
-            self.multiclass_logistic_regression.roc_plot)
-
-        self.assertRaises(
-            HealthcareAIError,
-            self.multiclass_logistic_regression.pr_plot)
 
     def test_predictions_work_with_unseen_factors(self):
         """
@@ -457,6 +410,81 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(expected_found, found)
         self.assertEqual(expected_required, required)
         self.assertEqual(expected_missing, missing)
+
+
+class TestTrainedSupervisedModelMulticlass(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        dermatology = healthcareai.load_dermatology()
+        cls.trainer = SupervisedModelTrainer(
+            dermatology,
+            'target_num',
+            'classification',
+            impute=True,
+            grain_column='PatientID',
+            verbose=False)
+
+        cls.pred_df = dermatology.copy().drop(['target_num'], axis=1)
+        cls.lr = cls.trainer.logistic_regression()
+
+    def test_is_classification(self):
+        self.assertTrue(self.lr.is_classification)
+
+    def test_is_regression(self):
+        self.assertFalse(self.lr.is_regression)
+
+    def test_metrics_returns_object(self):
+        self.assertIsInstance(self.lr.metrics, dict)
+
+    def test_multiclass_raises_errors_on_binary_metrics(self):
+        self.assertRaises(HealthcareAIError, self.lr.roc)
+        self.assertRaises(HealthcareAIError, self.lr.pr)
+        self.assertRaises(HealthcareAIError, self.lr.roc_plot)
+        self.assertRaises(HealthcareAIError, self.lr.pr_plot)
+
+    def test_predictions_is_dataframe(self):
+        predictions = self.lr.make_predictions(self.pred_df)
+        self.assertIsInstance(predictions, pd.core.frame.DataFrame)
+
+    def test_predictions_are_same_length_as_input(self):
+        predictions = self.lr.make_predictions(self.pred_df)
+        self.assertEqual(len(predictions), len(self.pred_df))
+
+    def test_single_prediction(self):
+        single_df = self.pred_df.iloc[0:1].copy()
+
+        result = self.lr.make_predictions(single_df)
+        assertBetween(self, 0.7, 0.99, result['Probability'][0])
+
+        probs = result['All Probabilities'][0]
+
+        assertBetween(self, 0, .1, probs[1])
+        assertBetween(self, .8, 1, probs[2])
+        assertBetween(self, 0, .1, probs[3])
+        assertBetween(self, 0, .1, probs[4])
+        assertBetween(self, 0, .2, probs[5])
+        assertBetween(self, 0, .1, probs[6])
+
+        expected = pd.DataFrame({
+            'PatientID': [1],
+            'Prediction': [2],
+        })
+
+        result.drop(['All Probabilities', 'Probability'], axis=1, inplace=True)
+        assert_dataframes_identical(expected, result)
+
+    def test_multiple_predictions(self):
+        single_df = self.pred_df.iloc[0:5].copy()
+
+        result = self.lr.make_predictions(single_df)
+
+        expected = pd.DataFrame({
+            'PatientID': [1, 2, 3, 4, 5],
+            'Prediction': [2, 1, 3, 1, 3],
+        })
+
+        result.drop(['All Probabilities', 'Probability'], axis=1, inplace=True)
+        assert_dataframes_identical(expected, result)
 
 
 if __name__ == '__main__':

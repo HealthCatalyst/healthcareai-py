@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `SupervisedModelTrainer` now has additional properties: `class_labels` and `number_of_classes`
 - new test helpers for robust dataframe and series equality assertions
 - DataFrameImputer can now exclude columns.
+- SupervisedModelTrainer now returns a nice dictionary of probabilites by label for multiclass predictions
 
 ### Changed
 
