@@ -106,6 +106,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         result = trained_rf_regressor.metrics
 
+        self.assertIsInstance(trained_rf_regressor, TrainedSupervisedModel)
         helpers.assertBetween(self, 350, 750, result['mean_squared_error'])
         helpers.assertBetween(self, 10, 25, result['mean_absolute_error'])
 
