@@ -202,7 +202,7 @@ class TrainedSupervisedModel(object):
         results[self.grain_column] = dataframe[self.grain_column].values
         results['Prediction'] = y_predictions
         results['Probability'] = y_probability
-        results['All Probabilities'] = str(all_probabilities)
+        results['All Probabilities'] = all_probabilities
 
         return results
 

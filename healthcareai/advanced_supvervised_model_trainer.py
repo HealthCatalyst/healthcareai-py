@@ -25,21 +25,6 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 SUPPORTED_MODEL_TYPES = ['classification', 'regression']
 
 
-def _remove_nas_from_labels(class_labels):
-    """Remove nans/nulls/Nones from class labels, regardless of type."""
-    if isinstance(class_labels, pd.core.series.Series):
-        class_labels = class_labels.dropna()
-    elif isinstance(class_labels, np.ndarray):
-        # np.isnan barfs on Nones. Change to NaNs
-        class_labels = np.array([np.nan if x is None else x for x in class_labels])
-        class_labels = class_labels[~np.isnan(class_labels)]
-    elif isinstance(class_labels, pd.Categorical):
-        # TODO this might reorder class labels and screw things up...
-        class_labels = class_labels.categories
-
-    return class_labels
-
-
 class AdvancedSupervisedModelTrainer(object):
     """
     Train supervised models.
@@ -123,9 +108,9 @@ class AdvancedSupervisedModelTrainer(object):
         uniques = self.dataframe[self.predicted_column].unique()
 
         # Guard against nulls in target column showing up here
-        uniques = _remove_nas_from_labels(uniques)
+        clean = _remove_nulls_from_labels(uniques)
 
-        return np.sort(uniques)
+        return np.sort(clean)
 
     @property
     def number_of_classes(self):
@@ -584,3 +569,42 @@ class AdvancedSupervisedModelTrainer(object):
     def _console_log(self, message):
         if self.verbose:
             print('AdvancedSupervisedModelTrainer :: {}'.format(message))
+
+
+def _remove_nulls_from_labels(labels):
+    """Remove nans/nulls/Nones from class labels, regardless of type."""
+    clean = []
+
+    if _is_series(labels):
+        clean = labels.dropna()
+    elif _is_ndarray(labels):
+        if _is_string_array(labels):
+            clean = labels[~pd.isnull(labels)]
+        else:
+            clean = labels[~np.isnan(_convert_nones_to_nans(labels))]
+    elif _is_categorical(labels):
+        # TODO this might reorder class labels and screw things up...
+        clean = labels.categories
+
+    return clean
+
+
+def _is_series(incoming):
+    return isinstance(incoming, pd.core.series.Series)
+
+
+def _is_ndarray(incoming):
+    return isinstance(incoming, np.ndarray)
+
+
+def _is_string_array(class_labels):
+    return class_labels.dtype == object
+
+
+def _is_categorical(incoming):
+    return isinstance(incoming, pd.Categorical)
+
+
+def _convert_nones_to_nans(incoming):
+    """Change Nones to NaNs so np.isnan works."""
+    return np.array([np.nan if x is None else x for x in incoming])

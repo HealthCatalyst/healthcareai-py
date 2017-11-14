@@ -1,11 +1,14 @@
 import unittest
 import pandas as pd
+import numpy as np
 
 import healthcareai.trained_models.trained_supervised_model
 import healthcareai.trained_models.trained_supervised_model as tsm
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
 import healthcareai.datasets as hcai_datasets
+from healthcareai.tests.helpers import assert_dataframes_identical, \
+    assertBetween
 
 
 class TestTrainedSupervisedModel(unittest.TestCase):
@@ -37,7 +40,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             grain_column='PatientEncounterID')
 
         # Train the models
-        cls.trained_linear_model = regression_trainer.linear_regression()
+        cls.trained_linear = regression_trainer.linear_regression()
         cls.trained_lr = classification_trainer.logistic_regression()
 
         # Load a new df for predicting
@@ -48,15 +51,19 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         cls.prediction_df.drop(columns_to_remove, axis=1, inplace=True)
 
         # Create various outputs
-        cls.predictions = cls.trained_linear_model.make_predictions(cls.prediction_df)
-        cls.factors = cls.trained_linear_model.make_factors(cls.prediction_df, number_top_features=3)
-        cls.predictions_with_3_factors = cls.trained_linear_model.make_predictions_with_k_factors(
+        cls.predictions = cls.trained_linear.make_predictions(
+            cls.prediction_df)
+        cls.factors = cls.trained_linear.make_factors(
             cls.prediction_df,
             number_top_features=3)
-        cls.original_with_predictions_3_factors = cls.trained_linear_model.make_original_with_predictions_and_factors(
+        cls.predictions_with_3_factors = cls.trained_linear.make_predictions_with_k_factors(
             cls.prediction_df,
             number_top_features=3)
-        cls.catalyst_dataframe = cls.trained_linear_model.create_catalyst_dataframe(cls.prediction_df)
+        cls.original_with_predictions_3_factors = cls.trained_linear.make_original_with_predictions_and_factors(
+            cls.prediction_df,
+            number_top_features=3)
+        cls.catalyst_dataframe = cls.trained_linear.create_catalyst_dataframe(
+            cls.prediction_df)
 
         # Multi class for testing
         dermatology = healthcareai.load_dermatology()
@@ -89,8 +96,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertFalse(self.trained_lr.is_regression)
 
     def test_is_regression(self):
-        self.assertTrue(self.trained_linear_model.is_regression)
-        self.assertFalse(self.trained_linear_model.is_classification)
+        self.assertTrue(self.trained_linear.is_regression)
+        self.assertFalse(self.trained_linear.is_classification)
 
     def test_predictions_is_dataframe(self):
         self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
@@ -102,22 +109,29 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertIsInstance(self.predictions_with_3_factors, pd.DataFrame)
 
     def test_predictions_with_factors_are_same_length_as_input(self):
-        self.assertEqual(len(self.predictions_with_3_factors), len(self.prediction_df))
+        self.assertEqual(
+            len(self.predictions_with_3_factors),
+            len(self.prediction_df))
 
     def test_predictions_with_factors_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction']
+        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT',
+                    'Factor3TXT', 'Prediction']
         results = self.predictions_with_3_factors.columns.values
-        self.assertTrue(set(expected) == set(results))
+        self.assertEqual(set(expected), set(results))
 
     def test_original_with_predictions_factors_return_is_dataframe(self):
-        self.assertIsInstance(self.original_with_predictions_3_factors, pd.DataFrame)
+        self.assertIsInstance(
+            self.original_with_predictions_3_factors,
+            pd.DataFrame)
 
     def test_original_with_predictions_factors_are_same_length_as_input(self):
-        self.assertEqual(len(self.original_with_predictions_3_factors), len(self.prediction_df))
+        self.assertEqual(len(self.original_with_predictions_3_factors),
+                         len(self.prediction_df))
 
     def test_original_with_predictions_factors_columns(self):
-        expected = ['PatientEncounterID', 'LDLNBR', 'A1CNBR', 'GenderFLG', 'ThirtyDayReadmitFLG',
-                    'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction']
+        expected = ['PatientEncounterID', 'LDLNBR', 'A1CNBR', 'GenderFLG',
+                    'ThirtyDayReadmitFLG', 'Factor1TXT', 'Factor2TXT',
+                    'Factor3TXT', 'Prediction']
         results = self.original_with_predictions_3_factors.columns.values
         self.assertTrue(set(expected) == set(results))
 
@@ -128,16 +142,19 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(len(self.catalyst_dataframe), len(self.prediction_df))
 
     def test_catalyst_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT', 'Factor3TXT', 'Prediction', 'BindingID',
+        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT',
+                    'Factor3TXT', 'Prediction', 'BindingID',
                     'BindingNM', 'LastLoadDTS']
         results = self.catalyst_dataframe.columns.values
         self.assertTrue(set(expected) == set(results))
 
     def test_metrics_returns_object(self):
-        self.assertIsInstance(self.trained_linear_model.metrics, dict)
+        self.assertIsInstance(self.trained_linear.metrics, dict)
 
     def test_prepare_and_subset_returns_dataframe(self):
-        self.assertIsInstance(self.trained_linear_model.prepare_and_subset(self.prediction_df), pd.DataFrame)
+        self.assertIsInstance(
+            self.trained_linear.prepare_and_subset(self.prediction_df),
+            pd.DataFrame)
 
     def test_pr_returns_dict(self):
         self.assertIsInstance(self.trained_lr.pr(), dict)
@@ -146,33 +163,49 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertIsInstance(self.trained_lr.roc(), dict)
 
     def test_comparison_plotter_raises_error_on_bad_plot_type(self):
-        self.assertRaises(HealthcareAIError,
-                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
-                          self.trained_lr,
-                          plot_type='bad_plot_type')
+        self.assertRaises(
+            HealthcareAIError,
+            tsm.tsm_classification_comparison_plots,
+            self.trained_lr,
+            plot_type='bad_plot_type')
 
     def test_comparison_plotter_raises_error_on_single_non_tsm(self):
-        self.assertRaises(HealthcareAIError,
-                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
+        self.assertRaises(
+            HealthcareAIError,
+                          tsm.tsm_classification_comparison_plots,
                           'foo')
 
     def test_comparison_plotter_raises_error_on_list_with_non_tsm(self):
         bad_list = ['foo']
-        self.assertRaises(HealthcareAIError,
-                          healthcareai.trained_models.trained_supervised_model.tsm_classification_comparison_plots,
-                          bad_list)
+        self.assertRaises(
+            HealthcareAIError,
+            tsm.tsm_classification_comparison_plots,
+            bad_list)
 
     def test_multiclass_class_number(self):
         self.assertEqual(6, self.multiclass_trainer.number_of_classes)
 
     def test_multiclass_class_labels(self):
-        self.assertEqual(set([1, 2, 3, 4, 5, 6]), set(self.multiclass_trainer.class_labels))
+        self.assertEqual(
+            set([1, 2, 3, 4, 5, 6]),
+            set(self.multiclass_trainer.class_labels))
 
     def test_multiclass_raises_errors_on_binary_metrics(self):
-        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc)
-        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr)
-        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.roc_plot)
-        self.assertRaises(HealthcareAIError, self.multiclass_logistic_regression.pr_plot)
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_logistic_regression.roc)
+
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_logistic_regression.pr)
+
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_logistic_regression.roc_plot)
+
+        self.assertRaises(
+            HealthcareAIError,
+            self.multiclass_logistic_regression.pr_plot)
 
     def test_predictions_work_with_unseen_factors(self):
         """
@@ -189,9 +222,84 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             'ThirtyDayReadmitFLG': [None, None, None]
         })
 
-        preds_bad = self.trained_lr.make_predictions(bad_data)
+        expected = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'Probability': [None, None, None],
+            'All Probabilities': [None, None, None],
+        })
 
-        self.assertIsInstance(preds_bad, pd.DataFrame)
+        result = self.trained_lr.make_predictions(bad_data)
+
+        # Check result is sane then drop it to check the rest of the df
+        for pred in result['Prediction']:
+            assertBetween(self, 0.0, 0.9, pred)
+        result.drop('Prediction', axis=1, inplace=True)
+
+        self.assertIsInstance(result, pd.DataFrame)
+        assert_dataframes_identical(expected, result)
+
+    def test_predictions_work_with_unseen_factors_in_prediction(self):
+        """
+        This is awkward to test since it is unknown how NaNs will be predicted.
+
+        All we can really test is that a prediction came back.
+        """
+        bad_data = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'A1CNBR': [8.9, 8.9, 6],
+            'LDLNBR': [110, 110, 250],
+            'SystolicBPNBR': [85, 85, 122],
+            'GenderFLG': ['F', 'F', 'M'],
+            'ThirtyDayReadmitFLG': ['garbage', np.NaN, 'Junk']
+        })
+
+        expected = pd.DataFrame({
+            'PatientEncounterID': [555, 556, 557],
+            'Probability': [None, None, None],
+            'All Probabilities': [None, None, None],
+        })
+
+        result = self.trained_lr.make_predictions(bad_data)
+
+        # Check result is sane then drop it to check the rest of the df
+        for pred in result['Prediction']:
+            assertBetween(self, 0.0, 0.9, pred)
+        result.drop('Prediction', axis=1, inplace=True)
+
+        self.assertIsInstance(result, pd.DataFrame)
+        assert_dataframes_identical(expected, result)
+
+    def test_predictions_equal_regardless_of_prediction_row_existence(self):
+        no_pred_row = pd.DataFrame({
+            'PatientEncounterID': [555],
+            'A1CNBR': [8.9],
+            'LDLNBR': [110],
+            'SystolicBPNBR': [85],
+            'GenderFLG': ['F'],
+        })
+
+        pred_row = no_pred_row.copy()
+        pred_row['ThirtyDayReadmitFLG'] = ['Y']
+
+        assert_dataframes_identical(
+            self.trained_lr.make_predictions(pred_row),
+            self.trained_lr.make_predictions(no_pred_row))
+
+    def test_predictions_equal_regardless_of_prediction_row_junk(self):
+        no_pred_row = pd.DataFrame({
+            'PatientEncounterID': [555],
+            'A1CNBR': [8.9],
+            'LDLNBR': [110],
+            'SystolicBPNBR': [85],
+            'GenderFLG': ['F'],
+        })
+
+        pred_row = no_pred_row.copy()
+        pred_row['ThirtyDayReadmitFLG'] = ['garbage']
+
+        assert_dataframes_identical(
+            self.trained_lr.make_predictions(pred_row),
+            self.trained_lr.make_predictions(no_pred_row))
 
     def test_add_missing_prediction_column_exists(self):
         bad_df = pd.DataFrame({
@@ -207,22 +315,116 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(set(result.columns), expected)
         self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
         self.assertListEqual(list(bad_df['gender']), list(result['gender']))
-        self.assertListEqual(list(bad_df['ThirtyDayReadmitFLG']), list(result['ThirtyDayReadmitFLG']))
+        self.assertListEqual(list(bad_df['ThirtyDayReadmitFLG']),
+                             list(result['ThirtyDayReadmitFLG']))
 
-    def test_add_missing_prediction_column(self):
+    def test_add_missing_prediction_column_single_row(self):
         bad_df = pd.DataFrame({
-            'numeric': [0, 1, 2, 3],
-            'gender': ['F', 'F', 'M', 'F'],
+            'PatientEncounterID': [1],
+            'SystolicBPNBR': [100],
+            'LDLNBR': [100],
+            'A1CNBR': [8],
+            'GenderFLG': ['M'],
         })
 
+        expected = bad_df.copy()
+        expected['ThirtyDayReadmitFLG'] = [np.NaN]
+
         result = self.trained_lr._add_prediction_column_if_missing(bad_df)
-        expected = {'numeric', 'gender', 'ThirtyDayReadmitFLG'}
 
         self.assertIsInstance(result, pd.core.frame.DataFrame)
-        self.assertEqual(set(result.columns), expected)
-        self.assertTrue(pd.isnull(result['ThirtyDayReadmitFLG']).all())
-        self.assertListEqual(list(bad_df['numeric']), list(result['numeric']))
-        self.assertListEqual(list(bad_df['gender']), list(result['gender']))
+        self.assertTrue(expected['ThirtyDayReadmitFLG'].isnull().all())
+        assert_dataframes_identical(expected, result)
+
+    def test_add_missing_prediction_column_multiple_rows(self):
+        bad_df = pd.DataFrame({
+            'PatientEncounterID': [1, 2],
+            'SystolicBPNBR': [100, 88],
+            'LDLNBR': [100, 85],
+            'A1CNBR': [8, 5.6],
+            'GenderFLG': ['M', 'F'],
+        })
+
+        expected = bad_df.copy()
+        expected['ThirtyDayReadmitFLG'] = [np.NaN, np.NaN]
+
+        result = self.trained_lr._add_prediction_column_if_missing(bad_df)
+
+        self.assertIsInstance(result, pd.core.frame.DataFrame)
+        self.assertTrue(expected['ThirtyDayReadmitFLG'].isnull().all())
+
+        assert_dataframes_identical(expected, result)
+
+    def test_predictions_missing_prediction_column_single_row(self):
+        bad_df = pd.DataFrame({
+            'PatientEncounterID': [1],
+            'SystolicBPNBR': [100],
+            'LDLNBR': [100],
+            'A1CNBR': [8],
+            'GenderFLG': ['M'],
+        })
+
+        expected = pd.DataFrame({
+            'PatientEncounterID': [1],
+            'Probability': [None],
+            'All Probabilities': [None]
+        })
+
+        result = self.trained_lr.make_predictions(bad_df)
+
+        # Check result is sane then drop it to check the rest of the df
+        assertBetween(self, 0.2, 0.5, result.iloc[0]['Prediction'])
+        result.drop('Prediction', axis=1, inplace=True)
+
+        assert_dataframes_identical(expected, result)
+
+    def test_predictions_missing_prediction_column_multiple_rows(self):
+        bad_df = pd.DataFrame({
+            'PatientEncounterID': [1, 2, 3],
+            'SystolicBPNBR': [100, 100, 100],
+            'LDLNBR': [100, 100, 100],
+            'A1CNBR': [8, 8, 8],
+            'GenderFLG': ['F', 'F', 'F'],
+        })
+
+        expected = pd.DataFrame({
+            'PatientEncounterID': [1, 2, 3],
+            'Probability': [None, None, None],
+            'All Probabilities': [None, None, None]
+        })
+
+        result = self.trained_lr.make_predictions(bad_df)
+
+        # Check result is sane then drop it to check the rest of the df
+        for pred in result['Prediction']:
+            assertBetween(self, 0.2, 0.5, pred)
+        result.drop('Prediction', axis=1, inplace=True)
+
+        assert_dataframes_identical(expected, result)
+
+    def test_predictions_unseen_data_in_prediction(self):
+        bad_df = pd.DataFrame({
+            'PatientEncounterID': [1],
+            'SystolicBPNBR': [100],
+            'LDLNBR': [100],
+            'A1CNBR': [8],
+            'GenderFLG': ['M'],
+            'ThirtyDayReadmitFLG': ['garbage']
+        })
+
+        expected = pd.DataFrame({
+            'PatientEncounterID': [1],
+            'Probability': [None],
+            'All Probabilities': [None]
+        })
+
+        result = self.trained_lr.make_predictions(bad_df)
+
+        # Check result is sane then drop it to check the rest of the df
+        assertBetween(self, 0.2, 0.5, result.iloc[0]['Prediction'])
+        result.drop('Prediction', axis=1, inplace=True)
+
+        assert_dataframes_identical(expected, result)
 
     def test_missing_column_error(self):
         bad_df = pd.DataFrame({

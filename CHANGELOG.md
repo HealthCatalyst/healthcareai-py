@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Imputation transformer now warns users about unseen factors during prediction use.
 - `SupervisedModelTrainer` now has additional properties: `class_labels` and `number_of_classes`
 - new test helpers for robust dataframe and series equality assertions
+- DataFrameImputer can now exclude columns.
 
 ### Changed
 
@@ -54,6 +55,7 @@ in console output and on ROC/PR plots.
 - Getting started section of README vastly improved
 - Bug that was imputing prediction target data during trainig.
 - Predictions no longer fail when categorical factors present during training were missing in prediction.
+- Nulls in prediction column are now removed
 
 ### Deprecated
 
