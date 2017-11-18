@@ -516,10 +516,13 @@ class AdvancedSupervisedModelTrainer(object):
         # PEP 8
         test_set_predictions = None
         test_set_class_labels = None
+        class_labels = None
+
         if self.is_classification:
             # Save both the probabilities and labels
             test_set_predictions = algorithm.predict_proba(self.X_test)
             test_set_class_labels = algorithm.predict(self.X_test)
+            class_labels = self.class_labels
         elif self.is_regression:
             test_set_predictions = algorithm.predict(self.X_test)
 
@@ -540,6 +543,7 @@ class AdvancedSupervisedModelTrainer(object):
             test_set_class_labels=test_set_class_labels,
             test_set_actual=self.y_test,
             metric_by_name=self.metrics(algorithm),
+            class_labels=class_labels,
             original_column_names=self.original_column_names,
             categorical_column_info=self.categorical_column_info,
             training_time=time.time() - t0)

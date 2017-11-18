@@ -51,6 +51,7 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
+                 class_labels=None,
                  original_column_names=None,
                  categorical_column_info=None,
                  training_time=None):
@@ -69,6 +70,7 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
+            class_labels: (list): List of class labels
             original_column_names (list): List of column names used as features before running the data preparation
                 pipeline (e.g. before dummification)
             categorical_column_info (dict): A dictionary mapping the name of each (pre-dummified) categorical column
@@ -83,6 +85,7 @@ class TrainedSupervisedModel(object):
         self._model_type = model_type
         self.grain_column = grain_column
         self.prediction_column = prediction_column
+        self.class_labels = class_labels
         self.test_set_predictions = test_set_predictions
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
@@ -191,7 +194,7 @@ class TrainedSupervisedModel(object):
         elif self.is_classification:
             result['Prediction'] = self.model.predict(df)
             probs_by_label = _probabilities_by_label(
-                self.model.classes_,
+                self.class_labels,
                 self.model.predict_proba(df))
             result['All Probabilities'] = probs_by_label
 
@@ -703,20 +706,22 @@ class TrainedSupervisedModel(object):
         return pr
 
     def _validate_classification(self):
-        """Validate that a model is classification and raise an error if it is not.
+        """Validate that a model is a classifier."""
+        if not self.is_classification:
+            raise HealthcareAIError(
+                'This function only runs on classification models.')
 
-        Run this on any method that only makes sense for classification.
-        """
-        if self.model_type != 'classification':
-            raise HealthcareAIError('This function only runs on a classification model.')
+    def _validate_regression(self):
+        """Validate that a model is a regressor."""
+        if not self.is_regression:
+            raise HealthcareAIError(
+                'This function only runs on regression models.')
 
     def _validate_binary_classification(self):
-        """Validate that a model is a binary classifier and raise an error if it is not.
-
-        Run this in any method that only makes sense for binary classification.
-        """
+        """Validate that a model is a binary classifier."""
         if not self.is_binary_classification:
-            raise HealthcareAIError('This function only runs on a binary classification model.')
+            raise HealthcareAIError(
+                'This function only runs on binary classification models.')
 
     @property
     def is_binary_classification(self):

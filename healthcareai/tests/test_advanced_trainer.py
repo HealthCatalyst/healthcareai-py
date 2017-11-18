@@ -228,7 +228,6 @@ class TestBinaryClassificationMetricValidation(unittest.TestCase):
         self.assertTrue(self.classification_trainer.is_binary_classification)
 
     def test_class_labels_strings(self):
-        # set literal saves a function call to set()
         self.assertEqual({'Y', 'N'}, set(self.classification_trainer.class_labels))
 
     def test_validate_score_metric_for_number_of_classes(self):
