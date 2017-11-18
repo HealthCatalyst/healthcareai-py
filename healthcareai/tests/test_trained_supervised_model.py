@@ -77,8 +77,11 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertTrue(self.trained_lr.is_binary_classification)
         self.assertFalse(self.trained_linear.is_binary_classification)
 
-    def test_class_labels(self):
-        self.assertListEqual(['N', 'Y'], list(self.trained_lr._class_labels))
+    def test_class_labels_correct(self):
+        self.assertListEqual(['N', 'Y'], list(self.trained_lr.class_labels))
+
+    def test_class_labels_none_on_regressor(self):
+        self.assertIsNone(self.trained_linear.class_labels)
 
     def test_predictions_is_dataframe(self):
         self.assertIsInstance(self.predictions, pd.core.frame.DataFrame)
