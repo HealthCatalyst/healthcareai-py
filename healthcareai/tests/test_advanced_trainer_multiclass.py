@@ -10,7 +10,8 @@ import healthcareai.datasets.base as hcai_datasets
 
 from healthcareai import AdvancedSupervisedModelTrainer
 import healthcareai.tests.helpers as test_helpers
-from healthcareai.common.helpers import count_unique_elements_in_column
+from healthcareai.common.helpers import count_unique_elements_in_column, \
+    calculate_random_forest_mtry_hyperparameter
 from healthcareai.common.healthcareai_error import HealthcareAIError
 import healthcareai.pipelines.data_preparation as pipelines
 
@@ -69,13 +70,20 @@ class TestRandomForestClassification(unittest.TestCase):
         self.trainer.train_test_split(random_seed=0)
 
     def test_random_forest_no_tuning(self):
-        rf = self.trainer.random_forest_classifier(trees=200, randomized_search=False)
+        rf = self.trainer.random_forest_classifier(trees=100, randomized_search=False)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         self.assertRaises(HealthcareAIError, rf.roc_plot)
         test_helpers.assertBetween(self, 15, 30, rf.metrics['confusion_matrix'][0][0])
 
     def test_random_forest_tuning(self):
-        rf = self.trainer.random_forest_classifier(randomized_search=True)
+        max_features = calculate_random_forest_mtry_hyperparameter(4,
+                                                                   'classification')
+        hyperparameter_grid = {'n_estimators': [10, 20, 30],
+                               'max_features': max_features}
+        rf = self.trainer.random_forest_classifier(
+            randomized_search=True,
+            number_iteration_samples=2,
+            hyperparameter_grid=hyperparameter_grid)
         self.assertIsInstance(rf, TrainedSupervisedModel)
         self.assertRaises(HealthcareAIError, rf.roc_plot)
         test_helpers.assertBetween(self, 15, 30, rf.metrics['confusion_matrix'][0][0])
