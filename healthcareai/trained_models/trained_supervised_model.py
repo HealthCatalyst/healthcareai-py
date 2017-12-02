@@ -51,6 +51,7 @@ class TrainedSupervisedModel(object):
                  test_set_class_labels,
                  test_set_actual,
                  metric_by_name,
+                 class_labels=None,
                  original_column_names=None,
                  categorical_column_info=None,
                  training_time=None):
@@ -69,6 +70,7 @@ class TrainedSupervisedModel(object):
             test_set_class_labels (list): y_prediction class label if classification
             test_set_actual (list): y_test
             metric_by_name (dict): Metrics by name
+            class_labels: (list): List of class labels
             original_column_names (list): List of column names used as features before running the data preparation
                 pipeline (e.g. before dummification)
             categorical_column_info (dict): A dictionary mapping the name of each (pre-dummified) categorical column
@@ -83,6 +85,7 @@ class TrainedSupervisedModel(object):
         self._model_type = model_type
         self.grain_column = grain_column
         self.prediction_column = prediction_column
+        self.class_labels = class_labels
         self.test_set_predictions = test_set_predictions
         self.test_set_class_labels = test_set_class_labels
         self.test_set_actual = test_set_actual
@@ -169,42 +172,44 @@ class TrainedSupervisedModel(object):
             dataframe (pandas.core.frame.DataFrame): Raw prediction dataframe
 
         Returns:
-            pandas.core.frame.DataFrame: A dataframe containing the grain id and predicted values
+            pandas.core.frame.DataFrame: A dataframe containing the grain id
+            and predicted values
+
+        Raises:
+            HealthcareAIError: Model neither regressor or classifier.
         """
-        # Run the raw dataframe through the preparation process
-        prepared_dataframe = self.prepare_and_subset(dataframe)
+        self._validate_regressor_or_classifier()
+        df = self.prepare_and_subset(dataframe)
 
-        y_predictions = None
-        y_probability = None
-        all_probabilities = None
+        result = pd.DataFrame({
+            self.grain_column: dataframe[self.grain_column].values,
+            'Prediction': None,
+            'Probability': None,
+            'All Probabilities': None
+        })
 
-        # make predictions returning probabity of a class or value of regression
-        if self.is_binary_classification():
+        if self.is_binary_classification:
             # Only save the prediction of one of the two classes
-            y_predictions = self.model.predict_proba(prepared_dataframe)[:, 1]
+            result['Prediction'] = self.model.predict_proba(df)[:, 1]
         elif self.is_classification:
-            # TODO This needs further thought. Should the prediction column
-            # TODO stay numeric and add an additional class object column?
-            # TODO fix all the tests
-            y_predictions = self.model.predict(prepared_dataframe)
-            all_probabilities = self.model.predict_proba(prepared_dataframe)
+            result['Prediction'] = self.model.predict(df)
+            probs_by_label = _probabilities_by_label(
+                self.class_labels,
+                self.model.predict_proba(df))
+            result['All Probabilities'] = probs_by_label
 
             # retrieve the probability of the single predicted class label
-            all_probabilities = {k: v for k, v in zip(self.model.classes_, np.squeeze(all_probabilities))}
-            y_probability = all_probabilities[y_predictions[0]]
+            result['Probability'] = _get_max_probabilities(probs_by_label)
         elif self.is_regression:
-            y_predictions = self.model.predict(prepared_dataframe)
-        else:
-            raise HealthcareAIError('Model type appears to be neither regression or classification.')
+            result['Prediction'] = self.model.predict(df)
 
-        # Create a new dataframe with the grain column from the original dataframe
-        results = pd.DataFrame()
-        results[self.grain_column] = dataframe[self.grain_column].values
-        results['Prediction'] = y_predictions
-        results['Probability'] = y_probability
-        results['All Probabilities'] = all_probabilities
+        return result
 
-        return results
+    def _validate_regressor_or_classifier(self):
+        if not self.is_classification and not self.is_regression:
+            raise HealthcareAIError(
+                'Model type appears to be neither regression or '
+                'classification.')
 
     def prepare_and_subset(self, dataframe):
         """
@@ -582,7 +587,7 @@ class TrainedSupervisedModel(object):
     def roc_plot(self):
         """Plot the ROC curve of the holdout set from model training."""
         self._validate_classification()
-        if not self.is_binary_classification():
+        if not self.is_binary_classification:
             raise HealthcareAIError('ROC plots only work for binary classification (\'Y\'/\'N\').\n'
                                     'For multiple classes (\'DRG1\'/\'DRG2\'/\'DRG3\'/...) use the '
                                     'confusion matrix instead.')
@@ -643,7 +648,7 @@ class TrainedSupervisedModel(object):
     def pr_plot(self):
         """Plot the PR curve of the holdout set from model training."""
         self._validate_classification()
-        if not self.is_binary_classification():
+        if not self.is_binary_classification:
             raise HealthcareAIError('PR plots only work for binary classification (\'Y\'/\'N\').\n'
                                     'For multiple classes (\'red\'/\'green\'/\'blue\'/...) use the '
                                     'confusion matrix instead.')
@@ -701,21 +706,24 @@ class TrainedSupervisedModel(object):
         return pr
 
     def _validate_classification(self):
-        """Validate that a model is classification and raise an error if it is not.
+        """Validate that a model is a classifier."""
+        if not self.is_classification:
+            raise HealthcareAIError(
+                'This function only runs on classification models.')
 
-        Run this on any method that only makes sense for classification.
-        """
-        if self.model_type != 'classification':
-            raise HealthcareAIError('This function only runs on a classification model.')
+    def _validate_regression(self):
+        """Validate that a model is a regressor."""
+        if not self.is_regression:
+            raise HealthcareAIError(
+                'This function only runs on regression models.')
 
     def _validate_binary_classification(self):
-        """Validate that a model is a binary classifier and raise an error if it is not.
+        """Validate that a model is a binary classifier."""
+        if not self.is_binary_classification:
+            raise HealthcareAIError(
+                'This function only runs on binary classification models.')
 
-        Run this in any method that only makes sense for binary classification.
-        """
-        if not self.is_binary_classification():
-            raise HealthcareAIError('This function only runs on a binary classification model.')
-
+    @property
     def is_binary_classification(self):
         """
         Check if an instance is a binary classifier.
@@ -813,7 +821,7 @@ def tsm_classification_comparison_plots(trained_supervised_models, plot_type='RO
             if not isinstance(model, TrainedSupervisedModel):
                 raise HealthcareAIError('One of the objects in the list is not a TrainedSupervisedModel ({})'
                                         .format(model))
-            if not model.is_binary_classification():
+            if not model.is_binary_classification:
                 raise HealthcareAIError(
                     'Comparison plots only work for binary classification tasks.')
 
@@ -857,7 +865,8 @@ def _confusion_matrix_text_color(normalize, value, threshold):
     """
     Determine the appropriate color for text on the confusion matrix plot.
     
-    If it is not normalized, keep text black. If it is normalized, use white when it is beyond the threshold.
+    If it is not normalized, keep text black. If it is normalized, use white
+    when it is beyond the threshold.
     
     Args:
         normalize (bool): if the plot is normalized
@@ -872,3 +881,47 @@ def _confusion_matrix_text_color(normalize, value, threshold):
         return 'black'
 
     return 'white' if value > threshold else 'black'
+
+
+def _probabilities_by_label(labels, matrix):
+    """
+    Build a list of dictionaries containing probabilities by label.
+
+    Args:
+        labels (list): List of class labels
+        matrix (np.array): 2D array of class probabilites by row
+
+    Returns:
+        list: list of dictionaries
+
+    Raises:
+        HealthcareAIError: Wrong number of labels.
+    """
+    compacted = []
+
+    if labels is None or matrix is None:
+        return compacted
+
+    _validate_label_count(labels, matrix)
+
+    for x in matrix:
+        compacted.append({k: v for k, v in zip(labels, x)})
+
+    return compacted
+
+
+def _validate_label_count(labels, matrix):
+    """Validate label count matches column count."""
+    if len(labels) != len(matrix[0]):
+        raise HealthcareAIError('Number of labels does not match columns.')
+
+
+def _get_max_probabilities(probs_by_label):
+    """Get all max probabilities."""
+    return [_max_probability_extractor(x) for x in probs_by_label]
+
+
+def _max_probability_extractor(probabilites_by_label):
+    """Extract the max probability from a dict of probabilities by label."""
+    max_key = max(probabilites_by_label, key=probabilites_by_label.get)
+    return probabilites_by_label[max_key]

@@ -1,6 +1,8 @@
 import math
 import sklearn
 
+from sklearn.grid_search import BaseSearchCV
+
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
@@ -67,7 +69,8 @@ def extract_estimator_from_meta_estimator(model):
 
 def get_hyperparameters_from_meta_estimator(model):
     """
-    Given an instance of a trained sklearn estimator, return the best hyperparameters if it is a meta estimator
+    Given an instance of a trained sklearn estimator, return the best
+    hyperparameters if it is a meta estimator
     Args:
         model (sklearn.base.BaseEstimator): 
 
@@ -77,12 +80,20 @@ def get_hyperparameters_from_meta_estimator(model):
     if not issubclass(type(model), sklearn.base.BaseEstimator):
         raise HealthcareAIError('This requires an instance of sklearn.base.BaseEstimator')
 
-    if issubclass(type(model), sklearn.base.MetaEstimatorMixin):
+    if _is_randomized_search(model) or _is_grid_search(model):
         result = model.best_params_
     else:
         result = None
 
     return result
+
+
+def _is_grid_search(model):
+    return isinstance(model, sklearn.model_selection.GridSearchCV)
+
+
+def _is_randomized_search(model):
+    return isinstance(model, sklearn.model_selection.RandomizedSearchCV)
 
 
 if __name__ == '__main__':
