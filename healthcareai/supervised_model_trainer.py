@@ -131,6 +131,13 @@ class SupervisedModelTrainer(object):
         """Return number of classes."""
         return self._advanced_trainer.number_of_classes
 
+    @property
+    def _default_scoring_metric(self):
+        if self._advanced_trainer.is_binary_classification:
+            return 'roc_auc'
+        else:
+            return 'accuracy'
+
     def random_forest(self, feature_importance_limit=15, save_plot=False):
         """
         Train a random forest model and print model performance metrics.
@@ -160,7 +167,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         return self._advanced_trainer.knn(
-            scoring_metric='accuracy',
+            scoring_metric=self._default_scoring_metric,
             hyperparameter_grid=None,
             randomized_search=True)
 
@@ -192,7 +199,7 @@ class SupervisedModelTrainer(object):
         """
         model = self._advanced_trainer.random_forest_classifier(
             trees=200,
-            scoring_metric='accuracy',
+            scoring_metric=self._default_scoring_metric,
             randomized_search=True)
 
         # Save or show the feature importance graph
@@ -212,6 +219,7 @@ class SupervisedModelTrainer(object):
             TrainedSupervisedModel: A trained supervised model.
         """
         return self._advanced_trainer.logistic_regression(
+            scoring_metric=self._default_scoring_metric,
             randomized_search=False)
 
     @trainer_output
@@ -241,7 +249,7 @@ class SupervisedModelTrainer(object):
         """
         # TODO consider making a scoring parameter (which will need more logic
         if self._advanced_trainer.model_type is 'classification':
-            metric = 'accuracy'
+            metric = self._default_scoring_metric
             model = self._advanced_trainer.ensemble_classification(
                 scoring_metric=metric)
         elif self._advanced_trainer.model_type is 'regression':

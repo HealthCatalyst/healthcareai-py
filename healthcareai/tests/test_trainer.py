@@ -3,6 +3,7 @@ import sys
 import unittest
 from contextlib import contextmanager
 from io import StringIO
+import pandas as pd
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 from healthcareai.supervised_model_trainer import SupervisedModelTrainer
@@ -63,9 +64,44 @@ class TestSupervisedModelTrainer(unittest.TestCase):
             verbose=False
         )
 
-    def test_knn(self):
-        trained_knn = self.classification_trainer.knn()
+    def test_default_binary_metric_is_roc_auc(self):
+        df = pd.DataFrame({
+            'x': [x for x in range(8)],
+            'y': [0, 1] * 4
+        })
+        binary = SupervisedModelTrainer(df, 'y', 'classification')
 
+        self.assertEqual(
+            'roc_auc',
+            binary._default_scoring_metric)
+
+    def test_default_multiclass_metric_is_accuracy(self):
+        df = pd.DataFrame({
+            'x': [x for x in range(8)],
+            'y': [1, 2, 3, 4] * 2
+        })
+        multi = SupervisedModelTrainer(df, 'y', 'classification')
+
+        self.assertEqual(
+            'accuracy',
+            multi._default_scoring_metric)
+
+    def test_knn(self):
+        import numpy as np
+
+        df = hcai_datasets.load_diabetes()
+        df.drop(['PatientID'], axis=1, inplace=True)
+        df['ThirtyDayReadmitFLG'].fillna('N', inplace=True)
+        df['ThirtyDayReadmitFLG'] = np.where(df['ThirtyDayReadmitFLG'] == 'Y', 1, 0)
+
+        classification_trainer = SupervisedModelTrainer(
+            dataframe=df,
+            predicted_column='ThirtyDayReadmitFLG',
+            model_type='classification',
+            impute=True,
+            grain_column='PatientEncounterID',
+            verbose=False)
+        trained_knn = classification_trainer.knn()
         result = trained_knn.metrics
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
@@ -118,15 +154,6 @@ class TestSupervisedModelTrainer(unittest.TestCase):
 
         helpers.assertBetween(self, 0.52, 0.95, result['roc_auc'])
         helpers.assertBetween(self, 0.6, 0.95, result['accuracy'])
-
-    def test_ensemble_classification(self):
-        trained_ensemble = self.classification_trainer.ensemble()
-        self.assertIsInstance(trained_ensemble, TrainedSupervisedModel)
-
-        result = trained_ensemble.metrics
-
-        helpers.assertBetween(self, 0.6, 0.97, result['roc_auc'])
-        helpers.assertBetween(self, 0.6, 0.97, result['accuracy'])
 
     def test_ensemble_regression(self):
         self.assertRaises(HealthcareAIError, self.regression_trainer.ensemble)

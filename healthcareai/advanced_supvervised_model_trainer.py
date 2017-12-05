@@ -216,7 +216,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def validate_score_metric_for_number_of_classes(self, metric):
         """
-        Validate the user's choice of scoring metric with the number of prediction classes.
+        Validate the user's choice of scoring metric.
 
         Args:
             metric (str): a string of the scoring metric
@@ -226,8 +226,9 @@ class AdvancedSupervisedModelTrainer(object):
             # return True for testing
             return True
         elif self.number_of_classes > 2 and metric in ['pr_auc', 'roc_auc']:
-            raise (HealthcareAIError('ROC and PR cannot be used for more than two classes. Please choose another'
-                                     ' metric such as \'accuracy\''))
+            raise HealthcareAIError(
+                'ROC and PR cannot be used for more than two classes. Please '
+                'choose another metric such as \'accuracy\'')
 
     def metrics(self, trained_sklearn_estimator):
         """

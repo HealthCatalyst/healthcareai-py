@@ -201,6 +201,45 @@ class TestLogisticRegression(unittest.TestCase):
         test_helpers.assertBetween(self, 160, 180, self.lr.metrics['confusion_matrix'][0][0])
 
 
+class TestEnsemble(unittest.TestCase):
+    def setUp(self):
+        """Load and prepare data, instantiate a trainer, and train test split."""
+        df = hcai_datasets.load_diabetes()
+
+        # Drop uninformative columns
+        df.drop(['PatientID'], axis=1, inplace=True)
+
+        np.random.seed(42)
+        pipeline = pipelines.training_pipeline(
+            CLS_PRED_COL,
+            GRAIN_COL,
+            impute=True)
+
+        clean_df = pipeline.fit_transform(df)
+
+        self.trainer = AdvancedSupervisedModelTrainer(
+            clean_df,
+            CLASSIFICATION,
+            CLS_PRED_COL)
+
+        self.trainer.train_test_split()
+
+    def test_ensemble_classification(self):
+        models = {
+            'KNN': self.trainer.knn(
+                randomized_search=False),
+            'Logistic Regression': self.trainer.logistic_regression(
+                randomized_search=False)
+        }
+        trained_ensemble = self.trainer.ensemble_classification(
+            trained_model_by_name=models)
+
+        result = trained_ensemble.metrics
+
+        test_helpers.assertBetween(self, 0.6, 0.97, result['roc_auc'])
+        test_helpers.assertBetween(self, 0.6, 0.97, result['accuracy'])
+
+
 class TestBinaryClassificationMetricValidation(unittest.TestCase):
     def setUp(self):
         """Load and prepare data, instantiate a trainer, and train test split."""
