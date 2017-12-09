@@ -25,6 +25,7 @@ class AdvancedSupervisedModelTrainer(object):
 
     def __init__(
         self,
+        pipeline,
         dataframe,
         model_type,
         predicted_column,
@@ -57,7 +58,7 @@ class AdvancedSupervisedModelTrainer(object):
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        self.pipeline = None
+        self.pipeline = pipeline
         self.original_column_names = original_column_names
         self.categorical_column_info = None
 

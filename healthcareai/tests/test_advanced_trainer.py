@@ -41,12 +41,20 @@ class TestAdvancedSupervisedModelTrainer(unittest.TestCase):
             GRAIN_COLUMN_NAME,
             impute=True).fit_transform(cls.df)
 
-        cls.regression_trainer = AdvancedSupervisedModelTrainer(
+        cls.regression_trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(
+            REGRESSION,
+            REGRESION_PREDICTED_COLUMN,
+            GRAIN_COLUMN_NAME,
+            impute=True),
             clean_regression_df,
             REGRESSION,
             REGRESION_PREDICTED_COLUMN)
 
-        cls.classification_trainer = AdvancedSupervisedModelTrainer(
+        cls.classification_trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(
+            CLASSIFICATION,
+            CLASSIFICATION_PREDICTED_COLUMN,
+            GRAIN_COLUMN_NAME,
+            impute=True).fit_transform(cls.df),
             clean_classification_df, CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
 
@@ -88,7 +96,8 @@ class TestRandomForestClassification(unittest.TestCase):
         np.random.seed(42)
         clean_df = pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
                                            impute=True).fit_transform(df)
-        self.trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
+        self.trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True),clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
         self.trainer.train_test_split(random_seed=0)
 
     def test_random_forest_no_tuning(self):
@@ -112,7 +121,8 @@ class TestRandomForestClassification(unittest.TestCase):
             CLASSIFICATION_PREDICTED_COLUMN,
             GRAIN_COLUMN_NAME,
             impute=True).fit_transform(df)
-        trainer = AdvancedSupervisedModelTrainer(clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
+        trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+                                           impute=True),clean_df, CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN)
 
         trainer.train_test_split()
 
@@ -133,7 +143,8 @@ class TestLogisticRegression(unittest.TestCase):
             GRAIN_COLUMN_NAME,
             impute=True).fit_transform(df)
 
-        self.classification_trainer = AdvancedSupervisedModelTrainer(
+        self.classification_trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(CLASSIFICATION, CLASSIFICATION_PREDICTED_COLUMN, GRAIN_COLUMN_NAME,
+            impute=True),
             clean_df,
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)
@@ -160,7 +171,11 @@ class TestMetricValidation(unittest.TestCase):
             CLASSIFICATION_PREDICTED_COLUMN,
             GRAIN_COLUMN_NAME,
             impute=True).fit_transform(df)
-        self.classification_trainer = AdvancedSupervisedModelTrainer(
+        self.classification_trainer = AdvancedSupervisedModelTrainer(pipelines.full_pipeline(
+            CLASSIFICATION,
+            CLASSIFICATION_PREDICTED_COLUMN,
+            GRAIN_COLUMN_NAME,
+            impute=True),
             clean_df,
             CLASSIFICATION,
             CLASSIFICATION_PREDICTED_COLUMN)

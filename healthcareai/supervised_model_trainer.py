@@ -54,7 +54,7 @@ class SupervisedModelTrainer(object):
         _ = prediction_pipeline.fit_transform(dataframe)
 
         # Instantiate the advanced class
-        self._advanced_trainer = AdvancedSupervisedModelTrainer(
+        self._advanced_trainer = AdvancedSupervisedModelTrainer(pipeline=pipeline,
             dataframe=clean_dataframe,
             model_type=model_type,
             predicted_column=predicted_column,
