@@ -445,6 +445,7 @@ class AdvancedSupervisedModelTrainer(object):
             hyperparameter_grid,
             randomized_search,
             number_iteration_samples=number_iteration_samples,
+            class_weight='balanced',
             n_estimators=trees)
 
         trained_supervised_model = self._create_trained_supervised_model(algorithm)
@@ -494,7 +495,7 @@ class AdvancedSupervisedModelTrainer(object):
 
         return trained_supervised_model
 
-    def _create_trained_supervised_model(self, algorithm, include_factor_model=True):
+    def _create_trained_supervised_model(self, algorithm, include_factor_model=False):
         """
         Train an algorithm, prepare metrics, build and return a TrainedSupervisedModel.
 
