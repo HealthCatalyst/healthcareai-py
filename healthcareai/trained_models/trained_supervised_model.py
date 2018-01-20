@@ -266,7 +266,8 @@ class TrainedSupervisedModel(object):
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
-        # Create a new dataframe. If grain column exists, add the grain column from the original dataframe; otherwise, 
+        # Create a new dataframe. If grain column exists, add the grain 
+        # column from the original dataframe; otherwise, 
         # just create a new empty dataframe. 
         if self.grain_column is not None: 
             results = dataframe[[self.grain_column]] 
