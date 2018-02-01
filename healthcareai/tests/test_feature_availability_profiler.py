@@ -38,7 +38,6 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
             pd.datetime(2015, 5, 20),
             1000
         )
-
         self.df['AdmitDTS'] = admit
         # add nulls
         a = np.random.rand(1000) > .5
