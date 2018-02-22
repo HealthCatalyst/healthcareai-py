@@ -175,7 +175,11 @@ class TrainedSupervisedModel(object):
 
         # Create a new dataframe with the grain column from the original dataframe
         results = pd.DataFrame()
-        results[self.grain_column] = dataframe[self.grain_column].values
+
+        # Column vector must exist in order to add it to results. 
+        if self.grain_column is not None: 
+            results[self.grain_column] = dataframe[self.grain_column].values
+
         results['Prediction'] = y_predictions
 
         return results
@@ -262,8 +266,13 @@ class TrainedSupervisedModel(object):
         # Run the raw dataframe through the preparation process
         prepared_dataframe = self.prepare_and_subset(dataframe)
 
-        # Create a new dataframe with the grain column from the original dataframe
-        results = dataframe[[self.grain_column]]
+        # Create a new dataframe. If grain column exists, add the grain 
+        # column from the original dataframe; otherwise, 
+        # just create a new empty dataframe. 
+        if self.grain_column is not None: 
+            results = dataframe[[self.grain_column]] 
+        else: 
+            results = pd.DataFrame() 
 
         # Create a list of column names
         reason_col_names = ['Factor{}TXT'.format(i) for i in range(1, number_top_features + 1)]
