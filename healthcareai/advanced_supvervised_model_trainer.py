@@ -19,7 +19,8 @@ SUPPORTED_MODEL_TYPES = ['classification', 'regression']
 
 class AdvancedSupervisedModelTrainer(object):
     """
-    This class helps create a model using several common classifiers and regressors, both of which report appropiate
+    This class helps create a model using several common classifiers and 
+    regressors, both of which report appropiate
     metrics.
     """
 
@@ -37,12 +38,19 @@ class AdvancedSupervisedModelTrainer(object):
         
         Args:
             dataframe (pandas.DataFrame): The training data
+
             model_type (str): 'classification' or 'regression'
-            predicted_column (str): The name of the predicted/target/label column
-            grain_column (str): The grain column
-            original_column_names (list): The original column names of the dataframe before going through the pipeline
-                (before dummification). These are used to check that the data contains all the necessary columns if
-                pre-pipeline data is going to be fed to the trained model.
+
+            predicted_column (str): The name of the predicted/target/label 
+
+            column grain_column (str): The grain column
+
+            original_column_names (list): The original column names of 
+            the dataframe before going through the pipeline
+            (before dummification). These are used to check that the 
+            data contains all the necessary columns if
+            pre-pipeline data is going to be fed to the trained model.
+
             verbose (bool): Verbose output
         """
         # Validate model type is sane
@@ -88,8 +96,9 @@ class AdvancedSupervisedModelTrainer(object):
         Splits the dataframe into train and test sets.
         
         Args:
-            random_seed (int): An optional random seed for the random number generator. It is best to leave at the None
-                deafault. Useful for unit tests when reproducibility is required.
+            random_seed (int): An optional random seed for the random number 
+            generator. It is best to leave at the None
+            default. Useful for unit tests when reproducibility is required.
         """
         y = np.squeeze(self.dataframe[[self.predicted_column]])
         X = self.dataframe.drop([self.predicted_column], axis=1)
@@ -110,12 +119,15 @@ class AdvancedSupervisedModelTrainer(object):
 
     def ensemble_classification(self, scoring_metric='roc_auc', trained_model_by_name=None):
         """
-        This provides a simple way to put data in and have healthcare.ai train a few models and pick the best one for
-        your data.
+        This provides a simple way to put data in and have healthcare.ai train 
+        a few models and pick the best one for your data.
 
         Args:
-            scoring_metric (str): The metric used to rank the models. Defaults to 'roc_auc'
-            trained_model_by_name (dict): A dictionary of trained models to compare for a custom ensemble
+            scoring_metric (str): The metric used to rank the models. Defaults 
+            to 'roc_auc'
+
+            trained_model_by_name (dict): A dictionary of trained models to 
+            compare for a custom ensemble
 
         Returns:
             TrainedSupervisedModel: The best TrainedSupervisedModel found.
@@ -125,10 +137,14 @@ class AdvancedSupervisedModelTrainer(object):
         score_by_name = {}
 
         # Here is the default list of algorithms to try for the ensemble
-        # Adding an ensemble method is as easy as adding a new key:value pair in the `model_by_name` dictionary
+        # Adding an ensemble method is as easy as adding a new key:value pair 
+        # in the `model_by_name` dictionary
         if trained_model_by_name is None:
-            # TODO because these now all return TSMs it will be additionally slow by all the factor models.
-            # TODO Could these be trained separately then after the best is found, train the factor model and add to TSM?
+            # TODO because these now all return TSMs it will be additionally 
+            # slow by all the factor models.
+
+            # TODO Could these be trained separately then after the best is 
+            # found, train the factor model and add to TSM?
             trained_model_by_name = {
                 'KNN': self.knn(randomized_search=True, scoring_metric=scoring_metric),
                 'Logistic Regression': self.logistic_regression(randomized_search=True),
@@ -160,7 +176,8 @@ class AdvancedSupervisedModelTrainer(object):
 
     def validate_score_metric_for_number_of_classes(self, metric):
         """
-        Check that a user's choice of scoring metric makes sense with the number of prediction classes
+        Check that a user's choice of scoring metric makes sense with the 
+        number of prediction classes
 
         Args:
             metric (str): a string of the scoring metric
@@ -183,7 +200,8 @@ class AdvancedSupervisedModelTrainer(object):
         This is intended to be a thin wrapper around the toolbox metrics.
 
         Args:
-            trained_sklearn_estimator (sklearn.base.BaseEstimator): A scikit-learn trained algorithm
+            trained_sklearn_estimator (sklearn.base.BaseEstimator): A 
+            scikit-learn trained algorithm
         """
         performance_metrics = None
 
@@ -204,15 +222,19 @@ class AdvancedSupervisedModelTrainer(object):
                             randomized_search=True,
                             number_iteration_samples=10):
         """
-        A light wrapper for Sklearn's logistic regression that performs randomized search over an overideable default 
+        A light wrapper for Sklearn's logistic regression that performs randomized 
+        search over an overideable default 
         hyperparameter grid.
 
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
             hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+
+            number_iteration_samples (int): Number of models to train during 
+            the randomized search for exploring the
+            hyperparameter space. More may lead to a better model, but will 
+            take longer.
 
         Returns:
             TrainedSupervisedModel: 
@@ -238,15 +260,17 @@ class AdvancedSupervisedModelTrainer(object):
                           randomized_search=True,
                           number_iteration_samples=2):
         """
-        A light wrapper for Sklearn's linear regression that performs randomized search over an overridable default
-        hyperparameter grid.
+        A light wrapper for Sklearn's linear regression that performs randomized 
+        search over an overridable default hyperparameter grid.
         
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
             hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+
+            number_iteration_samples (int): Number of models to train during the 
+            randomized search for exploring the hyperparameter space. More may 
+            lead to a better model, but will take longer.
 
         Returns:
             TrainedSupervisedModel:
@@ -271,15 +295,17 @@ class AdvancedSupervisedModelTrainer(object):
                          randomized_search=True,
                          number_iteration_samples=2):
         """
-        A light wrapper for Sklearn's lasso regression that performs randomized search over an overridable default
-        hyperparameter grid.
+        A light wrapper for Sklearn's lasso regression that performs randomized 
+        search over an overridable default hyperparameter grid.
 
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for regression
             hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+
+            number_iteration_samples (int): Number of models to train during the 
+            randomized search for exploring the hyperparameter space. More may lead 
+            to a better model, but will take longer.
 
         Returns:
             TrainedSupervisedModel:
@@ -305,15 +331,18 @@ class AdvancedSupervisedModelTrainer(object):
             randomized_search=True,
             number_iteration_samples=10):
         """
-        A light wrapper for Sklearn's knn classifier that performs randomized search over an overridable default
+        A light wrapper for Sklearn's knn classifier that performs randomized 
+        search over an overridable default
         hyperparameter grid.
         
         Args:
             scoring_metric (str): Any sklearn scoring metric appropriate for classification
             hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+
+            number_iteration_samples (int): Number of models to train during the 
+            randomized search for exploring the
+            hyperparameter space. More may lead to a better model, but will take longer.
 
         Returns:
             TrainedSupervisedModel: 
@@ -342,16 +371,18 @@ class AdvancedSupervisedModelTrainer(object):
                                  randomized_search=True,
                                  number_iteration_samples=5):
         """
-        A light wrapper for Sklearn's random forest classifier that performs randomized search over an overridable
+        A light wrapper for Sklearn's random forest classifier that performs 
+        randomized search over an overridable
         default hyperparameter grid.
         
         Args:
-            trees (int): number of trees to use if not performing a randomized grid search
-            scoring_metric (str): Any sklearn scoring metric appropriate for classification
-            hyperparameter_grid (dict): hyperparameters by name
+            trees (int): number of trees to use if not performing a randomized 
+            grid search scoring_metric (str): Any sklearn scoring metric appropriate 
+            for classification hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+            number_iteration_samples (int): Number of models to train during the 
+            randomized search for exploring the hyperparameter space. More may lead 
+            to a better model, but will take longer.
 
         Returns:
             TrainedSupervisedModel: 
@@ -381,16 +412,21 @@ class AdvancedSupervisedModelTrainer(object):
                                 randomized_search=True,
                                 number_iteration_samples=5):
         """
-        A light wrapper for Sklearn's random forest regressor that performs randomized search over an overridable
-        default hyperparameter grid.
+        A light wrapper for Sklearn's random forest regressor that performs 
+        randomized search over an overridable default hyperparameter grid.
         
         Args:
-            trees (int): number of trees to use if not performing a randomized grid search
-            scoring_metric (str): Any sklearn scoring metric appropriate for regression
+            trees (int): number of trees to use if not performing a randomized 
+
+            grid search scoring_metric (str): Any sklearn scoring metric 
+            appropriate for regression
+
             hyperparameter_grid (dict): hyperparameters by name
             randomized_search (bool): True for randomized search (default)
-            number_iteration_samples (int): Number of models to train during the randomized search for exploring the
-                hyperparameter space. More may lead to a better model, but will take longer.
+
+            number_iteration_samples (int): Number of models to train during the 
+            randomized search for exploring the hyperparameter space. More may 
+            lead to a better model, but will take longer.
 
         Returns:
             TrainedSupervisedModel: 
@@ -429,10 +465,11 @@ class AdvancedSupervisedModelTrainer(object):
 
         algorithm.fit(self.x_train, self.y_train)
 
-        # Build prediction sets for ROC/PR curve generation. Note this does increase the size of the TSM because the
-        # test set is saved inside the object as well as the calculated thresholds.
-        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 for a discussion on pros/cons
-        # PEP 8
+        # Build prediction sets for ROC/PR curve generation. Note this does 
+        # increase the size of the TSM because the test set is saved inside 
+        # the object as well as the calculated thresholds.
+        # See https://github.com/HealthCatalyst/healthcareai-py/issues/264 
+        # for a discussion on pros/cons PEP 8
         test_set_predictions = None
         test_set_class_labels = None
         if self.is_classification:

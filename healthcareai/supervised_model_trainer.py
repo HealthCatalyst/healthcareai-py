@@ -24,19 +24,27 @@ class SupervisedModelTrainer(object):
         all values are equal.
 
         Args:
-            dataframe (pandas.core.frame.DataFrame): The training data in a pandas dataframe
+            dataframe (pandas.core.frame.DataFrame): The training data in a 
+            pandas dataframe 
+            
             predicted_column (str): The name of the prediction column
+
             model_type (str): the trainer type - 'classification' or 'regression'
-            impute (bool): True to impute data (mean of numeric columns and mode of categorical ones). False to drop
-               rows that contain any null values.
+
+            impute (bool): True to impute data (mean of numeric columns and 
+            mode of categorical ones). False to drop
+            rows that contain any null values.
+
             grain_column (str): The name of the grain column
+
             verbose (bool): Set to true for verbose output. Defaults to True.
         """
         self.predicted_column = predicted_column
         self.grain_column = grain_column
 
         # Build the pipeline
-        # Note: Missing numeric values are imputed in prediction. If we don't impute, then some rows on the prediction
+        # Note: Missing numeric values are imputed in prediction. If we don't 
+        # impute, then some rows on the prediction
         # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute,
                                                 verbose=True)
@@ -81,9 +89,11 @@ class SupervisedModelTrainer(object):
         """Train a random forest model and print out the model performance metrics.
 
         Args:
-            feature_importance_limit (int): The maximum number of features to show in the feature importance plotl
-            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
-                display.
+            feature_importance_limit (int): The maximum number of features to show 
+            in the feature importance plotl
+
+            save_plot (bool): For the feature importance plot, True to save plot 
+            (will not display). False by default to display.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -108,7 +118,8 @@ class SupervisedModelTrainer(object):
 
     @trainer_output
     def random_forest_regression(self):
-        """Train a random forest regression model and print out the model performance metrics.
+        """Train a random forest regression model and print out the 
+        model performance metrics.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -120,12 +131,15 @@ class SupervisedModelTrainer(object):
 
     @trainer_output
     def random_forest_classification(self, feature_importance_limit=15, save_plot=False):
-        """Train a random forest classification model, print performance metrics and show a feature importance plot.
+        """Train a random forest classification model, print performance metrics 
+        and show a feature importance plot.
 
         Args:
-            feature_importance_limit (int): The maximum number of features to show in the feature importance plot
-            save_plot (bool): For the feature importance plot, True to save plot (will not display). False by default to
-                display.
+            feature_importance_limit (int): The maximum number of features to 
+            show in the feature importance plot
+
+            save_plot (bool): For the feature importance plot, True to save 
+            plot (will not display). False by default to display.
 
         Returns:
             TrainedSupervisedModel: A trained supervised model.
@@ -195,5 +209,6 @@ class SupervisedModelTrainer(object):
 
     @property
     def advanced_features(self):
-        """Return the underlying AdvancedSupervisedModelTrainer instance. For advanced users only."""
+        """Return the underlying AdvancedSupervisedModelTrainer instance. For 
+        advanced users only."""
         return self._advanced_trainer
