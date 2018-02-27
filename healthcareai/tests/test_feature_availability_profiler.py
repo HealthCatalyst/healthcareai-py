@@ -7,6 +7,25 @@ import unittest
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
+def random_datetimes(start, end, ntimes):
+    """Generate a fixed number of random timestamps between two dates.
+
+    :param start: Starting timestamp
+    :type start: datetime.datetime
+
+    :param end: Ending timestamp
+    :type end: datetime.datetime
+
+    :param ntimes: Number of timestamps
+    :type ntimes: int
+
+    """
+    delta = end - start
+    int_delta = int(delta.total_seconds())
+    return [start + timedelta(seconds=randrange(int_delta))
+            for _ in range(ntimes)]
+
+
 class TestFeatureAvailabilityProfiler(unittest.TestCase):
     def setUp(self):
         self.df = pd.DataFrame(np.random.randn(1000, 4),
@@ -14,12 +33,11 @@ class TestFeatureAvailabilityProfiler(unittest.TestCase):
         # generate load date
         self.df['LastLoadDTS'] = pd.datetime(2015, 5, 20)
         # generate datetime objects for admit date
-        admit = pd.Series(1000)
-        delta = pd.datetime(2015, 5, 20) - pd.datetime(2015, 5, 1)
-        int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
-        for i in range(1000):
-            random_second = randrange(int_delta)
-            admit[i] = pd.datetime(2015, 5, 1) + timedelta(seconds=random_second)
+        admit = random_datetimes(
+            pd.datetime(2015, 5, 1),
+            pd.datetime(2015, 5, 20),
+            1000
+        )
         self.df['AdmitDTS'] = admit
         # add nulls
         a = np.random.rand(1000) > .5
@@ -84,13 +102,11 @@ class TestFeatureAvailabilityProfilerError3(unittest.TestCase):
         # generate load date
         self.df['LastLoadDTS'] = pd.datetime(2015, 5, 20)
         # generate datetime objects for admit date
-        admit = pd.Series(1000)
-        delta = pd.datetime(2015, 5, 20) - pd.datetime(2015, 5, 1)
-        int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
-        for i in range(1000):
-            random_second = randrange(int_delta)
-            admit[i] = pd.datetime(2015, 5, 1) + timedelta(
-                seconds=random_second)
+        admit = random_datetimes(
+            pd.datetime(2015, 5, 1),
+            pd.datetime(2015, 5, 20),
+            1000
+        )
         self.df['AdmitDTS'] = admit
 
     def runTest(self):
