@@ -57,6 +57,7 @@ in console output and on ROC/PR plots.
 - Bug that was imputing prediction target data during trainig.
 - Predictions no longer fail when categorical factors present during training were missing in prediction.
 - Nulls in prediction column are now removed
+- Models trained with no grain column can now make predictions
 
 ### Deprecated
 
