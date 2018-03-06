@@ -53,15 +53,6 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         # Create various outputs
         cls.predictions = cls.trained_linear.make_predictions(
             cls.prediction_df)
-        cls.factors = cls.trained_linear.make_factors(
-            cls.prediction_df,
-            number_top_features=3)
-        cls.predictions_with_3_factors = cls.trained_linear.make_predictions_with_k_factors(
-            cls.prediction_df,
-            number_top_features=3)
-        cls.original_with_predictions_3_factors = cls.trained_linear.make_original_with_predictions_and_factors(
-            cls.prediction_df,
-            number_top_features=3)
         cls.catalyst_dataframe = cls.trained_linear.create_catalyst_dataframe(
             cls.prediction_df)
 
@@ -89,36 +80,6 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     def test_predictions_are_same_length_as_input(self):
         self.assertEqual(len(self.predictions), len(self.prediction_df))
 
-    def test_predictions_with_factors_return_is_dataframe(self):
-        self.assertIsInstance(self.predictions_with_3_factors, pd.DataFrame)
-
-    def test_predictions_with_factors_are_same_length_as_input(self):
-        self.assertEqual(
-            len(self.predictions_with_3_factors),
-            len(self.prediction_df))
-
-    def test_predictions_with_factors_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT',
-                    'Factor3TXT', 'Prediction']
-        results = self.predictions_with_3_factors.columns.values
-        self.assertEqual(set(expected), set(results))
-
-    def test_original_with_predictions_factors_return_is_dataframe(self):
-        self.assertIsInstance(
-            self.original_with_predictions_3_factors,
-            pd.DataFrame)
-
-    def test_original_with_predictions_factors_are_same_length_as_input(self):
-        self.assertEqual(len(self.original_with_predictions_3_factors),
-                         len(self.prediction_df))
-
-    def test_original_with_predictions_factors_columns(self):
-        expected = ['PatientEncounterID', 'LDLNBR', 'A1CNBR', 'GenderFLG',
-                    'ThirtyDayReadmitFLG', 'Factor1TXT', 'Factor2TXT',
-                    'Factor3TXT', 'Prediction']
-        results = self.original_with_predictions_3_factors.columns.values
-        self.assertTrue(set(expected) == set(results))
-
     def test_catalyst_return_is_dataframe(self):
         self.assertIsInstance(self.catalyst_dataframe, pd.DataFrame)
 
@@ -126,9 +87,8 @@ class TestTrainedSupervisedModel(unittest.TestCase):
         self.assertEqual(len(self.catalyst_dataframe), len(self.prediction_df))
 
     def test_catalyst_columns(self):
-        expected = ['PatientEncounterID', 'Factor1TXT', 'Factor2TXT',
-                    'Factor3TXT', 'Prediction', 'BindingID',
-                    'BindingNM', 'LastLoadDTS']
+        expected = ['All Probabilities', 'PatientEncounterID', 'Prediction',
+                    'Probability', 'BindingID', 'BindingNM', 'LastLoadDTS']
         results = self.catalyst_dataframe.columns.values
         self.assertTrue(set(expected) == set(results))
 

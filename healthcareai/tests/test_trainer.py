@@ -70,7 +70,7 @@ class TestSupervisedModelTrainer(unittest.TestCase):
         self.assertIsInstance(trained_knn, TrainedSupervisedModel)
 
         helpers.assertBetween(self, 0.5, 0.95, result['roc_auc'])
-        helpers.assertBetween(self, 0.79, 0.95, result['accuracy'])
+        helpers.assertBetween(self, 0.70, 0.95, result['accuracy'])
 
     # TODO see if there is a way to make this test work in travisCI. It fails with this error:
     # TODO > _tkinter.TclError: no display name and no $DISPLAY environment variable

@@ -25,6 +25,69 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 rcParams.update({'figure.autolayout': True})
 
 
+def _print_threshold_table_header(title, metric_1_name, metric_2_name):
+    print('|--------------------------------|')
+    print('|{}|'.format(title.center(32)))
+    print('|  Threshold   |{}|{}|'.format(metric_1_name.center(8),
+                                          metric_2_name.center(8)))
+    print('|--------------|--------|--------|')
+
+
+def _print_threshold_table_rows(best_threshold,
+                                thresholds,
+                                first_metrics,
+                                second_metrics):
+    for threshold, c1, c2 in zip(thresholds, first_metrics, second_metrics):
+        marker = '***' if threshold == best_threshold else '   '
+        print('|  {} {:03.2f}    |  {:03.2f}  |  {:03.2f}  |'.format(
+            marker,
+            threshold,
+            c1,
+            c2))
+
+
+def _print_threshold_table_footer():
+    print('|--------------------------------|')
+    print('|  *** Ideal cutoff              |')
+    print('|--------------------------------|')
+
+
+def _print_roc_table(roc):
+    print(('\nReceiver Operating Characteristic (ROC):\n'
+           '    Area under curve (ROC AUC): {:0.2f}\n'
+           '    Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and '
+           'FPR of {:0.2f}').format(
+        roc['roc_auc'],
+        roc['best_roc_cutoff'],
+        roc['best_true_positive_rate'],
+        roc['best_false_positive_rate']))
+    _print_threshold_table_header('ROC', 'TPR', 'FPR')
+    _print_threshold_table_rows(
+        roc['best_roc_cutoff'],
+        roc['roc_thresholds'],
+        roc['true_positive_rates'],
+        roc['false_positive_rates'])
+    _print_threshold_table_footer()
+
+
+def _print_pr_table(pr):
+    print(('\nPrecision-Recall:\n'
+           '    Area under Precision Recall curve (PR AUC): {:0.2f}\n'
+           '    Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and '
+           'recall of {:04.3f}').format(
+        pr['pr_auc'],
+        pr['best_pr_cutoff'],
+        pr['best_precision'],
+        pr['best_recall']))
+    _print_threshold_table_header('Precision-Recall Thresholds', 'PR', 'Recall')
+    _print_threshold_table_rows(
+        pr['best_pr_cutoff'],
+        pr['pr_thresholds'],
+        pr['precisions'],
+        pr['recalls'])
+    _print_threshold_table_footer()
+
+
 class TrainedSupervisedModel(object):
     """
     The meta-object that is created when training supervised models.
@@ -419,7 +482,7 @@ class TrainedSupervisedModel(object):
             pandas.core.frame.DataFrame:  
         """
         # Get predictions and on the top 3 features (catalyst SAMs expect 3 factors)
-        factors_and_predictions_df = self.make_predictions_with_k_factors(dataframe, number_top_features=3)
+        factors_and_predictions_df = self.make_predictions(dataframe)
 
         # Add all the catalyst-specific columns to back into the SAM
         factors_and_predictions_df['BindingID'] = 0
@@ -547,6 +610,9 @@ class TrainedSupervisedModel(object):
 
         accuracy = round(self.metrics['accuracy'], 2)
 
+        # matplotlib hacks
+        rcParams.update({'figure.autolayout': True})
+
         # Various settings for normalized vs non-normalized plots
         if normalize:
             number_format = '.2f'
@@ -596,7 +662,7 @@ class TrainedSupervisedModel(object):
 
     def roc(self, print_output=True):
         """
-        Print out ROC details and return them with cutoffs.
+        Return ROC thresholds with cutoffs and optionally print them.
         
         Note this is a simple subset of TrainedSupervisedModel.metrics()
         
@@ -604,7 +670,7 @@ class TrainedSupervisedModel(object):
             print_output (bool): True (default) to print a table of output.
 
         Returns:
-            dict: A subset of TrainedSupervisedModel.metrics() that are ROC specific
+            dict: A ROC specific subset of TrainedSupervisedModel.metrics()
         """
         self._validate_binary_classification()
 
@@ -620,28 +686,7 @@ class TrainedSupervisedModel(object):
         }
 
         if print_output:
-            print(('\nReceiver Operating Characteristic (ROC):\n'
-                   '    Area under curve (ROC AUC): {:0.2f}\n'
-                   '    Ideal ROC cutoff is {:0.2f}, yielding TPR of {:0.2f} and FPR of {:0.2f}').format(
-                roc['roc_auc'],
-                roc['best_roc_cutoff'],
-                roc['best_true_positive_rate'],
-                roc['best_false_positive_rate']))
-
-            print('|--------------------------------|')
-            print('|               ROC              |')
-            print('|  Threshhold  |  TPR   |  FPR   |')
-            print('|--------------|--------|--------|')
-            for i, _ in enumerate(roc['roc_thresholds']):
-                marker = '***' if roc['roc_thresholds'][i] == roc['best_roc_cutoff'] else '   '
-                print('|  {}   {:03.2f}  |  {:03.2f}  |  {:03.2f}  |'.format(
-                    marker,
-                    roc['roc_thresholds'][i],
-                    roc['true_positive_rates'][i],
-                    roc['false_positive_rates'][i]))
-            print('|--------------------------------|')
-            print('|  *** Ideal cutoff              |')
-            print('|--------------------------------|')
+            _print_roc_table(roc)
 
         return roc
 
@@ -656,7 +701,7 @@ class TrainedSupervisedModel(object):
 
     def pr(self, print_output=True):
         """
-        Print out PR details and return them with cutoffs.
+        Return PR thresholds with cutoffs and optionally print them.
 
         Note this is a simple subset of TrainedSupervisedModel.metrics()
 
@@ -664,7 +709,7 @@ class TrainedSupervisedModel(object):
             print_output (bool): True (default) to print a table of output.
 
         Returns:
-            dict: A subset of TrainedSupervisedModel.metrics() that are PR specific
+            dict: A PR specific subset of TrainedSupervisedModel.metrics()
         """
         self._validate_binary_classification()
 
@@ -680,28 +725,7 @@ class TrainedSupervisedModel(object):
         }
 
         if print_output:
-            print(('\nPrecision-Recall:\n'
-                   '    Area under Precision Recall curve (PR AUC): {:0.2f}\n'
-                   '    Ideal PR cutoff is {:0.2f}, yielding precision of {:04.3f} and recall of {:04.3f}').format(
-                pr['pr_auc'],
-                pr['best_pr_cutoff'],
-                pr['best_precision'],
-                pr['best_recall']))
-
-            print('|---------------------------------|')
-            print('|   Precision-Recall Thresholds   |')
-            print('| Threshhold | Precision | Recall |')
-            print('|------------|-----------|--------|')
-            for i, _ in enumerate(pr['pr_thresholds']):
-                marker = '***' if pr['pr_thresholds'][i] == pr['best_pr_cutoff'] else '   '
-                print('| {} {:03.2f}   |    {:03.2f}   |  {:03.2f}  |'.format(
-                    marker,
-                    pr['pr_thresholds'][i],
-                    pr['precisions'][i],
-                    pr['recalls'][i]))
-            print('|---------------------------------|')
-            print('|  *** Ideal cutoff               |')
-            print('|---------------------------------|')
+            _print_pr_table(pr)
 
         return pr
 

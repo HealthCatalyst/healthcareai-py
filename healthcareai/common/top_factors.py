@@ -7,7 +7,6 @@ from healthcareai.common.healthcareai_error import HealthcareAIError
 
 
 def descending_sort(row):
-    # TODO Low priority, consider testing
     """
     Sorts (descending) the columns of a dataframe by value or a single row
     
