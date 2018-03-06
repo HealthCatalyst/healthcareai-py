@@ -244,12 +244,16 @@ class TrainedSupervisedModel(object):
         self._validate_regressor_or_classifier()
         df = self.prepare_and_subset(dataframe)
 
+        def _get_none_array():
+            return [None] * len(df)
+
         result = pd.DataFrame({
-            self.grain_column: dataframe[self.grain_column].values,
-            'Prediction': None,
-            'Probability': None,
-            'All Probabilities': None
+            'Prediction': _get_none_array(),
+            'Probability': _get_none_array(),
+            'All Probabilities': _get_none_array()
         })
+        if self.grain_column:
+            result[self.grain_column] = dataframe[self.grain_column].values
 
         if self.is_binary_classification:
             # Only save the prediction of one of the two classes

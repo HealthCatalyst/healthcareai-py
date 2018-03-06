@@ -15,11 +15,11 @@ class TestTrainedSupervisedModel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Load a dataframe, train a few models and prepare a prediction dataframes for assertions"""
-        training_df = hcai_datasets.load_diabetes()
+        cls.training_df = hcai_datasets.load_diabetes()
 
         # Drop columns that won't help machine learning
-        training_df.drop(['PatientID'], axis=1, inplace=True)
-        reg_df = training_df.copy()
+        cls.training_df.drop(['PatientID'], axis=1, inplace=True)
+        reg_df = cls.training_df.copy()
         reg_df['SystolicBPNBR'].fillna(149, inplace=True)
 
         regression_trainer = SupervisedModelTrainer(
@@ -29,7 +29,7 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             impute=True,
             grain_column='PatientEncounterID')
 
-        cls_df = training_df.copy()
+        cls_df = cls.training_df.copy()
         cls_df['ThirtyDayReadmitFLG'].fillna('N', inplace=True)
 
         classification_trainer = SupervisedModelTrainer(
@@ -55,6 +55,23 @@ class TestTrainedSupervisedModel(unittest.TestCase):
             cls.prediction_df)
         cls.catalyst_dataframe = cls.trained_linear.create_catalyst_dataframe(
             cls.prediction_df)
+
+    def test_train_with_no_grain_column_predictions_still_work(self):
+        training_df = self.training_df.drop(['PatientEncounterID'], axis=1)
+        training_df['SystolicBPNBR'].fillna(149, inplace=True)
+
+        regression_trainer = SupervisedModelTrainer(
+            training_df,
+            'SystolicBPNBR',
+            'regression',
+            impute=True,
+            verbose=False)
+
+        lr = regression_trainer.linear_regression()
+        prediction_df = training_df.iloc[0:1]
+        predictions = lr.make_predictions(prediction_df)
+
+        self.assertEqual(1, len(predictions))
 
     def test_is_classification(self):
         self.assertTrue(self.trained_lr.is_classification)
