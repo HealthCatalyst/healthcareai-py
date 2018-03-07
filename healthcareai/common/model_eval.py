@@ -361,7 +361,6 @@ def pr_plot_from_thresholds(pr_thresholds_by_model, save=False, debug=False):
     plt.title('Precision Recall (PR)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.plot([0, 1], [1, 0], linestyle=DIAGONAL_LINE_STYLE, color=DIAGONAL_LINE_COLOR)
 
     # Calculate and plot for each model
     for color, (model_name, metrics) in zip(color_iterator, pr_thresholds_by_model.items()):
