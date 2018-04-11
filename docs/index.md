@@ -11,13 +11,10 @@ Find our code at our [Github Repo ![Our Github repo](img/GitHub-Mark-120px-plus.
 
 ## Do I Want This Package or the [R package](https://docs.healthcare.ai)?
 
-Choose this Python package if one of the following apply:
+Choose this Python package if several of the following apply:
 
-- You're familiar with python
-- You're familiar with machine learning
+- You love Python
 - You're working with 5M+ rows
+- You can tolerate some quirks
 
-Otherwise, the [R package](https://docs.healthcare.ai) is recommended, as it
-currently has more features and R is tends to be more newbie-friendly. For a comparison of packages and capabilities, check out:
-
-![What can I do with healthcareai?](img/infographic_final.png)
+Otherwise, the [R package](https://docs.healthcare.ai) is recommended, as it currently has more features and R is tends to be more newbie-friendly. R is where we're putting most of our time.
