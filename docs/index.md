@@ -9,7 +9,7 @@ The aim of **healthcareai** is to streamline machine learning in healthcare with
 
 Find our code at our [Github Repo ![Our Github repo](img/GitHub-Mark-120px-plus.png)](https://github.com/HealthCatalyst/healthcareai-py)
 
-## Do I Want This Package or the [R package](http://healthcare.ai/r)?
+## Do I Want This Package or the [R package](https://docs.healthcare.ai)?
 
 Choose this Python package if one of the following apply:
 
@@ -17,7 +17,7 @@ Choose this Python package if one of the following apply:
 - You're familiar with machine learning
 - You're working with 5M+ rows
 
-Otherwise, the [R package](http://healthcare.ai/r) is recommended, as it
+Otherwise, the [R package](https://docs.healthcare.ai) is recommended, as it
 currently has more features and R is tends to be more newbie-friendly. For a comparison of packages and capabilities, check out:
 
 ![What can I do with healthcareai?](img/infographic_final.png)
