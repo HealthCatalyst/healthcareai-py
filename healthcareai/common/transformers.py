@@ -5,11 +5,13 @@ This module contains transformers for preprocessing data. Most operate on DataFr
 import numpy as np
 import pandas as pd
 
+from distutils.version import StrictVersion
 from sklearn.base import TransformerMixin
 from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler
 
+CHECK_PANDAS_VERSION = StrictVersion("0.22.0")
 
 class DataFrameImputer(TransformerMixin):
     """
@@ -36,7 +38,8 @@ class DataFrameImputer(TransformerMixin):
 
         self.fill = pd.Series([X[c].value_counts().index[0]
                                if X[c].dtype == np.dtype('O')
-                                  or pd.core.common.is_categorical_dtype(X[c])
+                                  or ((StrictVersion(pd.__version__) >= CHECK_PANDAS_VERSION) and (pd.api.types.is_categorical_dtype(X[c])))
+                                  or ((StrictVersion(pd.__version__) < CHECK_PANDAS_VERSION) and (pd.core.common.is_categorical_dtype(X[c])))
                                else X[c].mean() for c in X], index=X.columns)
 
         if self.verbose:
@@ -105,7 +108,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        columns_to_dummify = X.select_dtypes(include=[object, 'category'])
+        columns_to_dummify = list(X.select_dtypes(include=[object, 'category']))
 
         # remove excluded columns (if they are still in the list)
         for column in columns_to_dummify:
