@@ -44,8 +44,7 @@ def top_k_features(dataframe, linear_model, k=3):
 
     # Multiply the values with the coefficients from the trained model and take the magnitude
     step1 = pd.DataFrame(np.abs(dataframe.values * linear_model.coef_), columns=dataframe.columns)
-    step2 = step1.apply(descending_sort, axis=1)
-
+    step2 = step1.apply(descending_sort, axis=1, result_type='expand')
     results = list(step2.values[:, :k])
     return results
 
