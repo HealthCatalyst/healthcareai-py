@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
+from distutils.version import StrictVersion
 
 from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from healthcareai.common.healthcareai_error import HealthcareAIError
 
+CHECK_PANDAS_VERSION = StrictVersion("0.23.1")
 
 def descending_sort(row):
     # TODO Low priority, consider testing
@@ -44,7 +46,12 @@ def top_k_features(dataframe, linear_model, k=3):
 
     # Multiply the values with the coefficients from the trained model and take the magnitude
     step1 = pd.DataFrame(np.abs(dataframe.values * linear_model.coef_), columns=dataframe.columns)
-    step2 = step1.apply(descending_sort, axis=1, result_type='expand')
+
+    if StrictVersion(pd.__version__) >= CHECK_PANDAS_VERSION:
+        step2 = step1.apply(descending_sort, axis=1, result_type='expand')
+    else:
+        step2 = step1.apply(descending_sort, axis=1)
+
     results = list(step2.values[:, :k])
     return results
 
