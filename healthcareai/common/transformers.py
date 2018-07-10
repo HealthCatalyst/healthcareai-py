@@ -10,7 +10,6 @@ from imblearn.over_sampling import RandomOverSampler
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.preprocessing import StandardScaler
 
-
 class DataFrameImputer(TransformerMixin):
     """
     Impute missing values in a dataframe.
@@ -36,7 +35,7 @@ class DataFrameImputer(TransformerMixin):
 
         self.fill = pd.Series([X[c].value_counts().index[0]
                                if X[c].dtype == np.dtype('O')
-                                  or pd.core.common.is_categorical_dtype(X[c])
+                                  or pd.api.types.is_categorical_dtype(X[c])
                                else X[c].mean() for c in X], index=X.columns)
 
         if self.verbose:
@@ -105,7 +104,7 @@ class DataFrameCreateDummyVariables(TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        columns_to_dummify = X.select_dtypes(include=[object, 'category'])
+        columns_to_dummify = list(X.select_dtypes(include=[object, 'category']))
 
         # remove excluded columns (if they are still in the list)
         for column in columns_to_dummify:
