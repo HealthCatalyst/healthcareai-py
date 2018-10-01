@@ -419,9 +419,11 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             X[col].fillna( value=imputeValue, inplace=True )
             
             if self.verbose:
-                print( "Column name               = ", col )
-                print( "Total no of mising values = ", len(imputeData))
-                print( "Top 10 predictions of missing values = ", imputeData[0:10] )
+                print( "Column name                             =", col )
+                print( "Total no of mising values               =", len(imputeData))
+                percentage_missing = len(imputeData)/len(X[col])*100
+                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
+                print( "Top 10 predictions of missing values    =", imputeData[0:10] )
                 print("------------------------------------------------------------------------------------------------")
         
         
@@ -513,9 +515,11 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             X_backup.loc[ X_backup[ to_impute[0] ].isnull(), to_impute[0] ] = self.fill_dict[ to_impute[0] ]
             
             if self.verbose:
-                print( "Column name               = ", to_impute[0] )
-                print( "Total no of mising values = ", len(y_pred_main))
-                print( "Top 10 predictions of missing values = ", y_pred_main[0:10] )
+                print( "Column name                             =", to_impute[0] )
+                print( "Total no of mising values               =", len(y_pred_main))
+                percentage_missing = len(y_pred_main)/len(X_backup[to_impute[0]])*100
+                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
+                print( "Top 10 predictions of missing values    =", y_pred_main[0:10] )
                 print("------------------------------------------------------------------------------------------------")
         
             
@@ -654,9 +658,11 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             self.fill_dict[ to_impute[0] ] = y_pred_main_df[ to_impute[0] ].values
             
             if self.verbose:
-                print( "Column name               = ", to_impute[0] )
-                print( "Total no of mising values = ", len(y_pred_main))
-                print( "Top 10 predictions of missing values = ", y_pred_main_df[ to_impute[0] ].values[0:10] )
+                print( "Column name                             =", to_impute[0] )
+                print( "Total no of mising values               =", len(y_pred_main))
+                percentage_missing = len(y_pred_main)/len(X_backup[to_impute[0]])*100
+                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
+                print( "Top 10 predictions of missing values    =", y_pred_main_df[ to_impute[0] ].values[0:10] )
                 print("------------------------------------------------------------------------------------------------")
 
             
