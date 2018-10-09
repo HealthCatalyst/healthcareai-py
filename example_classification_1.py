@@ -11,6 +11,7 @@ To run this example:
 This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
+import numpy as np
 
 import healthcareai
 import healthcareai.trained_models.trained_supervised_model as tsm_plots
@@ -41,7 +42,7 @@ def main():
 
     # Drop columns that won't help machine learning
     dataframe.drop(['PatientID'], axis=1, inplace=True)
-
+    
     # Step 1: Setup a healthcareai classification trainer. This prepares your data for model building
     classification_trainer = healthcareai.SupervisedModelTrainer(
         dataframe=dataframe,
@@ -50,7 +51,52 @@ def main():
         grain_column='PatientEncounterID',
         impute=True,
         verbose=False)
-
+    
+    
+    """
+    The below code demonstrate the advance features for imputation of missing values.
+    imputeStrategy: 
+        'MeanMode': (default), Impute using mean and mode values of column
+        'RandomForest': Impute missing values in RandomForest models.(Imputed values are much more realistic)
+    
+    tunedRandomForest:
+        True: ML to be used for imputation of missing values are tuned using grid search and K-fold cross 
+              validation.
+    
+    numeric_columns_as_categorical :
+        For example: GenderFLG (0,0,1,0,1,1 .... )
+        So in normal case pandas by default will consider this column as numeric and missing values of this column 
+        will be imputed using MEAN value (ex. 0.78 or 1.46 ....).
+        
+        Thus to explicitly mention such  as categorical there is this option which can be used as below:
+            numeric_columns_as_categorical = 'GenderFLG'
+        Now imputation will be done by MODE value and final type of the column wil be np.object.
+    """
+    
+    # Uncomment below code to see advance imputation in action.
+    """
+    # Creating missing values in GenderFLG column and converting it into Numeric type to demostrate advance imputation features.
+    dataframe['GenderFLG'].iloc[ 500:530, ] = np.NaN
+    dataframe['GenderFLG'].replace( to_replace=[ 'M', 'F' ], value=[ 0, 1], inplace=True )
+    pd.options.mode.chained_assignment = None
+    
+    classification_trainer = healthcareai.SupervisedModelTrainer(
+        dataframe=dataframe,
+        predicted_column='ThirtyDayReadmitFLG',
+        model_type='classification',
+        grain_column='PatientEncounterID',
+        impute=True,
+        verbose=False,
+        imputeStrategy = 'RandomForest',
+        tunedRandomForest = True,
+        numeric_columns_as_categorical = 'GenderFLG'   
+        )
+    """
+    
+    
+    
+    
+    
     # Look at the first few rows of your dataframe after loading the data
     print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
     print(classification_trainer.clean_dataframe.head())
@@ -107,7 +153,7 @@ def main():
     # Once you are happy with the performance of any model, you can save it for use later in predicting new data.
     # File names are timestamped and look like '2017-05-31T12-36-21_classification_RandomForestClassifier.pkl')
     # Note the file you saved and that will be used in example_classification_2.py
-    trained_random_forest.save()
+    # trained_random_forest.save()
 
 
 if __name__ == "__main__":

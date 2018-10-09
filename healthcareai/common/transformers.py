@@ -16,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import RandomizedSearchCV
 from healthcareai.common.healthcareai_error import HealthcareAIError
+from tabulate import tabulate
 
 SUPPORTED_IMPUTE_STRATEGY = ['MeanMode', 'RandomForest']
 
@@ -85,6 +86,14 @@ class DataFrameImputer( TransformerMixin ):
         self.imputeStrategy = imputeStrategy
         self.tunedRandomForest = tunedRandomForest
         self.numeric_columns_as_categorical = numeric_columns_as_categorical
+        if self.numeric_columns_as_categorical is not None:
+            if type(numeric_columns_as_categorical) is str:
+                self.numeric_columns_as_categorical = [numeric_columns_as_categorical]
+            elif type(numeric_columns_as_categorical) is list:
+                self.numeric_columns_as_categorical = numeric_columns_as_categorical
+            else:
+                raise HealthcareAIError( "Please provide \'numeric_columns_as_categorical = {}\' parameter in string/list format (for single column) or in list format (for multiple columns)".format(numeric_columns_as_categorical) )
+                 
         
 
     def fit(self, X, y=None):
@@ -153,7 +162,7 @@ class DataFrameImputer( TransformerMixin ):
         
         If imputeStrategy is : 'MeanMode' / None
             Missing value to be imputed are calculated using Mean and Mode of corresponding columns.
-            1. Missing values of dataframe ae filled using self.fill variable(generated in fill() function )
+            1. Missing values of dataframe are filled using self.fill variable(generated in fill() function )
             2. Columns specified in 'numeric_columns_as_categorical' are explicitly converted into dtype='object'
             3. Columns captured in 'self.object_columns' during fill() function are ensured to be of dtype='object'
             
@@ -254,11 +263,11 @@ class DataFrameImputerRandomForest( TransformerMixin ):
                 At this point calculation of missing vales of [num_as_cat_list] columns is completed.
             3. New dataframe is constructed as : 
                 X_NumericAsCategoricalImputed(now don't have any null values) + X[ cat_list+num_list ](still have null values)
-                At this point calculation of missing vales of [num_as_cat_list + num_list columns] is completed.
-            4. Then after missing values of Numreic colums are imuted by calling function : getNumericImputedData()
+                At this point calculation of missing vales of [num_as_cat_list] is completed.
+            4. Then after missing values of Numeric columns are imputed by calling function : getNumericImputedData()
             5. New dataframe is constructed as : 
-                NumericImputedData(now dont have any missing values) + X[ cat_list ](still have missing values)                                                                                                          missing values)
-            6. Now missing values of Categorical colums are imuted by calling function : getCategoricalImputedData()
+                NumericImputedData(now don't have any missing values) + X[ cat_list ](still have missing values)                                                                                                          missing values)
+            6. Now missing values of Categorical columns are imputed by calling function : getCategoricalImputedData()
             7. At this point calculation of missing vales of all columns is completed.
             8. While imputing any columns, corresponding entry is made in fill_dict as:
                 key   : column name
@@ -270,7 +279,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             X_backup (pd.Dataframe) = It will be used as backup of dataframe: X
             cat_list (List of Strings) = List of categorical columns
             num_list (List of Strings) = List of numeric columns
-            num_as_cat_list = numeric columns tobe considered as categorical (provided by user)
+            num_as_cat_list = numeric columns to be considered as categorical (provided by user)
             X_NumericAsCategoricalImputed(pd.Dataframe) =  dataframe having only num_as_cat_list cols with imputed missing values
             X_NumericImputed (pd.Dataframe)             = dataframe having only num_list cols with imputed missing values
             main_df_NumericImputed (pd.Dataframe)       = dataframe having Numeric cols(now don't have values) + Categorical cols(having missing values)
@@ -283,7 +292,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
         
         if self.tunedRandomForest==True and self.verbose==True:
             print("\nNote: Missing value imputation is being performed using Gridsearch and Cross-validation of ML models.")
-            print("      It may take longer time depending on size of data and number of column having missing values.\n\n")
+            print("      It may take longer time depending on size of data and number of column having missing values.\n")
             
         
         num_nans = X.isnull().sum().sum()
@@ -349,10 +358,11 @@ class DataFrameImputerRandomForest( TransformerMixin ):
         #--------------------------------------------------------------------------------------------------------------------------
         
         if self.verbose:
+            self.printFillDictReport( lenghth_X=len(X) )
             print("Percentage Imputed: %.2f%%" % percentage_imputed)
             print("Note: Impute will always happen on prediction dataframe, otherwise rows are dropped, and will lead "
                   "to missing predictions")
-        
+            print("")
 
         # return self for scikit compatibility
         return self
@@ -362,7 +372,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
         """
         Description:
         ------------
-            Missing value to be imputed are calculated using Mean and Mode of corresponding columns.
+            Missing value to be imputed are present in fill_dict.
             1. Missing values of dataframe ae filled using self.fill_dict dictionary( updated in fill() function )
             2. Columns captured in 'self.object_columns' during fill() function are ensured to be of dtype='object'
             3. Columns specified in 'numeric_columns_as_categorical' are explicitly converted into dtype='object'
@@ -394,6 +404,22 @@ class DataFrameImputerRandomForest( TransformerMixin ):
    
     
     
+    def printFillDictReport( self, lenghth_X ):
+        
+        header_names = [ 'Column Name', '  Number of\nmissing values', '% missing\n values', 'Top 3 impute values']
+        print_data = []
+        
+        for colName, imputeData in self.fill_dict.items():
+            length_imputeData = len(self.fill_dict[colName])
+            sample_imputeData = imputeData[0:3]
+            percentage_missing = length_imputeData/lenghth_X
+            percentage_missing = "{:.2%}".format(percentage_missing)
+            print_data.append( [colName, str(length_imputeData), percentage_missing, sample_imputeData] )
+        
+        table = tabulate( tabular_data=print_data, headers=header_names, tablefmt='fancy_grid', stralign='left', numalign='left')
+        print(table)
+        print("")
+    
     def getNumericAsCategoricalImputedData( self, X, num_as_cat_list):
         """
         This function do below operations on num_as_cat_list columns:
@@ -419,13 +445,8 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             X[col].fillna( value=imputeValue, inplace=True )
             
             if self.verbose:
-                print( "Column name                             =", col )
-                print( "Total no of mising values               =", len(imputeData))
-                percentage_missing = len(imputeData)/len(X[col])*100
-                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
-                print( "Top 10 predictions of missing values    =", imputeData[0:10] )
-                print("------------------------------------------------------------------------------------------------")
-        
+                print("Missing value imputation completed for column: \'{}\'".format(col))
+            
         
         return X
                 
@@ -449,12 +470,12 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             predictor_columns (List) = List of columns to be used for predicting the missing values in to_impute[0] column
         
         Return:
-            X_NumericImputed (pd.Dataframe) = have ONLY numeric colmns with imputed missing values
+            X_NumericImputed (pd.Dataframe) = have ONLY numeric columns with imputed missing values
             Also fill_dict gets updated for each Numeric columns having missing values
             
         Steps:
             1. Whole process will run in a loop. This loop will run once for every col in num_list.
-            2. That col will be the col under consideration in which mising values(if present) are to be imputed.
+            2. That col will be the col under consideration in which missing values(if present) are to be imputed.
             3. find predictor_columns
             4. Temporarily impute missing values in predictor_columns using mean/mode as part of pre-data processing
                ( predictions will be done only for to_impute col.)
@@ -464,7 +485,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             8. Data pre-processing is completed, get the predictions of missing values in to_impute col
             9. Add the col name(to_impute) and predicted of missing values in fill_dict
             10. *** Also imputing the missing values of this column so that in next iteration there will 
-                be lesser number of mising values in dataframe(X) that need to be temp imputed using
+                be lesser number of missing values in dataframe(X) that need to be temp imputed using
                 mean/mode  (i.e step 4)
                 
         """
@@ -515,13 +536,8 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             X_backup.loc[ X_backup[ to_impute[0] ].isnull(), to_impute[0] ] = self.fill_dict[ to_impute[0] ]
             
             if self.verbose:
-                print( "Column name                             =", to_impute[0] )
-                print( "Total no of mising values               =", len(y_pred_main))
-                percentage_missing = len(y_pred_main)/len(X_backup[to_impute[0]])*100
-                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
-                print( "Top 10 predictions of missing values    =", y_pred_main[0:10] )
-                print("------------------------------------------------------------------------------------------------")
-        
+                print("Missing value imputation completed for column: \'{}\'".format(to_impute[0]))
+                
             
         X_NumericImputed = X_backup[ num_list ].copy()
         return X_NumericImputed
@@ -529,7 +545,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
 
     def getCategoricalImputedData( self, main_df, X_NumericImputed, X, cat_list, num_list ):
         """
-        Impute missing values in Numeric cols of dataframe.
+        Impute missing values in Categorical cols of dataframe.
         
         Args:
             main_df (pd.Dataframe) = copy of original dataframe(having missing values)
@@ -546,12 +562,12 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             predictor_columns (List) = List of columns to be used for predicting the missing values in to_impute[0] column
         
         Return:
-            (pd.Dataframe) having ONLY categorical colmns with imputed missing values
+            (pd.Dataframe) having ONLY categorical columns with imputed missing values
             Also fill_dict is getting updated for each Numeric columns having missing values
         
          Steps:
             1. Whole process will run in a loop. This loop will run once for every col in num_list.
-            2. That col will be the col under consideration in which mising values(if present) are to be imputed.
+            2. That col will be the col under consideration in which missing values(if present) are to be imputed.
             3. find predictor_columns
             4. Temporarily impute missing values in predictor_columns using mean/mode as part of pre-data processing
                ( predictions will be done only for to_impute col.)
@@ -562,9 +578,9 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             9. Data pre-processing is completed, get the predictions of missing values in to_impute col
                Note: Here y_pred_main is in indexed form which needs to be converted back to original values.
             10. *** Imputing the missing values of this column so that in next iteration there will 
-                be lesser number of mising values in dataframe(X) that need to be temp imputed using
+                be lesser number of missing values in dataframe(X) that need to be temp imputed using
                 mean/mode  (i.e step 4)
-                Also conveting back the indexed version of to_impute to its original categoric values.
+                Also converting back the indexed version of to_impute to its original categoric values.
             11. Add the col name(to_impute) and predicted missing values in fill_dicts
                 
         """
@@ -658,13 +674,7 @@ class DataFrameImputerRandomForest( TransformerMixin ):
             self.fill_dict[ to_impute[0] ] = y_pred_main_df[ to_impute[0] ].values
             
             if self.verbose:
-                print( "Column name                             =", to_impute[0] )
-                print( "Total no of mising values               =", len(y_pred_main))
-                percentage_missing = len(y_pred_main)/len(X_backup[to_impute[0]])*100
-                print( "Percentage missing values in the column = %.2f%% " % percentage_missing)
-                print( "Top 10 predictions of missing values    =", y_pred_main_df[ to_impute[0] ].values[0:10] )
-                print("------------------------------------------------------------------------------------------------")
-
+                print("Missing value imputation completed for column: \'{}\'".format(to_impute[0]))
             
         X_CategoricImputed = X_backup[ cat_list ].copy()
         return X_CategoricImputed
@@ -672,13 +682,19 @@ class DataFrameImputerRandomForest( TransformerMixin ):
 
     def getTempImutedData( self, X ):
         """
-        This function is used for temporary imputaion of mising values and impute missing values in a dataframe using Mean and Mode    . 
+        This function is used for temporary imputation of missing values and impute missing 
+        values in a dataframe using Mean and Mode    . 
         
-        Actual imputaion is done<in to_impute col> by doing prediction using ML model, but before creating ML model, during data pre-               pre-processing, there might be missing values in the other columns(i.e other than to_impute col), so for time being those missing           values are imputed using MeanMode Strategy
+        Actual imputation is done(in to_impute col) by generating prediction using ML model, 
+        but before creating ML model, during data pre-processing, there might be missing values
+        in the other columns(i.e other than to_impute col), so for time being those values are 
+        imputed using MeanMode Strategy.
         
-        Columns of dtype object or category (assumed categorical) = imputed with the mode (most frequent value in column).
+        Columns of dtype object or category (assumed categorical) 
+                = imputed with the mode (most frequent value in column).
         
-        Columns of other types (assumed continuous)               = imputed with mean of column.
+        Columns of other types (assumed continuous 
+                = imputed with mean of column.
         """
         object_columns = X.select_dtypes(include=['object']).columns.values
         fill = pd.Series( [ X[c].value_counts().index[0] if X[c].dtype == np.dtype('O') or pd.api.types.is_categorical_dtype(X[c])
@@ -700,13 +716,13 @@ class DataFrameImputerRandomForest( TransformerMixin ):
         This method generate predictions of missing values
         
         Args:
-            X (pd.Dataframe) = Inpute dataframe
+            X (pd.Dataframe) = Input dataframe
             predictor_columns (List) = List of input columns for ML model
             to_impute (List)         = List<Although it will always have single element> of output column for ML model  
             toImputeType (String) = type of column to be imputed
         
         Return:
-            y_pred_main (np.array) = predicted values for missing cells
+            y_pred_main (numpy.array) = predicted values for missing cells
         """
         
         # Seperating the mainDf into train(dont have NaN) and test(having NaN) data

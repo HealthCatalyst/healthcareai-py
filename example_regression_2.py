@@ -11,6 +11,7 @@ To run this example:
 This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
+import numpy as np
 
 import healthcareai
 import healthcareai.common.database_connections as hcai_db
@@ -20,6 +21,13 @@ def main():
     """Template script for using healthcareai predict using a trained regression model."""
     # Load the included diabetes sample data
     prediction_dataframe = healthcareai.load_diabetes()
+    
+    # uncomment below code if advance imputaion is used in example_regression_1 
+    # beacuse we have intentionally converted GenderFLG column into numeric type for demonstration of numeric_columns_as_categorical feature.
+    """
+    prediction_dataframe['GenderFLG'].iloc[ 500:530, ] = np.NaN
+    prediction_dataframe['GenderFLG'].replace( to_replace=[ 'M', 'F' ], value=[ 0, 1], inplace=True )
+    """
 
     # ...or load your own data from a .csv file: Uncomment to pull data from your CSV
     # prediction_dataframe = healthcareai.load_csv('path/to/your.csv')
@@ -40,7 +48,8 @@ def main():
     # Load the saved model using your filename.
     # File names are timestamped and look like '2017-05-31T12-36-21_regression_LinearRegression.pkl')
     # Note the file you saved in example_regression_1.py and set that here.
-    trained_model = healthcareai.load_saved_model('2017-08-16T16-48-02_regression_LinearRegression.pkl')
+    trained_model = healthcareai.load_saved_model('2018-10-09T13-56-20_regression_LinearRegression_defaultImputation.pkl')
+    #trained_model = healthcareai.load_saved_model('2018-10-09T13-28-40_regression_LinearRegression_advanceImputation.pkl')
 
     # Any saved models can be inspected for properties such as metrics, columns, etc. (More examples are in the docs)
     print(trained_model.metrics)
