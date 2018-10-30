@@ -105,6 +105,9 @@ class TestTopFactors(unittest.TestCase):
         result = results.sort_index(axis=1)
 
         self.assertTrue(result.equals(expected))
+		
+		#print(expected)
+        #print(result)
 
 
 if __name__ == '__main__':
