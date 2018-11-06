@@ -15,7 +15,8 @@ class SupervisedModelTrainer(object):
     reports appropriate metrics.
     """
 
-    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=True):
+    def __init__(self, dataframe, predicted_column, model_type, impute=True, grain_column=None, verbose=True, imputeStrategy='MeanMode',
+                 tunedRandomForest=False, numeric_columns_as_categorical=None ):
         """
         Set up a SupervisedModelTrainer.
 
@@ -24,20 +25,63 @@ class SupervisedModelTrainer(object):
         all values are equal.
 
         Args:
-            dataframe (pandas.core.frame.DataFrame): The training data in a 
-            pandas dataframe 
-            
-            predicted_column (str): The name of the prediction column
+        -----
+        dataframe (pandas.core.frame.DataFrame): The training data in a 
+        pandas dataframe 
+        
+        predicted_column (str): The name of the prediction column
 
-            model_type (str): the trainer type - 'classification' or 'regression'
+        model_type (str): the trainer type - 'classification' or 'regression'
 
-            impute (bool): True to impute data (mean of numeric columns and 
-            mode of categorical ones). False to drop
-            rows that contain any null values.
+        impute (bool): True to impute data (mean of numeric columns and 
+        mode of categorical ones). False to drop
+        rows that contain any null values.
 
-            grain_column (str): The name of the grain column
+        grain_column (str): The name of the grain column
 
-            verbose (bool): Set to true for verbose output. Defaults to True.
+        verbose (bool): Set to true for verbose output. Defaults to True.
+        
+        impute : boolean, default=True
+        	If True, imputation of missing value takes place.
+        	If False, drop rows that contain any null values.
+        	
+        imputeStrategy : string, default='MeanMode'
+        	It decides the technique to be used for imputation of missing values.
+        	If imputeStrategy = 'MeanMode', Columns of dtype object or category 
+            (assumed categorical) and imputed by the mode value of that column. 
+            Columns of other types (assumed continuous) : by mean of column.
+        	
+             If imputeStrategy = 'RandomForest', Columns of dtype object or category 
+            (assumed categorical) : imputed using RandomForestClassifier. 
+            Columns of other types (assumed continuous) : imputed using RandomForestRegressor
+        			
+        
+        tunedRandomForest : boolean, default=False
+        	If set to True, RandomForestClassifier/RandomForestRegressor to be used for 
+        	imputation of missing values are tuned using grid search and K-fold cross 
+        	validation.
+        	
+        	Note:
+        	If set to True, imputation process may take longer time depending upon size of 
+        	dataframe and number of columns having missing values.
+        	
+        numeric_columns_as_categorical : List of type String, default=None
+        	List of column names which are numeric(int/float) in dataframe, but by nature 
+        	they are to be considered as categorical.
+        	
+        	For example:
+        	There is a column JobCode( Levels : 1,2,3,4,5,6)
+        	If there are missing values in JobCode column, panadas will by default convert 
+        	this column into type float.
+        	
+        	If numeric_columns_as_categorical=None
+        	Missing values of this column will be imputed by Mean value of JobCode column.
+        	type of 'JobCode' column will remain float. 
+        	
+            If numeric_columns_as_categorical=['JobCode']
+            Missing values of this column will be imputed by mode value of JobCode column.
+            Also final type of 'JobCode' column will be numpy.object 
+				
         """
         self.predicted_column = predicted_column
         self.grain_column = grain_column
@@ -47,10 +91,12 @@ class SupervisedModelTrainer(object):
         # impute, then some rows on the prediction
         # data frame will be removed, which results in missing predictions.
         pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=impute,
-                                                verbose=True)
+                                                verbose=True, imputeStrategy=imputeStrategy, tunedRandomForest=tunedRandomForest,
+                                                numeric_columns_as_categorical=numeric_columns_as_categorical )
 
         prediction_pipeline = hcai_pipelines.full_pipeline(model_type, predicted_column, grain_column, impute=True,
-                                                           verbose=False)
+                                                           verbose=False, imputeStrategy=imputeStrategy, tunedRandomForest=tunedRandomForest, 
+                                                           numeric_columns_as_categorical=numeric_columns_as_categorical )
 
         # Run a low and high cardinality check. Warn the user, and allow
         # them to proceed.

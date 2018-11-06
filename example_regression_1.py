@@ -11,6 +11,7 @@ To run this example:
 This code uses the diabetes sample data in datasets/data/diabetes.csv.
 """
 import pandas as pd
+import numpy as np
 
 import healthcareai
 import healthcareai.common.database_connections as hcai_db
@@ -37,7 +38,7 @@ def main():
 
     # Peek at the first 5 rows of data
     print(dataframe.head(5))
-
+    
     # Step 1: Setup a healthcareai regression trainer. This prepares your data for model building
     regression_trainer = healthcareai.SupervisedModelTrainer(
         dataframe=dataframe,
@@ -46,6 +47,49 @@ def main():
         grain_column='PatientEncounterID',
         impute=True,
         verbose=False)
+    
+    
+    """
+    The below code demonstrate the advance features for imputation of missing values.
+    imputeStrategy: 
+        'MeanMode': (default), Impute using mean and mode values of column
+        'RandomForest': Impute missing values in RandomForest models. (Imputed values are much more realistic)
+    
+    tunedRandomForest:
+        True: ML to be used for imputation of missing values are tuned using grid search and K-fold cross 
+              validation.
+    
+    numeric_columns_as_categorical :
+        For example: GenderFLG (0,0,1,0,1,1 .... )
+        So in normal case pandas by default will consider this column as numeric and missing values of this column 
+        will be imputed using MEAN value (ex. 0.78 or 1.46 ....).
+        
+        Thus to explicitly mention such  as categorical there is this option which can be used as below:
+            numeric_columns_as_categorical = 'GenderFLG'
+        Now imputation will be done by MODE value and final type of the column wil be np.object.
+    """
+    
+    # Uncomment below code to see advance imputation in action.
+    """
+    # Creating missing values in GenderFLG column and converting it into Numeric type to demostrate advance imputation features.
+    dataframe['GenderFLG'].iloc[ 500:530, ] = np.NaN
+    dataframe['GenderFLG'].replace( to_replace=[ 'M', 'F' ], value=[ 0, 1], inplace=True )
+    pd.options.mode.chained_assignment = None
+    
+    regression_trainer = healthcareai.SupervisedModelTrainer(
+        dataframe=dataframe,
+        predicted_column='SystolicBPNBR',
+        model_type='regression',
+        grain_column='PatientEncounterID',
+        impute=True,
+        verbose=False,
+        imputeStrategy = 'RandomForest',
+        tunedRandomForest = True,
+        numeric_columns_as_categorical = 'GenderFLG'   
+        )
+    """
+    
+    
 
     # Look at the first few rows of your dataframe after loading the data
     print('\n\n-------------------[ Cleaned Dataframe ]--------------------------')
